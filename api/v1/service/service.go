@@ -122,7 +122,7 @@ func createService(c *gin.Context) {
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
-		}).Error("failed to create mesh")
+		}).Error("failed to create net")
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}

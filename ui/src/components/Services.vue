@@ -142,12 +142,12 @@
                                         required
                                 />
                                 <v-select return-object
-                                        v-model="meshList.selected"
-                                        :items="meshList.items"
+                                        v-model="netList.selected"
+                                        :items="netList.items"
                                         item-text = "text"
                                         item-value = "value"
-                                        label="To this mesh"
-                                        :rules="[ v => !!v || 'Mesh is required', ]"
+                                        label="To this net"
+                                        :rules="[ v => !!v || 'Net is required', ]"
                                         single
                                         persistent-hint
                                         required
@@ -238,12 +238,12 @@
                                         required
                                 />
                                 <v-select return-object
-                                        v-model="meshList.selected"
-                                        :items="meshList.items"
+                                        v-model="netList.selected"
+                                        :items="netList.items"
                                         item-text = "text"
                                         item-value = "value"
-                                        label="To this mesh"
-                                        :rules="[ v => !!v || 'Mesh is required', ]"
+                                        label="To this net"
+                                        :rules="[ v => !!v || 'Net is required', ]"
                                         single
                                         persistent-hint
                                         required
@@ -289,7 +289,7 @@
       inDelete: false,
       credits : 0,
       used: 0,
-      meshList: {},
+      netList: {},
       serverList: {},
       ingressList: {},
       egressList: {},
@@ -315,7 +315,7 @@
         { text: "Quad9 DNS", value: "9.9.9.9"},
       ]},
       svcList:{ items: [
-        { text: "Relay Service  (allows all machines in mesh to communicate with each other)", value: "Relay" },
+        { text: "Relay Service  (allows all machines in net to communicate with each other)", value: "Relay" },
         { text: "Tunnel Service (tunnel all traffic through the Service Host)", value: "Tunnel" },
       ]},
       headers: [
@@ -346,12 +346,12 @@
         subscriptions: 'subscription/subscriptions',
         services: 'service/services',
         servers: 'server/servers',
-        meshes: 'mesh/meshes',
+        nets: 'net/nets',
       }),
     },
 
     mounted () {
-      this.readAllMeshes()
+      this.readAllNetworks()
       this.readSubscriptions(this.authuser.email)
       this.readServices(this.authuser.email)
       this.readServers()
@@ -391,8 +391,8 @@
             readServers: 'read',
         }),
 
-        ...mapActions('mesh', {
-            readAllMeshes: 'readAll',
+        ...mapActions('net', {
+            readAllNetworks: 'readAll',
         }),
 
       Refresh() {
@@ -417,16 +417,16 @@
           name: "",
           email: this.authuser.email,
         }
-        this.meshList = { selected: { "text": "",  "value": ""},
+        this.netList = { selected: { "text": "",  "value": ""},
                           items: [] }
 
         var selected = 0;
-        this.meshList.items[0] = { "text": "New Mesh", "value": ""}
-        for (let i=0; i<this.meshes.length; i++) {
-            this.meshList.items[i+1]= { "text": this.meshes[i].meshName, "value": this.meshes[i].id }
+        this.netList.items[0] = { "text": "New Net", "value": ""}
+        for (let i=0; i<this.nets.length; i++) {
+            this.netList.items[i+1]= { "text": this.nets[i].netName, "value": this.nets[i].id }
         }
 
-        this.meshList.selected = this.meshList.items[selected];
+        this.netList.selected = this.netList.items[selected];
 
         this.serverList = { selected: { "text": "",  "value": ""},
                           items: [] }
@@ -455,15 +455,15 @@
           name: "",
           email: this.authuser.email,
         }
-        this.meshList = { selected: { "text": "",  "value": ""},
+        this.netList = { selected: { "text": "",  "value": ""},
                           items: [] }
 
         var selected = -1;
-        for (let i=0; i<this.meshes.length; i++) {
-            this.meshList.items[i]= { "text": this.meshes[i].meshName, "value": this.meshes[i].id }
+        for (let i=0; i<this.nets.length; i++) {
+            this.netList.items[i]= { "text": this.nets[i].netName, "value": this.nets[i].id }
         }
 
-        this.meshList.selected = this.meshList.items[selected];
+        this.netList.selected = this.netList.items[selected];
 
         this.ingressList = { selected: { "text": "",  "value": ""},
                           items: [] }
@@ -492,7 +492,7 @@
     this.service.defaultSubnet = this.server.defaultSubnet;
     this.service.servicePort = port;
     this.service.relayHost = {}
-    this.service.relayHost.meshName = this.serverList.selected.value;
+    this.service.relayHost.netName = this.serverList.selected.value;
     this.service.relayHost.current = {}
     this.service.relayHost.current.dns = []
     this.service.relayHost.current.dns[0] = this.dnsList.selected.value;
@@ -505,11 +505,11 @@
 
     this.service.serviceType = this.svcList.selected.value;
 
-    if (this.service.relayHost.meshName != "") {
-        this.service.relayHost.meshId = this.meshList.selected.value;
+    if (this.service.relayHost.netName != "") {
+        this.service.relayHost.netId = this.netList.selected.value;
     }
     else {
-        this.service.relayHost.meshId = "";
+        this.service.relayHost.netId = "";
     }
 
     this.createService(this.service);
@@ -538,7 +538,7 @@
     this.ingress.defaultSubnet = this.ingressServer.defaultSubnet;
     this.ingress.servicePort = portI;
     this.ingress.relayHost = {}
-    this.ingress.relayHost.meshName = this.meshList.selected.value;
+    this.ingress.relayHost.netName = this.netList.selected.value;
     this.ingress.relayHost.current = {}
     this.ingress.relayHost.current.dns = []
     this.ingress.relayHost.current.dns[0] = "8.8.8.8";
@@ -551,11 +551,11 @@
 
     this.ingress.serviceType = "Ingress";
 
-    if (this.ingress.relayHost.meshName != "") {
-        this.ingress.relayHost.meshId = this.meshList.selected.value;
+    if (this.ingress.relayHost.netName != "") {
+        this.ingress.relayHost.netId = this.netList.selected.value;
     }
     else {
-        this.ingress.relayHost.meshId = "";
+        this.ingress.relayHost.netId = "";
     }
 
     var rangeE = this.egressServer.portMax - this.egressServer.portMin + 1;
@@ -564,7 +564,7 @@
     this.egress.defaultSubnet = this.ingressServer.defaultSubnet;
     this.egress.servicePort = portE;
     this.egress.relayHost = {}
-    this.egress.relayHost.meshName = this.meshList.selected.value;
+    this.egress.relayHost.netName = this.netList.selected.value;
     this.egress.relayHost.current = {}
     this.egress.relayHost.current.dns = []
     this.egress.relayHost.current.dns[0] = "8.8.8.8";
@@ -577,11 +577,11 @@
 
     this.egress.serviceType = "Egress";
 
-    if (this.egress.relayHost.meshName != "") {
-        this.egress.relayHost.meshId = this.meshList.selected.value;
+    if (this.egress.relayHost.netName != "") {
+        this.egress.relayHost.netId = this.netList.selected.value;
     }
     else {
-        this.egress.relayHost.meshId = "";
+        this.egress.relayHost.netId = "";
     }
 
 
@@ -598,7 +598,7 @@
           this.deleteSubscription(item)
         }
         this.readAllAccounts(this.authuser.email)
-        this.readAllMeshes()
+        this.readAllNetworks()
         this.readServices(this.authuser.email)
 
       },
@@ -610,12 +610,12 @@
           this.deleteService(item)
         }
         this.readAllAccounts(this.authuser.email)
-        this.readAllMeshes()
+        this.readAllNetworks()
         this.readServices(this.authuser.email)
 
       },
 
-      email(toAddress, mesh) {
+      email(toAddress, net) {
         this.dialogCreateService = false;
         if (!toAddress) {
           this.errorUser('email address is not defined')
@@ -649,8 +649,8 @@
       updateMember(member) {
 
         this.dialogMember = false;
-        this.member.meshName = this.meshList.selected.text;
-        this.member.meshId = this.meshList.selected.value;
+        this.member.netName = this.netList.selected.text;
+        this.member.netId = this.netList.selected.value;
 
         this.updateAccount(member)
       },      
@@ -662,15 +662,15 @@
         }
 
         var selected = 0;
-        this.meshList.items = [];
-        this.meshList.items[0] = { "text": "All Meshes", "value": ""};
-        for (let i=0; i<this.meshes.length; i++) {
-            this.meshList.items[i+1]= { "text": this.meshes[i].meshName, "value": this.meshes[i].id }
-            if (this.meshes[i].id == member.meshId) {
+        this.netList.items = [];
+        this.netList.items[0] = { "text": "All Networks", "value": ""};
+        for (let i=0; i<this.nets.length; i++) {
+            this.netList.items[i+1]= { "text": this.nets[i].netName, "value": this.nets[i].id }
+            if (this.nets[i].id == member.netId) {
                 selected = i+1;
             }
         }
-        this.meshList.selected = this.meshList.items[selected];
+        this.netList.selected = this.netList.items[selected];
 
         this.member = member;
         this.dialogMember = true;

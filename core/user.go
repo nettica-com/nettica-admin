@@ -119,9 +119,9 @@ func ReadUsers() ([]*model.User, error) {
 }
 
 // EmailHost send email to host
-func EmailUser(id string, account string, mesh string) error {
+func EmailUser(id string, account string, net string) error {
 	// get email body
-	emailBody, err := template.DumpUserEmail(account, mesh)
+	emailBody, err := template.DumpUserEmail(account, net)
 	if err != nil {
 		return err
 	}

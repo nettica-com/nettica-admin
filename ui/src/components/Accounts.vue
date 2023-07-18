@@ -137,12 +137,12 @@
                                     v-model="valid"
                             >
                                 <v-select return-object
-                                        v-model="meshList.selected"
-                                        :items="meshList.items"
+                                        v-model="netList.selected"
+                                        :items="netList.items"
                                         item-text = "text"
                                         item-value = "value"
-                                        label="To this mesh"
-                                        :rules="[ v => !!v || 'Mesh is required', ]"
+                                        label="To this net"
+                                        :rules="[ v => !!v || 'Net is required', ]"
                                         single
                                         persistent-hint
                                         required
@@ -174,7 +174,7 @@
                     <v-btn
                             :disabled="!valid"
                             color="success"
-                            @click="create(toAddress, meshList.selected)"
+                            @click="create(toAddress, netList.selected)"
                     >
                         Submit
                         <v-icon right dark>mdi-check-outline</v-icon>
@@ -293,12 +293,12 @@
                                         required
                                 />
                                 <v-select return-object
-                                        v-model="meshList.selected"
-                                        :items="meshList.items"
+                                        v-model="netList.selected"
+                                        :items="netList.items"
                                         item-text = "text"
                                         item-value = "value"
-                                        label="To this mesh"
-                                        :rules="[ v => !!v || 'Mesh is required', ]"
+                                        label="To this net"
+                                        :rules="[ v => !!v || 'Net is required', ]"
                                         single
                                         persistent-hint
                                         required
@@ -350,7 +350,7 @@
       dialogUpdate: false,
       dialogMember : false,
       inDelete: false,
-      meshList: {},
+      netList: {},
       toAddress: "",
       sendEmail: true,
       roles : ["Owner", "Admin", "User"],
@@ -365,7 +365,7 @@
         { text: 'Account Name', value: 'accountName', },
         { text: 'Name', value: 'name', },
         { text: "Role", value: 'role', },
-        { text: 'Mesh', value: 'meshName', },
+        { text: 'Net', value: 'netName', },
         { text: 'From', value: 'from', },
         { text: 'Status', value: 'status', },
         { text: 'Actions', value: 'action', sortable: false, },
@@ -375,7 +375,7 @@
         { text: 'Email', value: 'email', },
         { text: 'Name', value: 'name', },
         { text: "Role", value: 'role', },
-        { text: 'Mesh', value: 'meshName', },
+        { text: 'Net', value: 'netName', },
         { text: 'Account Name', value: 'accountName', },
         { text: 'Status', value: 'status', },
         { text: 'Actions', value: 'action', sortable: false, },
@@ -388,13 +388,13 @@
         authuser: 'auth/user',
         accounts: 'account/accounts',
         members: 'account/users',
-        meshes: 'mesh/meshes',
+        nets: 'net/nets',
       }),
     },
 
     mounted () {
       this.readAllAccounts(this.authuser.email)
-      this.readAllMeshes()
+      this.readAllNetworks()
     },
 
     watch: {
@@ -418,13 +418,13 @@
             emailUser: 'email',
         }),
 
-        ...mapActions('mesh', {
-            readAllMeshes: 'readAll',
+        ...mapActions('net', {
+            readAllNetworks: 'readAll',
         }),
 
       Refresh() {
         this.readAllAccounts(this.authuser.email)
-        this.readAllMeshes()
+        this.readAllNetworks()
       },
 
 
@@ -435,23 +435,23 @@
           from: this.authuser.email,
           email: "",
         }
-        this.meshList = { selected: { "text": "",  "value": ""},
+        this.netList = { selected: { "text": "",  "value": ""},
                           items: [] }
 
         var selected = 0;
-        this.meshList.items[0] = { "text": "All Meshes", "value": ""}
-        for (let i=0; i<this.meshes.length; i++) {
-            this.meshList.items[i+1]= { "text": this.meshes[i].meshName, "value": this.meshes[i].id }
+        this.netList.items[0] = { "text": "All Networks", "value": ""}
+        for (let i=0; i<this.nets.length; i++) {
+            this.netList.items[i+1]= { "text": this.nets[i].netName, "value": this.nets[i].id }
         }
 
-        this.meshList.selected = this.meshList.items[selected];
+        this.netList.selected = this.netList.items[selected];
 
       },
 
-      create(toAddress, mesh) {
+      create(toAddress, net) {
         this.account.email = toAddress;
-        this.account.meshId = mesh.value;
-        this.account.meshName = mesh.text;
+        this.account.netId = net.value;
+        this.account.netName = net.text;
         this.account.from = this.authuser.email;
         this.account.role = "User"
         this.account.status = "Pending"
@@ -483,7 +483,7 @@
           this.delete(item)
         }
         this.readAllAccounts(this.authuser.email)
-        this.readAllMeshes()
+        this.readAllNetworks()
 
       },
 
@@ -516,8 +516,8 @@
       updateMember(member) {
 
         this.dialogMember = false;
-        this.member.meshName = this.meshList.selected.text;
-        this.member.meshId = this.meshList.selected.value;
+        this.member.netName = this.netList.selected.text;
+        this.member.netId = this.netList.selected.value;
 
         this.updateAccount(member)
       },      
@@ -529,15 +529,15 @@
         }
 
         var selected = 0;
-        this.meshList.items = [];
-        this.meshList.items[0] = { "text": "All Meshes", "value": ""};
-        for (let i=0; i<this.meshes.length; i++) {
-            this.meshList.items[i+1]= { "text": this.meshes[i].meshName, "value": this.meshes[i].id }
-            if (this.meshes[i].id == member.meshId) {
+        this.netList.items = [];
+        this.netList.items[0] = { "text": "All Networks", "value": ""};
+        for (let i=0; i<this.nets.length; i++) {
+            this.netList.items[i+1]= { "text": this.nets[i].netName, "value": this.nets[i].id }
+            if (this.nets[i].id == member.netId) {
                 selected = i+1;
             }
         }
-        this.meshList.selected = this.meshList.items[selected];
+        this.netList.selected = this.netList.items[selected];
 
         this.member = member;
         this.dialogMember = true;

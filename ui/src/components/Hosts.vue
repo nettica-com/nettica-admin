@@ -23,8 +23,8 @@
                         color="success"
                         @click="startCreate"
                 >
-                    Add host manually
-                    <v-icon right dark>mdi-network-outline</v-icon>
+                    Add Host Manually
+                    <v-icon right dark>mdi-server</v-icon>
                 </v-btn>
             </v-card-title>
             <v-data-table
@@ -33,7 +33,7 @@
                     :items="hosts"
                     :search="search"
                     :items-per-page="25"
-                    no-data-text="No Hosts.  Click above to create your first host, or use Meshify Agent on the host."
+                    no-data-text="No Hosts.  Click above to create your first host, or use Nettica Agent on the host."
                     no-results-text="No results matching your search"
                     :footer-props="footerProps"
             >
@@ -147,12 +147,12 @@
                                         required
                                 />
                                 <v-select return-object
-                                        v-model="meshList.selected"
-                                        :items="meshList.items"
+                                        v-model="netList.selected"
+                                        :items="netList.items"
                                         item-text = "text"
                                         item-value = "value"
-                                        label="Join this mesh"
-                                        :rules="[ v => !!v || 'Mesh is required', ]"
+                                        label="Join this net"
+                                        :rules="[ v => !!v || 'Net is required', ]"
                                         single
                                         persistent-hint
                                         required
@@ -242,12 +242,12 @@
                                 />
 
                                 <v-select return-object
-                                        v-model="meshList.selected"
-                                        :items="meshList.items"
+                                        v-model="netList.selected"
+                                        :items="netList.items"
                                         item-text = "text"
                                         item-value = "value"
-                                        label="Join this mesh"
-                                        :rules="[ v => !!v || 'Mesh is required', ]"
+                                        label="Join this net"
+                                        :rules="[ v => !!v || 'Net is required', ]"
                                         single
                                         persistent-hint
                                         required
@@ -456,7 +456,7 @@
                                         v-model="host.current.enableDns"
                                         color="success"
                                         inset
-                                        label="Enable Meshify DNS"
+                                        label="Enable Nettica DNS"
                                />
 
                             </v-col>
@@ -490,7 +490,7 @@
                 max-width="550"
         >
             <v-card>
-            <v-card-title class="headline">Copy Host to Mesh</v-card-title>
+            <v-card-title class="headline">Copy Host to Net</v-card-title>
                     <v-card-text>
 
                         <v-row>
@@ -509,12 +509,12 @@
                                     />
 
                                     <v-select return-object
-                                            v-model="meshList.selected"
-                                            :items="meshList.items"
+                                            v-model="netList.selected"
+                                            :items="netList.items"
                                             item-text = "text"
                                             item-value = "value"
-                                            label="Copy to this mesh"
-                                            :rules="[ v => !!v || 'Mesh is required', ]"
+                                            label="Copy to this net"
+                                            :rules="[ v => !!v || 'Net is required', ]"
                                             single
                                             persistent-hint
                                             required
@@ -629,11 +629,11 @@
       dialogCopy: false,
       dialogServiceHost: false,
       host: null,
-      mesh: null,
+      net: null,
       name: '',
       panel: 1,
       valid: false,
-      meshList: {},
+      netList: {},
       platList: {},
       publicSubnets: false,
       platforms: { selected: { text:"", value:"" },
@@ -651,7 +651,7 @@
       headers: [
         { text: 'Name', value: 'name', },
         { text: 'Status', value: 'status', },
-        { text: 'Mesh', value: 'meshName', },
+        { text: 'Net', value: 'netName', },
         { text: 'IP addresses', value: 'current.address', },
 //        { text: 'ID', value:'id', },
         { text: "Endpoint", value: 'current.endpoint', },
@@ -670,7 +670,7 @@
         servers: 'server/servers',
         accounts: 'account/accounts',
         hosts: 'host/hosts',
-        meshes: 'mesh/meshes',
+        nets: 'net/nets',
         hostQrcodes: 'host/hostQrcodes',
       }),
     },
@@ -678,7 +678,7 @@
     mounted () {
       this.readAllAccounts(this.user.email)
       this.readAllHosts()
-      this.readAllMeshes()
+      this.readAllNetworks()
     },
 
     methods: {
@@ -692,8 +692,8 @@
         deletehost: 'delete',
         emailhost: 'email',
       }),
-      ...mapActions('mesh', {
-        readAllMeshes: 'readAll',
+      ...mapActions('net', {
+        readAllNetworks: 'readAll',
       }),
       ...mapActions('account', {
           readAllAccounts: 'readAll',
@@ -702,7 +702,7 @@
       Refresh() {
         this.readAllAccounts(this.user.email)
         this.readAllHosts()
-        this.readAllMeshes()
+        this.readAllNetworks()
       },
 
 
@@ -711,28 +711,28 @@
           name: "",
           email: this.user.email,
           enable: true,
-//          meshName: this.meshes[0].meshName,
-//          meshID: this.meshes[0].id,
-//          allowedIPs: this.meshes[0].default.allowedIPs,
-//          address: this.meshes[0].default.address,
-//          meshName: this.meshes[0].default.meshName,
-//          id: this.meshes[0].default.id,
+//          netName: this.nets[0].netName,
+//          netID: this.nets[0].id,
+//          allowedIPs: this.nets[0].default.allowedIPs,
+//          address: this.nets[0].default.address,
+//          netName: this.nets[0].default.netName,
+//          id: this.nets[0].default.id,
           tags: [],
           current: {},
         }
         
-        this.meshList = { selected: { "text": "",  "value": ""},
+        this.netList = { selected: { "text": "",  "value": ""},
                           items: [] }
 
         var selected = 0;
-        for (let i=0; i<this.meshes.length; i++) {
-            this.meshList.items[i]= { "text": this.meshes[i].meshName, "value": this.meshes[i].id }
-            if (this.meshList.items[i].text == this.host.meshName) {
+        for (let i=0; i<this.nets.length; i++) {
+            this.netList.items[i]= { "text": this.nets[i].netName, "value": this.nets[i].id }
+            if (this.netList.items[i].text == this.host.netName) {
                 selected = i
             }
         }
 
-        this.meshList.selected = this.meshList.items[selected];
+        this.netList.selected = this.netList.items[selected];
         this.dialogCreate = true;
       },
 
@@ -745,8 +745,8 @@
             }
             this.host.current.endpoint = this.host.current.endpoint + ":" + this.host.current.listenPort.toString()
         }
-        this.host.meshName = this.meshList.selected.text
-        this.host.meshid = this.meshList.selected.value
+        this.host.netName = this.netList.selected.text
+        this.host.netid = this.netList.selected.value
         this.host.platform = this.platforms.selected.value
         this.dialogCreate = false;
         this.createhost(host)
@@ -775,18 +775,18 @@
 //        this.readQrCode(this.host);
         this.readConfig(host);
 
-        this.meshList = { selected: { "text": this.host.meshName,  "value": this.host.meshid },
+        this.netList = { selected: { "text": this.host.netName,  "value": this.host.netid },
                           items: [] }
 
         var selected = 0;
-        for (let i=0; i<this.meshes.length; i++) {
-            this.meshList.items[i]= { "text": this.meshes[i].meshName, "value": this.meshes[i].id }
-            if (this.meshList.items[i].text == this.host.meshName) {
+        for (let i=0; i<this.nets.length; i++) {
+            this.netList.items[i]= { "text": this.nets[i].netName, "value": this.nets[i].id }
+            if (this.netList.items[i].text == this.host.netName) {
                 selected = i
             }
         }
 
-        this.meshList.selected = this.meshList.items[selected];
+        this.netList.selected = this.netList.items[selected];
 
         for (let i=0; i<this.platforms.items.length; i++) {
             if (this.platforms.items[i].value == this.host.platform) {
@@ -813,18 +813,18 @@
         this.host = host;
         this.readConfig(host);
 
-        this.meshList = { selected: { "text": this.host.meshName,  "value": this.host.meshid },
+        this.netList = { selected: { "text": this.host.netName,  "value": this.host.netid },
                         items: [] }
 
         var selected = 0;
-        for (let i=0; i<this.meshes.length; i++) {
-            this.meshList.items[i]= { "text": this.meshes[i].meshName, "value": this.meshes[i].id }
-            if (this.meshList.items[i].text == this.host.meshName) {
+        for (let i=0; i<this.nets.length; i++) {
+            this.netList.items[i]= { "text": this.nets[i].netName, "value": this.nets[i].id }
+            if (this.netList.items[i].text == this.host.netName) {
                 selected = i
             }
         }
 
-        this.meshList.selected = this.meshList.items[selected];
+        this.netList.selected = this.netList.items[selected];
 
         this.dialogCopy = true;
         this.dialogUpdate = false;
@@ -840,20 +840,20 @@
         this.host.current.mtu = parseInt(this.host.current.mtu, 10);
 
         var changed = false;
-        if (this.host.meshid != this.meshList.selected.value) {
-            this.host.meshName = this.meshList.selected.text
-            this.host.meshid = this.meshList.selected.value
+        if (this.host.netid != this.netList.selected.value) {
+            this.host.netName = this.netList.selected.text
+            this.host.netid = this.netList.selected.value
             changed = true;
         }
-        this.host.meshName = this.meshList.selected.text
+        this.host.netName = this.netList.selected.text
         this.host.platform = this.platforms.selected.value
 
         if (changed) {
             this.host.id = ""
             this.host.current.endpoint = ""
             this.host.current.listenPort = 0
-            this.host.meshName = this.meshList.selected.text
-            this.host.meshid = this.meshList.selected.value
+            this.host.netName = this.netList.selected.text
+            this.host.netid = this.netList.selected.value
             this.createhost(host)
 
         }
@@ -886,13 +886,13 @@
 
         var changed = false;
 
-        if (this.meshList.selected != null && this.host.meshid != this.meshList.selected.value) {
-            this.host.meshName = this.meshList.selected.text
-            this.host.meshid = this.meshList.selected.value
+        if (this.netList.selected != null && this.host.netid != this.netList.selected.value) {
+            this.host.netName = this.netList.selected.text
+            this.host.netid = this.netList.selected.value
             changed = true;
         }
-        if (this.meshList.selected != null ) {
-            this.host.meshName = this.meshList.selected.text
+        if (this.netList.selected != null ) {
+            this.host.netName = this.netList.selected.text
         }
         if (this.platforms.selected != null) {
             this.host.platform = this.platforms.selected.value
@@ -907,9 +907,9 @@
             "192.170.0.0/15","192.172.0.0/14","192.176.0.0/12","192.192.0.0/10","193.0.0.0/8","194.0.0.0/7","196.0.0.0/6","200.0.0.0/5","208.0.0.0/4")
         }
         if (changed) {
-            for (let i=0; i<this.meshes.length; i++) {
-                if ( this.host.meshid == this.meshList.items[i].value ) {
-                    var template = this.meshes[i]
+            for (let i=0; i<this.nets.length; i++) {
+                if ( this.host.netid == this.netList.items[i].value ) {
+                    var template = this.nets[i]
                     this.host.current.address = []
 
                     if (host.current.listenPort == host.default.listenPort) {
@@ -935,7 +935,7 @@
                     if (host.current.persistentKeepalive == host.default.persistentKeepalive) {
                         host.current.persistentKeepalive = template.persistentKeepalive
                     }
-                    this.host.default = this.meshes[i].default
+                    this.host.default = this.nets[i].default
                 } 
             host.current.preshareKey = this.host.default.preshareKey
             }
@@ -978,7 +978,7 @@
         const url = window.URL.createObjectURL(new Blob([config]))
         const link = document.createElement('a')
         link.href = url
-        link.setAttribute('download', host.name.split(' ').join('-') + '-' + host.meshName.split(' ').join('-') + '.zip') //or any other extension
+        link.setAttribute('download', host.name.split(' ').join('-') + '-' + host.netName.split(' ').join('-') + '.zip') //or any other extension
         document.body.appendChild(link)
         link.click()
       },

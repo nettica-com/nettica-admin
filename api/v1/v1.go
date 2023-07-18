@@ -6,7 +6,7 @@ import (
 	"github.com/nettica-com/nettica-admin/api/v1/account"
 	"github.com/nettica-com/nettica-admin/api/v1/auth"
 	host "github.com/nettica-com/nettica-admin/api/v1/host"
-	"github.com/nettica-com/nettica-admin/api/v1/mesh"
+	"github.com/nettica-com/nettica-admin/api/v1/net"
 	"github.com/nettica-com/nettica-admin/api/v1/server"
 	"github.com/nettica-com/nettica-admin/api/v1/service"
 	"github.com/nettica-com/nettica-admin/api/v1/subscription"
@@ -21,7 +21,7 @@ func ApplyRoutes(r *gin.RouterGroup, private bool) {
 			host.ApplyRoutes(v1)
 			server.ApplyRoutes(v1)
 			user.ApplyRoutes(v1)
-			mesh.ApplyRoutes(v1)
+			net.ApplyRoutes(v1)
 			service.ApplyRoutes(v1)
 			subscription.ApplyRoutes(v1)
 		} else {

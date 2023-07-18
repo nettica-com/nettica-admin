@@ -79,7 +79,7 @@ func emailAccount(c *gin.Context) {
 
 	account.From = user.Email
 
-	err = core.EmailUser(account.Email, account.Id, account.MeshId)
+	err = core.EmailUser(account.Email, account.Id, account.NetId)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,

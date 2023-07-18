@@ -1,6 +1,6 @@
 module.exports = {
   devServer: {
-    client : { webSocketURL : 'https://dev.meshify.app' },
+    client : { webSocketURL : 'https://dev.nettica.com' },
     allowedHosts: 'all',
     port: 8081,
   },

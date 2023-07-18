@@ -71,7 +71,7 @@
         authRedirectUrl: 'auth/authRedirectUrl',
         authError: 'auth/error',
         clientError: 'host/error',
-        meshError: 'mesh/error',
+        netError: 'net/error',
         serverError: 'server/error',
         serviceError: 'service/error',
         subscriptionError: 'subscription/error',

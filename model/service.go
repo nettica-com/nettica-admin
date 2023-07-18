@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// Mesh structure
+// Net structure
 type Service struct {
 	Id             string    `json:"id"           bson:"id"`
 	ServiceGroup   string    `json:"serviceGroup" bson:"serviceGroup"`

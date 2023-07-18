@@ -133,7 +133,7 @@ func deleteUser(c *gin.Context) {
 }
 
 func readUsers(c *gin.Context) {
-	meshes, err := core.ReadUsers()
+	nets, err := core.ReadUsers()
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
@@ -142,7 +142,7 @@ func readUsers(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, meshes)
+	c.JSON(http.StatusOK, nets)
 }
 
 func emailUser(c *gin.Context) {
@@ -161,7 +161,7 @@ func emailUser(c *gin.Context) {
 
 	id := c.Param("id")
 	account := c.Param("account")
-	mesh := c.Param("meshId")
+	net := c.Param("netId")
 
 	p, err := core.ReadAllAccounts(account)
 	if err != nil {
@@ -178,7 +178,7 @@ func emailUser(c *gin.Context) {
 	var a model.Account
 	a.Email = id
 	a.Parent = account
-	a.MeshId = mesh
+	a.NetId = net
 	a.Role = "User"
 	a.Status = "Pending"
 	a.Created = time.Now()
@@ -187,9 +187,9 @@ func emailUser(c *gin.Context) {
 
 	pa, err := core.CreateAccount(&a)
 
-	log.Infof("emailUser account = %v %v %v", pa, a.MeshId, err)
+	log.Infof("emailUser account = %v %v %v", pa, a.NetId, err)
 
-	err = core.EmailUser(id, pa.Id, a.MeshId)
+	err = core.EmailUser(id, pa.Id, a.NetId)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,

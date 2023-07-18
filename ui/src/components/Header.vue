@@ -1,7 +1,7 @@
 <template>
     <v-container>
         <v-app-bar app>
-            <a href="https://meshify.app"><img class="mr-3" src="/logo.png" height="50" /></a>
+            <a href="https://nettica.com"><img class="mr-3" src="/logo.png" height="50" /></a>
             <v-toolbar-title to="/">
                 {{ title }}</v-toolbar-title>
 
@@ -11,13 +11,13 @@
                     Services
                     <v-icon right dark>mdi-weather-cloudy</v-icon>
                 </v-btn>
-                <v-btn to="/mesh" right>
-                    Meshes
-                    <img class="ml-1" :src="require('../assets/meshify-bw.png')" height="32" width="32" alt="nettica"/>
+                <v-btn to="/networks" right>
+                    Networks
+                    <v-icon right dark>mdi-network-outline</v-icon>
                 </v-btn>
                 <v-btn to="/hosts">
                     Hosts
-                    <v-icon right dark>mdi-network-outline</v-icon>
+                    <v-icon right dark>mdi-server</v-icon>
                 </v-btn>
                 <v-btn to="/accounts">
                     Account

@@ -3,7 +3,7 @@ import Vuex from 'vuex'
 import auth from "./modules/auth";
 import host from "./modules/host";
 import server from "./modules/server";
-import mesh from "./modules/mesh";
+import net from "./modules/net";
 import user from "./modules/users"
 import account from "./modules/account"
 import join from "./modules/join"
@@ -21,7 +21,7 @@ export default new Vuex.Store({
     account,
     auth,
     host,
-    mesh,
+    net,
     user,
     join,
     subscription,

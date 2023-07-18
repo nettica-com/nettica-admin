@@ -39,17 +39,17 @@ func CreateHost(host *model.Host) (*model.Host, error) {
 		}
 	}
 
-	// read the meshes and configure the default values
-	meshes, err := ReadMeshes(host.CreatedBy)
+	// read the nets and configure the default values
+	nets, err := ReadNetworks(host.CreatedBy)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, mesh := range meshes {
-		if mesh.MeshName == host.MeshName {
-			host.Default = mesh.Default
+	for _, net := range nets {
+		if net.NetName == host.NetName {
+			host.Default = net.Default
 			current := host.Current
-			host.Current = mesh.Default
+			host.Current = net.Default
 			host.Current.ListenPort = current.ListenPort
 			host.Current.Endpoint = current.Endpoint
 			host.Current.PrivateKey = current.PrivateKey
@@ -57,10 +57,10 @@ func CreateHost(host *model.Host) (*model.Host, error) {
 			host.Current.PostUp = current.PostUp
 			host.Current.PostDown = current.PostDown
 			host.Current.PersistentKeepalive = current.PersistentKeepalive
-			host.MeshId = mesh.Id
-			host.AccountId = mesh.AccountId
+			host.NetId = net.Id
+			host.AccountId = net.AccountId
 			host.Current.AllowedIPs = current.AllowedIPs
-			host.Current.Dns = mesh.Default.Dns
+			host.Current.Dns = net.Default.Dns
 		}
 	}
 
@@ -79,7 +79,7 @@ func CreateHost(host *model.Host) (*model.Host, error) {
 		host.Current.PublicKey = key.PublicKey().String()
 	}
 
-	reserverIps, err := GetAllReservedMeshIps(host.MeshId)
+	reserverIps, err := GetAllReservedNetIps(host.NetId)
 	if err != nil {
 		return nil, err
 	}
@@ -106,10 +106,10 @@ func CreateHost(host *model.Host) (*model.Host, error) {
 	}
 
 	if host.Current.SubnetRouting && len(host.Current.PostUp) == 0 {
-		host.Current.PostUp = fmt.Sprintf("iptables -A FORWARD -i %s -j ACCEPT; iptables -A FORWARD -o %s -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE", host.MeshName, host.MeshName)
+		host.Current.PostUp = fmt.Sprintf("iptables -A FORWARD -i %s -j ACCEPT; iptables -A FORWARD -o %s -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE", host.NetName, host.NetName)
 	}
 	if host.Current.SubnetRouting && len(host.Current.PostDown) == 0 {
-		host.Current.PostDown = fmt.Sprintf("iptables -D FORWARD -i %s -j ACCEPT; iptables -D FORWARD -o %s -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE", host.MeshName, host.MeshName)
+		host.Current.PostDown = fmt.Sprintf("iptables -D FORWARD -i %s -j ACCEPT; iptables -D FORWARD -o %s -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE", host.NetName, host.NetName)
 	}
 
 	host.Created = time.Now().UTC()
@@ -142,8 +142,8 @@ func CreateHost(host *model.Host) (*model.Host, error) {
 }
 
 // GetAllReservedIps the list of all reserved IPs, client and server
-func GetAllReservedMeshIps(meshId string) ([]string, error) {
-	clients, err := mongo.ReadAllHosts("meshid", meshId)
+func GetAllReservedNetIps(netId string) ([]string, error) {
+	clients, err := mongo.ReadAllHosts("netid", netId)
 
 	if err != nil {
 		return nil, err
@@ -151,7 +151,7 @@ func GetAllReservedMeshIps(meshId string) ([]string, error) {
 	reserverIps := make([]string, 0)
 
 	for _, client := range clients {
-		if client.MeshId == meshId {
+		if client.NetId == netId {
 			for _, cidr := range client.Current.Address {
 				ip, err := util.GetIpFromCidr(cidr)
 				if err != nil {
@@ -195,7 +195,7 @@ func UpdateHost(Id string, host *model.Host, flag bool) (*model.Host, error) {
 	if len(host.Current.Address) == 0 ||
 		(len(host.Default.Address) > 0 && len(current.Default.Address) > 0 &&
 			(host.Default.Address[0] != current.Default.Address[0])) {
-		reserverIps, err := GetAllReservedMeshIps(host.MeshId)
+		reserverIps, err := GetAllReservedNetIps(host.NetId)
 		if err != nil {
 			return nil, err
 		}
@@ -224,10 +224,10 @@ func UpdateHost(Id string, host *model.Host, flag bool) (*model.Host, error) {
 	}
 
 	if host.Current.SubnetRouting && len(host.Current.PostUp) == 0 {
-		host.Current.PostUp = fmt.Sprintf("iptables -A FORWARD -i %s -j ACCEPT; iptables -A FORWARD -o %s -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE", host.MeshName, host.MeshName)
+		host.Current.PostUp = fmt.Sprintf("iptables -A FORWARD -i %s -j ACCEPT; iptables -A FORWARD -o %s -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE", host.NetName, host.NetName)
 	}
 	if host.Current.SubnetRouting && len(host.Current.PostDown) == 0 {
-		host.Current.PostDown = fmt.Sprintf("iptables -D FORWARD -i %s -j ACCEPT; iptables -D FORWARD -o %s -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE", host.MeshName, host.MeshName)
+		host.Current.PostDown = fmt.Sprintf("iptables -D FORWARD -i %s -j ACCEPT; iptables -D FORWARD -o %s -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE", host.NetName, host.NetName)
 	}
 
 	// check if host is valid
@@ -285,8 +285,8 @@ func ReadHostsForUser(email string) ([]*model.Host, error) {
 	for _, account := range accounts {
 		if account.Status == "Active" {
 
-			if account.MeshId != "" {
-				hosts, err := mongo.ReadAllHosts("meshid", account.MeshId)
+			if account.NetId != "" {
+				hosts, err := mongo.ReadAllHosts("netid", account.NetId)
 				if err != nil {
 					return nil, err
 				}
@@ -309,12 +309,12 @@ func ReadHostsForUser(email string) ([]*model.Host, error) {
 // ReadHostConfig in wg format
 func ReadHostConfig(id string) ([]byte, *string, error) {
 
-	meshName := ""
+	netName := ""
 	host, err := ReadHost(id)
 	if err != nil {
 		return nil, nil, err
 	}
-	hosts, err := ReadHost2("meshid", host.MeshId)
+	hosts, err := ReadHost2("netid", host.NetId)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -328,10 +328,10 @@ func ReadHostConfig(id string) ([]byte, *string, error) {
 	}
 
 	if index == -1 {
-		log.Errorf("Error reading Mesh: %v", hosts)
+		log.Errorf("Error reading Net: %v", hosts)
 	} else {
 		host := hosts[index]
-		meshName = host.MeshName
+		netName = host.NetName
 		hosts = append(hosts[:index], hosts[index+1:]...)
 
 		for i := 0; i < len(hosts); i++ {
@@ -349,7 +349,7 @@ func ReadHostConfig(id string) ([]byte, *string, error) {
 			return nil, nil, err
 		}
 
-		return config, &meshName, nil
+		return config, &netName, nil
 	}
 	return nil, nil, err
 }

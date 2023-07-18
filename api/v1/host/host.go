@@ -254,8 +254,8 @@ func statusHost(c *gin.Context) {
 			authorized := false
 
 			for _, config := range msg.Config {
-				for _, mesh := range config.Hosts {
-					if mesh.HostGroup == id && mesh.APIKey == apikey {
+				for _, net := range config.Hosts {
+					if net.HostGroup == id && net.APIKey == apikey {
 						authorized = true
 						break
 					}
@@ -271,7 +271,7 @@ func statusHost(c *gin.Context) {
 		}
 	*/
 
-	meshes, err := core.ReadHost2("hostGroup", c.Param("id"))
+	nets, err := core.ReadHost2("hostGroup", c.Param("id"))
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
@@ -282,8 +282,8 @@ func statusHost(c *gin.Context) {
 
 	authorized := false
 
-	for _, mesh := range meshes {
-		if mesh.APIKey == apikey {
+	for _, net := range nets {
+		if net.APIKey == apikey {
 			authorized = true
 			break
 		}
@@ -294,13 +294,13 @@ func statusHost(c *gin.Context) {
 	}
 
 	var msg model.Message
-	hconfig := make([]model.HostConfig, len(meshes))
+	hconfig := make([]model.HostConfig, len(nets))
 
 	msg.Id = c.Param("id")
 	msg.Config = hconfig
 
-	for i, mesh := range meshes {
-		clients, err := core.ReadHost2("meshid", mesh.MeshId)
+	for i, net := range nets {
+		clients, err := core.ReadHost2("netid", net.NetId)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"err": err,
@@ -310,8 +310,8 @@ func statusHost(c *gin.Context) {
 		}
 
 		msg.Config[i] = model.HostConfig{}
-		msg.Config[i].MeshName = mesh.MeshName
-		msg.Config[i].MeshId = mesh.MeshId
+		msg.Config[i].NetName = net.NetName
+		msg.Config[i].NetId = net.NetId
 
 		hasIngress := false
 		ingress := &model.Host{}
@@ -319,10 +319,10 @@ func statusHost(c *gin.Context) {
 		isIngress := false
 		isEgress := false
 
-		// Check the mesh to see if it has ingress and egress roles
+		// Check the net to see if it has ingress and egress roles
 		for _, client := range clients {
 			// They should all match
-			if client.MeshId == msg.Config[i].MeshId {
+			if client.NetId == msg.Config[i].NetId {
 				if client.Role == "Ingress" {
 					hasIngress = true
 					ingress = client
@@ -418,7 +418,7 @@ func configHost(c *gin.Context) {
 	formatQr := c.DefaultQuery("qrcode", "false")
 	zipcode := c.DefaultQuery("zip", "false")
 
-	data, mesh, err := core.ReadHostConfig(c.Param("id"))
+	data, net, err := core.ReadHostConfig(c.Param("id"))
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
@@ -430,11 +430,11 @@ func configHost(c *gin.Context) {
 
 	if zipcode == "false" {
 		c.Writer.Header().Set("Content-Type", "application/zip")
-		c.Writer.Header().Set("Content-Disposition", "attachment; filename="+*mesh+".zip")
+		c.Writer.Header().Set("Content-Disposition", "attachment; filename="+*net+".zip")
 		w := zip.NewWriter(c.Writer)
 		defer w.Close()
 		// Make a zip file with the config file
-		f, err := w.Create(*mesh + ".conf")
+		f, err := w.Create(*net + ".conf")
 		if err != nil {
 			log.WithFields(log.Fields{
 				"err": err,
@@ -455,7 +455,7 @@ func configHost(c *gin.Context) {
 
 	if formatQr == "false" {
 		// return config as txt file
-		c.Header("Content-Disposition", "attachment; filename=meshify.conf")
+		c.Header("Content-Disposition", "attachment; filename=nettica.conf")
 		c.Data(http.StatusOK, "application/config", data)
 		return
 	}

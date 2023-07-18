@@ -28,7 +28,7 @@ func Deserialize(id string) (interface{}, error) {
 		return nil, err
 	}
 
-	if id == "mesh.json" {
+	if id == "net.json" {
 		var s *model.Server
 		err = json.Unmarshal(data, &s)
 		if err != nil {

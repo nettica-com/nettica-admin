@@ -18,7 +18,7 @@ A control plane for [WireGuard](https://wireguard.com).
 ## Features
 
  * Self-hosted and web based management of wireguard networks
- * Mesh define the configuration of the hosts in the network
+ * Net define the configuration of the hosts in the network
  * Invite people to network with email
  * Authenticate them with OAuth2
  * Generation of configuration files on demand

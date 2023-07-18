@@ -4,18 +4,18 @@
             <v-col cols="12">
                 <v-card dark>
                     <v-card-title>
-                        Mesh Configuration
+                        Net Configuration
                     </v-card-title>
                     <div class="d-flex flex-no-wrap justify-space-between">
                         <v-col cols="12">
                             <v-text-field
                                     v-model="server.id"
-                                    label="Mesh ID"
+                                    label="Net ID"
                                     disabled
                             />
                             <v-text-field
-                                    v-model="server.meshName"
-                                    label="Mesh Name"
+                                    v-model="server.netName"
+                                    label="Net Name"
                                     disabled
                             />
                             <v-combobox

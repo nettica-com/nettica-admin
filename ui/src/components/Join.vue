@@ -7,7 +7,7 @@
         </v-card>
         <v-card>
             <p>Joining {{ $route.query.id }}</p>
-            <p>Click <a href="/hosts">here</a> to manage your meshes</p>
+            <p>Click <a href="/hosts">here</a> to manage your nets</p>
         </v-card>
     </v-container>
 </template>

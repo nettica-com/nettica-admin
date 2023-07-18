@@ -27,10 +27,10 @@ const routes = [
     }
   },
   {
-    path: '/mesh',
-    name: 'mesh',
+    path: '/networks',
+    name: 'networks',
     component: function () {
-      return import(/* webpackChunkName: "Mesh" */ '../views/Mesh.vue')
+      return import(/* webpackChunkName: "Network" */ '../views/Network.vue')
     },
     meta: {
       requiresAuth: true

@@ -16,8 +16,8 @@ type Host struct {
 	HostGroup string    `json:"hostGroup"                 bson:"hostGroup"`
 	Type      string    `json:"type"                      bson:"type"`
 	Role      string    `json:"role"                      bson:"role"`
-	MeshId    string    `json:"meshid"                    bson:"meshid"`
-	MeshName  string    `json:"meshName"                  bson:"meshName"`
+	NetId     string    `json:"netid"                     bson:"netid"`
+	NetName   string    `json:"netName"                   bson:"netName"`
 	APIKey    string    `json:"apiKey"                    bson:"apiKey"`
 	Email     string    `json:"email"                     bson:"email"`
 	Enable    bool      `json:"enable"                    bson:"enable"`

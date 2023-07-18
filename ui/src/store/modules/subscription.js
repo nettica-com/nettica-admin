@@ -23,17 +23,17 @@ const actions = {
     ApiService.get("/subscriptions")
       .then(resp => {
         commit('subscriptions', resp)
-//        dispatch('readMeshConfigs')
+//        dispatch('readNetConfigs')
       })
       .catch(err => {
         commit('error', err)
       })
   },
 
-  create({ commit, dispatch }, mesh){
-    ApiService.post("/subscriptions", mesh)
+  create({ commit, dispatch }, net){
+    ApiService.post("/subscriptions", net)
       .then(resp => {
-//        dispatch('readMeshConfig', resp)
+//        dispatch('readNetConfig', resp)
         commit('create', resp)
       })
       .catch(err => {
@@ -44,7 +44,7 @@ const actions = {
   update({ commit, dispatch }, subscription){
     ApiService.patch(`/subscriptions/${subscription.id}`, subscription)
       .then(resp => {
-//        dispatch('readMeshConfig', resp)
+//        dispatch('readNetConfig', resp)
         commit('update', resp)
       })
       .catch(err => {

@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// Mesh structure
+// Net structure
 type Subscription struct {
 	Id          string    `json:"id"          bson:"id"`
 	AccountId   string    `json:"accountid"   bson:"accountid"`

@@ -61,72 +61,72 @@ func CreateService(service *model.Service) (*model.Service, error) {
 		service.DefaultSubnet = "10.10.10.0/24"
 	}
 
-	if service.RelayHost.MeshId == "" {
-		// get all the current meshes and see if there is one with the same name
-		meshes, err := ReadMeshes(service.CreatedBy)
+	if service.RelayHost.NetId == "" {
+		// get all the current nets and see if there is one with the same name
+		nets, err := ReadNetworks(service.CreatedBy)
 		if err != nil {
 			return nil, err
 		}
 
 		found := false
 
-		for _, m := range meshes {
-			if m.MeshName == service.RelayHost.MeshName {
+		for _, m := range nets {
+			if m.NetName == service.RelayHost.NetName {
 				found = true
-				service.RelayHost.MeshName = m.MeshName
-				service.RelayHost.MeshId = m.Id
+				service.RelayHost.NetName = m.NetName
+				service.RelayHost.NetId = m.Id
 				service.RelayHost.Default = m.Default
 				break
 			}
 		}
 
 		if !found {
-			// create a default mesh
-			mesh := model.Mesh{
+			// create a default net
+			net := model.Network{
 				AccountId:   service.AccountId,
-				MeshName:    service.RelayHost.MeshName,
+				NetName:     service.RelayHost.NetName,
 				Description: service.Description,
 				Created:     time.Now().UTC(),
 				Updated:     time.Now().UTC(),
 				CreatedBy:   service.CreatedBy,
 			}
-			mesh.Default.Address = []string{service.DefaultSubnet}
-			mesh.Default.Dns = service.RelayHost.Current.Dns
-			mesh.Default.EnableDns = false
-			mesh.Default.UPnP = false
+			net.Default.Address = []string{service.DefaultSubnet}
+			net.Default.Dns = service.RelayHost.Current.Dns
+			net.Default.EnableDns = false
+			net.Default.UPnP = false
 
-			mesh2, err := CreateMesh(&mesh)
+			net2, err := CreateNet(&net)
 			if err != nil {
 				return nil, err
 			}
-			service.RelayHost.MeshName = mesh2.MeshName
-			service.RelayHost.MeshId = mesh2.Id
-			service.RelayHost.Default = mesh2.Default
+			service.RelayHost.NetName = net2.NetName
+			service.RelayHost.NetId = net2.Id
+			service.RelayHost.Default = net2.Default
 		}
 	} else {
-		// check if mesh exists
-		mesh, err := ReadMesh(service.RelayHost.MeshId)
+		// check if net exists
+		net, err := ReadNet(service.RelayHost.NetId)
 		if err != nil {
 			return nil, err
 		}
-		if mesh == nil {
-			return nil, errors.New("mesh does not exist")
+		if net == nil {
+			return nil, errors.New("net does not exist")
 		}
-		service.RelayHost.MeshName = mesh.MeshName
-		service.RelayHost.MeshId = mesh.Id
-		service.RelayHost.Default = mesh.Default
-		log.Infof("Using existing mesh: %s", mesh.MeshName)
+		service.RelayHost.NetName = net.NetName
+		service.RelayHost.NetId = net.Id
+		service.RelayHost.Default = net.Default
+		log.Infof("Using existing net: %s", net.NetName)
 	}
 
 	if service.RelayHost.Id == "" {
-		// create a default host using the mesh
+		// create a default host using the net
 		host := model.Host{
 			Id:        uuid.NewV4().String(),
 			AccountId: service.AccountId,
-			Name:      strings.ToLower(service.ServiceType) + "." + service.RelayHost.MeshName,
+			Name:      strings.ToLower(service.ServiceType) + "." + service.RelayHost.NetName,
 			Enable:    true,
-			MeshId:    service.RelayHost.MeshId,
-			MeshName:  service.RelayHost.MeshName,
+			NetId:     service.RelayHost.NetId,
+			NetName:   service.RelayHost.NetName,
 			HostGroup: service.RelayHost.HostGroup,
 			Current:   service.RelayHost.Current,
 			Default:   service.RelayHost.Default,
@@ -143,10 +143,10 @@ func CreateService(service *model.Service) (*model.Service, error) {
 
 		// Configure the routing for the relay/egress host
 		if host.Current.PostUp == "" {
-			host.Current.PostUp = fmt.Sprintf("iptables -A FORWARD -i %s -j ACCEPT; iptables -A FORWARD -o %s -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE", host.MeshName, host.MeshName)
+			host.Current.PostUp = fmt.Sprintf("iptables -A FORWARD -i %s -j ACCEPT; iptables -A FORWARD -o %s -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE", host.NetName, host.NetName)
 		}
 		if host.Current.PostDown == "" {
-			host.Current.PostDown = fmt.Sprintf("iptables -D FORWARD -i %s -j ACCEPT; iptables -D FORWARD -o %s -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE", host.MeshName, host.MeshName)
+			host.Current.PostDown = fmt.Sprintf("iptables -D FORWARD -i %s -j ACCEPT; iptables -D FORWARD -o %s -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE", host.NetName, host.NetName)
 		}
 
 		host.Current.PersistentKeepalive = 23
@@ -282,16 +282,16 @@ func DeleteService(id string) error {
 		}
 	}
 
-	if service.RelayHost.MeshId != "" {
-		hosts, err := ReadHost2("meshid", service.RelayHost.MeshId)
+	if service.RelayHost.NetId != "" {
+		hosts, err := ReadHost2("netid", service.RelayHost.NetId)
 		if err != nil {
-			log.Errorf("failed to delete mesh %s", service.RelayHost.MeshId)
+			log.Errorf("failed to delete net %s", service.RelayHost.NetId)
 			return err
 		}
 		if len(hosts) == 0 {
-			err = DeleteMesh(service.RelayHost.MeshId)
+			err = DeleteNet(service.RelayHost.NetId)
 			if err != nil {
-				log.Errorf("failed to delete mesh %s", service.RelayHost.MeshId)
+				log.Errorf("failed to delete net %s", service.RelayHost.NetId)
 				return err
 			}
 		}

@@ -119,7 +119,7 @@ var (
                                                                     <td class="h4 pb20" style="color:#ffffff; font-family:'Muli', Arial,sans-serif; font-size:20px; line-height:28px; text-align:left; padding-bottom:20px;">Hi/td>
                                                                 </tr>
                                                                 <tr>
-                                                                    <td class="text pb20" style="color:#ffffff; font-family:Arial,sans-serif; font-size:14px; line-height:26px; text-align:left; padding-bottom:20px;">Welcome to Meshify!  Click on the link to join the mesh.</td>
+                                                                    <td class="text pb20" style="color:#ffffff; font-family:Arial,sans-serif; font-size:14px; line-height:26px; text-align:left; padding-bottom:20px;">Welcome to Nettica!  Click on the link to join the net.</td>
                                                                 </tr>
                                                             </table>
                                                         </th>
@@ -360,7 +360,7 @@ var (
               <td style="padding:0px;margin:0px;border-spacing:0;"><table class="module" role="module" data-type="text" border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;" data-muid="maUZm1LjW4qkSBGyjsozna" data-mc-module-version="2019-10-22">
         <tbody>
           <tr>
-            <td style="padding:18px 0px 18px 0px; line-height:22px; text-align:inherit;" height="100%" valign="top" bgcolor="" role="module-content"><div><div style="font-family: inherit; text-align: inherit"><span style="color: #000000; font-family: arial, helvetica, sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; white-space: pre-wrap; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; float: none; display: inline">Welcome to Meshify! &nbsp;Click on the link below to add this mesh to your account.</span>&nbsp;</div><div></div></div></td>
+            <td style="padding:18px 0px 18px 0px; line-height:22px; text-align:inherit;" height="100%" valign="top" bgcolor="" role="module-content"><div><div style="font-family: inherit; text-align: inherit"><span style="color: #000000; font-family: arial, helvetica, sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; white-space: pre-wrap; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; float: none; display: inline">Welcome to Nettica! &nbsp;Click on the link below to add this net to your account.</span>&nbsp;</div><div></div></div></td>
           </tr>
         </tbody>
       </table><table border="0" cellpadding="0" cellspacing="0" class="module" data-role="module-button" data-type="button" role="module" style="table-layout:fixed;" width="100%" data-muid="aa69e025-a4d0-4096-9d5f-2e90fdc2f7dd">
@@ -371,7 +371,7 @@ var (
                   <tbody>
                     <tr>
                     <td align="center" bgcolor="#336699" class="inner-td" style="border-radius:6px; font-size:16px; text-align:center; background-color:inherit;">
-                      <a href="https://my.meshify.app/join?id={{.AccountId}}&meshid={{.MeshId}}" style="background-color:#336699; border:1px solid #336699; border-color:#336699; border-radius:6px; border-width:1px; color:#ffffff; display:inline-block; font-size:14px; font-weight:normal; letter-spacing:0px; line-height:normal; padding:12px 18px 12px 18px; text-align:center; text-decoration:none; border-style:solid;" target="_blank">Join Mesh</a>
+                      <a href="https://my.nettica.com/join?id={{.AccountId}}&netid={{.NetId}}" style="background-color:#336699; border:1px solid #336699; border-color:#336699; border-radius:6px; border-width:1px; color:#ffffff; display:inline-block; font-size:14px; font-weight:normal; letter-spacing:0px; line-height:normal; padding:12px 18px 12px 18px; text-align:center; text-decoration:none; border-style:solid;" target="_blank">Join Net</a>
                     </td>
                     </tr>
                   </tbody>
@@ -385,7 +385,7 @@ var (
         </table></td>
           </tr>
         </tbody>
-      </table><div data-role="module-unsubscribe" class="module" role="module" data-type="unsubscribe" style="color:#444444; font-size:12px; line-height:20px; padding:16px 16px 16px 16px; text-align:Center;" data-muid="4e838cf3-9892-4a6d-94d6-170e474d21e5"><div class="Unsubscribe--addressLine"><p class="Unsubscribe--senderName" style="font-size:12px; line-height:20px;">Meshify.app</p><p style="font-size:12px; line-height:20px;"><span class="Unsubscribe--senderAddress">info@meshify.app</span>, <span class="Unsubscribe--senderCity">Kirkland</span>, <span class="Unsubscribe--senderState">WA</span></p></td>
+      </table><div data-role="module-unsubscribe" class="module" role="module" data-type="unsubscribe" style="color:#444444; font-size:12px; line-height:20px; padding:16px 16px 16px 16px; text-align:Center;" data-muid="4e838cf3-9892-4a6d-94d6-170e474d21e5"><div class="Unsubscribe--addressLine"><p class="Unsubscribe--senderName" style="font-size:12px; line-height:20px;">Nettica.com</p><p style="font-size:12px; line-height:20px;"><span class="Unsubscribe--senderAddress">info@nettica.com</span>, <span class="Unsubscribe--senderCity">Kirkland</span>, <span class="Unsubscribe--senderState">WA</span></p></td>
                                           </tr>
                                         </table>
                                         <!--[if mso]>
@@ -508,7 +508,7 @@ var (
                                                                     <td class="h4 pb20" style="color:#ffffff; font-family:'Muli', Arial,sans-serif; font-size:20px; line-height:28px; text-align:left; padding-bottom:20px;">Hi</td>
                                                                 </tr>
                                                                 <tr>
-                                                                    <td class="text pb20" style="color:#ffffff; font-family:Arial,sans-serif; font-size:14px; line-height:26px; text-align:left; padding-bottom:20px;">Welcome to Meshify!  Click on the link to join the mesh.</td>
+                                                                    <td class="text pb20" style="color:#ffffff; font-family:Arial,sans-serif; font-size:14px; line-height:26px; text-align:left; padding-bottom:20px;">Welcome to Nettica!  Click on the link to join the net.</td>
                                                                 </tr>
                                                             </table>
                                                         </th>
@@ -530,10 +530,10 @@ var (
                                 <td class="p30-15 bbrr" style="padding: 50px 30px; border-radius:0px 0px 26px 26px;" bgcolor="#0e264b">
                                     <table width="100%" border="0" cellspacing="0" cellpadding="0">
                                         <tr>
-                                            <td class="text-footer1 pb10" style="color:#c1cddc; font-family:'Muli', Arial,sans-serif; font-size:16px; line-height:20px; text-align:center; padding-bottom:10px;">Meshify.app - Simple Web based management service for WireGuard</td>
+                                            <td class="text-footer1 pb10" style="color:#c1cddc; font-family:'Muli', Arial,sans-serif; font-size:16px; line-height:20px; text-align:center; padding-bottom:10px;">Nettica.com - Simple Web based management service for WireGuard</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-footer2" style="color:#8297b3; font-family:'Muli', Arial,sans-serif; font-size:12px; line-height:26px; text-align:center;"><a href="https://github.com/grapid" target="_blank" class="link" style="color:#66c7ff; text-decoration:none;"><span class="link" style="color:#66c7ff; text-decoration:none;">More info on Github</span></a></td>
+                                            <td class="text-footer2" style="color:#8297b3; font-family:'Muli', Arial,sans-serif; font-size:12px; line-height:26px; text-align:center;"><a href="https://github.com/nettica-com" target="_blank" class="link" style="color:#66c7ff; text-decoration:none;"><span class="link" style="color:#66c7ff; text-decoration:none;">More info on Github</span></a></td>
                                         </tr>
                                     </table>
                                 </td>
@@ -694,7 +694,7 @@ func DumpEmail(host *model.Host, qrcodePngName string) ([]byte, error) {
 }
 
 // DumpEmail invites a user to join the network
-func DumpUserEmail(accountId string, meshId string) ([]byte, error) {
+func DumpUserEmail(accountId string, netId string) ([]byte, error) {
 	file := "invite.html"
 	bytes, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -708,10 +708,10 @@ func DumpUserEmail(accountId string, meshId string) ([]byte, error) {
 
 	return dump(t, struct {
 		AccountId string
-		MeshId    string
+		NetId     string
 	}{
 		AccountId: accountId,
-		MeshId:    meshId,
+		NetId:     netId,
 	})
 }
 

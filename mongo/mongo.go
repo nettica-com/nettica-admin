@@ -97,8 +97,8 @@ func Deserialize(id string, parm string, col string, t reflect.Type) (interface{
 		err = collection.FindOne(ctx, filter).Decode(&c)
 		return c, err
 
-	case "model.Mesh":
-		var c *model.Mesh
+	case "model.Network":
+		var c *model.Network
 		err = collection.FindOne(ctx, filter).Decode(&c)
 		return c, err
 
@@ -212,9 +212,9 @@ func ReadAllHosts(param string, id string) ([]*model.Host, error) {
 
 }
 
-// ReadAllMeshes from MongoDB
-func ReadAllMeshes(param string, id string) []*model.Mesh {
-	meshes := make([]*model.Mesh, 0)
+// ReadAllNetworks from MongoDB
+func ReadAllNetworks(param string, id string) []*model.Network {
+	nets := make([]*model.Network, 0)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -233,23 +233,23 @@ func ReadAllMeshes(param string, id string) []*model.Mesh {
 
 	}
 
-	collection := client.Database("nettica").Collection("mesh")
+	collection := client.Database("nettica").Collection("network")
 	cursor, err := collection.Find(ctx, filter)
 
 	if err == nil {
 
 		defer cursor.Close(ctx)
 		for cursor.Next(ctx) {
-			var mesh *model.Mesh
-			err = cursor.Decode(&mesh)
+			var net *model.Network
+			err = cursor.Decode(&net)
 			if err == nil {
-				meshes = append(meshes, mesh)
+				nets = append(nets, net)
 			}
 		}
 
 	}
 
-	return meshes
+	return nets
 
 }
 
@@ -344,7 +344,7 @@ func ReadAllAccountsForID(id string) ([]*model.Account, error) {
 		}
 	}()
 
-	collection := client.Database("meshify").Collection("accounts")
+	collection := client.Database("nettica").Collection("accounts")
 
 	filter := bson.D{}
 	if id != "" {
@@ -386,7 +386,7 @@ func ReadAllSubscriptions(email string) ([]*model.Subscription, error) {
 		}
 	}()
 
-	collection := client.Database("meshify").Collection("subscriptions")
+	collection := client.Database("nettica").Collection("subscriptions")
 
 	filter := bson.D{}
 	if email != "" {
@@ -428,7 +428,7 @@ func ReadAllServices(email string) ([]*model.Service, error) {
 		}
 	}()
 
-	collection := client.Database("meshify").Collection("service")
+	collection := client.Database("nettica").Collection("service")
 
 	filter := bson.D{}
 	if email != "" {
@@ -470,7 +470,7 @@ func ReadAllServers() ([]*model.Server, error) {
 		}
 	}()
 
-	collection := client.Database("meshify").Collection("servers")
+	collection := client.Database("nettica").Collection("servers")
 	cursor, err := collection.Find(ctx, bson.D{})
 	if err == nil {
 		defer cursor.Close(ctx)
@@ -499,7 +499,7 @@ func ReadServiceHost(id string) ([]*model.Service, error) {
 		}
 	}()
 
-	collection := client.Database("meshify").Collection("service")
+	collection := client.Database("nettica").Collection("service")
 
 	filter := bson.D{}
 	if id != "" {

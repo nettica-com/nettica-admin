@@ -120,7 +120,7 @@ func (o *Oauth2Basic) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 	user.Sub = idToken.Subject
 	user.Email = idToken.Subject + "@localhost"
 	user.Email = strings.ToLower(user.Email)
-	user.Picture = "/nettica.png"
+	user.Picture = "/account-circle.svg"
 	user.Issuer = idToken.Issuer
 	user.IssuedAt = idToken.IssuedAt
 	log.Infof("user %v", user)
