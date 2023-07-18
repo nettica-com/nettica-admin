@@ -1,0 +1,5 @@
+{
+    "vetur.completion.scaffoldSnippetSources": {
+        "workspace": "./ui"
+    }
+}
