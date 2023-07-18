@@ -31,7 +31,7 @@ yarn-error.log*
 node_modules/
 
 # output
-nettica
+nettica-api
 __debug_bin
 
 # Editor directories and files

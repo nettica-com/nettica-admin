@@ -4,7 +4,7 @@ FROM golang:alpine AS build-back
 WORKDIR /app
 ARG COMMIT
 COPY . .
-RUN go build -o wg-gen-web-linux -ldflags="-X 'github.com/nettica/nettica/version.Version=${COMMIT}'" github.com/nettica/nettica/nettica
+RUN go build -o wg-gen-web-linux -ldflags="-X 'github.com/nettica-com/nettica-admin/version.Version=${COMMIT}'" github.com/nettica-com/nettica-admin/nettica-api
 
 FROM node:10-alpine AS build-front
 WORKDIR /app

@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"time"
 
-	model "github.com/nettica-com/nettica/model"
+	model "github.com/nettica-com/nettica-admin/model"
 	log "github.com/sirupsen/logrus"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -344,9 +344,185 @@ func ReadAllAccountsForID(id string) ([]*model.Account, error) {
 		}
 	}()
 
-	collection := client.Database("nettica").Collection("accounts")
+	collection := client.Database("meshify").Collection("accounts")
 
 	filter := bson.D{}
 	if id != "" {
 		findstr := fmt.Sprintf("{\"%s\":\"%s\"}", "parent", id)
-		err = bson.UnmarshalExtJSON([]b
+		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
+
+	}
+
+	cursor, err := collection.Find(ctx, filter)
+
+	if err == nil {
+
+		defer cursor.Close(ctx)
+		for cursor.Next(ctx) {
+			var account *model.Account
+			err = cursor.Decode(&account)
+			if err == nil {
+				accounts = append(accounts, account)
+			}
+		}
+
+	}
+
+	return accounts, err
+
+}
+
+// ReadAllSubscriptions from MongoDB
+func ReadAllSubscriptions(email string) ([]*model.Subscription, error) {
+	subscriptions := make([]*model.Subscription, 0)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGODB_CONNECTION_STRING")))
+
+	defer func() {
+		if err = client.Disconnect(ctx); err != nil {
+			log.Error(err)
+		}
+	}()
+
+	collection := client.Database("meshify").Collection("subscriptions")
+
+	filter := bson.D{}
+	if email != "" {
+		findstr := fmt.Sprintf("{\"%s\":\"%s\"}", "email", email)
+		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
+
+	}
+
+	cursor, err := collection.Find(ctx, filter)
+
+	if err == nil {
+
+		defer cursor.Close(ctx)
+		for cursor.Next(ctx) {
+			var subscription *model.Subscription
+			err = cursor.Decode(&subscription)
+			if err == nil {
+				subscriptions = append(subscriptions, subscription)
+			}
+		}
+
+	}
+
+	return subscriptions, err
+
+}
+
+// ReadAllServices from MongoDB
+func ReadAllServices(email string) ([]*model.Service, error) {
+	services := make([]*model.Service, 0)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGODB_CONNECTION_STRING")))
+
+	defer func() {
+		if err = client.Disconnect(ctx); err != nil {
+			log.Error(err)
+		}
+	}()
+
+	collection := client.Database("meshify").Collection("service")
+
+	filter := bson.D{}
+	if email != "" {
+		findstr := fmt.Sprintf("{\"%s\":\"%s\"}", "email", email)
+		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
+
+	}
+
+	cursor, err := collection.Find(ctx, filter)
+
+	if err == nil {
+
+		defer cursor.Close(ctx)
+		for cursor.Next(ctx) {
+			var service *model.Service
+			err = cursor.Decode(&service)
+			if err == nil {
+				services = append(services, service)
+			}
+		}
+
+	}
+
+	return services, err
+
+}
+
+// ReadAllServers from MongoDB
+func ReadAllServers() ([]*model.Server, error) {
+	servers := make([]*model.Server, 0)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGODB_CONNECTION_STRING")))
+
+	defer func() {
+		if err = client.Disconnect(ctx); err != nil {
+			log.Error(err)
+		}
+	}()
+
+	collection := client.Database("meshify").Collection("servers")
+	cursor, err := collection.Find(ctx, bson.D{})
+	if err == nil {
+		defer cursor.Close(ctx)
+		for cursor.Next(ctx) {
+			var server *model.Server
+			err = cursor.Decode(&server)
+			if err == nil {
+				servers = append(servers, server)
+			}
+		}
+	}
+	return servers, err
+}
+
+// ReadServiceHost from MongoDB
+func ReadServiceHost(id string) ([]*model.Service, error) {
+	services := make([]*model.Service, 0)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGODB_CONNECTION_STRING")))
+
+	defer func() {
+		if err = client.Disconnect(ctx); err != nil {
+			log.Error(err)
+		}
+	}()
+
+	collection := client.Database("meshify").Collection("service")
+
+	filter := bson.D{}
+	if id != "" {
+		findstr := fmt.Sprintf("{\"%s\":\"%s\"}", "serviceGroup", id)
+		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
+
+	}
+
+	cursor, err := collection.Find(ctx, filter)
+
+	if err == nil {
+
+		defer cursor.Close(ctx)
+		for cursor.Next(ctx) {
+			var service *model.Service
+			err = cursor.Decode(&service)
+			if err == nil {
+				services = append(services, service)
+			}
+		}
+
+	}
+
+	return services, err
+
+}
