@@ -38,7 +38,7 @@ func Deserialize(id string) (interface{}, error) {
 	}
 
 	// if not the server, must be client
-	var c *model.Host
+	var c *model.VPN
 	err = json.Unmarshal(data, &c)
 	if err != nil {
 		return nil, err
