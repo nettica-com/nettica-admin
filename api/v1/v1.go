@@ -5,12 +5,12 @@ import (
 	user "github.com/nettica-com/nettica-admin/api/v1/Users"
 	"github.com/nettica-com/nettica-admin/api/v1/account"
 	"github.com/nettica-com/nettica-admin/api/v1/auth"
-	"github.com/nettica-com/nettica-admin/api/v1/device"
+	device "github.com/nettica-com/nettica-admin/api/v1/device"
 	"github.com/nettica-com/nettica-admin/api/v1/net"
 	"github.com/nettica-com/nettica-admin/api/v1/server"
 	"github.com/nettica-com/nettica-admin/api/v1/service"
 	"github.com/nettica-com/nettica-admin/api/v1/subscription"
-	"github.com/nettica-com/nettica-admin/api/v1/vpn"
+	vpn "github.com/nettica-com/nettica-admin/api/v1/vpn"
 )
 
 // ApplyRoutes apply routes to gin router
