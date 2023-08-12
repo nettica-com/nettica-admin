@@ -17,7 +17,7 @@ type Service struct {
 	Updated        time.Time `json:"updated"      bson:"updated"`
 	CreatedBy      string    `json:"createdBy"    bson:"createdBy"`
 	UpdatedBy      string    `json:"updatedBy"    bson:"updatedBy"`
-	RelayHost      Host      `json:"relayHost"    bson:"relayHost"`
+	Relay          VPN       `json:"relay"        bson:"relay"`
 	ContainerId    string    `json:"containerId"  bson:"containerId"`
 	Status         string    `json:"status"       bson:"status"`
 	ServiceHost    string    `json:"serviceHost"  bson:"serviceHost"`

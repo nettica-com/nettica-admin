@@ -61,7 +61,7 @@ func CreateService(service *model.Service) (*model.Service, error) {
 		service.DefaultSubnet = "10.10.10.0/24"
 	}
 
-	if service.RelayHost.NetId == "" {
+	if service.Relay.NetId == "" {
 		// get all the current nets and see if there is one with the same name
 		nets, err := ReadNetworks(service.CreatedBy)
 		if err != nil {
@@ -71,11 +71,11 @@ func CreateService(service *model.Service) (*model.Service, error) {
 		found := false
 
 		for _, m := range nets {
-			if m.NetName == service.RelayHost.NetName {
+			if m.NetName == service.Relay.NetName {
 				found = true
-				service.RelayHost.NetName = m.NetName
-				service.RelayHost.NetId = m.Id
-				service.RelayHost.Default = m.Default
+				service.Relay.NetName = m.NetName
+				service.Relay.NetId = m.Id
+				service.Relay.Default = m.Default
 				break
 			}
 		}
@@ -84,14 +84,14 @@ func CreateService(service *model.Service) (*model.Service, error) {
 			// create a default net
 			net := model.Network{
 				AccountId:   service.AccountId,
-				NetName:     service.RelayHost.NetName,
+				NetName:     service.Relay.NetName,
 				Description: service.Description,
 				Created:     time.Now().UTC(),
 				Updated:     time.Now().UTC(),
 				CreatedBy:   service.CreatedBy,
 			}
 			net.Default.Address = []string{service.DefaultSubnet}
-			net.Default.Dns = service.RelayHost.Current.Dns
+			net.Default.Dns = service.Relay.Current.Dns
 			net.Default.EnableDns = false
 			net.Default.UPnP = false
 
@@ -99,86 +99,86 @@ func CreateService(service *model.Service) (*model.Service, error) {
 			if err != nil {
 				return nil, err
 			}
-			service.RelayHost.NetName = net2.NetName
-			service.RelayHost.NetId = net2.Id
-			service.RelayHost.Default = net2.Default
+			service.Relay.NetName = net2.NetName
+			service.Relay.NetId = net2.Id
+			service.Relay.Default = net2.Default
 		}
 	} else {
 		// check if net exists
-		net, err := ReadNet(service.RelayHost.NetId)
+		net, err := ReadNet(service.Relay.NetId)
 		if err != nil {
 			return nil, err
 		}
 		if net == nil {
 			return nil, errors.New("net does not exist")
 		}
-		service.RelayHost.NetName = net.NetName
-		service.RelayHost.NetId = net.Id
-		service.RelayHost.Default = net.Default
+		service.Relay.NetName = net.NetName
+		service.Relay.NetId = net.Id
+		service.Relay.Default = net.Default
 		log.Infof("Using existing net: %s", net.NetName)
 	}
 
-	if service.RelayHost.Id == "" {
-		// create a default host using the net
-		host := model.Host{
+	if service.Relay.Id == "" {
+		// create a default vpn using the net
+		vpn := model.VPN{
 			Id:        uuid.NewV4().String(),
 			AccountId: service.AccountId,
-			Name:      strings.ToLower(service.ServiceType) + "." + service.RelayHost.NetName,
+			Name:      strings.ToLower(service.ServiceType) + "." + service.Relay.NetName,
 			Enable:    true,
-			NetId:     service.RelayHost.NetId,
-			NetName:   service.RelayHost.NetName,
-			HostGroup: service.RelayHost.HostGroup,
-			Current:   service.RelayHost.Current,
-			Default:   service.RelayHost.Default,
-			Type:      "ServiceHost",
+			NetId:     service.Relay.NetId,
+			NetName:   service.Relay.NetName,
+			//			VPNGroup: service.Relay.VPNGroup,
+			Current: service.Relay.Current,
+			Default: service.Relay.Default,
+			//			Type:      "ServiceVPN",
 			Created:   time.Now().UTC(),
 			Updated:   time.Now().UTC(),
 			CreatedBy: service.CreatedBy,
 		}
 
 		// Failsafe entry for DNS.  Service will break without proper DNS setup.  If nothing is set use google
-		if len(host.Current.Dns) == 0 {
-			host.Current.Dns = append(host.Current.Dns, "8.8.8.8")
+		if len(vpn.Current.Dns) == 0 {
+			vpn.Current.Dns = append(vpn.Current.Dns, "8.8.8.8")
 		}
 
-		// Configure the routing for the relay/egress host
-		if host.Current.PostUp == "" {
-			host.Current.PostUp = fmt.Sprintf("iptables -A FORWARD -i %s -j ACCEPT; iptables -A FORWARD -o %s -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE", host.NetName, host.NetName)
+		// Configure the routing for the relay/egress vpn
+		if vpn.Current.PostUp == "" {
+			vpn.Current.PostUp = fmt.Sprintf("iptables -A FORWARD -i %s -j ACCEPT; iptables -A FORWARD -o %s -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE", vpn.NetName, vpn.NetName)
 		}
-		if host.Current.PostDown == "" {
-			host.Current.PostDown = fmt.Sprintf("iptables -D FORWARD -i %s -j ACCEPT; iptables -D FORWARD -o %s -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE", host.NetName, host.NetName)
+		if vpn.Current.PostDown == "" {
+			vpn.Current.PostDown = fmt.Sprintf("iptables -D FORWARD -i %s -j ACCEPT; iptables -D FORWARD -o %s -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE", vpn.NetName, vpn.NetName)
 		}
 
-		host.Current.PersistentKeepalive = 23
+		vpn.Current.PersistentKeepalive = 23
 
 		switch service.ServiceType {
 		case "Relay":
-			host.Current.AllowedIPs = append(host.Current.AllowedIPs, host.Current.Address...)
-			host.Current.AllowedIPs = append(host.Current.AllowedIPs, host.Default.Address...)
+			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Current.Address...)
+			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Default.Address...)
 
 		case "Tunnel":
-			host.Current.AllowedIPs = append(host.Current.AllowedIPs, host.Current.Address...)
-			host.Current.AllowedIPs = append(host.Current.AllowedIPs, host.Default.Address...)
-			host.Current.AllowedIPs = append(host.Current.AllowedIPs, "0.0.0.0/0")
+			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Current.Address...)
+			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Default.Address...)
+			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, "0.0.0.0/0")
 
 		case "Ingress":
-			host.Role = "Ingress"
-			host.Current.AllowedIPs = append(host.Current.AllowedIPs, host.Current.Address...)
-			host.Current.AllowedIPs = append(host.Current.AllowedIPs, host.Default.Address...)
-			host.Current.AllowedIPs = append(host.Current.AllowedIPs, "0.0.0.0/0")
+			vpn.Role = "Ingress"
+			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Current.Address...)
+			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Default.Address...)
+			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, "0.0.0.0/0")
 
 		case "Egress":
-			host.Role = "Egress"
-			host.Current.AllowedIPs = append(host.Current.AllowedIPs, host.Current.Address...)
-			host.Current.AllowedIPs = append(host.Current.AllowedIPs, "0.0.0.0/0")
+			vpn.Role = "Egress"
+			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Current.Address...)
+			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, "0.0.0.0/0")
 
 		}
 
-		host2, err := CreateHost(&host)
+		vpn2, err := CreateVPN(&vpn)
 		if err != nil {
 			return nil, err
 		}
-		service.RelayHost = *host2
+		service.Relay = *vpn2
 	}
 
 	// check if service is valid
@@ -274,24 +274,24 @@ func DeleteService(id string) error {
 	}
 	service := v.(*model.Service)
 
-	if service.RelayHost.Id != "" {
-		err = DeleteHost(service.RelayHost.Id)
+	if service.Relay.Id != "" {
+		err = DeleteVPN(service.Relay.Id)
 		if err != nil {
-			log.Errorf("failed to delete host %s", service.RelayHost.Id)
+			log.Errorf("failed to delete vpn %s", service.Relay.Id)
 			return err
 		}
 	}
 
-	if service.RelayHost.NetId != "" {
-		hosts, err := ReadHost2("netid", service.RelayHost.NetId)
+	if service.Relay.NetId != "" {
+		vpns, err := ReadVPN2("netid", service.Relay.NetId)
 		if err != nil {
-			log.Errorf("failed to delete net %s", service.RelayHost.NetId)
+			log.Errorf("failed to delete net %s", service.Relay.NetId)
 			return err
 		}
-		if len(hosts) == 0 {
-			err = DeleteNet(service.RelayHost.NetId)
+		if len(vpns) == 0 {
+			err = DeleteNet(service.Relay.NetId)
 			if err != nil {
-				log.Errorf("failed to delete net %s", service.RelayHost.NetId)
+				log.Errorf("failed to delete net %s", service.Relay.NetId)
 				return err
 			}
 		}
@@ -330,8 +330,8 @@ func ReadServices(email string) ([]*model.Service, error) {
 	return results, err
 }
 
-// ReadServiceHost returns all services configured for a host
-func ReadServiceHost(serviceGroup string) ([]*model.Service, error) {
+// ReadServiceVPN returns all services configured for a vpn
+func ReadServiceVPN(serviceGroup string) ([]*model.Service, error) {
 	services, err := mongo.ReadServiceHost(serviceGroup)
 	return services, err
 }

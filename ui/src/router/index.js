@@ -17,10 +17,10 @@ const routes = [
     }
   },
   {
-    path: '/hosts',
-    name: 'hosts',
+    path: '/devices',
+    name: 'devices',
     component: function () {
-      return import(/* webpackChunkName: "Hosts" */ '../views/Hosts.vue')
+      return import(/* webpackChunkName: "Devices" */ '../views/Devices.vue')
     },
     meta: {
       requiresAuth: true

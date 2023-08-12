@@ -60,7 +60,7 @@ func statusService(c *gin.Context) {
 		return
 	}
 
-	services, err := core.ReadServiceHost(serviceGroup)
+	services, err := core.ReadServiceVPN(serviceGroup)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,

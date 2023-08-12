@@ -1,16 +1,16 @@
 package model
 
 // Peer structure
-type HostConfig struct {
+type VPNConfig struct {
 	NetName string `json:"netName"  bson:"netName"`
 	NetId   string `json:"netid"    bson:"netid"`
-	Hosts   []Host `json:"hosts"    bson:"hosts"`
+	Vpns    []VPN  `json:"vpns"     bson:"vpns"`
 }
 
 // Host structure
 type Message struct {
-	Id     string       `json:"id"       bson:"id"`
-	Config []HostConfig `json:"config"   bson:"config"`
+	Id     string      `json:"id"       bson:"id"`
+	Config []VPNConfig `json:"config"   bson:"config"`
 }
 
 type ServiceMessage struct {

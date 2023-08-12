@@ -1,19 +1,22 @@
 <template>
   <v-app id="inspire">
+    <v-layout>
     <Notification v-bind:notification="notification"/>
-      <Header v-show="isAuthenticated"/>
+      <Header v-show="isAuthenticated" />
 
-        <v-container>
+        <v-main style="padding: 0px 0px 0px 0px;">
           <router-view />
-        </v-container>
+        </v-main>
 
       <Footer/>
+    </v-layout>
   </v-app>
 </template>
 
 <script>
   import Notification from './components/Notification'
   import Header from "./components/Header";
+  import MainMenu from "./components/Menu";
   import Footer from "./components/Footer";
   import {mapActions, mapGetters} from "vuex";
 
@@ -23,6 +26,7 @@
     components: {
       Footer,
       Header,
+      MainMenu,
       Notification
     },
 

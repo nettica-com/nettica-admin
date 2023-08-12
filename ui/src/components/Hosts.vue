@@ -23,8 +23,8 @@
                         color="success"
                         @click="startCreate"
                 >
-                    Add Host Manually
-                    <v-icon right dark>mdi-server</v-icon>
+                    Add Device Manually
+                    <v-icon right dark>mdi-devices</v-icon>
                 </v-btn>
             </v-card-title>
             <v-data-table

@@ -87,8 +87,13 @@ func Deserialize(id string, parm string, col string, t reflect.Type) (interface{
 		err = collection.FindOne(ctx, filter).Decode(&c)
 		return c, err
 
-	case "model.Host":
-		var c *model.Host
+	case "model.VPN":
+		var c *model.VPN
+		err = collection.FindOne(ctx, filter).Decode(&c)
+		return c, err
+
+	case "model.Device":
+		var c *model.Device
 		err = collection.FindOne(ctx, filter).Decode(&c)
 		return c, err
 
@@ -122,8 +127,8 @@ func Deserialize(id string, parm string, col string, t reflect.Type) (interface{
 	return nil, nil
 }
 
-// DeleteHost removes the given id from the given collection
-func DeleteHost(id string, col string) error {
+// DeleteVPN removes the given id from the given collection
+func DeleteVPN(id string, col string) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -170,9 +175,9 @@ func Delete(id string, ident string, col string) error {
 	return nil
 }
 
-// ReadAllHosts from MongoDB
-func ReadAllHosts(param string, id string) ([]*model.Host, error) {
-	hosts := make([]*model.Host, 0)
+// ReadAllDevices from MongoDB
+func ReadAllDevices(param string, id string) ([]*model.Device, error) {
+	devices := make([]*model.Device, 0)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -184,7 +189,7 @@ func ReadAllHosts(param string, id string) ([]*model.Host, error) {
 		}
 	}()
 
-	collection := client.Database("nettica").Collection("hosts")
+	collection := client.Database("nettica").Collection("devices")
 
 	filter := bson.D{}
 	if id != "" {
@@ -199,16 +204,58 @@ func ReadAllHosts(param string, id string) ([]*model.Host, error) {
 
 		defer cursor.Close(ctx)
 		for cursor.Next(ctx) {
-			var host *model.Host
-			err = cursor.Decode(&host)
+			var device *model.Device
+			err = cursor.Decode(&device)
 			if err == nil {
-				hosts = append(hosts, host)
+				devices = append(devices, device)
 			}
 		}
 
 	}
 
-	return hosts, err
+	return devices, err
+
+}
+
+// ReadAllHosts from MongoDB
+func ReadAllVPNs(param string, id string) ([]*model.VPN, error) {
+	vpns := make([]*model.VPN, 0)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGODB_CONNECTION_STRING")))
+
+	defer func() {
+		if err = client.Disconnect(ctx); err != nil {
+			log.Error(err)
+		}
+	}()
+
+	collection := client.Database("nettica").Collection("vpns")
+
+	filter := bson.D{}
+	if id != "" {
+		findstr := fmt.Sprintf("{\"%s\":\"%s\"}", param, id)
+		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
+
+	}
+
+	cursor, err := collection.Find(ctx, filter)
+
+	if err == nil {
+
+		defer cursor.Close(ctx)
+		for cursor.Next(ctx) {
+			var vpn *model.VPN
+			err = cursor.Decode(&vpn)
+			if err == nil {
+				vpns = append(vpns, vpn)
+			}
+		}
+
+	}
+
+	return vpns, err
 
 }
 

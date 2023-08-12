@@ -4,7 +4,7 @@ const state = {
   error: null,
   servers: [],
   config: '',
-  version: '1.0',
+  version: '2.0',
 }
 
 const getters = {

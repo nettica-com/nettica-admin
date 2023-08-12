@@ -551,8 +551,8 @@ var (
 `
 
 	clientTpl = `[Interface]
-Address = {{ StringsJoin .Host.Current.Address ", " }}
-PrivateKey = {{ .Host.Current.PrivateKey }}
+Address = {{ StringsJoin .VPN.Current.Address ", " }}
+PrivateKey = {{ .VPN.Current.PrivateKey }}
 {{ if ne (len .Server.Dns) 0 -}}
 DNS={{ StringsJoin .Server.Dns ", " }}
 {{- end }}
@@ -560,11 +560,11 @@ DNS={{ StringsJoin .Server.Dns ", " }}
 MTU = {{.Server.Mtu}}
 {{- end}}
 [Peer]
-PublicKey = {{ .Host.Current.PublicKey }}
-PresharedKey = {{ .Host.Current.PresharedKey }}
-AllowedIPs = {{ StringsJoin .Host.Current.AllowedIPs ", " }}
+PublicKey = {{ .VPN.Current.PublicKey }}
+PresharedKey = {{ .VPN.Current.PresharedKey }}
+AllowedIPs = {{ StringsJoin .VPN.Current.AllowedIPs ", " }}
 Endpoint = {{ .Server.Endpoint }}
-PersistentKeepalive = {{.Host.Current.PersistentKeepalive}}
+PersistentKeepalive = {{.VPN.Current.PersistentKeepalive}}
 `
 
 	wgTpl = `# Updated: {{ .Server.Updated }} / Created: {{ .Server.Created }}
@@ -581,7 +581,7 @@ PreUp = {{ .Server.PreUp }}
 PostUp = {{ .Server.PostUp }}
 PreDown = {{ .Server.PreDown }}
 PostDown = {{ .Server.PostDown }}
-{{- range .Hosts }}
+{{- range .VPNs }}
 {{ if .Enable -}}
 # {{.Name}} / {{.Email}} / Updated: {{.Updated}} / Created: {{.Created}}
 [Peer]
@@ -591,21 +591,21 @@ AllowedIPs = {{ StringsJoin .Current.Address ", " }}
 {{- end }}
 {{ end }}`
 
-	wireguardTemplate = `{{ if .Host.Enable }}
-# {{.Host.Name }} / {{ .Host.Email }} / Updated: {{ .Host.Updated }} / Created: {{ .Host.Created }}
+	wireguardTemplate = `{{ if .VPN.Enable }}
+# {{.VPN.Name }} / {{ .VPN.Email }} / Updated: {{ .VPN.Updated }} / Created: {{ .VPN.Created }}
 [Interface]
-  {{- range .Host.Current.Address }}
+  {{- range .VPN.Current.Address }}
 Address = {{ . }}
   {{- end }}
-PrivateKey = {{ .Host.Current.PrivateKey }}
-{{ if ne .Host.Current.ListenPort 0 -}}ListenPort = {{ .Host.Current.ListenPort }}{{- end}}
-{{ if .Host.Current.Dns }}DNS={{ StringsJoin .Host.Current.Dns ", " }}{{ end }}
-{{ if ne .Host.Current.Mtu 0 -}}MTU = {{.Host.Current.Mtu}}{{- end}}
-{{ if .Host.Current.PreUp -}}PreUp = {{ .Host.Current.PreUp }}{{- end}}
-{{ if .Host.Current.PostUp -}}PostUp = {{ .Host.Current.PostUp }}{{- end}}
-{{ if .Host.Current.PreDown -}}PreDown = {{ .Host.Current.PreDown }}{{- end}}
-{{ if .Host.Current.PostDown -}}PostDown = {{ .Host.Current.PostDown }}{{- end}}
-{{ range .Hosts }}
+PrivateKey = {{ .VPN.Current.PrivateKey }}
+{{ if ne .VPN.Current.ListenPort 0 -}}ListenPort = {{ .VPN.Current.ListenPort }}{{- end}}
+{{ if .VPN.Current.Dns }}DNS={{ StringsJoin .VPN.Current.Dns ", " }}{{ end }}
+{{ if ne .VPN.Current.Mtu 0 -}}MTU = {{.VPN.Current.Mtu}}{{- end}}
+{{ if .VPN.Current.PreUp -}}PreUp = {{ .VPN.Current.PreUp }}{{- end}}
+{{ if .VPN.Current.PostUp -}}PostUp = {{ .VPN.Current.PostUp }}{{- end}}
+{{ if .VPN.Current.PreDown -}}PreDown = {{ .VPN.Current.PreDown }}{{- end}}
+{{ if .VPN.Current.PostDown -}}PostDown = {{ .VPN.Current.PostDown }}{{- end}}
+{{ range .VPNs }}
 {{ if .Enable }}
 # {{.Name}} / {{.Email}} / Updated: {{.Updated}} / Created: {{.Created}}
 [Peer]
@@ -620,49 +620,49 @@ AllowedIPs = {{ StringsJoin .Current.AllowedIPs ", " }}
 )
 
 // DumpWireguardConfig using go template
-func DumpWireguardConfig(host *model.Host, hosts []*model.Host) ([]byte, error) {
+func DumpWireguardConfig(vpn *model.VPN, vpns []*model.VPN) ([]byte, error) {
 	t, err := template.New("wireguard").Funcs(template.FuncMap{"StringsJoin": strings.Join}).Parse(wireguardTemplate)
 	if err != nil {
 		return nil, err
 	}
 
 	return dump(t, struct {
-		Host  *model.Host
-		Hosts []*model.Host
+		VPN  *model.VPN
+		VPNs []*model.VPN
 	}{
-		Host:  host,
-		Hosts: hosts,
+		VPN:  vpn,
+		VPNs: vpns,
 	})
 }
 
 // DumpClientWg dump client wg config with go template
-func DumpClientWg(host *model.Host, server *model.Server) ([]byte, error) {
+func DumpClientWg(vpn *model.VPN, server *model.Server) ([]byte, error) {
 	t, err := template.New("client").Funcs(template.FuncMap{"StringsJoin": strings.Join}).Parse(clientTpl)
 	if err != nil {
 		return nil, err
 	}
 
 	return dump(t, struct {
-		Host   *model.Host
+		VPN    *model.VPN
 		Server *model.Server
 	}{
-		Host:   host,
+		VPN:    vpn,
 		Server: server,
 	})
 }
 
 // DumpServerWg dump server wg config with go template, write it to file and return bytes
-func DumpServerWg(hosts []*model.Host, server *model.Server) ([]byte, error) {
+func DumpServerWg(vpns []*model.VPN, server *model.Server) ([]byte, error) {
 	t, err := template.New("server").Funcs(template.FuncMap{"StringsJoin": strings.Join}).Parse(wgTpl)
 	if err != nil {
 		return nil, err
 	}
 
 	configDataWg, err := dump(t, struct {
-		Hosts  []*model.Host
+		VPNs   []*model.VPN
 		Server *model.Server
 	}{
-		Hosts:  hosts,
+		VPNs:   vpns,
 		Server: server,
 	})
 	if err != nil {
@@ -678,17 +678,17 @@ func DumpServerWg(hosts []*model.Host, server *model.Server) ([]byte, error) {
 }
 
 // DumpEmail dump server wg config with go template
-func DumpEmail(host *model.Host, qrcodePngName string) ([]byte, error) {
+func DumpEmail(vpn *model.VPN, qrcodePngName string) ([]byte, error) {
 	t, err := template.New("email").Parse(emailTpl)
 	if err != nil {
 		return nil, err
 	}
 
 	return dump(t, struct {
-		Host          *model.Host
+		VPN           *model.VPN
 		QrcodePngName string
 	}{
-		Host:          host,
+		VPN:           vpn,
 		QrcodePngName: qrcodePngName,
 	})
 }

@@ -46,7 +46,7 @@ func UpdateServer(server *model.Server) (*model.Server, error) {
 
 // GetAllReservedIps the list of all reserved IPs, client and server
 func GetAllReservedIps() ([]string, error) {
-	clients, err := ReadHosts()
+	clients, err := ReadVPNs()
 	if err != nil {
 		return nil, err
 	}

@@ -1,19 +1,15 @@
 <template>
-    <v-container>
         <v-footer app>
             <v-row justify="start" no-gutters>
-                <v-col cols="12" lg="6" md="12" sm="12">
-                    <div :align="$vuetify.breakpoint.smAndDown ? 'center' : 'left'">
-                        <small>Copyright &copy; {{ new Date().getFullYear() }}, nettica.com</small>
-                    </div>
+                <v-col>
+                        <small>Copyright &copy; {{ new Date().getFullYear() }} nettica.com</small>
+                        <v-spacer></v-spacer>
                 </v-col>
-            </v-row>
-            <v-row justify="end" no-gutters>
-                <v-col cols="12" lg="6" md="12" sm="12">
+                <v-col align="right" >
+                  <small>Version: {{ version }}</small>
                 </v-col>
             </v-row>
         </v-footer>
-    </v-container>
 </template>
 
 <script>
