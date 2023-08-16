@@ -26,11 +26,11 @@ const getters = {
 }
 
 const actions = {
-  error({ commit }, error){
+  error({ commit }, error) {
     commit('error', error)
   },
 
-  read({ commit, dispatch }){
+  read({ commit, dispatch }) {
     ApiService.get("/server")
       .then(resp => {
         commit('servers', resp)
@@ -40,7 +40,7 @@ const actions = {
       })
   },
 
-  update({ commit }, server){
+  update({ commit }, server) {
     ApiService.patch(`/server/${server.id}`, server)
       .then(resp => {
         // commit('servers', resp)
@@ -51,7 +51,7 @@ const actions = {
   },
 
 
-  version({ commit }){
+  version({ commit }) {
     ApiService.get("/server/version")
       .then(resp => {
         commit('version', resp.version)
@@ -68,15 +68,15 @@ const mutations = {
     state.error = error;
   },
 
-  servers(state, servers){
+  servers(state, servers) {
     state.servers = servers
   },
 
-  config(state, config){
+  config(state, config) {
     state.config = config
   },
 
-  version(state, version){
+  version(state, version) {
     state.version = version
   },
 }

@@ -15,12 +15,12 @@ const getters = {
 }
 
 const actions = {
-  error({ commit }, error){
+  error({ commit }, error) {
     commit('error', error)
   },
 
-  activate({ state, commit }, id){
-    ApiService.post("/accounts/"+ id + "/activate")
+  activate({ state, commit }, id) {
+    ApiService.post("/accounts/" + id + "/activate")
       .then(resp => {
         commit('result', resp)
       })
@@ -35,13 +35,13 @@ const mutations = {
   error(state, error) {
     state.error = error;
   },
-  join(state, join){
+  join(state, join) {
     state.join = join
   },
-  create(state, join){
+  create(state, join) {
     state.join.push(join)
   },
-  
+
 }
 
 export default {

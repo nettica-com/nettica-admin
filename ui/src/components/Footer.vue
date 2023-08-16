@@ -1,41 +1,41 @@
 <template>
-        <v-footer app>
-            <v-row justify="start" no-gutters>
-                <v-col>
-                        <small>Copyright &copy; {{ new Date().getFullYear() }} nettica.com</small>
-                        <v-spacer></v-spacer>
-                </v-col>
-                <v-col align="right" >
-                  <small>Version: {{ version }}</small>
-                </v-col>
-            </v-row>
-        </v-footer>
+  <v-footer app>
+    <v-row justify="start" no-gutters>
+      <v-col>
+        <small>Copyright &copy; {{ new Date().getFullYear() }} nettica.com</small>
+        <v-spacer></v-spacer>
+      </v-col>
+      <v-col align="right">
+        <small>Version: {{ version }}</small>
+      </v-col>
+    </v-row>
+  </v-footer>
 </template>
 
 <script>
-  import {mapActions, mapGetters} from "vuex";
+import { mapActions, mapGetters } from "vuex";
 
-  export default {
-    name: 'Footer',
+export default {
+  name: 'Footer',
 
-    data: () => ({
+  data: () => ({
 
+  }),
+
+  computed: {
+    ...mapGetters({
+      version: 'server/version',
     }),
+  },
 
-    computed:{
-      ...mapGetters({
-        version: 'server/version',
-      }),
-    },
+  mounted() {
+    this.versionServer()
+  },
 
-    mounted() {
-      this.versionServer()
-    },
-
-    methods: {
-      ...mapActions('server', {
-        versionServer: 'version',
-      }),
-    }
+  methods: {
+    ...mapActions('server', {
+      versionServer: 'version',
+    }),
   }
+}
 </script>

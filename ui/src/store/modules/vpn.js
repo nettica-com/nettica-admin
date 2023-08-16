@@ -18,7 +18,7 @@ const getters = {
     let item = state.vpnQrcodes.find(item => item.id === id)
     // initial load fails, must wait promise and stuff...
     return item ? item.qrcode : "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg=="
-//    return "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+    //    return "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
   },
   getVPNConfig: (state) => (id) => {
     let item = state.vpnConfigs.find(item => item.id === id)
@@ -28,42 +28,42 @@ const getters = {
 }
 
 const actions = {
-  error({ commit }, error){
+  error({ commit }, error) {
     commit('error', error)
   },
 
-  readAll({ commit, dispatch }){
+  readAll({ commit, dispatch }) {
     ApiService.get("/vpn")
       .then(resp => {
         for (var i = 0; i < resp.length; i++) {
           var vpn = resp[i]
           var last = new Date(vpn.lastSeen)
           var diff = Math.abs(Date.now() - last)
-          console.log( "VPN: " + vpn.name + " lastSeen: " + vpn.lastSeen + " ms: "  + diff)
+          console.log("VPN: " + vpn.name + " lastSeen: " + vpn.lastSeen + " ms: " + diff)
           if (diff > 30000) {
-              vpn.status = "Offline"
-              if (vpn.platform == "Native" || vpn.platform == "iOS" || vpn.platform == "Android" || vpn.platform == "MacOS") {
-                vpn.status = "Native"
-              }
+            vpn.status = "Offline"
+            if (vpn.platform == "Native" || vpn.platform == "iOS" || vpn.platform == "Android" || vpn.platform == "MacOS") {
+              vpn.status = "Native"
+            }
           } else {
-              vpn.status = "Online"
+            vpn.status = "Online"
           }
           commit('vpns', resp)
         }
-  
-//        dispatch('readQrcodes')
-//        dispatch('readConfigs')
+
+        //        dispatch('readQrcodes')
+        //        dispatch('readConfigs')
       })
       .catch(err => {
         commit('error', err)
       })
   },
 
-  create({ commit, dispatch }, vpn){
+  create({ commit, dispatch }, vpn) {
     ApiService.post("/vpn", vpn)
       .then(resp => {
-//        dispatch('readQrcode', resp)
-//        dispatch('readConfig', resp)
+        //        dispatch('readQrcode', resp)
+        //        dispatch('readConfig', resp)
         commit('create', resp)
       })
       .catch(err => {
@@ -71,11 +71,11 @@ const actions = {
       })
   },
 
-  update({ commit, dispatch }, vpn){
+  update({ commit, dispatch }, vpn) {
     ApiService.patch(`/vpn/${vpn.id}`, vpn)
       .then(resp => {
-//        dispatch('readQrcode', resp)
-//        dispatch('readConfig', vpn.id)
+        //        dispatch('readQrcode', resp)
+        //        dispatch('readConfig', vpn.id)
         commit('update', resp)
       })
       .catch(err => {
@@ -83,7 +83,7 @@ const actions = {
       })
   },
 
-  delete({ commit }, vpn){
+  delete({ commit }, vpn) {
     ApiService.delete(`/vpn/${vpn.id}`)
       .then(() => {
         commit('delete', vpn)
@@ -93,7 +93,7 @@ const actions = {
       })
   },
 
-  email({ commit }, vpn){
+  email({ commit }, vpn) {
     ApiService.get(`/vpn/${vpn.id}/email`)
       .then(() => {
       })
@@ -102,8 +102,8 @@ const actions = {
       })
   },
 
-  readQrcode({ state, commit }, vpn){
-    ApiService.getWithConfig(`/vpn/${vpn.id}/config?qrcode=true`, {responseType: 'arraybuffer'})
+  readQrcode({ state, commit }, vpn) {
+    ApiService.getWithConfig(`/vpn/${vpn.id}/config?qrcode=true`, { responseType: 'arraybuffer' })
       .then(resp => {
         let image = Buffer.from(resp, 'binary').toString('base64')
         commit('vpnQrcodes', { vpn, image })
@@ -113,8 +113,8 @@ const actions = {
       })
   },
 
-  readConfig({ state, commit }, vpn){
-    ApiService.getWithConfig(`/vpn/${vpn.id}/config?qrcode=false`, {responseType: 'arraybuffer'})
+  readConfig({ state, commit }, vpn) {
+    ApiService.getWithConfig(`/vpn/${vpn.id}/config?qrcode=false`, { responseType: 'arraybuffer' })
       .then(resp => {
         commit('vpnConfigs', { vpn: vpn, config: resp })
       })
@@ -123,13 +123,13 @@ const actions = {
       })
   },
 
-  readQrcodes({ state, dispatch }){
+  readQrcodes({ state, dispatch }) {
     state.vpns.forEach(vpn => {
       dispatch('readQrcode', vpn)
     })
   },
 
-  readConfigs({ state, dispatch }){
+  readConfigs({ state, dispatch }) {
     state.vpns.forEach(vpn => {
       dispatch('readConfig', vpn)
     })
@@ -140,13 +140,13 @@ const mutations = {
   error(state, error) {
     state.error = error;
   },
-  vpns(state, vpns){
+  vpns(state, vpns) {
     state.vpns = vpns
   },
-  create(state, vpn){
+  create(state, vpn) {
     state.vpns.push(vpn)
   },
-  update(state, vpn){
+  update(state, vpn) {
     let index = state.vpns.findIndex(x => x.id === vpn.id);
     if (index !== -1) {
       state.vpns.splice(index, 1);
@@ -155,7 +155,7 @@ const mutations = {
       state.error = "update vpn failed, not in list"
     }
   },
-  delete(state, vpn){
+  delete(state, vpn) {
     let index = state.vpns.findIndex(x => x.id === vpn.id);
     if (index !== -1) {
       state.vpns.splice(index, 1);
@@ -163,7 +163,7 @@ const mutations = {
       state.error = "delete vpn failed, not in list"
     }
   },
-  vpnQrcodes(state, { vpn, image }){
+  vpnQrcodes(state, { vpn, image }) {
     let index = state.vpnQrcodes.findIndex(x => x.id === vpn.id);
     if (index !== -1) {
       state.vpnQrcodes.splice(index, 1);
@@ -173,7 +173,7 @@ const mutations = {
       qrcode: image
     })
   },
-  vpnConfigs(state, { vpn, config }){
+  vpnConfigs(state, { vpn, config }) {
     let index = state.vpnConfigs.findIndex(x => x.id === vpn.id);
     if (index !== -1) {
       state.vpnConfigs.splice(index, 1);

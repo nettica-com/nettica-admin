@@ -27,9 +27,9 @@ const getters = {
 };
 
 const actions = {
-  user({ commit }){
+  user({ commit }) {
     ApiService.get("/auth/user")
-      .then( resp => {
+      .then(resp => {
         commit('user', resp)
       })
       .catch(err => {
@@ -38,7 +38,7 @@ const actions = {
       });
   },
 
-  oauth2_url({ commit, dispatch }){
+  oauth2_url({ commit, dispatch }) {
     if (TokenService.getToken()) {
       ApiService.setHeader();
       dispatch('user');
@@ -46,11 +46,11 @@ const actions = {
     }
     ApiService.get("/auth/oauth2_url")
       .then(resp => {
-        if (resp.codeUrl === '_magic_string_fake_auth_no_redirect_'){
+        if (resp.codeUrl === '_magic_string_fake_auth_no_redirect_') {
           console.log("server report oauth2 is disabled, fake exchange")
           commit('authStatus', 'disabled')
           TokenService.saveClientId(resp.clientId)
-          dispatch('oauth2_exchange', {code: "", state: resp.state})
+          dispatch('oauth2_exchange', { code: "", state: resp.state })
         } else {
           commit('authStatus', 'redirect')
           commit('authRedirectUrl', resp)
@@ -63,12 +63,12 @@ const actions = {
       })
   },
 
-  basic_auth({ commit }){
-    commit( 'authStatus', 'basic')
+  basic_auth({ commit }) {
+    commit('authStatus', 'basic')
 
   },
 
-  oauth2_exchange({ commit, dispatch }, data){
+  oauth2_exchange({ commit, dispatch }, data) {
     data.clientId = TokenService.getClientId()
     ApiService.post("/auth/oauth2_exchange", data)
       .then(resp => {
@@ -83,7 +83,7 @@ const actions = {
       })
   },
 
-  logout({ commit }){
+  logout({ commit }) {
     ApiService.get("/auth/logout")
       .then(resp => {
         commit('logout')

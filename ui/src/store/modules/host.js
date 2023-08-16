@@ -18,7 +18,7 @@ const getters = {
     let item = state.hostQrcodes.find(item => item.id === id)
     // initial load fails, must wait promise and stuff...
     return item ? item.qrcode : "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg=="
-//    return "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+    //    return "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
   },
   gethostConfig: (state) => (id) => {
     let item = state.hostConfigs.find(item => item.id === id)
@@ -27,41 +27,41 @@ const getters = {
 }
 
 const actions = {
-  error({ commit }, error){
+  error({ commit }, error) {
     commit('error', error)
   },
 
-  readAll({ commit, dispatch }){
+  readAll({ commit, dispatch }) {
     ApiService.get("/host")
       .then(resp => {
         for (var i = 0; i < resp.length; i++) {
           var host = resp[i]
           var last = new Date(host.lastSeen)
           var diff = Math.abs(Date.now() - last)
-          console.log( "Host: " + host.name + " lastSeen: " + host.lastSeen + " ms: "  + diff)
+          console.log("Host: " + host.name + " lastSeen: " + host.lastSeen + " ms: " + diff)
           if (diff > 30000) {
-              host.status = "Offline"
-              if (host.platform == "Native" || host.platform == "iOS" || host.platform == "Android" || host.platform == "MacOS") {
-                host.status = "Native"
-              }
+            host.status = "Offline"
+            if (host.platform == "Native" || host.platform == "iOS" || host.platform == "Android" || host.platform == "MacOS") {
+              host.status = "Native"
+            }
           } else {
-              host.status = "Online"
+            host.status = "Online"
           }
           commit('hosts', resp)
         }
-  
-//        dispatch('readQrcodes')
-//        dispatch('readConfigs')
+
+        //        dispatch('readQrcodes')
+        //        dispatch('readConfigs')
       })
       .catch(err => {
         commit('error', err)
       })
   },
 
-  create({ commit, dispatch }, host){
+  create({ commit, dispatch }, host) {
     ApiService.post("/host", host)
       .then(resp => {
-//        dispatch('readQrcode', resp)
+        //        dispatch('readQrcode', resp)
         dispatch('readConfig', resp)
         commit('create', resp)
       })
@@ -70,11 +70,11 @@ const actions = {
       })
   },
 
-  update({ commit, dispatch }, host){
+  update({ commit, dispatch }, host) {
     ApiService.patch(`/host/${host.id}`, host)
       .then(resp => {
-//        dispatch('readQrcode', resp)
-//        dispatch('readConfig', host.id)
+        //        dispatch('readQrcode', resp)
+        //        dispatch('readConfig', host.id)
         commit('update', resp)
       })
       .catch(err => {
@@ -82,7 +82,7 @@ const actions = {
       })
   },
 
-  delete({ commit }, host){
+  delete({ commit }, host) {
     ApiService.delete(`/host/${host.id}`)
       .then(() => {
         commit('delete', host)
@@ -92,7 +92,7 @@ const actions = {
       })
   },
 
-  email({ commit }, host){
+  email({ commit }, host) {
     ApiService.get(`/host/${host.id}/email`)
       .then(() => {
       })
@@ -101,8 +101,8 @@ const actions = {
       })
   },
 
-  readQrcode({ state, commit }, host){
-    ApiService.getWithConfig(`/host/${host.id}/config?qrcode=true`, {responseType: 'arraybuffer'})
+  readQrcode({ state, commit }, host) {
+    ApiService.getWithConfig(`/host/${host.id}/config?qrcode=true`, { responseType: 'arraybuffer' })
       .then(resp => {
         let image = Buffer.from(resp, 'binary').toString('base64')
         commit('hostQrcodes', { host, image })
@@ -112,8 +112,8 @@ const actions = {
       })
   },
 
-  readConfig({ state, commit }, host){
-    ApiService.getWithConfig(`/host/${host.id}/config?qrcode=false`, {responseType: 'arraybuffer'})
+  readConfig({ state, commit }, host) {
+    ApiService.getWithConfig(`/host/${host.id}/config?qrcode=false`, { responseType: 'arraybuffer' })
       .then(resp => {
         commit('hostConfigs', { host: host, config: resp })
       })
@@ -122,13 +122,13 @@ const actions = {
       })
   },
 
-  readQrcodes({ state, dispatch }){
+  readQrcodes({ state, dispatch }) {
     state.hosts.forEach(host => {
       dispatch('readQrcode', host)
     })
   },
 
-  readConfigs({ state, dispatch }){
+  readConfigs({ state, dispatch }) {
     state.hosts.forEach(host => {
       dispatch('readConfig', host)
     })
@@ -139,13 +139,13 @@ const mutations = {
   error(state, error) {
     state.error = error;
   },
-  hosts(state, hosts){
+  hosts(state, hosts) {
     state.hosts = hosts
   },
-  create(state, host){
+  create(state, host) {
     state.hosts.push(host)
   },
-  update(state, host){
+  update(state, host) {
     let index = state.hosts.findIndex(x => x.id === host.id);
     if (index !== -1) {
       state.hosts.splice(index, 1);
@@ -154,7 +154,7 @@ const mutations = {
       state.error = "update host failed, not in list"
     }
   },
-  delete(state, host){
+  delete(state, host) {
     let index = state.hosts.findIndex(x => x.id === host.id);
     if (index !== -1) {
       state.hosts.splice(index, 1);
@@ -162,7 +162,7 @@ const mutations = {
       state.error = "delete host failed, not in list"
     }
   },
-  hostQrcodes(state, { host, image }){
+  hostQrcodes(state, { host, image }) {
     let index = state.hostQrcodes.findIndex(x => x.id === host.id);
     if (index !== -1) {
       state.hostQrcodes.splice(index, 1);
@@ -172,7 +172,7 @@ const mutations = {
       qrcode: image
     })
   },
-  hostConfigs(state, { host, config }){
+  hostConfigs(state, { host, config }) {
     let index = state.hostConfigs.findIndex(x => x.id === host.id);
     if (index !== -1) {
       state.hostConfigs.splice(index, 1);

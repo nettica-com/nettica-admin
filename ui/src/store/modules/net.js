@@ -19,25 +19,25 @@ const getters = {
 }
 
 const actions = {
-  error({ commit }, error){
+  error({ commit }, error) {
     commit('error', error)
   },
 
-  readAll({ commit, dispatch }){
+  readAll({ commit, dispatch }) {
     ApiService.get("/net")
       .then(resp => {
         commit('nets', resp)
-//        dispatch('readNetConfigs')
+        //        dispatch('readNetConfigs')
       })
       .catch(err => {
         commit('error', err)
       })
   },
 
-  create({ commit, dispatch }, net){
+  create({ commit, dispatch }, net) {
     ApiService.post("/net", net)
       .then(resp => {
-//        dispatch('readNetConfig', resp)
+        //        dispatch('readNetConfig', resp)
         commit('create', resp)
       })
       .catch(err => {
@@ -45,10 +45,10 @@ const actions = {
       })
   },
 
-  update({ commit, dispatch }, net){
+  update({ commit, dispatch }, net) {
     ApiService.patch(`/net/${net.id}`, net)
       .then(resp => {
-//        dispatch('readNetConfig', resp)
+        //        dispatch('readNetConfig', resp)
         commit('update', resp)
       })
       .catch(err => {
@@ -56,7 +56,7 @@ const actions = {
       })
   },
 
-  delete({ commit }, net){
+  delete({ commit }, net) {
     ApiService.delete(`/net/${net.id}`)
       .then(() => {
         commit('delete', net)
@@ -66,17 +66,17 @@ const actions = {
       })
   },
 
-  readNetConfig({ state, commit }, net){
-    ApiService.getWithConfig(`/net/${net.id}`, {responseType: 'arraybuffer'})
+  readNetConfig({ state, commit }, net) {
+    ApiService.getWithConfig(`/net/${net.id}`, { responseType: 'arraybuffer' })
       .then(resp => {
-//        commit('nets', { net: net, config: resp })
+        //        commit('nets', { net: net, config: resp })
       })
       .catch(err => {
         commit('error', err)
       })
   },
 
-  readNetConfigs({ state, dispatch }){
+  readNetConfigs({ state, dispatch }) {
     state.nets.forEach(net => {
       dispatch('readNetConfig', net)
     })
@@ -87,13 +87,13 @@ const mutations = {
   error(state, error) {
     state.error = error;
   },
-  nets(state, nets){
+  nets(state, nets) {
     state.nets = nets
   },
-  create(state, net){
+  create(state, net) {
     state.nets.push(net)
   },
-  update(state, net){
+  update(state, net) {
     let index = state.nets.findIndex(x => x.id === net.id);
     if (index !== -1) {
       state.nets.splice(index, 1);
@@ -102,7 +102,7 @@ const mutations = {
       state.error = "update net failed, not in list"
     }
   },
-  delete(state, net){
+  delete(state, net) {
     let index = state.nets.findIndex(x => x.id === net.id);
     if (index !== -1) {
       state.nets.splice(index, 1);

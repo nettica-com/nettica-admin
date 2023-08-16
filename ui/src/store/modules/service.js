@@ -15,11 +15,11 @@ const getters = {
 }
 
 const actions = {
-  error({ commit }, error){
+  error({ commit }, error) {
     commit('error', error)
   },
 
-  read({ commit, dispatch }){
+  read({ commit, dispatch }) {
     ApiService.get("/service")
       .then(resp => {
         commit('services', resp)
@@ -29,7 +29,7 @@ const actions = {
       })
   },
 
-  create({ commit, dispatch }, service){
+  create({ commit, dispatch }, service) {
     ApiService.post("/service", service)
       .then(resp => {
         commit('create', resp)
@@ -39,7 +39,7 @@ const actions = {
       })
   },
 
-  update({ commit, dispatch }, service){
+  update({ commit, dispatch }, service) {
     ApiService.patch(`/service/${service.id}`, service)
       .then(resp => {
         commit('update', resp)
@@ -49,7 +49,7 @@ const actions = {
       })
   },
 
-  delete({ commit }, service){
+  delete({ commit }, service) {
     ApiService.delete(`/service/${service.id}`)
       .then(() => {
         commit('delete', service)
@@ -65,13 +65,13 @@ const mutations = {
   error(state, error) {
     state.error = error;
   },
-  services(state, services){
+  services(state, services) {
     state.services = services
   },
-  create(state, service){
+  create(state, service) {
     state.services.push(service)
   },
-  update(state, service){
+  update(state, service) {
     let index = state.services.findIndex(x => x.id === service.id);
     if (index !== -1) {
       state.services.splice(index, 1);
@@ -80,7 +80,7 @@ const mutations = {
       state.error = "update service failed, not in list"
     }
   },
-  delete(state, service){
+  delete(state, service) {
     let index = state.services.findIndex(x => x.id === service.id);
     if (index !== -1) {
       state.services.splice(index, 1);

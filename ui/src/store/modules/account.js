@@ -23,11 +23,11 @@ const getters = {
 }
 
 const actions = {
-  error({ commit }, error){
+  error({ commit }, error) {
     commit('error', error)
   },
 
-  readAll({ commit, dispatch }, id){
+  readAll({ commit, dispatch }, id) {
     ApiService.get(`/accounts/${id}`)
       .then(resp => {
         commit('accounts', resp)
@@ -37,7 +37,7 @@ const actions = {
       })
   },
 
-  readUsers({ commit, dispatch }, id){
+  readUsers({ commit, dispatch }, id) {
     ApiService.get(`/accounts/${id}`)
       .then(resp => {
         commit('users', resp)
@@ -47,7 +47,7 @@ const actions = {
       })
   },
 
-  readMembers({ commit, dispatch }, id){
+  readMembers({ commit, dispatch }, id) {
     ApiService.get(`/accounts/${id}`)
       .then(resp => {
         commit('members', resp)
@@ -57,7 +57,7 @@ const actions = {
       })
   },
 
-  create({ commit }, account){
+  create({ commit }, account) {
     ApiService.post(`/accounts`, account)
       .then(resp => {
         commit('create', resp)
@@ -67,8 +67,8 @@ const actions = {
       })
   },
 
-  update({ commit, dispatch }, account){
-    ApiService.patch(`/accounts/${account.id}`,account)
+  update({ commit, dispatch }, account) {
+    ApiService.patch(`/accounts/${account.id}`, account)
       .then(resp => {
         commit('update', resp)
       })
@@ -77,7 +77,7 @@ const actions = {
       })
   },
 
-  delete({ commit }, account){
+  delete({ commit }, account) {
     ApiService.delete(`/accounts/${account.id}`)
       .then(() => {
         commit('delete', account)
@@ -87,7 +87,7 @@ const actions = {
       })
   },
 
-  email({ commit }, account){
+  email({ commit }, account) {
     ApiService.get(`/accounts/${account.id}/invite`)
       .then(() => {
       })
@@ -103,7 +103,7 @@ const mutations = {
   error(state, error) {
     state.error = error;
   },
-  accounts(state, accounts){
+  accounts(state, accounts) {
     state.accounts = accounts
   },
   users(state, users) {
@@ -112,13 +112,13 @@ const mutations = {
   members(state, members) {
     state.members = members
   },
-  create(state, account){
+  create(state, account) {
     state.accounts.push(account)
   },
   create(state, user) {
     state.users.push(user)
   },
-  update(state, account){
+  update(state, account) {
     let index = state.accounts.findIndex(x => x.id === account.id);
     if (index !== -1) {
       state.accounts.splice(index, 1);
@@ -127,7 +127,7 @@ const mutations = {
       state.error = "update account failed, not in list"
     }
   },
-  delete(state, account){
+  delete(state, account) {
     let index = state.accounts.findIndex(x => x.id === account.id);
     if (index !== -1) {
       state.accounts.splice(index, 1);
@@ -135,7 +135,7 @@ const mutations = {
       state.error = "delete account failed, not in list"
     }
   },
-  update(state, user){
+  update(state, user) {
     let index = state.users.findIndex(x => x.id === user.id);
     if (index !== -1) {
       state.users.splice(index, 1);
@@ -144,7 +144,7 @@ const mutations = {
       state.error = "update account (user) failed, not in list"
     }
   },
-  delete(state, user){
+  delete(state, user) {
     let index = state.users.findIndex(x => x.id === user.id);
     if (index !== -1) {
       state.users.splice(index, 1);
@@ -152,7 +152,7 @@ const mutations = {
       state.error = "delete user failed, not in list"
     }
   },
-  update(state, member){
+  update(state, member) {
     let index = state.users.findIndex(x => x.id === member.id);
     if (index !== -1) {
       state.members.splice(index, 1);
@@ -161,7 +161,7 @@ const mutations = {
       state.error = "update account (member) failed, not in list"
     }
   },
-  delete(state, member){
+  delete(state, member) {
     let index = state.users.findIndex(x => x.id === member.id);
     if (index !== -1) {
       state.members.splice(index, 1);

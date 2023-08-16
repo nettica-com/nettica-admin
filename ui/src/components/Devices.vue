@@ -1,22 +1,13 @@
 <template>
     <v-container style="padding-top:0px">
-        <v-snackbar
-            v-model="notification.show"
-            :right="true"
-            :top="true"
-            :color="notification.color"
-    > 
-    {{ notification.text }}
+        <v-snackbar v-model="notification.show" :right="true" :top="true" :color="notification.color">
+            {{ notification.text }}
 
-    <template v-slot:actions>
-        <v-btn
-            dark
-            variant="text"
-            @click="notification.show = false"
-        >Close
-        </v-btn>
-    </template>
-    </v-snackbar>
+            <template v-slot:actions>
+                <v-btn dark variant="text" @click="notification.show = false">Close
+                </v-btn>
+            </template>
+        </v-snackbar>
         <v-row><v-col cols="12">
                 <div>
                     <v-btn class="mb-3 mt-0" @click="Refresh()">
@@ -82,8 +73,9 @@
 
                                 <v-row class="text-left" width="300">
                                     <v-col flex>
-                                        <v-combobox v-model="selected.device.tags" chips hint="Enter a tag, hit tab, hit enter."
-                                            label="Tags" multiple dark :readonly="!inEdit">
+                                        <v-combobox v-model="selected.device.tags" chips
+                                            hint="Enter a tag, hit tab, hit enter." label="Tags" multiple dark
+                                            :readonly="!inEdit">
                                             <template v-slot:selection="{ attrs, item, select, selected }">
                                                 <v-chip v-bind="attrs" :input-value="selected" close @click="select"
                                                     @click:close="device.tags.splice(device.tags.indexOf(item), 1)">
@@ -91,12 +83,12 @@
                                                 </v-chip>
                                             </template>
                                         </v-combobox>
-                                        <v-select return-object v-model="selected.platform"
-                                                        :items="platforms.items" item-text="text" item-value="value"
-                                                        label="Platform of this device" single persistent-hint :readonly="!inEdit"/>
+                                        <v-select return-object v-model="selected.platform" :items="platforms.items"
+                                            item-text="text" item-value="value" label="Platform of this device" single
+                                            persistent-hint :readonly="!inEdit" />
 
                                         <v-switch v-model="selected.device.enable" color="success" inset
-                                            :label="selected.device.enable ? 'Enabled' : 'Disabled'" :readonly="!inEdit"/>
+                                            :label="selected.device.enable ? 'Enabled' : 'Disabled'" :readonly="!inEdit" />
                                         <v-text-field v-model="selected.device.id" label="Device ID" readonly />
                                         <v-text-field v-model="selected.device.apiKey" label="API Key" readonly />
                                         <div :hidden="!inEdit">
@@ -140,7 +132,7 @@
                                     </v-container>
                                 </v-card-actions>
                             </v-card>
-                            <v-card v-else-if="!selected.isDevice" >
+                            <v-card v-else-if="!selected.isDevice">
                                 <v-card-text width="600" class="px-3">
                                     <span class="material-symbols-outlined">hub</span>
                                     <h3 class="text-h5 mb-2">
@@ -171,8 +163,10 @@
                                                 </v-chip>
                                             </template>
                                         </v-combobox>
-                                        <v-text-field :readonly="!inEdit" v-model="selected.current.endpoint" label="Public endpoint for clients" />
-                                        <v-text-field :readonly="!inEdit" v-model="selected.current.listenPort" type="number" label="Listen port" />
+                                        <v-text-field :readonly="!inEdit" v-model="selected.current.endpoint"
+                                            label="Public endpoint for clients" />
+                                        <v-text-field :readonly="!inEdit" v-model="selected.current.listenPort"
+                                            type="number" label="Listen port" />
 
                                     </v-col>
                                 </v-row>
@@ -351,9 +345,9 @@
                                                 </v-chip>
                                             </template>
                                         </v-combobox>
-                                        <v-select return-object v-model="platforms.selected"
-                                                        :items="platforms.items" item-text="text" item-value="value"
-                                                        label="Platform of this device" single persistent-hint />
+                                        <v-select return-object v-model="platforms.selected" :items="platforms.items"
+                                            item-text="text" item-value="value" label="Platform of this device" single
+                                            persistent-hint />
 
                                         <v-switch v-model="device.enable" color="success" inset
                                             :label="device.enable ? 'Enable device after creation' : 'Disable device after creation'" />
@@ -596,9 +590,9 @@ export default {
             }
 
             var device = this.devices.find(device => device.id === id)
-//            if (device) {
-//                this.platforms.selected.value = device.platform
-//}
+            //            if (device) {
+            //                this.platforms.selected.value = device.platform
+            //}
 
             return this.items.find(item => item.id === id)
         },
@@ -778,7 +772,7 @@ export default {
             }
             this.vpn.netName = this.netList.selected.text
             this.vpn.netid = this.netList.selected.value
-            this.dialogAddVPN = false;  
+            this.dialogAddVPN = false;
             await this.createvpn(vpn)
             // wait a second
             await new Promise(r => setTimeout(r, 2000));
@@ -965,12 +959,12 @@ export default {
             dummy.select();
             document.execCommand("copy");
             document.body.removeChild(dummy);
-            
+
             this.notification = {
-              show: true,
-              color: 'success',
-              text: "Copied to clipboard",
-              timeout: 2000,
+                show: true,
+                color: 'success',
+                text: "Copied to clipboard",
+                timeout: 2000,
             }
 
         },
@@ -992,18 +986,18 @@ export default {
             this.Refresh()
         },
 
-       async forceFileDownload(vpn) {
-            console.log( vpn )
+        async forceFileDownload(vpn) {
+            console.log(vpn)
             await this.readvpnconfig(vpn)
             // sleep for one second
             await new Promise(r => setTimeout(r, 1000));
             let config = this.getvpnconfig(vpn.id)
             if (!config) {
-                console.log( "failed to get config")
+                console.log("failed to get config")
                 this.errordevice('Failed to download device config');
                 return
             }
-            console.log( 'config', config )
+            console.log('config', config)
 
             const url = window.URL.createObjectURL(new Blob([config]))
             const link = document.createElement('a')

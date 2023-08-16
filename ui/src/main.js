@@ -7,9 +7,9 @@ import './plugins/moment';
 import './plugins/cidr'
 import './plugins/axios'
 import D3Network from 'vue-d3-network'
-  components: {
-    D3Network
-  }
+components: {
+  D3Network
+}
 
 // Don't warn about using the dev version of Vue in development.
 Vue.config.productionTip = process.env.NODE_ENV === 'production'

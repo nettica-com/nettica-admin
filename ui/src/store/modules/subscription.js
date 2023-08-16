@@ -15,25 +15,25 @@ const getters = {
 }
 
 const actions = {
-  error({ commit }, error){
+  error({ commit }, error) {
     commit('error', error)
   },
 
-  read({ commit, dispatch }){
+  read({ commit, dispatch }) {
     ApiService.get("/subscriptions")
       .then(resp => {
         commit('subscriptions', resp)
-//        dispatch('readNetConfigs')
+        //        dispatch('readNetConfigs')
       })
       .catch(err => {
         commit('error', err)
       })
   },
 
-  create({ commit, dispatch }, net){
+  create({ commit, dispatch }, net) {
     ApiService.post("/subscriptions", net)
       .then(resp => {
-//        dispatch('readNetConfig', resp)
+        //        dispatch('readNetConfig', resp)
         commit('create', resp)
       })
       .catch(err => {
@@ -41,10 +41,10 @@ const actions = {
       })
   },
 
-  update({ commit, dispatch }, subscription){
+  update({ commit, dispatch }, subscription) {
     ApiService.patch(`/subscriptions/${subscription.id}`, subscription)
       .then(resp => {
-//        dispatch('readNetConfig', resp)
+        //        dispatch('readNetConfig', resp)
         commit('update', resp)
       })
       .catch(err => {
@@ -52,7 +52,7 @@ const actions = {
       })
   },
 
-  delete({ commit }, subscription){
+  delete({ commit }, subscription) {
     ApiService.delete(`/subscriptions/${subscription.id}`)
       .then(() => {
         commit('delete', subscription)
@@ -68,13 +68,13 @@ const mutations = {
   error(state, error) {
     state.error = error;
   },
-  subscriptions(state, subscriptions){
+  subscriptions(state, subscriptions) {
     state.subscriptions = subscriptions;
   },
-  create(state, subscription){
+  create(state, subscription) {
     state.subscriptions.push(subscription)
   },
-  update(state, subscription){
+  update(state, subscription) {
     let index = state.subscriptions.findIndex(x => x.id === subscription.id);
     if (index !== -1) {
       state.subscriptions.splice(index, 1);
@@ -83,7 +83,7 @@ const mutations = {
       state.error = "update subscription failed, not in list"
     }
   },
-  delete(state, subscription){
+  delete(state, subscription) {
     let index = state.subscriptions.findIndex(x => x.id === subscription.id);
     if (index !== -1) {
       state.subscriptions.splice(index, 1);
