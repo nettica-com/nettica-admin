@@ -280,7 +280,7 @@ func ReadAllNetworks(param string, id string) []*model.Network {
 
 	}
 
-	collection := client.Database("nettica").Collection("network")
+	collection := client.Database("nettica").Collection("networks")
 	cursor, err := collection.Find(ctx, filter)
 
 	if err == nil {

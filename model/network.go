@@ -10,8 +10,9 @@ import (
 type Network struct {
 	Id          string    `json:"id"          bson:"id"`
 	AccountId   string    `json:"accountid"   bson:"accountid"`
-	NetName     string    `json:"netName"     bson:"nethName"`
+	NetName     string    `json:"netName"     bson:"netName"`
 	Description string    `json:"description" bson:"description"`
+	Tags        []string  `json:"tags"        bson:"tags"`
 	CreatedBy   string    `json:"createdBy"   bson:"createdBy"`
 	UpdatedBy   string    `json:"updatedBy"   bson:"updatedBy"`
 	Created     time.Time `json:"created"     bson:"created"`

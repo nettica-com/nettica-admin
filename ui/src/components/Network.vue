@@ -24,7 +24,7 @@
                         @click="startCreate"
                 >
                     Create New Network
-                    <v-icon right dark>mdi-network-outline</v-icon>
+                    <span class="material-symbols-outlined">hub</span>
                 </v-btn>
             </v-card-title>
             <d3-network class="network" :net-nodes="nodes" :net-links="links" :options="options" />
@@ -48,9 +48,9 @@
                         {{ ip }}
                     </v-chip>
                 </template>
-                <template v-slot:item.default.tags="{ item }">
+                <template v-slot:item.tags="{ item }">
                     <v-chip
-                            v-for="(tag, i) in item.default.tags"
+                            v-for="(tag, i) in item.tags"
                             :key="i"
                             color="blue-grey"
                             text-color="white"
@@ -159,7 +159,7 @@
                                     </template>
                                 </v-combobox>
                                 <v-combobox
-                                        v-model="net.default.tags"
+                                        v-model="net.tags"
                                         chips
                                         hint="Enter a tag, hit tab, hit enter."
                                         label="Tags"
@@ -172,7 +172,7 @@
                                                 :input-value="selected"
                                                 close
                                                 @click="select"
-                                                @click:close="net.default.tags.splice(net.default.tags.indexOf(item), 1)"
+                                                @click:close="net.tags.splice(net.tags.indexOf(item), 1)"
                                         >
                                             <strong>{{ item }}</strong>&nbsp;
                                         </v-chip>
@@ -288,7 +288,7 @@
                                     </template>
                                 </v-combobox>
                                 <v-combobox
-                                        v-model="net.default.tags"
+                                        v-model="net.tags"
                                         chips
                                         hint="Write tag name and hit enter"
                                         label="Tags"
@@ -301,7 +301,7 @@
                                                 :input-value="selected"
                                                 close
                                                 @click="select"
-                                                @click:close="net.default.tags.splice(net.default.tags.indexOf(item), 1)"
+                                                @click:close="net.tags.splice(net.tags.indexOf(item), 1)"
                                         >
                                             <strong>{{ item }}</strong>&nbsp;
                                         </v-chip>
@@ -478,12 +478,12 @@ var D3Network = window['vue-d3-network']
     mounted () {
       this.readAllAccounts(this.user.email)
       this.readAllNetworks()
-      this.readAllHosts()
+      this.readAllVPNs()
     },
 
     methods: {
-        ...mapActions('host', {
-        readAllHosts: 'readAll',
+        ...mapActions('vpn', {
+        readAllVPNs: 'readAll',
       }),
       ...mapActions('net', {
         errorNet: 'error',
@@ -491,7 +491,6 @@ var D3Network = window['vue-d3-network']
         createNet: 'create',
         updateNet: 'update',
         deleteNet: 'delete',
-        emailNet: 'email',
       }),
       ...mapActions('server', {
         readServer: 'read',
@@ -502,7 +501,7 @@ var D3Network = window['vue-d3-network']
 
       Refresh() {
         this.readAllAccounts(this.user.email)
-        this.readAllHosts()
+        this.readAllVPNs()
         this.readAllNetworks()
       },
 
@@ -672,7 +671,7 @@ var D3Network = window['vue-d3-network']
         const url = window.URL.createObjectURL(new Blob([config]))
         const link = document.createElement('a')
         link.href = url
-        link.setAttribute('download', net.name.split(' ').join('-') + '.conf') //or any other extension
+        link.setAttribute('download', net.netName.split(' ').join('-') + '.conf') //or any other extension
         document.body.appendChild(link)
         link.click()
       },

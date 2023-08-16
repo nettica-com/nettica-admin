@@ -3,7 +3,9 @@ import Vuex from 'vuex'
 import auth from "./modules/auth";
 import host from "./modules/host";
 import server from "./modules/server";
+import device from "./modules/device";
 import net from "./modules/net";
+import vpn from "./modules/vpn"
 import user from "./modules/users"
 import account from "./modules/account"
 import join from "./modules/join"
@@ -21,7 +23,9 @@ export default new Vuex.Store({
     account,
     auth,
     host,
+    device,
     net,
+    vpn,
     user,
     join,
     subscription,

@@ -169,8 +169,6 @@ func (o *Oauth2Basic) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 		if len(accounts) == 0 {
 			var account model.Account
 			account.Email = user.Email
-			account.Name = user.Sub
-			account.AccountName = user.Sub
 			account.Role = "Owner"
 			account.Status = "Active"
 			a, err := core.CreateAccount(&account)
@@ -178,7 +176,21 @@ func (o *Oauth2Basic) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 			if err != nil {
 				log.Error(err)
 			}
+			accounts, err = mongodb.ReadAllAccounts(user.Email)
+			if err != nil {
+				log.Error(err)
+			}
+
 		}
+	}
+	for i := 0; i < len(accounts); i++ {
+		if accounts[i].Id == accounts[i].Parent {
+			user.AccountId = accounts[i].Id
+			break
+		}
+	}
+	if user.AccountId == "" {
+		user.AccountId = accounts[0].Id
 	}
 
 	//res, err := collection.InsertOne(ctx, b)

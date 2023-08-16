@@ -33,7 +33,7 @@ func init() {
 }
 
 func main() {
-	log.Infof("Starting Meshify version: %s", version.Version)
+	log.Infof("Starting Nettica version: %s", version.Version)
 
 	// load .env environment variables
 	err := godotenv.Load()

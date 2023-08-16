@@ -41,7 +41,7 @@ type Device struct {
 	Created   time.Time `json:"created"                   bson:"created"`
 	Updated   time.Time `json:"updated"                   bson:"updated"`
 	LastSeen  time.Time `json:"lastSeen"                  bson:"lastSeen"`
-	Vpns      []VPN     `json:"vpns"                      bson:"vpns"`
+	Vpns      []*VPN    `json:"vpns"`
 }
 
 // IsValid check if model is valid

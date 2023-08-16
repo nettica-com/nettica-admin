@@ -44,6 +44,12 @@ func ReadDevice(id string) (*model.Device, error) {
 	}
 	device := v.(*model.Device)
 
+	vpns, err := mongo.ReadAllVPNs("deviceid", device.Id)
+	if err != nil {
+		return nil, err
+	}
+	device.Vpns = vpns
+
 	return device, nil
 }
 
@@ -63,6 +69,7 @@ func UpdateDevice(Id string, device *model.Device, flag bool) (*model.Device, er
 		device.Updated = time.Now().UTC()
 	}
 
+	device.Vpns = nil
 	err = mongo.Serialize(device.Id, "id", "devices", device)
 	if err != nil {
 		return nil, err
@@ -73,6 +80,7 @@ func UpdateDevice(Id string, device *model.Device, flag bool) (*model.Device, er
 		return nil, err
 	}
 	device = v.(*model.Device)
+	device.Vpns = current.Vpns
 
 	// data modified, dump new config
 	return device, nil
@@ -80,6 +88,18 @@ func UpdateDevice(Id string, device *model.Device, flag bool) (*model.Device, er
 
 // DeleteDevice from database
 func DeleteDevice(id string) error {
+
+	vpns, err := mongo.ReadAllVPNs("deviceid", id)
+
+	if err != nil {
+		return err
+	}
+	for _, vpn := range vpns {
+		err = DeleteVPN(vpn.Id)
+		if err != nil {
+			return err
+		}
+	}
 
 	return mongo.Delete(id, "id", "devices")
 }
@@ -104,9 +124,21 @@ func ReadDevicesForUser(email string) ([]*model.Device, error) {
 		if account.Status == "Active" {
 
 			if account.NetId != "" {
+
+				vpns, err := mongo.ReadAllVPNs("netid", account.NetId)
+				if err != nil {
+					return nil, err
+				}
 				devices, err := mongo.ReadAllDevices("netid", account.NetId)
 				if err != nil {
 					return nil, err
+				}
+				for _, device := range devices {
+					for _, vpn := range vpns {
+						if device.Id == vpn.DeviceId {
+							device.Vpns = append(device.Vpns, vpn)
+						}
+					}
 				}
 				results = append(results, devices...)
 
@@ -114,6 +146,18 @@ func ReadDevicesForUser(email string) ([]*model.Device, error) {
 				devices, err := mongo.ReadAllDevices("accountid", account.Parent)
 				if err != nil {
 					return nil, err
+				}
+
+				vpns, err := mongo.ReadAllVPNs("accountid", account.Parent)
+				if err != nil {
+					return nil, err
+				}
+				for _, device := range devices {
+					for _, vpn := range vpns {
+						if device.Id == vpn.DeviceId {
+							device.Vpns = append(device.Vpns, vpn)
+						}
+					}
 				}
 				results = append(results, devices...)
 			}

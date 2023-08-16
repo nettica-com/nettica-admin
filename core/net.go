@@ -62,12 +62,12 @@ func CreateNet(net *model.Network) (*model.Network, error) {
 		return nil, errors.New("failed to validate net")
 	}
 
-	err := mongo.Serialize(net.Id, "id", "net", net)
+	err := mongo.Serialize(net.Id, "id", "networks", net)
 	if err != nil {
 		return nil, err
 	}
 
-	v, err := mongo.Deserialize(net.Id, "id", "net", reflect.TypeOf(model.Network{}))
+	v, err := mongo.Deserialize(net.Id, "id", "networks", reflect.TypeOf(model.Network{}))
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func CreateNet(net *model.Network) (*model.Network, error) {
 
 // ReadNet net by id
 func ReadNet(id string) (*model.Network, error) {
-	v, err := mongo.Deserialize(id, "id", "net", reflect.TypeOf(model.Network{}))
+	v, err := mongo.Deserialize(id, "id", "networks", reflect.TypeOf(model.Network{}))
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ func ReadNet(id string) (*model.Network, error) {
 
 // UpdateNet preserve keys
 func UpdateNet(Id string, net *model.Network) (*model.Network, error) {
-	v, err := mongo.Deserialize(Id, "id", "net", reflect.TypeOf(model.Network{}))
+	v, err := mongo.Deserialize(Id, "id", "networks", reflect.TypeOf(model.Network{}))
 	if err != nil {
 		return nil, err
 	}
@@ -119,12 +119,12 @@ func UpdateNet(Id string, net *model.Network) (*model.Network, error) {
 
 	net.Updated = time.Now().UTC()
 
-	err = mongo.Serialize(net.Id, "id", "net", net)
+	err = mongo.Serialize(net.Id, "id", "networks", net)
 	if err != nil {
 		return nil, err
 	}
 
-	v, err = mongo.Deserialize(Id, "id", "net", reflect.TypeOf(model.Network{}))
+	v, err = mongo.Deserialize(Id, "id", "networks", reflect.TypeOf(model.Network{}))
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func UpdateNet(Id string, net *model.Network) (*model.Network, error) {
 // DeleteNet from disk
 func DeleteNet(id string) error {
 
-	err := mongo.Delete(id, "id", "net")
+	err := mongo.Delete(id, "id", "networks")
 	//	path := filepath.Join(os.Getenv("WG_CONF_DIR"), id)
 	//	err := os.Remove(path)
 	if err != nil {
