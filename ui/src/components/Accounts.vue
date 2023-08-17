@@ -278,6 +278,7 @@ export default {
 
         ...mapGetters({
             authuser: 'auth/user',
+            create_result: 'account/account',
             accounts: 'account/accounts',
             members: 'account/users',
             nets: 'net/nets',
@@ -430,7 +431,7 @@ export default {
 
         },
 
-        create(toAddress, net) {
+        async create(toAddress, net) {
             this.account.email = toAddress;
             this.account.netId = net.value;
             this.account.netName = net.text;
@@ -446,11 +447,17 @@ export default {
                 }
             }
 
-            var result = this.createAccount(this.account)
-            console.log("result = %s", result)
+            var result = await this.createAccount(this.account)
 
-            if ((result) && (this.sendEmail)) {
-                this.emailUser(result)
+            console.log("result = ", result)
+            // sleep one second
+            
+            await new Promise(r => setTimeout(r, 1000));
+
+            console.log("create_result = ", this.create_result)
+
+            if ((this.create_result) && (this.sendEmail)) {
+                this.emailUser(this.create_result)
             }
 
             this.dialogCreate = false;

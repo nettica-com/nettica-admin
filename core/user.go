@@ -108,8 +108,7 @@ func DeleteUser(id string) error {
 
 // ReadUsers all users
 func ReadUsers() ([]*model.User, error) {
-	users := make([]*model.User, 0)
-	users = mongo.ReadAllUsers()
+	users := mongo.ReadAllUsers()
 
 	sort.Slice(users, func(i, j int) bool {
 		return users[i].Created.After(users[j].Created)

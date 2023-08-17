@@ -2,6 +2,7 @@ import ApiService from "../../services/api.service";
 
 const state = {
   error: null,
+  account: null,
   accounts: [],
   users: [],
   members: [],
@@ -10,6 +11,9 @@ const state = {
 const getters = {
   error(state) {
     return state.error;
+  },
+  account(state) {
+    return state.account;
   },
   accounts(state) {
     return state.accounts;
@@ -57,12 +61,12 @@ const actions = {
       })
   },
 
-  create({ commit }, account) {
-    ApiService.post(`/accounts`, account)
-      .then(resp => {
-        commit('create', resp)
-      })
-      .catch(err => {
+  create({ commit, dispatch }, account) {
+    ApiService.post(`/accounts/`, account)
+    .then(resp => {
+      commit('account', resp)
+    }) 
+    .catch(err => {
         commit('error', err)
       })
   },
@@ -102,6 +106,9 @@ const actions = {
 const mutations = {
   error(state, error) {
     state.error = error;
+  },
+  account(state, account) {
+    state.account = account
   },
   accounts(state, accounts) {
     state.accounts = accounts

@@ -2,14 +2,18 @@ package core
 
 import (
 	"errors"
+	"os"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
 	model "github.com/nettica-com/nettica-admin/model"
 	mongo "github.com/nettica-com/nettica-admin/mongo"
+	template "github.com/nettica-com/nettica-admin/template"
 	util "github.com/nettica-com/nettica-admin/util"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/gomail.v2"
 )
 
 // CreateAccount with all necessary data
@@ -151,4 +155,49 @@ func ActivateAccount(id string) (string, error) {
 	log.Infof("Account Activated: %s %s", a.Email, id)
 
 	return "Account activated.", nil
+}
+
+func Email(id string) error {
+	v, err := mongo.Deserialize(id, "id", "accounts", reflect.TypeOf(model.Account{}))
+	if err != nil {
+		return err
+	}
+
+	account := v.(*model.Account)
+	net := account.NetName
+
+	if net == "" {
+		net = "All Networks"
+	}
+
+	// get email body
+	emailBody, err := template.DumpUserEmail(id, net)
+	if err != nil {
+		return err
+	}
+
+	// port to int
+	port, err := strconv.Atoi(os.Getenv("SMTP_PORT"))
+	if err != nil {
+		return err
+	}
+
+	d := gomail.NewDialer(os.Getenv("SMTP_HOST"), port, os.Getenv("SMTP_USERNAME"), os.Getenv("SMTP_PASSWORD"))
+	s, err := d.Dial()
+	if err != nil {
+		return err
+	}
+	m := gomail.NewMessage()
+
+	m.SetHeader("From", os.Getenv("SMTP_FROM"))
+	m.SetAddressHeader("To", id, id)
+	m.SetHeader("Subject", "nettica.com Invitation")
+	m.SetBody("text/html", string(emailBody))
+
+	err = gomail.Send(s, m)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
