@@ -73,7 +73,6 @@
                                     <v-select  :items="networks" v-model="selected.netName" label="To this net"></v-select>
                                     <v-select :items="roles" v-model="selected.role" label="Role"></v-select>
                                     <v-select :items="statuses" v-model="selected.status" label="Status"></v-select>
-                                    <v-text-field v-model="selected.member.apiKey" label="API Key" />
                                 </v-form>
                             </v-col>
                         </v-row>
