@@ -7,6 +7,7 @@ import (
 
 	model "github.com/nettica-com/nettica-admin/model"
 	mongo "github.com/nettica-com/nettica-admin/mongo"
+	util "github.com/nettica-com/nettica-admin/util"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -18,6 +19,15 @@ func CreateDevice(device *model.Device) (*model.Device, error) {
 
 	device.Created = time.Now().UTC()
 	device.Updated = device.Created
+
+	if device.ApiKey == "" {
+		var err error
+		device.ApiKey, err = util.RandomString(32)
+		if err != nil {
+			return nil, err
+		}
+		device.ApiKey = "device-api-" + device.ApiKey
+	}
 
 	// check if device is valid
 

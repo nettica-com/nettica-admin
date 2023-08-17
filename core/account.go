@@ -24,11 +24,12 @@ func CreateAccount(account *model.Account) (*model.Account, error) {
 		}
 	}
 
-	if account.Key == "" {
-		account.Key, err = util.RandomString(32)
+	if account.ApiKey == "" {
+		account.ApiKey, err = util.RandomString(32)
 		if err != nil {
 			return nil, err
 		}
+		account.ApiKey = "nettica-api-" + account.ApiKey
 	}
 
 	if account.Parent == "" {

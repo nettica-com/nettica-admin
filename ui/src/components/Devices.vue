@@ -1,12 +1,14 @@
 <template>
     <v-container style="padding-top:0px">
-        <v-snackbar v-model="notification.show" :right="true" :top="true" :color="notification.color">
-            {{ notification.text }}
-
-            <template v-slot:actions>
-                <v-btn dark variant="text" @click="notification.show = false">Close
-                </v-btn>
-            </template>
+        <v-snackbar v-model="notification.show" :center="true" :bottom="true" :color="notification.color">
+            <v-row>
+                <v-col cols="9" class="text-center">
+                    {{ notification.text }}
+                </v-col>
+                <v-col cols="3">
+                    <v-btn text @click="notification.show = false">close</v-btn>
+                </v-col>
+            </v-row>
         </v-snackbar>
         <v-row><v-col cols="12">
                 <div>
@@ -28,7 +30,7 @@
                         </v-btn>
                     </v-card-title>
                     <v-row>
-                        <v-col>
+                        <v-col cols="6">
                             <v-treeview v-if="showTree" :items="items" :search="search" :active.sync="active"
                                 :open.sync="open" activatable open-all hoverable>
                                 <template v-slot:prepend="{ item }">

@@ -66,14 +66,6 @@ func createDevice(c *gin.Context) {
 	if data.AccountId == "" {
 		data.AccountId = user.AccountId
 	}
-	data.ApiKey, err = util.RandomString(32)
-
-	if err != nil {
-		log.WithFields(log.Fields{
-			"err": err,
-		}).Error("failed to generate state random string")
-		c.AbortWithStatus(http.StatusInternalServerError)
-	}
 
 	client, err := core.CreateDevice(&data)
 	if err != nil {
