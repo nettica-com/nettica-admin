@@ -69,7 +69,14 @@
                                     <v-text-field v-model="selected.member.name" label="Name"
                                         :rules="[v => !!v || 'Name is required',]" required />
                                     <v-text-field v-model="selected.member.email" label="Email Address"
-                                        :rules="[v => !!v || 'Email address is required',]" required />
+                                        :rules="[v => !!v || 'Email address is required',]" required >
+                                        <template v-slot:append>
+                                                    <v-btn icon @click="resendEmail(selected.member)" >
+                                                        <v-icon dark>mdi-refresh</v-icon>
+                                                        <v-icon dark>mdi-email-outline</v-icon>
+                                                    </v-btn>
+                                        </template>
+                                    </v-text-field>
                                     <v-select  :items="networks" v-model="selected.netName" label="To this net"></v-select>
                                     <v-select :items="roles" v-model="selected.role" label="Role"></v-select>
                                     <v-select :items="statuses" v-model="selected.status" label="Status"></v-select>
@@ -462,6 +469,15 @@ export default {
 
             this.dialogCreate = false;
 
+        },
+
+        resendEmail(account) {
+            this.emailUser(account)
+            this.notification = {
+                show: true,
+                text: "Email sent to " + account.email,
+                timeout: 5000,
+            }
         },
 
         remove(item) {
