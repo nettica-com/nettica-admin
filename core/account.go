@@ -145,7 +145,11 @@ func ActivateAccount(id string) (string, error) {
 		return "Error", err
 	}
 	a = v.(*model.Account)
-	a.Status = "Active"
+	if a.Status != "Suspended" {
+		a.Status = "Active"
+	} else {
+		return "Error", errors.New("account is suspended")
+	}
 
 	err = mongo.Serialize(id, "id", "accounts", a)
 	if err != nil {

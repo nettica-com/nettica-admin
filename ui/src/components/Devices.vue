@@ -1004,6 +1004,12 @@ export default {
             this.dialogUpdate = false;
             this.dialogServiceHost = false;
             this.inEdit = false;
+            this.notification = {
+                show: true,
+                text: "Saved",
+                timeout: 2000,
+            }
+
             await this.updatedevice(this.device)
             await new Promise(r => setTimeout(r, 1000));
             this.Refresh()

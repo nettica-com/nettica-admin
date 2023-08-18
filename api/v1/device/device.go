@@ -229,7 +229,7 @@ func statusDevice(c *gin.Context) {
 
 	//	id := c.Param("id")
 	if c.Param("id") == "" {
-		log.Error("devicegroup cannot be empty")
+		log.Error("deviceid cannot be empty")
 		c.AbortWithStatus(http.StatusInternalServerError)
 	}
 	deviceId := c.Param("id")

@@ -1,5 +1,16 @@
 <template>
     <v-container style="padding-top:0px">
+        <v-snackbar v-model="notification.show" :center="true" :bottom="true" :color="notification.color">
+            <v-row>
+                <v-col cols="9" class="text-center">
+                    {{ notification.text }}
+                </v-col>
+                <v-col cols="3">
+                    <v-btn text @click="notification.show = false">close</v-btn>
+                </v-col>
+            </v-row>
+        </v-snackbar>
+
         <div>
             <v-btn class="mb-3 mt-0" @click="Refresh()">
                 <v-icon dark>mdi-refresh</v-icon>
@@ -10,12 +21,12 @@
             <v-card-title>
                 <v-row>
                     <v-col cols="4">
-                Networks
+                        Networks
                     </v-col>
                     <v-col cols="4">
                         <v-text-field v-if="listView" v-model="search" append-icon="mdi-magnify" label="Search" single-line
                             hide-details></v-text-field>
-                        </v-col>
+                    </v-col>
                     <v-col cols="4" class="text-right">
                         <v-btn color="success" @click="startCreate">
                             Create
@@ -24,7 +35,7 @@
                     </v-col>
                 </v-row>
             </v-card-title>
-            <d3-network class="network" :net-nodes="nodes" :net-links="links" :options="options"  />
+            <d3-network class="network" :net-nodes="nodes" :net-links="links" :options="options" />
             <v-divider></v-divider>
             <v-row style="padding-top: 12px;">
                 <v-col cols="6">
@@ -56,8 +67,8 @@
                         <v-row class="text-left" width="550">
                             <v-col flex>
                                 <v-text-field v-model="selected.net.description" label="Description" />
-                                <v-combobox v-model="selected.net.default.address" chips hint="Write IPv4 or IPv6 CIDR and hit enter"
-                                    label="Addresses" multiple dark>
+                                <v-combobox v-model="selected.net.default.address" chips
+                                    hint="Write IPv4 or IPv6 CIDR and hit enter" label="Addresses" multiple dark>
                                     <template v-slot:selection="{ attrs, item, select, selected }">
                                         <v-chip v-bind="attrs" :input-value="selected" close @click="select"
                                             @click:close="selected.net.default.address.splice(selected.net.default.address.indexOf(item), 1)">
@@ -97,8 +108,8 @@
                                     </template>
                                 </v-combobox>
 
-                                <v-text-field type="number" v-model="selected.net.default.mtu" label="Define default global MTU"
-                                    hint="Leave at 0 and let us take care of MTU" />
+                                <v-text-field type="number" v-model="selected.net.default.mtu"
+                                    label="Define default global MTU" hint="Leave at 0 and let us take care of MTU" />
                                 <v-text-field type="number" v-model="selected.net.default.persistentKeepalive"
                                     label="Persistent keepalive"
                                     hint="To disable, set to 0.  Recommended value 29 (seconds)" />
@@ -118,15 +129,22 @@
                             </v-col>
                         </v-row>
                         <v-card-actions>
-                            <v-btn color="success" @click="update(selected.net)">
-                                Save
-                                <v-icon right dark>mdi-check-outline</v-icon>
-                            </v-btn>
-                            <v-spacer></v-spacer>
-                            <v-btn color="error" @click="remove(selected.net)">
-                                Delete
-                                <v-icon right dark>mdi-delete-outline</v-icon>
-                            </v-btn>
+                            <v-container>
+                                <v-row>
+                                    <v-col>
+                                        <v-btn color="success" @click="update(selected.net)">
+                                            Save
+                                            <v-icon right dark>mdi-check-outline</v-icon>
+                                        </v-btn>
+                                    </v-col>
+                                    <v-col>
+                                        <v-btn color="error" @click="remove(selected.net)">
+                                            Delete
+                                            <v-icon right dark>mdi-delete-outline</v-icon>
+                                        </v-btn>
+                                    </v-col>
+                                </v-row>
+                            </v-container>
                         </v-card-actions>
                     </v-card>
                 </v-col>
@@ -290,6 +308,7 @@ export default {
     name: 'Networks',
 
     data: () => ({
+        notification: {},
         acntList: {},
         showTree: false,
         items: [],
@@ -417,17 +436,17 @@ export default {
             }
 
             this.items.sort((a, b) => {
-            const nameA = a.name.toUpperCase(); // ignore upper and lowercase
-            const nameB = b.name.toUpperCase(); // ignore upper and lowercase
-            if (nameA < nameB) {
-                return -1;
-            }
-            if (nameA > nameB) {
-                return 1;
-            }
+                const nameA = a.name.toUpperCase(); // ignore upper and lowercase
+                const nameB = b.name.toUpperCase(); // ignore upper and lowercase
+                if (nameA < nameB) {
+                    return -1;
+                }
+                if (nameA > nameB) {
+                    return 1;
+                }
 
-            // names must be equal
-            return 0;
+                // names must be equal
+                return 0;
             });
 
             return this.items
@@ -598,6 +617,13 @@ export default {
             // all good, submit
             this.dialogUpdate = false;
             this.updateNet(net)
+
+            this.notification = {
+                show: true,
+                text: "Net updated",
+                timeout: 2000,
+            }
+
         },
     }
 };

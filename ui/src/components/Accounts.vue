@@ -81,8 +81,9 @@
                                                     </v-btn>
                                         </template>
                                     </v-text-field>
-                                    <v-select  :items="networks" v-model="selected.netName" label="To this net"></v-select>
-                                    <v-select :items="roles" v-model="selected.role" label="Role"></v-select>
+                                    <v-select  :items="networks" v-model="selected.netName" label="To this net" 
+                                        :readonly="selected.isReadOnly" ></v-select>
+                                    <v-select :items="roles" v-model="selected.role" label="Role" :readonly="selected.isReadOnly"></v-select>
                                     <v-select :items="statuses" v-model="selected.status" label="Status"></v-select>
                                 </v-form>
                             </v-col>
@@ -376,6 +377,30 @@ export default {
                     isAccount: true,
                     children: []
                 }
+                if (this.accounts[i].id != this.accounts[i].parent) {
+                    var name = this.accounts[i].name
+                        if (this.accounts[i].netName != "") {
+                            name = name + " (" + this.accounts[i].netName + ")"
+                        }
+                        var netName = this.accounts[i].netName
+                        if (netName == "") {
+                            netName = "All Networks"
+                        }
+
+                    this.items[i].children[0] = {
+                        id: "m-" + this.accounts[i].id,
+                        name: name,
+                        netName: netName,
+                        isReadOnly: true,
+                        member: this.accounts[i],
+                        status: this.accounts[i].status,
+                        role: this.accounts[i].role,
+                        icon: "mdi-account",
+                        isAccount: false,
+                        isMember: true,
+                        children: []
+                    }
+                }
                 console.log("account: ", this.accounts[i])
                 var k = 0
 
@@ -402,6 +427,7 @@ export default {
                             member: this.members[j],
                             status: this.members[j].status,
                             netName: netName,
+                            isReadOnly: false,
                             role: this.members[j].role,
                             email: this.members[j].email,
                             icon: "mdi-account",
