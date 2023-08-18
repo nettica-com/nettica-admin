@@ -4,7 +4,7 @@ package model
 type VPNConfig struct {
 	NetName string `json:"netName"  bson:"netName"`
 	NetId   string `json:"netid"    bson:"netid"`
-	Vpns    []VPN  `json:"vpns"     bson:"vpns"`
+	VPNs    []VPN  `json:"vpns"     bson:"vpns"`
 }
 
 // Host structure

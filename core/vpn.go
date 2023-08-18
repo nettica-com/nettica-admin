@@ -40,7 +40,7 @@ func CreateVPN(vpn *model.VPN) (*model.VPN, error) {
 			vpn.Current.PostDown = current.PostDown
 			vpn.Current.PersistentKeepalive = current.PersistentKeepalive
 			vpn.NetId = net.Id
-			vpn.AccountId = net.AccountId
+			vpn.AccountID = net.AccountID
 			vpn.Current.AllowedIPs = current.AllowedIPs
 			vpn.Current.Dns = net.Default.Dns
 		}

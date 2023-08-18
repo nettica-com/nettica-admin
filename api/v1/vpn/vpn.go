@@ -63,8 +63,8 @@ func createVPN(c *gin.Context) {
 		return
 	}
 	data.CreatedBy = user.Email
-	if data.AccountId == "" {
-		data.AccountId = user.AccountId
+	if data.AccountID == "" {
+		data.AccountID = user.AccountID
 	}
 
 	if err != nil {
@@ -121,7 +121,7 @@ func updateVPN(c *gin.Context) {
 
 	if apikey != "" {
 
-		device, err := core.ReadDevice(data.DeviceId)
+		device, err := core.ReadDevice(data.DeviceID)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"err": err,
@@ -236,7 +236,7 @@ func statusVPN(c *gin.Context) {
 
 	//	id := c.Param("id")
 	if c.Param("id") == "" {
-		log.Error("DeviceId cannot be empty")
+		log.Error("DeviceID cannot be empty")
 		c.AbortWithStatus(http.StatusInternalServerError)
 	}
 	deviceId := c.Param("id")
@@ -330,13 +330,13 @@ func statusVPN(c *gin.Context) {
 				if client.Role == "Ingress" {
 					hasIngress = true
 					ingress = client
-					if client.DeviceId == deviceId {
+					if client.DeviceID == deviceId {
 						isIngress = true
 					}
 				}
 				if client.Role == "Egress" {
 					egress = client
-					if client.DeviceId == deviceId {
+					if client.DeviceID == deviceId {
 						isEgress = true
 					}
 				}
@@ -358,16 +358,16 @@ func statusVPN(c *gin.Context) {
 					break
 				}
 			}
-			msg.Config[i].Vpns = make([]model.VPN, 2)
-			msg.Config[i].Vpns[0] = *ingress
-			msg.Config[i].Vpns[0].Current.AllowedIPs = allowed
-			msg.Config[i].Vpns[1] = *egress
+			msg.Config[i].VPNs = make([]model.VPN, 2)
+			msg.Config[i].VPNs[0] = *ingress
+			msg.Config[i].VPNs[0].Current.AllowedIPs = allowed
+			msg.Config[i].VPNs[1] = *egress
 		}
 
 		for _, client := range clients {
 			// If this config isn't explicitly for this vpn, remove the private key
 			// from the results
-			if client.DeviceId != deviceId {
+			if client.DeviceID != deviceId {
 				client.Current.PrivateKey = ""
 			} else {
 				//				client.LastSeen = time.Now()
@@ -398,7 +398,7 @@ func statusVPN(c *gin.Context) {
 			// only an egress vpn, or if it's neither,
 			// include this client in the results
 
-			msg.Config[i].Vpns = append(msg.Config[i].Vpns, *client)
+			msg.Config[i].VPNs = append(msg.Config[i].VPNs, *client)
 		}
 	}
 	bytes, err := json.Marshal(msg)

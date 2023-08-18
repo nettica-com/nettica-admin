@@ -9,7 +9,7 @@ import (
 // Network structure
 type Network struct {
 	Id          string    `json:"id"          bson:"id"`
-	AccountId   string    `json:"accountid"   bson:"accountid"`
+	AccountID   string    `json:"accountid"   bson:"accountid"`
 	NetName     string    `json:"netName"     bson:"netName"`
 	Description string    `json:"description" bson:"description"`
 	Tags        []string  `json:"tags"        bson:"tags"`

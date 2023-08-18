@@ -10,7 +10,7 @@ type Service struct {
 	Id             string    `json:"id"           bson:"id"`
 	ServiceGroup   string    `json:"serviceGroup" bson:"serviceGroup"`
 	ApiKey         string    `json:"apikey"       bson:"apikey"`
-	AccountId      string    `json:"accountid"    bson:"accountid"`
+	AccountID      string    `json:"accountid"    bson:"accountid"`
 	Email          string    `json:"email"        bson:"email"`
 	SubscriptionId string    `json:"subscriptionid" bson:"subscriptionid"`
 	Created        time.Time `json:"created"      bson:"created"`

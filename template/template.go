@@ -370,7 +370,7 @@ var (
                   <tbody>
                     <tr>
                     <td align="center" bgcolor="#336699" class="inner-td" style="border-radius:6px; font-size:16px; text-align:center; background-color:inherit;">
-                      <a href="https://my.nettica.com/join?id={{.AccountId}}&netid={{.NetId}}" style="background-color:#336699; border:1px solid #336699; border-color:#336699; border-radius:6px; border-width:1px; color:#ffffff; display:inline-block; font-size:14px; font-weight:normal; letter-spacing:0px; line-height:normal; padding:12px 18px 12px 18px; text-align:center; text-decoration:none; border-style:solid;" target="_blank">Join Net</a>
+                      <a href="https://my.nettica.com/join?id={{.AccountID}}&netid={{.NetId}}" style="background-color:#336699; border:1px solid #336699; border-color:#336699; border-radius:6px; border-width:1px; color:#ffffff; display:inline-block; font-size:14px; font-weight:normal; letter-spacing:0px; line-height:normal; padding:12px 18px 12px 18px; text-align:center; text-decoration:none; border-style:solid;" target="_blank">Join Net</a>
                     </td>
                     </tr>
                   </tbody>
@@ -706,10 +706,10 @@ func DumpUserEmail(accountId string, netId string) ([]byte, error) {
 	}
 
 	return dump(t, struct {
-		AccountId string
+		AccountID string
 		NetId     string
 	}{
-		AccountId: accountId,
+		AccountID: accountId,
 		NetId:     netId,
 	})
 }

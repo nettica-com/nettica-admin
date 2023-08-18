@@ -191,12 +191,12 @@ func (o *Oauth2Msft) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 	}
 	for i := 0; i < len(accounts); i++ {
 		if accounts[i].Id == accounts[i].Parent {
-			user.AccountId = accounts[i].Id
+			user.AccountID = accounts[i].Id
 			break
 		}
 	}
-	if user.AccountId == "" {
-		user.AccountId = accounts[0].Id
+	if user.AccountID == "" {
+		user.AccountID = accounts[0].Id
 	}
 
 	//res, err := collection.InsertOne(ctx, b)

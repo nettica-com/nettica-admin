@@ -63,8 +63,8 @@ func createDevice(c *gin.Context) {
 		return
 	}
 	data.CreatedBy = user.Email
-	if data.AccountId == "" {
-		data.AccountId = user.AccountId
+	if data.AccountID == "" {
+		data.AccountID = user.AccountID
 	}
 
 	client, err := core.CreateDevice(&data)
@@ -324,13 +324,13 @@ func statusDevice(c *gin.Context) {
 				if client.Role == "Ingress" {
 					hasIngress = true
 					ingress = client
-					if client.DeviceId == deviceId {
+					if client.DeviceID == deviceId {
 						isIngress = true
 					}
 				}
 				if client.Role == "Egress" {
 					egress = client
-					if client.DeviceId == deviceId {
+					if client.DeviceID == deviceId {
 						isEgress = true
 					}
 				}
@@ -352,16 +352,16 @@ func statusDevice(c *gin.Context) {
 					break
 				}
 			}
-			msg.Config[i].Vpns = make([]model.VPN, 2)
-			msg.Config[i].Vpns[0] = *ingress
-			msg.Config[i].Vpns[0].Current.AllowedIPs = allowed
-			msg.Config[i].Vpns[1] = *egress
+			msg.Config[i].VPNs = make([]model.VPN, 2)
+			msg.Config[i].VPNs[0] = *ingress
+			msg.Config[i].VPNs[0].Current.AllowedIPs = allowed
+			msg.Config[i].VPNs[1] = *egress
 		}
 
 		for _, client := range clients {
 			// If this config isn't explicitly for this device, remove the private key
 			// from the results
-			if client.DeviceId != deviceId {
+			if client.DeviceID != deviceId {
 				client.Current.PrivateKey = ""
 			} else {
 				device.LastSeen = time.Now()
@@ -392,7 +392,7 @@ func statusDevice(c *gin.Context) {
 			// only an egress device, or if it's neither,
 			// include this client in the results
 
-			msg.Config[i].Vpns = append(msg.Config[i].Vpns, *client)
+			msg.Config[i].VPNs = append(msg.Config[i].VPNs, *client)
 		}
 	}
 	bytes, err := json.Marshal(msg)

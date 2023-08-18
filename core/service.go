@@ -49,7 +49,7 @@ func CreateService(service *model.Service) (*model.Service, error) {
 	}
 	for _, account := range accounts {
 		if account.Parent == account.Id {
-			service.AccountId = account.Id
+			service.AccountID = account.Id
 			break
 		}
 	}
@@ -83,7 +83,7 @@ func CreateService(service *model.Service) (*model.Service, error) {
 		if !found {
 			// create a default net
 			net := model.Network{
-				AccountId:   service.AccountId,
+				AccountID:   service.AccountID,
 				NetName:     service.Relay.NetName,
 				Description: service.Description,
 				Created:     time.Now().UTC(),
@@ -122,7 +122,7 @@ func CreateService(service *model.Service) (*model.Service, error) {
 		// create a default vpn using the net
 		vpn := model.VPN{
 			Id:        uuid.NewV4().String(),
-			AccountId: service.AccountId,
+			AccountID: service.AccountID,
 			Name:      strings.ToLower(service.ServiceType) + "." + service.Relay.NetName,
 			Enable:    true,
 			NetId:     service.Relay.NetId,

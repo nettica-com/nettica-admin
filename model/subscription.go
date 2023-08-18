@@ -8,7 +8,7 @@ import (
 // Net structure
 type Subscription struct {
 	Id          string    `json:"id"          bson:"id"`
-	AccountId   string    `json:"accountid"   bson:"accountid"`
+	AccountID   string    `json:"accountid"   bson:"accountid"`
 	Email       string    `json:"email"       bson:"email"`
 	Name        string    `json:"name"        bson:"name"`
 	Description string    `json:"description" bson:"description"`

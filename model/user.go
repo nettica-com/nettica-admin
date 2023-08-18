@@ -12,7 +12,7 @@ type User struct {
 	Sub       string    `json:"sub"          bson:"sub"`
 	Name      string    `json:"name"         bson:"name"`
 	Email     string    `json:"email"        bson:"email"`
-	AccountId string    `json:"accountid"    bson:"accountid"`
+	AccountID string    `json:"accountid"    bson:"accountid"`
 	Profile   string    `json:"profile"      bson:"profile"`
 	Picture   string    `json:"picture"      bson:"picture"`
 	Issuer    string    `json:"issuer"       bson:"issuer"`

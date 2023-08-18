@@ -11,8 +11,8 @@ import (
 // VPN structure
 type VPN struct {
 	Id        string    `json:"id"                        bson:"id"`
-	AccountId string    `json:"accountid"                 bson:"accountid"`
-	DeviceId  string    `json:"deviceid"                  bson:"deviceid"`
+	AccountID string    `json:"accountid"                 bson:"accountid"`
+	DeviceID  string    `json:"deviceid"                  bson:"deviceid"`
 	Name      string    `json:"name"                      bson:"name"`
 	NetId     string    `json:"netid"                     bson:"netid"`
 	NetName   string    `json:"netName"                   bson:"netName"`
@@ -29,7 +29,7 @@ type VPN struct {
 
 type Device struct {
 	Id        string    `json:"id"                        bson:"id"`
-	AccountId string    `json:"accountid"                 bson:"accountid"`
+	AccountID string    `json:"accountid"                 bson:"accountid"`
 	ApiKey    string    `json:"apiKey"                    bson:"apiKey"`
 	Name      string    `json:"name"                      bson:"name"`
 	Enable    bool      `json:"enable"                    bson:"enable"`
@@ -41,7 +41,7 @@ type Device struct {
 	Created   time.Time `json:"created"                   bson:"created"`
 	Updated   time.Time `json:"updated"                   bson:"updated"`
 	LastSeen  time.Time `json:"lastSeen"                  bson:"lastSeen"`
-	Vpns      []*VPN    `json:"vpns"`
+	VPNs      []*VPN    `json:"vpns"`
 }
 
 // IsValid check if model is valid

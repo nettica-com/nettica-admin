@@ -58,7 +58,7 @@ func ReadDevice(id string) (*model.Device, error) {
 	if err != nil {
 		return nil, err
 	}
-	device.Vpns = vpns
+	device.VPNs = vpns
 
 	return device, nil
 }
@@ -79,7 +79,7 @@ func UpdateDevice(Id string, device *model.Device, flag bool) (*model.Device, er
 		device.Updated = time.Now().UTC()
 	}
 
-	device.Vpns = nil
+	device.VPNs = nil
 	err = mongo.Serialize(device.Id, "id", "devices", device)
 	if err != nil {
 		return nil, err
@@ -90,7 +90,7 @@ func UpdateDevice(Id string, device *model.Device, flag bool) (*model.Device, er
 		return nil, err
 	}
 	device = v.(*model.Device)
-	device.Vpns = current.Vpns
+	device.VPNs = current.VPNs
 
 	// data modified, dump new config
 	return device, nil
@@ -145,8 +145,8 @@ func ReadDevicesForUser(email string) ([]*model.Device, error) {
 				}
 				for _, device := range devices {
 					for _, vpn := range vpns {
-						if device.Id == vpn.DeviceId {
-							device.Vpns = append(device.Vpns, vpn)
+						if device.Id == vpn.DeviceID {
+							device.VPNs = append(device.VPNs, vpn)
 						}
 					}
 				}
@@ -164,8 +164,8 @@ func ReadDevicesForUser(email string) ([]*model.Device, error) {
 				}
 				for _, device := range devices {
 					for _, vpn := range vpns {
-						if device.Id == vpn.DeviceId {
-							device.Vpns = append(device.Vpns, vpn)
+						if device.Id == vpn.DeviceID {
+							device.VPNs = append(device.VPNs, vpn)
 						}
 					}
 				}
