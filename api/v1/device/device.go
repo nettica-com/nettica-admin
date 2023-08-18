@@ -231,6 +231,7 @@ func statusDevice(c *gin.Context) {
 	if c.Param("id") == "" {
 		log.Error("deviceid cannot be empty")
 		c.AbortWithStatus(http.StatusInternalServerError)
+		return
 	}
 	deviceId := c.Param("id")
 

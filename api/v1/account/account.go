@@ -151,13 +151,13 @@ func updateAccount(c *gin.Context) {
 	var bodyBytes []byte
 	if c.Request.Body != nil {
 		bodyBytes, _ = ioutil.ReadAll(c.Request.Body)
-		log.Info("updateAccount - %s", string(bodyBytes))
+		log.Infof("updateAccount - %s", string(bodyBytes))
 	}
 
 	// Restore the io.ReadCloser to its original state
 	c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
 
-	log.Info("updateAccount - %s", string(bodyBytes))
+	log.Infof("updateAccount - %s", string(bodyBytes))
 
 	if err := c.ShouldBindJSON(&data); err != nil {
 		log.WithFields(log.Fields{
