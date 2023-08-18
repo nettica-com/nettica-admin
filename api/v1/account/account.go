@@ -2,7 +2,7 @@ package account
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -150,12 +150,12 @@ func updateAccount(c *gin.Context) {
 
 	var bodyBytes []byte
 	if c.Request.Body != nil {
-		bodyBytes, _ = ioutil.ReadAll(c.Request.Body)
+		bodyBytes, _ = io.ReadAll(c.Request.Body)
 		log.Infof("updateAccount - %s", string(bodyBytes))
 	}
 
 	// Restore the io.ReadCloser to its original state
-	c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
+	c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
 	log.Infof("updateAccount - %s", string(bodyBytes))
 

@@ -4,7 +4,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -43,7 +43,7 @@ func createSubscription(c *gin.Context) {
 
 	// read and log the request body
 
-	bytes, err := ioutil.ReadAll(c.Request.Body)
+	bytes, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
@@ -123,7 +123,7 @@ func createSubscription(c *gin.Context) {
 			return
 		}
 
-		bodyBytes, err := ioutil.ReadAll(resp.Body)
+		bodyBytes, err := io.ReadAll(resp.Body)
 		if err != nil {
 			log.Error(err)
 			return

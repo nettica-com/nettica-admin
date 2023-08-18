@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"time"
@@ -70,7 +70,7 @@ func (o *Github) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 		return nil, fmt.Errorf("http status %s expect 200 OK", resp.Status)
 	}
 
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}

@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
-	"io/ioutil"
 	"math/big"
 	"net"
 	"os"
@@ -30,7 +29,7 @@ func GetCleanAuthToken(c *gin.Context) string {
 
 // ReadFile file content
 func ReadFile(path string) (bytes []byte, err error) {
-	bytes, err = ioutil.ReadFile(path)
+	bytes, err = os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +39,7 @@ func ReadFile(path string) (bytes []byte, err error) {
 
 // WriteFile content to file
 func WriteFile(path string, bytes []byte) (err error) {
-	err = ioutil.WriteFile(path, bytes, 0644)
+	err = os.WriteFile(path, bytes, 0644)
 	if err != nil {
 		return err
 	}
@@ -136,7 +135,7 @@ func GetIpFromCidr(cidr string) (string, error) {
 	return ip.String(), nil
 }
 
-//  http://play.golang.org/p/m8TNTtygK0
+// http://play.golang.org/p/m8TNTtygK0
 func inc(ip net.IP) {
 	for j := len(ip) - 1; j >= 0; j-- {
 		ip[j]++
