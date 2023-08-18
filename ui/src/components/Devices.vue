@@ -19,15 +19,20 @@
                 </div>
                 <v-card>
                     <v-card-title>
-                        Devices
-                        <v-spacer></v-spacer>
-                        <v-text-field v-if="listView" v-model="search" append-icon="mdi-magnify" label="Search" single-line
-                            hide-details></v-text-field>
-                        <v-spacer></v-spacer>
-                        <v-btn color="success" @click="startCreate">
-                            Add Device
-                            <span class="material-symbols-outlined">devices</span>
-                        </v-btn>
+                        <v-row>
+                            <v-col cols="4">Devices</v-col>
+                            <v-col cols="4">
+
+                                <v-text-field v-if="listView" v-model="search" append-icon="mdi-magnify" label="Search" single-line
+                                    hide-details></v-text-field>
+                            </v-col>
+                            <v-col cols="4" class="text-right">
+                                <v-btn color="success" @click="startCreate">
+                                    Add Device
+                                    <span class="material-symbols-outlined">devices</span>
+                                </v-btn>
+                            </v-col>
+                        </v-row>
                     </v-card-title>
                     <v-row>
                         <v-col cols="6">
@@ -97,6 +102,8 @@
                                             <v-text-field v-model="selected.device.name" label="Device friendly name"
                                                 :rules="[v => !!v || 'device name is required',]" required />
                                         </div>
+                                        <p class="text-caption">Created by {{ selected.device.createdBy }} at {{ selected.device.created | formatDate }}<br/>
+                                                            Last update by {{ selected.device.updatedBy }} at {{ selected.device.updated | formatDate }}</p>
                                     </v-col>
                                 </v-row>
                                 <v-card-actions v-if="inEdit">
@@ -696,6 +703,20 @@ export default {
                     }
                 }
             }
+            this.items.sort((a, b) => {
+            const nameA = a.name.toUpperCase(); // ignore upper and lowercase
+            const nameB = b.name.toUpperCase(); // ignore upper and lowercase
+            if (nameA < nameB) {
+                return -1;
+            }
+            if (nameA > nameB) {
+                return 1;
+            }
+
+            // names must be equal
+            return 0;
+            });
+
             return this.items
 
         },

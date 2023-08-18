@@ -8,54 +8,129 @@
         </div>
         <v-card>
             <v-card-title>
+                <v-row>
+                    <v-col cols="4">
                 Networks
-                <v-spacer></v-spacer>
-                <v-text-field v-if="listView" v-model="search" append-icon="mdi-magnify" label="Search" single-line
-                    hide-details></v-text-field>
-                <v-spacer></v-spacer>
-                <v-btn color="success" @click="startCreate">
-                    Create New Network
-                    <span class="material-symbols-outlined">hub</span>
-                </v-btn>
+                    </v-col>
+                    <v-col cols="4">
+                        <v-text-field v-if="listView" v-model="search" append-icon="mdi-magnify" label="Search" single-line
+                            hide-details></v-text-field>
+                        </v-col>
+                    <v-col cols="4" class="text-right">
+                        <v-btn color="success" @click="startCreate">
+                            Create
+                            <span class="material-symbols-outlined">hub</span>
+                        </v-btn>
+                    </v-col>
+                </v-row>
             </v-card-title>
-            <d3-network class="network" :net-nodes="nodes" :net-links="links" :options="options" />
-            <v-data-table v-if="listView" :headers="headers" :items="nets" :search="search"
-                no-data-text="Welcome to Nettica!  Click 'Create New Network' above to get started."
-                no-results-text="No results matching your search" @click:row="loadNetwork">
-                <template v-slot:item.default.address="{ item }">
-                    <v-chip v-for="(ip, i) in item.default.address" :key="i" color="#336699" text-color="white">
-                        <v-icon left>mdi-ip-network</v-icon>
-                        {{ ip }}
-                    </v-chip>
-                </template>
-                <template v-slot:item.tags="{ item }">
-                    <v-chip v-for="(tag, i) in item.tags" :key="i" color="blue-grey" text-color="white">
-                        <v-icon left>mdi-tag</v-icon>
-                        {{ tag }}
-                    </v-chip>
-                </template>
-                <template v-slot:item.created="{ item }">
-                    <v-row>
-                        <p>{{ item.createdBy }} at {{ item.created | formatDate }}</p>
-                    </v-row>
-                </template>
-                <template v-slot:item.updated="{ item }">
-                    <v-row>
-                        <p>At {{ item.updated | formatDate }} by {{ item.updatedBy }}</p>
-                    </v-row>
-                </template>
-                <template v-slot:item.action="{ item }">
-                    <v-row>
-                        <v-icon class="pr-1 pl-1" @click.stop="startUpdate(item)" title="Edit">
-                            mdi-square-edit-outline
-                        </v-icon>
-                        <v-icon class="pr-1 pl-1" @click="remove(item)" title="Delete">
-                            mdi-trash-can-outline
-                        </v-icon>
-                    </v-row>
-                </template>
+            <d3-network class="network" :net-nodes="nodes" :net-links="links" :options="options"  />
+            <v-divider></v-divider>
+            <v-row style="padding-top: 12px;">
+                <v-col cols="6">
+                    <v-treeview v-if="showTree" :items="items" :search="search" :active.sync="active" :open.sync="open"
+                        activatable open-all hoverable @update:active="loadNetwork">
+                        <template v-slot:prepend="{ item }">
+                            <span v-if="item.symbol" class="material-symbols-outlined">{{ item.symbol }}</span>
+                            <v-icon v-else>
+                                {{ item.icon }}
+                            </v-icon>
+                        </template>
+                    </v-treeview>
+                </v-col>
+                <v-divider vertical></v-divider>
+                <v-col cols="6" class="text-center">
+                    <div v-if="!selected" class="text-h6 grey--text text--lighten-1 font-weight-light"
+                        style="align-self: center;">
 
-            </v-data-table>
+                    </div>
+                    <v-card v-else-if="selected.isNet" :key="selected.id" class="px-3 mx-auto" flat>
+                        <v-card-text width="550">
+                            <span class="material-symbols-outlined">hub</span>
+                            <h3 class="text-h5 mb-2">
+                                {{ selected.name }}
+                            </h3>
+                        </v-card-text>
+                        <v-divider></v-divider>
+
+                        <v-row class="text-left" width="550">
+                            <v-col flex>
+                                <v-text-field v-model="selected.net.description" label="Description" />
+                                <v-combobox v-model="selected.net.default.address" chips hint="Write IPv4 or IPv6 CIDR and hit enter"
+                                    label="Addresses" multiple dark>
+                                    <template v-slot:selection="{ attrs, item, select, selected }">
+                                        <v-chip v-bind="attrs" :input-value="selected" close @click="select"
+                                            @click:close="selected.net.default.address.splice(selected.net.default.address.indexOf(item), 1)">
+                                            <strong>{{ item }}</strong>&nbsp;
+                                        </v-chip>
+                                    </template>
+                                </v-combobox>
+                                <v-combobox :readonly="!inEdit" v-model="selected.net.default.dns" chips
+                                    hint="Enter IP address(es) and hit enter or leave empty."
+                                    label="DNS servers for this device" multiple dark>
+                                    <template v-slot:selection="{ attrs, item, select, selected }">
+
+                                        <v-chip v-bind="attrs" :input-value="selected" close @click="select"
+                                            @click:close="selected.net.default.dns.splice(selected.net.default.dns.indexOf(item), 1)">
+                                            <strong>{{ item }}</strong>&nbsp;
+                                        </v-chip>
+                                    </template>
+                                </v-combobox>
+                                <v-combobox v-model="selected.net.tags" chips hint="Enter a tag, hit tab, hit enter."
+                                    label="Tags" multiple dark>
+                                    <template v-slot:selection="{ attrs, item, select, selected }">
+                                        <v-chip v-bind="attrs" :input-value="selected" close @click="select"
+                                            @click:close="selected.net.tags.splice(selected.net.tags.indexOf(item), 1)">
+                                            <strong>{{ item }}</strong>&nbsp;
+                                        </v-chip>
+                                    </template>
+                                </v-combobox>
+                                <v-text-field v-model="selected.net.id" label="Network ID" readonly />
+                                <v-text-field v-model="selected.net.default.presharedKey" label="Preshared Key" />
+                                <v-combobox v-model="selected.net.default.allowedIPs" chips
+                                    hint="Write IPv4 or IPv6 CIDR and hit enter" label="Allowed IPs" multiple dark>
+                                    <template v-slot:selection="{ attrs, item, select, selected }">
+                                        <v-chip v-bind="attrs" :input-value="selected" close @click="select"
+                                            @click:close="selected.net.default.allowedIPs.splice(selected.net.default.allowedIPs.indexOf(item), 1)">
+                                            <strong>{{ item }}</strong>&nbsp;
+                                        </v-chip>
+                                    </template>
+                                </v-combobox>
+
+                                <v-text-field type="number" v-model="selected.net.default.mtu" label="Define default global MTU"
+                                    hint="Leave at 0 and let us take care of MTU" />
+                                <v-text-field type="number" v-model="selected.net.default.persistentKeepalive"
+                                    label="Persistent keepalive"
+                                    hint="To disable, set to 0.  Recommended value 29 (seconds)" />
+                                <v-text-field v-model="selected.net.default.listenPort" type="number" :rules="[
+                                    v => !!v || 'Listen port is required',
+                                ]" label="Listen port" required />
+                                <v-switch v-model="selected.net.default.upnp" color="success" inset
+                                    label="Enable UPnP where possible" />
+                                <v-switch v-model="selected.net.default.enableDns" color="success" inset
+                                    label="Enable Nettica DNS" />
+
+
+                                <p class="text-caption">Created by {{ selected.net.createdBy }} at {{
+                                    selected.net.created | formatDate }}<br />
+                                    Last update by {{ selected.net.updatedBy }} at {{ selected.net.updated |
+                                        formatDate }}</p>
+                            </v-col>
+                        </v-row>
+                        <v-card-actions>
+                            <v-btn color="success" @click="update(selected.net)">
+                                Save
+                                <v-icon right dark>mdi-check-outline</v-icon>
+                            </v-btn>
+                            <v-spacer></v-spacer>
+                            <v-btn color="error" @click="remove(selected.net)">
+                                Delete
+                                <v-icon right dark>mdi-delete-outline</v-icon>
+                            </v-btn>
+                        </v-card-actions>
+                    </v-card>
+                </v-col>
+            </v-row>
         </v-card>
         <v-dialog v-if="net" v-model="dialogCreate" max-width="550">
             <v-card>
@@ -74,8 +149,7 @@
 
                                 <v-combobox v-model="net.default.address" :items="net.default.address"
                                     label="IP subnet for this network (ex. 10.10.10.0/24)"
-                                    :rules="[v => !!v || 'Subnet is required',]" multiple chips persistent-hint
-                                    required />
+                                    :rules="[v => !!v || 'Subnet is required',]" multiple chips persistent-hint required />
                                 <v-combobox v-model="net.default.dns" chips
                                     hint="Enter the IP address of a global DNS resolver, hit tab, hit enter."
                                     label="DNS servers for this network" multiple dark>
@@ -162,41 +236,6 @@
                     </v-row>
                 </v-card-text>
             </v-card>
-            <v-expansion-panels>
-                <v-expansion-panel>
-                    <v-expansion-panel-header dark>Advanced configuration</v-expansion-panel-header>
-                    <v-expansion-panel-content>
-                        <div class="d-flex flex-no-wrap justify-space-between">
-                            <v-col cols="12">
-                                <v-text-field v-model="net.default.presharedKey" label="Preshared Key" />
-                                <v-combobox v-model="net.default.allowedIPs" chips
-                                    hint="Write IPv4 or IPv6 CIDR and hit enter" label="Allowed IPs" multiple dark>
-                                    <template v-slot:selection="{ attrs, item, select, selected }">
-                                        <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                            @click:close="net.default.allowedIPs.splice(net.default.allowedIPs.indexOf(item), 1)">
-                                            <strong>{{ item }}</strong>&nbsp;
-                                        </v-chip>
-                                    </template>
-                                </v-combobox>
-
-                                <v-text-field type="number" v-model="net.default.mtu" label="Define default global MTU"
-                                    hint="Leave at 0 and let us take care of MTU" />
-                                <v-text-field type="number" v-model="net.default.persistentKeepalive"
-                                    label="Persistent keepalive"
-                                    hint="To disable, set to 0.  Recommended value 29 (seconds)" />
-                                <v-text-field v-model="net.default.listenPort" type="number" :rules="[
-                                    v => !!v || 'Listen port is required',
-                                ]" label="Listen port" required />
-                                <v-switch v-model="net.default.upnp" color="success" inset
-                                    label="Enable UPnP where possible" />
-                                <v-switch v-model="net.default.enableDns" color="success" inset
-                                    label="Enable Nettica DNS" />
-
-                            </v-col>
-                        </div>
-                    </v-expansion-panel-content>
-                </v-expansion-panel>
-            </v-expansion-panels>
             <v-card>
                 <v-card-actions>
                     <v-btn :disabled="!valid" color="success" @click="update(net)">
@@ -252,6 +291,11 @@ export default {
 
     data: () => ({
         acntList: {},
+        showTree: false,
+        items: [],
+        active: [],
+        open: [],
+        inEdit: false,
         listView: true,
         dialogCreate: false,
         dialogUpdate: false,
@@ -280,10 +324,26 @@ export default {
     }),
 
     computed: {
+        selected() {
+            if (!this.active.length) return undefined
+
+            const id = this.active[0]
+            console.log("selected id = ", id)
+
+            var vpn = this.vpns.find(vpn => vpn.id === id)
+            if (vpn) {
+                return vpn
+            }
+
+
+            return this.items.find(item => item.id === id)
+        },
+
         ...mapGetters({
             user: 'auth/user',
             server: 'server/server',
             nets: 'net/nets',
+            vpns: 'vpn/vpns',
             hosts: 'host/hosts',
             accounts: 'account/accounts',
 
@@ -291,7 +351,7 @@ export default {
         options() {
             return {
                 force: 4000,
-                size: { w: 1000, h: 500 },
+                size: { w: 400, h: 300 },
                 nodeSize: this.nodeSize,
                 nodeLabels: true,
                 linkLabels: true,
@@ -306,6 +366,14 @@ export default {
         this.readAllNetworks()
         this.readAllVPNs()
     },
+
+    watch: {
+        nets: function (val) {
+            console.log("buildTree = ", this.buildTree())
+            this.showTree = true
+        },
+    },
+
 
     methods: {
         ...mapActions('vpn', {
@@ -329,25 +397,67 @@ export default {
             this.readAllAccounts(this.user.email)
             this.readAllVPNs()
             this.readAllNetworks()
+            this.buildTree()
         },
 
-        loadNetwork(net) {
+        buildTree() {
+            // build the treeview using the networks
+            this.items = []
+            var k = 0
+            for (let i = 0; i < this.nets.length; i++) {
+                this.items[i] = {
+                    id: this.nets[i].id,
+                    name: this.nets[i].netName,
+                    net: this.nets[i],
+                    icon: "mdi-network-outline",
+                    symbol: "hub",
+                    isNet: true,
+                    children: []
+                }
+            }
+
+            this.items.sort((a, b) => {
+            const nameA = a.name.toUpperCase(); // ignore upper and lowercase
+            const nameB = b.name.toUpperCase(); // ignore upper and lowercase
+            if (nameA < nameB) {
+                return -1;
+            }
+            if (nameA > nameB) {
+                return 1;
+            }
+
+            // names must be equal
+            return 0;
+            });
+
+            return this.items
+
+        },
+
+
+        loadNetwork() {
+            const id = this.active[0]
+            let item = this.items.find(item => item.id === id)
+
+            let net = item.net
+            console.log("net = ", net)
             let name = net.netName
             let x = 0
             let l = 0
             this.links = []
             this.nodes = []
             let net_hosts = []
-            for (let i = 0; i < this.hosts.length; i++) {
-                if (this.hosts[i].netName == name) {
-                    net_hosts[x] = this.hosts[i]
-                    this.nodes[x] = { id: x, name: this.hosts[i].name, /* _color:'gray'*/ }
-                    if (this.hosts[i].current.endpoint == "") {
+            console.log("this.vpns = ", this.vpns)
+            for (let i = 0; i < this.vpns.length; i++) {
+                if (this.vpns[i].netName == name) {
+                    net_hosts[x] = this.vpns[i]
+                    this.nodes[x] = { id: x, name: this.vpns[i].name, /* _color:'gray'*/ }
+                    if (this.vpns[i].current.endpoint == "") {
                         this.nodes[x]._color = "#34adcd"
                     } else {
                         this.nodes[x]._color = "#83c44d"
                     }
-                    if (this.hosts[i].role == "Egress") {
+                    if (this.vpns[i].role == "Egress") {
                         this.nodes[x]._color = "#50C878"
                     }
                     x++
@@ -428,7 +538,6 @@ export default {
         remove(net) {
             this.noEdit = true
             if (confirm(`Do you really want to delete ${net.netName}?`)) {
-                net.id = net.id
                 this.deleteNet(net)
             }
         },
@@ -455,6 +564,7 @@ export default {
         },
 
         update(net) {
+            this.net = net
 
             this.net.default.listenPort = parseInt(this.net.default.listenPort, 10);
             this.net.default.persistentKeepalive = parseInt(this.net.default.persistentKeepalive, 10);
@@ -488,20 +598,6 @@ export default {
             // all good, submit
             this.dialogUpdate = false;
             this.updateNet(net)
-        },
-
-        forceFileDownload(net) {
-            let config = this.getNetConfig(net.id)
-            if (!config) {
-                this.errorNet('Failed to download net config');
-                return
-            }
-            const url = window.URL.createObjectURL(new Blob([config]))
-            const link = document.createElement('a')
-            link.href = url
-            link.setAttribute('download', net.netName.split(' ').join('-') + '.conf') //or any other extension
-            document.body.appendChild(link)
-            link.click()
         },
     }
 };

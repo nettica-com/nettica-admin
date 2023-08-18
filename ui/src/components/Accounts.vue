@@ -19,15 +19,19 @@
         </div>
         <v-card>
             <v-card-title>
-                Accounts
-                <v-spacer></v-spacer>
-                <v-text-field v-if="listView" v-model="search" append-icon="mdi-magnify" label="Search" single-line
-                    hide-details></v-text-field>
-                <v-spacer></v-spacer>
-                <v-btn color="success" @click="startInvite">
-                    Invite
-                    <v-icon right dark>mdi-account-group</v-icon>
-                </v-btn>
+                <v-row>
+                    <v-col cols="4" >Account</v-col>
+                    <v-col cols="4">
+                        <v-text-field v-if="listView" v-model="search" append-icon="mdi-magnify" label="Search" single-line
+                            hide-details></v-text-field>
+                    </v-col>
+                    <v-col cols="4" class="text-right">
+                        <v-btn color="success" @click="startInvite">
+                            Invite
+                            <v-icon right dark>mdi-account-group</v-icon>
+                        </v-btn>
+                    </v-col>
+                </v-row>
             </v-card-title>
         </v-card>
         <v-card>
@@ -410,6 +414,21 @@ export default {
                     console.log("member: ", this.members[j])
                 }
             }
+
+            this.items.sort((a, b) => {
+            const nameA = a.name.toUpperCase(); // ignore upper and lowercase
+            const nameB = b.name.toUpperCase(); // ignore upper and lowercase
+            if (nameA < nameB) {
+                return -1;
+            }
+            if (nameA > nameB) {
+                return 1;
+            }
+
+            // names must be equal
+            return 0;
+            });
+
             this.showTree = true
             return this.items
 
@@ -442,6 +461,9 @@ export default {
             this.account.email = toAddress;
             this.account.netId = net.value;
             this.account.netName = net.text;
+            if (this.account.netName == "All Networks") {
+                this.account.netName = ""
+            }
             this.account.from = this.authuser.email;
             this.account.role = "User"
             this.account.status = "Pending"
