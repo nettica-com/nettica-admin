@@ -8,6 +8,7 @@ import (
 
 type Device struct {
 	Id            string    `json:"id"                        bson:"id"`
+	Server        string    `json:"server"                    bson:"server"`
 	AccountID     string    `json:"accountid"                 bson:"accountid"`
 	ApiKey        string    `json:"apiKey"                    bson:"apiKey"`
 	Name          string    `json:"name"                      bson:"name"`
@@ -15,7 +16,7 @@ type Device struct {
 	Authenticated bool      `json:"authenticated"             bson:"authenticated"`
 	Tags          []string  `json:"tags"                      bson:"tags"`
 	Platform      string    `json:"platform"                  bson:"platform"`
-	Server        string    `json:"server"                    bson:"server"`
+	Architecture  string    `json:"arch"                      bson:"arch"`
 	ClientID      string    `json:"clientid"                  bson:"clientid"`
 	AuthDomain    string    `json:"authdomain"                bson:"authdomain"`
 	ApiID         string    `json:"apiid"                     bson:"apiid"`
