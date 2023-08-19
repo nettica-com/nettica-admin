@@ -7,25 +7,31 @@ import (
 )
 
 type Device struct {
-	Id         string    `json:"id"                        bson:"id"`
-	AccountID  string    `json:"accountid"                 bson:"accountid"`
-	ApiKey     string    `json:"apiKey"                    bson:"apiKey"`
-	Name       string    `json:"name"                      bson:"name"`
-	Enable     bool      `json:"enable"                    bson:"enable"`
-	Tags       []string  `json:"tags"                      bson:"tags"`
-	Platform   string    `json:"platform"                  bson:"platform"`
-	Server     string    `json:"server"                    bson:"server"`
-	ClientID   string    `json:"clientid"                  bson:"clientid"`
-	AuthDomain string    `json:"authdomain"                bson:"authdomain"`
-	ApiID      string    `json:"apiid"                     bson:"apiid"`
-	AppData    string    `json:"appdata"                   bson:"appdata"`
-	Version    string    `json:"version"                   bson:"version"`
-	CreatedBy  string    `json:"createdBy"                 bson:"createdBy"`
-	UpdatedBy  string    `json:"updatedBy"                 bson:"updatedBy"`
-	Created    time.Time `json:"created"                   bson:"created"`
-	Updated    time.Time `json:"updated"                   bson:"updated"`
-	LastSeen   time.Time `json:"lastSeen"                  bson:"lastSeen"`
-	VPNs       []*VPN    `json:"vpns"`
+	Id            string    `json:"id"                        bson:"id"`
+	AccountID     string    `json:"accountid"                 bson:"accountid"`
+	ApiKey        string    `json:"apiKey"                    bson:"apiKey"`
+	Name          string    `json:"name"                      bson:"name"`
+	Enable        bool      `json:"enable"                    bson:"enable"`
+	Tags          []string  `json:"tags"                      bson:"tags"`
+	Platform      string    `json:"platform"                  bson:"platform"`
+	Server        string    `json:"server"                    bson:"server"`
+	ClientID      string    `json:"clientid"                  bson:"clientid"`
+	AuthDomain    string    `json:"authdomain"                bson:"authdomain"`
+	ApiID         string    `json:"apiid"                     bson:"apiid"`
+	AppData       string    `json:"appdata"                   bson:"appdata"`
+	CheckInterval int64     `json:"checkInterval"             bson:"checkInterval"`
+	ServiceGroup  string    `json:"serviceGroup"              bson:"serviceGroup"`
+	ServiceApiKey string    `json:"serviceApiKey"             bson:"serviceApiKey"`
+	SourceAddress string    `json:"sourceAddress"             bson:"sourceAddress"`
+	Debug         bool      `json:"debug"                     bson:"debug"`
+	Quiet         bool      `json:"quiet"                     bson:"quiet"`
+	Version       string    `json:"version"                   bson:"version"`
+	CreatedBy     string    `json:"createdBy"                 bson:"createdBy"`
+	UpdatedBy     string    `json:"updatedBy"                 bson:"updatedBy"`
+	Created       time.Time `json:"created"                   bson:"created"`
+	Updated       time.Time `json:"updated"                   bson:"updated"`
+	LastSeen      time.Time `json:"lastSeen"                  bson:"lastSeen"`
+	VPNs          []*VPN    `json:"vpns"`
 }
 
 // IsValid check if model is valid
