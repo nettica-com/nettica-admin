@@ -16,6 +16,7 @@ type Device struct {
 	Authenticated bool      `json:"authenticated"             bson:"authenticated"`
 	Tags          []string  `json:"tags"                      bson:"tags"`
 	Platform      string    `json:"platform"                  bson:"platform"`
+	OS            string    `json:"os"                        bson:"os"`
 	Architecture  string    `json:"arch"                      bson:"arch"`
 	ClientID      string    `json:"clientid"                  bson:"clientid"`
 	AuthDomain    string    `json:"authdomain"                bson:"authdomain"`
