@@ -27,23 +27,6 @@ type VPN struct {
 	Default   Settings  `json:"default"                   bson:"default"`
 }
 
-type Device struct {
-	Id        string    `json:"id"                        bson:"id"`
-	AccountID string    `json:"accountid"                 bson:"accountid"`
-	ApiKey    string    `json:"apiKey"                    bson:"apiKey"`
-	Name      string    `json:"name"                      bson:"name"`
-	Enable    bool      `json:"enable"                    bson:"enable"`
-	Tags      []string  `json:"tags"                      bson:"tags"`
-	Platform  string    `json:"platform"                  bson:"platform"`
-	Version   string    `json:"version"                   bson:"version"`
-	CreatedBy string    `json:"createdBy"                 bson:"createdBy"`
-	UpdatedBy string    `json:"updatedBy"                 bson:"updatedBy"`
-	Created   time.Time `json:"created"                   bson:"created"`
-	Updated   time.Time `json:"updated"                   bson:"updated"`
-	LastSeen  time.Time `json:"lastSeen"                  bson:"lastSeen"`
-	VPNs      []*VPN    `json:"vpns"`
-}
-
 // IsValid check if model is valid
 func (a VPN) IsValid() []error {
 	errs := make([]error, 0)
