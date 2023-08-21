@@ -78,6 +78,9 @@ func UpdateDevice(Id string, device *model.Device, flag bool) (*model.Device, er
 	if !flag {
 		device.Updated = time.Now().UTC()
 	}
+	if device.AccountID == "" {
+		device.AccountID = current.AccountID
+	}
 
 	device.VPNs = nil
 	err = mongo.Serialize(device.Id, "id", "devices", device)

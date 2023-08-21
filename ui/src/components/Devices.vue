@@ -488,7 +488,7 @@
                 </v-dialog>
                 <v-dialog v-if="vpn" v-model="dialogServiceHost" max-width="550">
                     <v-card>
-                        <v-card-title class="headline">Manage Service: {{ device.name }}</v-card-title>
+                        <v-card-title class="headline">Manage Service: {{ vpn.name }}</v-card-title>
                         <v-card-text>
 
                             <v-row>
