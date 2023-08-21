@@ -83,9 +83,9 @@
                                         <v-combobox v-model="selected.device.tags" chips
                                             hint="Enter a tag, hit tab, hit enter." label="Tags" multiple dark
                                             :readonly="!inEdit">
-                                            <template v-slot:selection="{ attrs, item, select, selected }">
+                                            <template v-slot:selection="{ attrs, item, select }">
                                                 <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                                    @click:close="device.tags.splice(device.tags.indexOf(item), 1)">
+                                                    @click:close="selected.device.tags.splice(selected.device.tags.indexOf(item), 1)">
                                                     <strong>{{ item }}</strong>&nbsp;
                                                 </v-chip>
                                             </template>
@@ -154,7 +154,7 @@
                                         <v-text-field v-model="selected.name" label="DNS name" :readonly="!inEdit" />
                                         <v-combobox :readonly="!inEdit" v-model="selected.current.address" chips
                                             hint="Write IPv4 or IPv6 CIDR and hit enter" label="Addresses" multiple dark>
-                                            <template v-slot:selection="{ attrs, item, select, selected }">
+                                            <template v-slot:selection="{ attrs, item, select }">
                                                 <v-chip v-bind="attrs" :input-value="selected" close @click="select"
                                                     @click:close="selected.current.address.splice(selected.current.address.indexOf(item), 1)">
                                                     <strong>{{ item }}</strong>&nbsp;
@@ -164,7 +164,7 @@
                                         <v-combobox :readonly="!inEdit" v-model="selected.current.dns" chips
                                             hint="Enter IP address(es) and hit enter or leave empty."
                                             label="DNS servers for this device" multiple dark>
-                                            <template v-slot:selection="{ attrs, item, select, selected }">
+                                            <template v-slot:selection="{ attrs, item, select }">
 
                                                 <v-chip v-bind="attrs" :input-value="selected" close @click="select"
                                                     @click:close="selected.current.dns.splice(selected.current.dns.indexOf(item), 1)">
@@ -189,9 +189,8 @@
                                                         hint="Write IPv4 or IPv6 CIDR and hit enter" label="Allowed IPs"
                                                         multiple dark>
 
-                                                        <template v-slot:selection="{ attrs, item, select, selected }">
-                                                            <v-chip v-bind="attrs" :input-value="selected" close
-                                                                @click="select"
+                                                        <template v-slot:selection="{ attrs, item, select }">
+                                                            <v-chip v-bind="attrs" :input-value="selected" close @click="select"
                                                                 @click:close="selected.current.allowedIPs.splice(selected.current.allowedIPs.indexOf(item), 1)">
                                                                 <strong>{{ item }}</strong>&nbsp;
                                                             </v-chip>
@@ -347,7 +346,7 @@
 
                                         <v-combobox v-model="device.tags" chips hint="Enter a tag, hit tab, hit enter."
                                             label="Tags" multiple dark>
-                                            <template v-slot:selection="{ attrs, item, select, selected }">
+                                            <template v-slot:selection="{ attrs, item, select }">
                                                 <v-chip v-bind="attrs" :input-value="selected" close @click="select"
                                                     @click:close="device.tags.splice(device.tags.indexOf(item), 1)">
                                                     <strong>{{ item }}</strong>&nbsp;
@@ -434,7 +433,7 @@
                                             :rules="[v => !!v || 'Net is required',]" single persistent-hint required />
                                         <v-combobox v-model="device.tags" chips hint="Write tag name and hit enter"
                                             label="Tags" multiple dark>
-                                            <template v-slot:selection="{ attrs, item, select, selected }">
+                                            <template v-slot:selection="{ attrs, item, select }">
                                                 <v-chip v-bind="attrs" :input-value="selected" close @click="select"
                                                     @click:close="device.tags.splice(device.tags.indexOf(item), 1)">
                                                     <strong>{{ item }}</strong>&nbsp;

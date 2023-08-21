@@ -69,7 +69,7 @@
                                 <v-text-field v-model="selected.net.description" label="Description" />
                                 <v-combobox v-model="selected.net.default.address" chips
                                     hint="Write IPv4 or IPv6 CIDR and hit enter" label="Addresses" multiple dark>
-                                    <template v-slot:selection="{ attrs, item, select, selected }">
+                                    <template v-slot:selection="{ attrs, item, select }">
                                         <v-chip v-bind="attrs" :input-value="selected" close @click="select"
                                             @click:close="selected.net.default.address.splice(selected.net.default.address.indexOf(item), 1)">
                                             <strong>{{ item }}</strong>&nbsp;
@@ -79,7 +79,7 @@
                                 <v-combobox :readonly="!inEdit" v-model="selected.net.default.dns" chips
                                     hint="Enter IP address(es) and hit enter or leave empty."
                                     label="DNS servers for this device" multiple dark>
-                                    <template v-slot:selection="{ attrs, item, select, selected }">
+                                    <template v-slot:selection="{ attrs, item, select }">
 
                                         <v-chip v-bind="attrs" :input-value="selected" close @click="select"
                                             @click:close="selected.net.default.dns.splice(selected.net.default.dns.indexOf(item), 1)">
@@ -89,7 +89,7 @@
                                 </v-combobox>
                                 <v-combobox v-model="selected.net.tags" chips hint="Enter a tag, hit tab, hit enter."
                                     label="Tags" multiple dark>
-                                    <template v-slot:selection="{ attrs, item, select, selected }">
+                                    <template v-slot:selection="{ attrs, item, select }">
                                         <v-chip v-bind="attrs" :input-value="selected" close @click="select"
                                             @click:close="selected.net.tags.splice(selected.net.tags.indexOf(item), 1)">
                                             <strong>{{ item }}</strong>&nbsp;
@@ -100,7 +100,7 @@
                                 <v-text-field v-model="selected.net.default.presharedKey" label="Preshared Key" />
                                 <v-combobox v-model="selected.net.default.allowedIPs" chips
                                     hint="Write IPv4 or IPv6 CIDR and hit enter" label="Allowed IPs" multiple dark>
-                                    <template v-slot:selection="{ attrs, item, select, selected }">
+                                    <template v-slot:selection="{ attrs, item, select }">
                                         <v-chip v-bind="attrs" :input-value="selected" close @click="select"
                                             @click:close="selected.net.default.allowedIPs.splice(selected.net.default.allowedIPs.indexOf(item), 1)">
                                             <strong>{{ item }}</strong>&nbsp;
