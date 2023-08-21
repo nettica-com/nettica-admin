@@ -8,6 +8,7 @@ import (
 	model "github.com/nettica-com/nettica-admin/model"
 	mongo "github.com/nettica-com/nettica-admin/mongo"
 	util "github.com/nettica-com/nettica-admin/util"
+	log "github.com/sirupsen/logrus"
 )
 
 // CreateDevice device with all necessary data
@@ -33,6 +34,15 @@ func CreateDevice(device *model.Device) (*model.Device, error) {
 	}
 
 	// check if device is valid
+	errs := device.IsValid()
+	if len(errs) != 0 {
+		for _, err := range errs {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("device validation error")
+		}
+		return nil, errors.New("failed to validate device")
+	}
 
 	err = mongo.Serialize(device.Id, "id", "devices", device)
 	if err != nil {
@@ -86,6 +96,18 @@ func UpdateDevice(Id string, device *model.Device, flag bool) (*model.Device, er
 	}
 
 	device.VPNs = nil
+
+	// check if device is valid
+	errs := device.IsValid()
+	if len(errs) != 0 {
+		for _, err := range errs {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("device validation error")
+		}
+		return nil, errors.New("failed to validate device")
+	}
+
 	err = mongo.Serialize(device.Id, "id", "devices", device)
 	if err != nil {
 		return nil, err

@@ -45,6 +45,11 @@ func (a Device) IsValid() []error {
 	if a.Id == "" {
 		errs = append(errs, fmt.Errorf("id is required"))
 	}
+
+	if a.AccountID == "" {
+		errs = append(errs, fmt.Errorf("accountid is required"))
+	}
+
 	// check the name field is between 2 to 40 chars
 	if len(a.Name) < 2 || len(a.Name) > 40 {
 		errs = append(errs, fmt.Errorf("name field must be between 2-40 chars"))
