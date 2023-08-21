@@ -9,7 +9,6 @@ import (
 	model "github.com/nettica-com/nettica-admin/model"
 	mongo "github.com/nettica-com/nettica-admin/mongo"
 	util "github.com/nettica-com/nettica-admin/util"
-	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 )
@@ -17,8 +16,12 @@ import (
 // CreateNet net with all necessary data
 func CreateNet(net *model.Network) (*model.Network, error) {
 
-	u := uuid.NewV4()
-	net.Id = u.String()
+	var err error
+	net.Id, err = util.RandomString(12)
+	if err != nil {
+		return nil, err
+	}
+	net.Id = "net-" + net.Id
 
 	ips := make([]string, 0)
 	// normalize ip addresses given
@@ -62,7 +65,7 @@ func CreateNet(net *model.Network) (*model.Network, error) {
 		return nil, errors.New("failed to validate net")
 	}
 
-	err := mongo.Serialize(net.Id, "id", "networks", net)
+	err = mongo.Serialize(net.Id, "id", "networks", net)
 	if err != nil {
 		return nil, err
 	}

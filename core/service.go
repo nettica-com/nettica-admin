@@ -28,8 +28,11 @@ func CreateService(service *model.Service) (*model.Service, error) {
 	defer CreateLock.Unlock()
 
 	var err error
-	u := uuid.NewV4()
-	service.Id = u.String()
+	service.Id, err = util.RandomString(12)
+	if err != nil {
+		return nil, err
+	}
+	service.Id = "service-" + service.Id
 	service.Created = time.Now().UTC()
 	service.Updated = time.Now().UTC()
 

@@ -8,14 +8,17 @@ import (
 	model "github.com/nettica-com/nettica-admin/model"
 	mongo "github.com/nettica-com/nettica-admin/mongo"
 	util "github.com/nettica-com/nettica-admin/util"
-	uuid "github.com/satori/go.uuid"
 )
 
 // CreateDevice device with all necessary data
 func CreateDevice(device *model.Device) (*model.Device, error) {
 
-	u := uuid.NewV4()
-	device.Id = u.String()
+	var err error
+	device.Id, err = util.RandomString(12)
+	if err != nil {
+		return nil, err
+	}
+	device.Id = "device-" + device.Id
 
 	device.Created = time.Now().UTC()
 	device.Updated = device.Created
@@ -31,7 +34,7 @@ func CreateDevice(device *model.Device) (*model.Device, error) {
 
 	// check if device is valid
 
-	err := mongo.Serialize(device.Id, "id", "devices", device)
+	err = mongo.Serialize(device.Id, "id", "devices", device)
 	if err != nil {
 		return nil, err
 	}
@@ -54,11 +57,11 @@ func ReadDevice(id string) (*model.Device, error) {
 	}
 	device := v.(*model.Device)
 
-	vpns, err := mongo.ReadAllVPNs("deviceid", device.Id)
-	if err != nil {
-		return nil, err
-	}
-	device.VPNs = vpns
+	//	vpns, err := mongo.ReadAllVPNs("deviceid", device.Id)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	device.VPNs = vpns
 
 	return device, nil
 }

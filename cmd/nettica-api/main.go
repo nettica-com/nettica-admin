@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -14,7 +13,6 @@ import (
 	"github.com/joho/godotenv"
 	api "github.com/nettica-com/nettica-admin/api"
 	auth "github.com/nettica-com/nettica-admin/auth"
-	core "github.com/nettica-com/nettica-admin/core"
 	util "github.com/nettica-com/nettica-admin/util"
 	version "github.com/nettica-com/nettica-admin/version"
 	"github.com/patrickmn/go-cache"
@@ -41,27 +39,6 @@ func main() {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Fatal("failed to load .env file")
-	}
-
-	// check directories or create it
-	if !util.DirectoryExists(filepath.Join(os.Getenv("WG_CONF_DIR"))) {
-		err = os.Mkdir(filepath.Join(os.Getenv("WG_CONF_DIR")), 0755)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"err": err,
-				"dir": filepath.Join(os.Getenv("WG_CONF_DIR")),
-			}).Fatal("failed to create directory")
-		}
-	}
-
-	// check if mesh.json exists otherwise create it with default values
-	if !util.FileExists(filepath.Join(os.Getenv("WG_CONF_DIR"), "mesh.json")) {
-		_, err = core.ReadServer()
-		if err != nil {
-			log.WithFields(log.Fields{
-				"err": err,
-			}).Fatal("mesh.json does not exist or can not read it")
-		}
 	}
 
 	if os.Getenv("GIN_MODE") == "debug" {
@@ -134,7 +111,6 @@ func main() {
 		}
 
 		c.Next()
-		return
 
 		//		c.AbortWithStatus(http.StatusUnauthorized)
 		//		return

@@ -26,6 +26,7 @@ func CreateAccount(account *model.Account) (*model.Account, error) {
 		if err != nil {
 			return nil, err
 		}
+		account.Id = "account-" + account.Id
 	}
 
 	if account.ApiKey == "" {
