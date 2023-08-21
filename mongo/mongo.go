@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"sync"
 	"time"
 
 	model "github.com/nettica-com/nettica-admin/model"
@@ -15,6 +16,36 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+// Create a cache of mongo db connections
+var mongoClient *mongo.Client
+var m sync.Mutex
+
+// getMongoClient returns a mongo client for the given connection string
+func getMongoClient() (*mongo.Client, error) {
+
+	m.Lock()
+	defer m.Unlock()
+
+	if mongoClient != nil {
+
+		return mongoClient, nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	o := options.Client().SetMinPoolSize(2)
+	o = o.ApplyURI(os.Getenv("MONGODB_CONNECTION_STRING"))
+	client, err := mongo.Connect(ctx, o)
+
+	if err != nil {
+		return nil, err
+	}
+
+	mongoClient = client
+
+	return mongoClient, nil
+}
 
 ///
 /// Mongo DB primitives
@@ -29,13 +60,12 @@ func Serialize(id string, parm string, col string, c interface{}) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGODB_CONNECTION_STRING")))
 
-	defer func() {
-		if err = client.Disconnect(ctx); err != nil {
-			log.Error(err)
-		}
-	}()
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+		return err
+	}
 
 	data, err := json.Marshal(c)
 	//	json := fmt.Sprintf("%v", user)
@@ -67,13 +97,12 @@ func Deserialize(id string, parm string, col string, t reflect.Type) (interface{
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGODB_CONNECTION_STRING")))
 
-	defer func() {
-		if err = client.Disconnect(ctx); err != nil {
-			log.Error(err)
-		}
-	}()
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+		return nil, err
+	}
 
 	collection := client.Database("nettica").Collection(col)
 
@@ -132,13 +161,12 @@ func DeleteVPN(id string, col string) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGODB_CONNECTION_STRING")))
 
-	defer func() {
-		if err = client.Disconnect(ctx); err != nil {
-			log.Error(err)
-		}
-	}()
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+		return err
+	}
 
 	collection := client.Database("nettica").Collection(col)
 
@@ -156,13 +184,12 @@ func Delete(id string, ident string, col string) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGODB_CONNECTION_STRING")))
 
-	defer func() {
-		if err = client.Disconnect(ctx); err != nil {
-			log.Error(err)
-		}
-	}()
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+		return err
+	}
 
 	collection := client.Database("nettica").Collection(col)
 
@@ -181,13 +208,12 @@ func ReadAllDevices(param string, id string) ([]*model.Device, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGODB_CONNECTION_STRING")))
 
-	defer func() {
-		if err = client.Disconnect(ctx); err != nil {
-			log.Error(err)
-		}
-	}()
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+		return nil, err
+	}
 
 	collection := client.Database("nettica").Collection("devices")
 
@@ -221,15 +247,14 @@ func ReadAllDevices(param string, id string) ([]*model.Device, error) {
 func ReadAllVPNs(param string, id string) ([]*model.VPN, error) {
 	vpns := make([]*model.VPN, 0)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGODB_CONNECTION_STRING")))
 
-	defer func() {
-		if err = client.Disconnect(ctx); err != nil {
-			log.Error(err)
-		}
-	}()
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+		return nil, err
+	}
 
 	collection := client.Database("nettica").Collection("vpns")
 
@@ -260,18 +285,17 @@ func ReadAllVPNs(param string, id string) ([]*model.VPN, error) {
 }
 
 // ReadAllNetworks from MongoDB
-func ReadAllNetworks(param string, id string) []*model.Network {
+func ReadAllNetworks(param string, id string) ([]*model.Network, error) {
 	nets := make([]*model.Network, 0)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGODB_CONNECTION_STRING")))
 
-	defer func() {
-		if err = client.Disconnect(ctx); err != nil {
-			log.Error(err)
-		}
-	}()
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+		return nil, err
+	}
 
 	filter := bson.D{}
 	if id != "" {
@@ -296,7 +320,7 @@ func ReadAllNetworks(param string, id string) []*model.Network {
 
 	}
 
-	return nets
+	return nets, nil
 
 }
 
@@ -306,14 +330,12 @@ func ReadAllUsers() []*model.User {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGODB_CONNECTION_STRING")))
 
-	defer func() {
-		if err = client.Disconnect(ctx); err != nil {
-			log.Error(err)
-		}
-	}()
-
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+		return nil
+	}
 	collection := client.Database("nettica").Collection("users")
 
 	cursor, err := collection.Find(ctx, bson.D{})
@@ -341,13 +363,11 @@ func ReadAllAccounts(email string) ([]*model.Account, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGODB_CONNECTION_STRING")))
-
-	defer func() {
-		if err = client.Disconnect(ctx); err != nil {
-			log.Error(err)
-		}
-	}()
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+		return nil, err
+	}
 
 	collection := client.Database("nettica").Collection("accounts")
 
@@ -383,13 +403,12 @@ func ReadAllAccountsForID(id string) ([]*model.Account, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGODB_CONNECTION_STRING")))
 
-	defer func() {
-		if err = client.Disconnect(ctx); err != nil {
-			log.Error(err)
-		}
-	}()
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+		return nil, err
+	}
 
 	collection := client.Database("nettica").Collection("accounts")
 
@@ -425,13 +444,12 @@ func ReadAllSubscriptions(email string) ([]*model.Subscription, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGODB_CONNECTION_STRING")))
 
-	defer func() {
-		if err = client.Disconnect(ctx); err != nil {
-			log.Error(err)
-		}
-	}()
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+		return nil, err
+	}
 
 	collection := client.Database("nettica").Collection("subscriptions")
 
@@ -467,13 +485,12 @@ func ReadAllServices(email string) ([]*model.Service, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGODB_CONNECTION_STRING")))
 
-	defer func() {
-		if err = client.Disconnect(ctx); err != nil {
-			log.Error(err)
-		}
-	}()
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+		return nil, err
+	}
 
 	collection := client.Database("nettica").Collection("service")
 
@@ -509,13 +526,12 @@ func ReadAllServers() ([]*model.Server, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGODB_CONNECTION_STRING")))
 
-	defer func() {
-		if err = client.Disconnect(ctx); err != nil {
-			log.Error(err)
-		}
-	}()
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+		return nil, err
+	}
 
 	collection := client.Database("nettica").Collection("servers")
 	cursor, err := collection.Find(ctx, bson.D{})
@@ -538,13 +554,12 @@ func ReadServiceHost(id string) ([]*model.Service, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGODB_CONNECTION_STRING")))
 
-	defer func() {
-		if err = client.Disconnect(ctx); err != nil {
-			log.Error(err)
-		}
-	}()
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+		return nil, err
+	}
 
 	collection := client.Database("nettica").Collection("service")
 

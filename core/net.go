@@ -159,10 +159,16 @@ func ReadNetworks(email string) ([]*model.Network, error) {
 
 	for _, account := range accounts {
 		if account.NetId != "" && account.Status == "Active" {
-			nets := mongo.ReadAllNetworks("id", account.NetId)
+			nets, err := mongo.ReadAllNetworks("id", account.NetId)
+			if err != nil {
+				return nil, err
+			}
 			results = append(results, nets...)
 		} else if account.Status == "Active" {
-			nets := mongo.ReadAllNetworks("accountid", account.Parent)
+			nets, err := mongo.ReadAllNetworks("accountid", account.Parent)
+			if err != nil {
+				return nil, err
+			}
 			results = append(results, nets...)
 		}
 	}
