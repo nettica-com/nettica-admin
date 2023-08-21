@@ -267,7 +267,11 @@ func statusDevice(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to read client config")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		if err.Error() == "mongo: no documents in result" {
+			c.AbortWithStatus(http.StatusNotFound)
+		} else {
+			c.AbortWithStatus(http.StatusInternalServerError)
+		}
 		return
 	}
 
