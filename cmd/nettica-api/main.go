@@ -119,7 +119,7 @@ func main() {
 	// apply api router private
 	api.ApplyRoutes(app, true)
 
-	err = app.Run(fmt.Sprintf("%s:%s", os.Getenv("SERVER"), os.Getenv("PORT")))
+	err = app.Run(fmt.Sprintf("%s:%s", os.Getenv("LISTEN_ADDR"), os.Getenv("PORT")))
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,

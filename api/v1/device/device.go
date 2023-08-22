@@ -368,11 +368,11 @@ func statusDevice(c *gin.Context) {
 			if client.DeviceID != deviceId {
 				client.Current.PrivateKey = ""
 			} else {
-				device.LastSeen = time.Now()
-				device2 := device
+				device2 := *device
 				// update device from id with new last seen
 				go func() {
-					_, err = core.UpdateDevice(device.Id, device2, true)
+					device2.LastSeen = time.Now()
+					_, err = core.UpdateDevice(device2.Id, &device2, true)
 					if err != nil {
 						log.Error(err)
 					}

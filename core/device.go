@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"os"
 	"reflect"
 	"time"
 
@@ -31,6 +32,10 @@ func CreateDevice(device *model.Device) (*model.Device, error) {
 			return nil, err
 		}
 		device.ApiKey = "device-api-" + device.ApiKey
+	}
+
+	if device.Server == "" {
+		device.Server = os.Getenv("SERVER")
 	}
 
 	// check if device is valid
@@ -77,7 +82,7 @@ func ReadDevice(id string) (*model.Device, error) {
 }
 
 // UpdateDevice preserve keys
-func UpdateDevice(Id string, device *model.Device, flag bool) (*model.Device, error) {
+func UpdateDevice(Id string, device *model.Device, fUpdated bool) (*model.Device, error) {
 	v, err := mongo.Deserialize(Id, "id", "devices", reflect.TypeOf(model.Device{}))
 	if err != nil {
 		return nil, err
@@ -88,7 +93,7 @@ func UpdateDevice(Id string, device *model.Device, flag bool) (*model.Device, er
 		return nil, errors.New("records Id mismatch")
 	}
 
-	if !flag {
+	if !fUpdated {
 		device.Updated = time.Now().UTC()
 	}
 	if device.AccountID == "" {

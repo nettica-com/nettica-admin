@@ -12,7 +12,6 @@ import (
 	model "github.com/nettica-com/nettica-admin/model"
 	mongo "github.com/nettica-com/nettica-admin/mongo"
 	util "github.com/nettica-com/nettica-admin/util"
-	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -41,6 +40,7 @@ func CreateService(service *model.Service) (*model.Service, error) {
 		if err != nil {
 			return nil, err
 		}
+		service.ApiKey = "service-api-" + service.ApiKey
 	}
 
 	// TODO: validate the subscription
@@ -58,7 +58,7 @@ func CreateService(service *model.Service) (*model.Service, error) {
 	}
 
 	if service.ServicePort == 0 {
-		service.ServicePort = 30000
+		service.ServicePort = 30001
 	}
 	if service.DefaultSubnet == "" {
 		service.DefaultSubnet = "10.10.10.0/24"
@@ -92,6 +92,7 @@ func CreateService(service *model.Service) (*model.Service, error) {
 				Created:     time.Now().UTC(),
 				Updated:     time.Now().UTC(),
 				CreatedBy:   service.CreatedBy,
+				UpdatedBy:   service.CreatedBy,
 			}
 			net.Default.Address = []string{service.DefaultSubnet}
 			net.Default.Dns = service.Relay.Current.Dns
@@ -122,21 +123,27 @@ func CreateService(service *model.Service) (*model.Service, error) {
 	}
 
 	if service.Relay.Id == "" {
+		id, err := util.RandomString(12)
+		if err != nil {
+			return nil, err
+		}
+		service.Relay.Id = "relay-" + id
 		// create a default vpn using the net
 		vpn := model.VPN{
-			Id:        uuid.NewV4().String(),
+			Id:        id,
 			AccountID: service.AccountID,
 			Name:      strings.ToLower(service.ServiceType) + "." + service.Relay.NetName,
 			Enable:    true,
 			NetId:     service.Relay.NetId,
 			NetName:   service.Relay.NetName,
-			//			VPNGroup: service.Relay.VPNGroup,
-			Current: service.Relay.Current,
-			Default: service.Relay.Default,
-			//			Type:      "ServiceVPN",
+			DeviceID:  service.Relay.DeviceID,
+			Current:   service.Relay.Current,
+			Default:   service.Relay.Default,
+			Type:      "ServiceHost",
 			Created:   time.Now().UTC(),
 			Updated:   time.Now().UTC(),
 			CreatedBy: service.CreatedBy,
+			UpdatedBy: service.CreatedBy,
 		}
 
 		// Failsafe entry for DNS.  Service will break without proper DNS setup.  If nothing is set use google

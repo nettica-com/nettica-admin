@@ -39,8 +39,12 @@
                             <v-treeview v-if="showTree" :items="items" :search="search" :active.sync="active"
                                 :open.sync="open" activatable open-all hoverable>
                                 <template v-slot:prepend="{ item }">
-                                    <span v-if="item.symbol" class="material-symbols-outlined">{{ item.symbol }}</span>
-                                    <v-icon v-else>
+                                    <span v-if="item.symbol && item.status == 'Online'" class="material-symbols-outlined" style="color:green;">{{ item.symbol }}</span>
+                                    <span v-if="item.symbol && item.status == 'Offline'" class="material-symbols-outlined" style="color:red;">{{ item.symbol }}</span>
+                                    <span v-if="item.symbol && item.status == 'Native'" class="material-symbols-outlined" style="color:blue;">{{ item.symbol }}</span>
+                                    <span v-if="item.symbol && !item.status" class="material-symbols-outlined">{{ item.symbol }}</span>
+                                    
+                                    <v-icon v-if="!item.symbol">
                                         {{ item.icon }}
                                     </v-icon>
                                 </template>
@@ -78,7 +82,7 @@
                                 </v-card-text>
                                 <v-divider></v-divider>
 
-                                <v-row class="text-left" width="300">
+                                <v-row class="px-3" width="300">
                                     <v-col flex>
                                         <v-combobox v-model="selected.device.tags" chips
                                             hint="Enter a tag, hit tab, hit enter." label="Tags" multiple dark
@@ -176,6 +180,10 @@
                                             label="Public endpoint for clients" />
                                         <v-text-field :readonly="!inEdit" v-model="selected.current.listenPort"
                                             type="number" label="Listen port" />
+                                        <v-switch v-model="selected.enable" color="success" inset
+                                        :label="selected.enable ? 'Enabled' : 'Disabled'" :readonly="!inEdit" />
+                                        <p class="text-caption">Created by {{ selected.createdBy }} at {{ selected.created | formatDate }}<br/>
+                                                            Last update by {{ selected.updatedBy }} at {{ selected.updated | formatDate }}</p>
 
                                     </v-col>
                                 </v-row>
@@ -996,8 +1004,8 @@ export default {
             this.noEdit = true;
             this.device = device;
 
-            this.device.platform = this.selected.platform.value
-            console.log("platform = ", this.device.platform)
+            device.platform = this.selected.platform.value
+            console.log("platform = ", device.platform)
 
             // all good, submit
             this.dialogUpdate = false;
@@ -1009,7 +1017,7 @@ export default {
                 timeout: 2000,
             }
 
-            await this.updatedevice(this.device)
+            await this.updatedevice(device)
             await new Promise(r => setTimeout(r, 1000));
             this.Refresh()
         },

@@ -12,6 +12,7 @@ type Device struct {
 	AccountID     string    `json:"accountid"                 bson:"accountid"`
 	ApiKey        string    `json:"apiKey"                    bson:"apiKey"`
 	Name          string    `json:"name"                      bson:"name"`
+	Type          string    `json:"type"                      bson:"type"`
 	Enable        bool      `json:"enable"                    bson:"enable"`
 	Authenticated bool      `json:"authenticated"             bson:"authenticated"`
 	Tags          []string  `json:"tags"                      bson:"tags"`
