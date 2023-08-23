@@ -391,13 +391,20 @@ export default {
 
             this.service.defaultSubnet = this.server.defaultSubnet;
             this.service.servicePort = port;
-            this.service.relayHost = {}
-            this.service.relayHost.netName = this.serverList.selected.value;
-            this.service.relayHost.current = {}
-            this.service.relayHost.current.dns = []
-            this.service.relayHost.current.dns[0] = this.dnsList.selected.value;
-            this.service.relayHost.current.endpoint = this.server.ipAddress + ":" + port;
-            this.service.relayHost.current.listenPort = port;
+            this.service.net = {}
+            this.service.net.netName = this.netList.selected.value;
+            this.service.net.default = {}
+            this.service.net.default.dns = []
+            this.service.net.default.dns[0] = this.dnsList.selected.value;
+
+            this.service.vpn = {}
+            this.service.vpn.netName = this.serverList.selected.value;
+            this.service.vpn.current = {}
+            this.service.vpn.current.dns = []
+            this.service.vpn.current.dns[0] = this.dnsList.selected.value;
+            this.service.vpn.current.endpoint = this.server.ipAddress + ":" + port;
+            this.service.vpn.current.listenPort = port;
+
             this.service.description = this.server.description
             this.service.name = this.server.name
             this.service.serviceGroup = this.server.serviceGroup
@@ -405,11 +412,11 @@ export default {
 
             this.service.serviceType = this.svcList.selected.value;
 
-            if (this.service.relayHost.netName != "") {
-                this.service.relayHost.netId = this.netList.selected.value;
+            if (this.service.net.netName != "") {
+                this.service.net.id = this.netList.selected.value;
             }
             else {
-                this.service.relayHost.netId = "";
+                this.service.net.id = "";
             }
 
             this.createService(this.service);
@@ -437,25 +444,30 @@ export default {
 
             this.ingress.defaultSubnet = this.ingressServer.defaultSubnet;
             this.ingress.servicePort = portI;
-            this.ingress.relayHost = {}
-            this.ingress.relayHost.netName = this.netList.selected.value;
-            this.ingress.relayHost.current = {}
-            this.ingress.relayHost.current.dns = []
-            this.ingress.relayHost.current.dns[0] = "8.8.8.8";
-            this.ingress.relayHost.current.endpoint = this.ingressServer.ipAddress + ":" + portI;
-            this.ingress.relayHost.current.listenPort = portI;
             this.ingress.description = this.ingressServer.description + " (ingress)"
             this.ingress.name = this.ingressServer.name
             this.ingress.serviceGroup = this.ingressServer.serviceGroup
             this.ingress.apiKey = this.ingressServer.serviceApiKey
 
+            this.ingress.net = {}
+            this.ingress.net.netName = this.netList.selected.value;
+            this.ingress.net.default = {}
+            this.ingress.net.default.dns = []
+            this.ingress.net.default.dns[0] = this.dnsList.selected.value;
+            this.ingress.vpn = {}
+            this.ingress.vpn.current = {}
+            this.ingress.vpn.current.dns = []
+            this.ingress.vpn.current.dns[0] = this.dnsList.selected.value;
+            this.ingress.vpn.current.endpoint = this.ingressServer.ipAddress + ":" + portI;
+            this.ingress.vpn.current.listenPort = portI;
+
             this.ingress.serviceType = "Ingress";
 
-            if (this.ingress.relayHost.netName != "") {
-                this.ingress.relayHost.netId = this.netList.selected.value;
+            if (this.ingress.net.netName != "") {
+                this.ingress.net.id = this.netList.selected.value;
             }
             else {
-                this.ingress.relayHost.netId = "";
+                this.ingress.net.id = "";
             }
 
             var rangeE = this.egressServer.portMax - this.egressServer.portMin + 1;
@@ -463,25 +475,29 @@ export default {
 
             this.egress.defaultSubnet = this.ingressServer.defaultSubnet;
             this.egress.servicePort = portE;
-            this.egress.relayHost = {}
-            this.egress.relayHost.netName = this.netList.selected.value;
-            this.egress.relayHost.current = {}
-            this.egress.relayHost.current.dns = []
-            this.egress.relayHost.current.dns[0] = "8.8.8.8";
-            this.egress.relayHost.current.endpoint = this.egressServer.ipAddress + ":" + portE;
-            this.egress.relayHost.current.listenPort = portE;
             this.egress.description = this.egressServer.description + " (egress)"
             this.egress.name = this.egressServer.name
             this.egress.serviceGroup = this.egressServer.serviceGroup
             this.egress.apiKey = this.egressServer.serviceApiKey
+            this.egress.net = {}
+            this.egress.net.netName = this.netList.selected.value;
+            this.egress.net.default = {}
+            this.egress.net.default.dns = []
+            this.egress.net.default.dns[0] = this.dnsList.selected.value;
+            this.egress.vpn = {}
+            this.egress.vpn.current = {}
+            this.egress.vpn.current.dns = []
+            this.egress.vpn.current.dns[0] = this.dnsList.selected.value;
+            this.egress.vpn.current.endpoint = this.egressServer.ipAddress + ":" + portE;
+            this.egress.vpn.current.listenPort = portE;
 
             this.egress.serviceType = "Egress";
 
-            if (this.egress.relayHost.netName != "") {
-                this.egress.relayHost.netId = this.netList.selected.value;
+            if (this.egress.net.netName != "") {
+                this.egress.net.id = this.netList.selected.value;
             }
             else {
-                this.egress.relayHost.netId = "";
+                this.egress.net.id = "";
             }
 
 

@@ -3,6 +3,7 @@ package core
 import (
 	"errors"
 	"fmt"
+	"os"
 	"reflect"
 	"sort"
 	"strings"
@@ -64,7 +65,40 @@ func CreateService(service *model.Service) (*model.Service, error) {
 		service.DefaultSubnet = "10.10.10.0/24"
 	}
 
-	if service.Relay.NetId == "" {
+	// Create a device for the service container
+	deviceID, err := util.RandomString(12)
+	if err != nil {
+		return nil, err
+	}
+	deviceID = "s-device-" + deviceID
+	deviceApikey, err := util.RandomString(32)
+	if err != nil {
+		return nil, err
+	}
+
+	service.Device = &model.Device{
+		Id:        deviceID,
+		AccountID: service.AccountID,
+		ApiKey:    deviceApikey,
+		Name:      service.ServiceType + "." + service.Name,
+		Enable:    true,
+		Server:    os.Getenv("SERVER"),
+		Type:      "Service",
+		Created:   time.Now().UTC(),
+		Updated:   time.Now().UTC(),
+		CreatedBy: service.CreatedBy,
+		UpdatedBy: service.CreatedBy,
+	}
+
+	// Create the device
+	service.Device, err = CreateDevice(service.Device)
+	if err != nil {
+		return nil, err
+	}
+
+	// Find or create the network to use for the service
+
+	if service.Net.Id == "" {
 		// get all the current nets and see if there is one with the same name
 		nets, err := ReadNetworks(service.CreatedBy)
 		if err != nil {
@@ -73,12 +107,10 @@ func CreateService(service *model.Service) (*model.Service, error) {
 
 		found := false
 
-		for _, m := range nets {
-			if m.NetName == service.Relay.NetName {
+		for _, n := range nets {
+			if n.NetName == service.Net.NetName {
 				found = true
-				service.Relay.NetName = m.NetName
-				service.Relay.NetId = m.Id
-				service.Relay.Default = m.Default
+				service.Net = n
 				break
 			}
 		}
@@ -87,7 +119,7 @@ func CreateService(service *model.Service) (*model.Service, error) {
 			// create a default net
 			net := model.Network{
 				AccountID:   service.AccountID,
-				NetName:     service.Relay.NetName,
+				NetName:     service.Net.NetName,
 				Description: service.Description,
 				Created:     time.Now().UTC(),
 				Updated:     time.Now().UTC(),
@@ -95,51 +127,45 @@ func CreateService(service *model.Service) (*model.Service, error) {
 				UpdatedBy:   service.CreatedBy,
 			}
 			net.Default.Address = []string{service.DefaultSubnet}
-			net.Default.Dns = service.Relay.Current.Dns
+			net.Default.Dns = service.Net.Default.Dns
 			net.Default.EnableDns = false
 			net.Default.UPnP = false
 
-			net2, err := CreateNet(&net)
+			service.Net, err = CreateNet(&net)
 			if err != nil {
 				return nil, err
 			}
-			service.Relay.NetName = net2.NetName
-			service.Relay.NetId = net2.Id
-			service.Relay.Default = net2.Default
 		}
 	} else {
 		// check if net exists
-		net, err := ReadNet(service.Relay.NetId)
+		service.Net, err = ReadNet(service.Net.Id)
 		if err != nil {
 			return nil, err
 		}
-		if net == nil {
+		if service.Net == nil {
 			return nil, errors.New("net does not exist")
 		}
-		service.Relay.NetName = net.NetName
-		service.Relay.NetId = net.Id
-		service.Relay.Default = net.Default
-		log.Infof("Using existing net: %s", net.NetName)
+		log.Infof("Using existing net: %s", service.Net.NetName)
 	}
 
-	if service.Relay.Id == "" {
+	if service.VPN.Id == "" {
 		id, err := util.RandomString(12)
 		if err != nil {
 			return nil, err
 		}
-		service.Relay.Id = "relay-" + id
+		service.VPN.Id = strings.ToLower(service.ServiceType) + "-" + id
 		// create a default vpn using the net
 		vpn := model.VPN{
 			Id:        id,
 			AccountID: service.AccountID,
-			Name:      strings.ToLower(service.ServiceType) + "." + service.Relay.NetName,
+			Name:      strings.ToLower(service.ServiceType) + "." + service.Net.NetName,
 			Enable:    true,
-			NetId:     service.Relay.NetId,
-			NetName:   service.Relay.NetName,
-			DeviceID:  service.Relay.DeviceID,
-			Current:   service.Relay.Current,
-			Default:   service.Relay.Default,
-			Type:      "ServiceHost",
+			NetId:     service.Net.Id,
+			NetName:   service.Net.NetName,
+			DeviceID:  service.Device.Id,
+			Current:   service.Net.Default,
+			Default:   service.Net.Default,
+			Type:      "Service",
 			Created:   time.Now().UTC(),
 			Updated:   time.Now().UTC(),
 			CreatedBy: service.CreatedBy,
@@ -184,11 +210,10 @@ func CreateService(service *model.Service) (*model.Service, error) {
 
 		}
 
-		vpn2, err := CreateVPN(&vpn)
+		service.VPN, err = CreateVPN(&vpn)
 		if err != nil {
 			return nil, err
 		}
-		service.Relay = *vpn2
 	}
 
 	// check if service is valid
@@ -284,24 +309,24 @@ func DeleteService(id string) error {
 	}
 	service := v.(*model.Service)
 
-	if service.Relay.Id != "" {
-		err = DeleteVPN(service.Relay.Id)
+	if service.VPN.Id != "" {
+		err = DeleteVPN(service.VPN.Id)
 		if err != nil {
-			log.Errorf("failed to delete vpn %s", service.Relay.Id)
+			log.Errorf("failed to delete vpn %s (%s)", service.VPN.Id, service.VPN.Name)
 			return err
 		}
 	}
 
-	if service.Relay.NetId != "" {
-		vpns, err := ReadVPN2("netid", service.Relay.NetId)
+	if service.Net.Id != "" {
+		vpns, err := ReadVPN2("netid", service.Net.Id)
 		if err != nil {
-			log.Errorf("failed to delete net %s", service.Relay.NetId)
+			log.Errorf("failed to delete net %s", service.Net.Id)
 			return err
 		}
 		if len(vpns) == 0 {
-			err = DeleteNet(service.Relay.NetId)
+			err = DeleteNet(service.Net.Id)
 			if err != nil {
-				log.Errorf("failed to delete net %s", service.Relay.NetId)
+				log.Errorf("failed to delete net %s (%s)", service.Net.Id, service.Net.NetName)
 				return err
 			}
 		}
