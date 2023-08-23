@@ -66,20 +66,9 @@ func CreateService(service *model.Service) (*model.Service, error) {
 	}
 
 	// Create a device for the service container
-	deviceID, err := util.RandomString(12)
-	if err != nil {
-		return nil, err
-	}
-	deviceID = "s-device-" + deviceID
-	deviceApikey, err := util.RandomString(32)
-	if err != nil {
-		return nil, err
-	}
 
 	service.Device = &model.Device{
-		Id:        deviceID,
 		AccountID: service.AccountID,
-		ApiKey:    deviceApikey,
 		Name:      service.ServiceType + "." + service.Name,
 		Enable:    true,
 		Server:    os.Getenv("SERVER"),
@@ -97,6 +86,14 @@ func CreateService(service *model.Service) (*model.Service, error) {
 	}
 
 	// Find or create the network to use for the service
+
+	if service.Net == nil {
+		return nil, errors.New("net is nil")
+	}
+
+	if service.Net.NetName == "" {
+		service.Net.NetName = service.Name
+	}
 
 	if service.Net.Id == "" {
 		// get all the current nets and see if there is one with the same name
@@ -148,6 +145,10 @@ func CreateService(service *model.Service) (*model.Service, error) {
 		log.Infof("Using existing net: %s", service.Net.NetName)
 	}
 
+	if service.VPN == nil {
+		return nil, errors.New("vpn is nil")
+	}
+
 	if service.VPN.Id == "" {
 		id, err := util.RandomString(12)
 		if err != nil {
@@ -163,7 +164,6 @@ func CreateService(service *model.Service) (*model.Service, error) {
 			NetId:     service.Net.Id,
 			NetName:   service.Net.NetName,
 			DeviceID:  service.Device.Id,
-			Current:   service.Net.Default,
 			Default:   service.Net.Default,
 			Type:      "Service",
 			Created:   time.Now().UTC(),

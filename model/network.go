@@ -31,7 +31,7 @@ func (a Network) IsValid() []error {
 
 	// check if the name empty
 	if a.NetName == "" {
-		errs = append(errs, fmt.Errorf("name is required"))
+		errs = append(errs, fmt.Errorf("netName is required"))
 	}
 	// check the name field is between 3 to 40 chars
 	if len(a.NetName) < 2 || len(a.NetName) > 12 {

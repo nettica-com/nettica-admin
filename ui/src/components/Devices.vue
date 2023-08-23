@@ -207,7 +207,8 @@
                                                     <v-switch v-model="publicSubnets" color="success" inset
                                                         label="Route all public traffic through tunnel" />
 
-                                                    <v-text-field v-model="selected.id" label="Network ID" readonly />
+                                                    <v-text-field v-model="selected.id" label="VPN ID" readonly />
+                                                    <v-text-field v-model="selected.netid" label="Network ID" readonly />
                                                     <v-text-field v-model="selected.deviceid" label="Device ID" disabled />
                                                     <v-text-field v-model="selected.current.table" label="Table" />
                                                     <v-text-field v-model="selected.current.publicKey" label="Public key" />

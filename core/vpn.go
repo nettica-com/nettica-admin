@@ -10,7 +10,6 @@ import (
 	mongo "github.com/nettica-com/nettica-admin/mongo"
 	template "github.com/nettica-com/nettica-admin/template"
 	util "github.com/nettica-com/nettica-admin/util"
-	uuid "github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 	"golang.zx2c4.com/wireguard/wgctrl/wgtypes"
 )
@@ -18,8 +17,12 @@ import (
 // CreateVPN vpn with all necessary data
 func CreateVPN(vpn *model.VPN) (*model.VPN, error) {
 
-	u := uuid.NewV4()
-	vpn.Id = u.String()
+	var err error
+	vpn.Id, err = util.RandomString(12)
+	if err != nil {
+		return nil, err
+	}
+	vpn.Id = "vpn-" + vpn.Id
 
 	// read the nets and configure the default values
 	nets, err := ReadNetworks(vpn.CreatedBy)

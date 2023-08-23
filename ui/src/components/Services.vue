@@ -218,7 +218,7 @@ export default {
 
         ],
         bottom_headers: [
-            { text: 'Name', value: 'relayHost.name', },
+            { text: 'Name', value: 'device.name', },
             { text: "Location", value: 'description', },
             { text: 'Service', value: 'serviceType' },
             { text: 'Created', value: 'created', },
