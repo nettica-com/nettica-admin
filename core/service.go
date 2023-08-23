@@ -73,6 +73,7 @@ func CreateService(service *model.Service) (*model.Service, error) {
 		Enable:    true,
 		Server:    os.Getenv("SERVER"),
 		Type:      "Service",
+		Platform:  "Linux",
 		Created:   time.Now().UTC(),
 		Updated:   time.Now().UTC(),
 		CreatedBy: service.CreatedBy,
@@ -149,71 +150,64 @@ func CreateService(service *model.Service) (*model.Service, error) {
 		return nil, errors.New("vpn is nil")
 	}
 
-	if service.VPN.Id == "" {
-		id, err := util.RandomString(12)
-		if err != nil {
-			return nil, err
-		}
-		service.VPN.Id = strings.ToLower(service.ServiceType) + "-" + id
-		// create a default vpn using the net
-		vpn := model.VPN{
-			Id:        id,
-			AccountID: service.AccountID,
-			Name:      strings.ToLower(service.ServiceType) + "." + service.Net.NetName,
-			Enable:    true,
-			NetId:     service.Net.Id,
-			NetName:   service.Net.NetName,
-			DeviceID:  service.Device.Id,
-			Default:   service.Net.Default,
-			Type:      "Service",
-			Created:   time.Now().UTC(),
-			Updated:   time.Now().UTC(),
-			CreatedBy: service.CreatedBy,
-			UpdatedBy: service.CreatedBy,
-		}
+	// create a default vpn using the net
+	vpn := model.VPN{
+		AccountID: service.AccountID,
+		Name:      strings.ToLower(service.ServiceType) + "." + service.Net.NetName,
+		Enable:    true,
+		NetId:     service.Net.Id,
+		NetName:   service.Net.NetName,
+		DeviceID:  service.Device.Id,
+		Current:   service.VPN.Current,
+		Default:   service.Net.Default,
+		Type:      "Service",
+		Created:   time.Now().UTC(),
+		Updated:   time.Now().UTC(),
+		CreatedBy: service.CreatedBy,
+		UpdatedBy: service.CreatedBy,
+	}
 
-		// Failsafe entry for DNS.  Service will break without proper DNS setup.  If nothing is set use google
-		if len(vpn.Current.Dns) == 0 {
-			vpn.Current.Dns = append(vpn.Current.Dns, "8.8.8.8")
-		}
+	// Failsafe entry for DNS.  Service will break without proper DNS setup.  If nothing is set use google
+	if len(vpn.Current.Dns) == 0 {
+		vpn.Current.Dns = append(vpn.Current.Dns, "8.8.8.8")
+	}
 
-		// Configure the routing for the relay/egress vpn
-		if vpn.Current.PostUp == "" {
-			vpn.Current.PostUp = fmt.Sprintf("iptables -A FORWARD -i %s -j ACCEPT; iptables -A FORWARD -o %s -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE", vpn.NetName, vpn.NetName)
-		}
-		if vpn.Current.PostDown == "" {
-			vpn.Current.PostDown = fmt.Sprintf("iptables -D FORWARD -i %s -j ACCEPT; iptables -D FORWARD -o %s -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE", vpn.NetName, vpn.NetName)
-		}
+	// Configure the routing for the relay/egress vpn
+	if vpn.Current.PostUp == "" {
+		vpn.Current.PostUp = fmt.Sprintf("iptables -A FORWARD -i %s -j ACCEPT; iptables -A FORWARD -o %s -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE", vpn.NetName, vpn.NetName)
+	}
+	if vpn.Current.PostDown == "" {
+		vpn.Current.PostDown = fmt.Sprintf("iptables -D FORWARD -i %s -j ACCEPT; iptables -D FORWARD -o %s -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE", vpn.NetName, vpn.NetName)
+	}
 
-		vpn.Current.PersistentKeepalive = 23
+	vpn.Current.PersistentKeepalive = 23
 
-		switch service.ServiceType {
-		case "Relay":
-			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Current.Address...)
-			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Default.Address...)
+	switch service.ServiceType {
+	case "Relay":
+		vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Current.Address...)
+		vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Default.Address...)
 
-		case "Tunnel":
-			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Current.Address...)
-			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Default.Address...)
-			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, "0.0.0.0/0")
+	case "Tunnel":
+		vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Current.Address...)
+		vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Default.Address...)
+		vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, "0.0.0.0/0")
 
-		case "Ingress":
-			vpn.Role = "Ingress"
-			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Current.Address...)
-			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Default.Address...)
-			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, "0.0.0.0/0")
+	case "Ingress":
+		vpn.Role = "Ingress"
+		vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Current.Address...)
+		vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Default.Address...)
+		vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, "0.0.0.0/0")
 
-		case "Egress":
-			vpn.Role = "Egress"
-			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Current.Address...)
-			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, "0.0.0.0/0")
+	case "Egress":
+		vpn.Role = "Egress"
+		vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Current.Address...)
+		vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, "0.0.0.0/0")
 
-		}
+	}
 
-		service.VPN, err = CreateVPN(&vpn)
-		if err != nil {
-			return nil, err
-		}
+	service.VPN, err = CreateVPN(&vpn)
+	if err != nil {
+		return nil, err
 	}
 
 	// check if service is valid
@@ -329,6 +323,14 @@ func DeleteService(id string) error {
 				log.Errorf("failed to delete net %s (%s)", service.Net.Id, service.Net.NetName)
 				return err
 			}
+		}
+	}
+
+	if service.Device.Id != "" {
+		err = DeleteDevice(service.Device.Id)
+		if err != nil {
+			log.Errorf("failed to delete device %s (%s)", service.Device.Id, service.Device.Name)
+			return err
 		}
 	}
 

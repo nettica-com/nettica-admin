@@ -22,7 +22,7 @@ type Service struct {
 	VPN            *VPN      `json:"vpn"            bson:"vpn"`
 	ContainerId    string    `json:"containerid"    bson:"containerid"`
 	Status         string    `json:"status"         bson:"status"`
-	ServiceHost    string    `json:"serviceHost"    bson:"serviceHost"`
+	IpAddress      string    `json:"ipAddress"      bson:"ipAddress"`
 	Name           string    `json:"name"           bson:"name"`
 	Description    string    `json:"description"    bson:"description"`
 	ServiceType    string    `json:"serviceType"    bson:"serviceType"`

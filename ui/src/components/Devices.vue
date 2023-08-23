@@ -62,9 +62,9 @@
 
                             </div>
                             <v-card v-else-if="selected.isDevice" :key="selected.id" class="px-3 mx-auto" flat>
-                                <v-card-text width="300">
-                                    <v-icon>mdi-devices</v-icon>
-
+                                <v-card-text width="600">
+                                    <v-icon v-if="selected.device.type=='Service'">mdi-cloud</v-icon>
+                                    <v-icon v-else>mdi-devices</v-icon>
                                     <h3 class="text-h5 mb-2">
                                         {{ selected.name }}
                                     </h3>
@@ -693,6 +693,10 @@ export default {
                     symbol: "devices",
                     isDevice: true,
                     children: []
+                }
+                if (this.devices[i].type == "Service") {
+                    this.items[i].icon = "mdi-cloud"
+                    this.items[i].symbol = "cloud"
                 }
                 if (this.devices[i].vpns == null) {
                     continue

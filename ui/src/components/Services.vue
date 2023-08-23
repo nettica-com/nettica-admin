@@ -171,7 +171,6 @@ export default {
         dialogCreateService: false,
         dialogCreateMultihop: false,
         dialogUpdate: false,
-        dialogMember: false,
         inDelete: false,
         credits: 0,
         used: 0,
@@ -186,7 +185,6 @@ export default {
         statuses: ["Active", "Pending", "Suspended", "Hidden"],
         user: null,
         member: null,
-        account: null,
         subscription: null,
         service: null,
         ingress: null,
@@ -231,8 +229,6 @@ export default {
     computed: {
         ...mapGetters({
             authuser: 'auth/user',
-            accounts: 'account/accounts',
-            members: 'account/users',
             subscriptions: 'subscription/subscriptions',
             services: 'service/services',
             servers: 'server/servers',
@@ -248,22 +244,8 @@ export default {
 
     },
 
-    watch: {
-        // whenever accounts changes, this function will run
-        //      subscriptions(newSubscriptions, oldSubscriptions) {
-        //      this.readSubscriptions(this.authuser.email);
-        //}
-    },
 
     methods: {
-        ...mapActions('account', {
-            readAllAccounts: 'readAll',
-            readUsers: 'readUsers',
-            createAccount: 'create',
-            updateAccount: 'update',
-            emailUser: 'email',
-        }),
-
         ...mapActions('subscription', {
             readSubscriptions: 'read',
             deleteSubscription: 'delete',
@@ -313,7 +295,7 @@ export default {
             }
 
             var selected = 0;
-            this.netList.items[0] = { "text": "New Net", "value": "" }
+            this.netList.items[0] = { "text": "New Network", "value": "" }
             for (let i = 0; i < this.nets.length; i++) {
                 this.netList.items[i + 1] = { "text": this.nets[i].netName, "value": this.nets[i].id }
             }
@@ -513,7 +495,6 @@ export default {
             if (confirm(`Do you really want to delete ${item.name} ?`)) {
                 this.deleteSubscription(item)
             }
-            this.readAllAccounts(this.authuser.email)
             this.readAllNetworks()
             this.readServices(this.authuser.email)
 
@@ -525,71 +506,8 @@ export default {
             if (confirm(`Do you really want to delete ${item.name} ?`)) {
                 this.deleteService(item)
             }
-            this.readAllAccounts(this.authuser.email)
             this.readAllNetworks()
             this.readServices(this.authuser.email)
-
-        },
-
-        email(toAddress, net) {
-            this.dialogCreateService = false;
-            if (!toAddress) {
-                this.errorUser('email address is not defined')
-                return
-            }
-
-            for (let i = 0; i < this.accounts.length; i++) {
-                if (this.accounts[i].id == this.accounts[i].parent) {
-                    this.emailUser(toAddress + "/" + this.accounts[i].id);
-                    break;
-                }
-            }
-
-        },
-
-        startUpdate(user) {
-            if (this.inDelete == true) {
-                this.inDelete = false;
-                return
-            }
-            this.user = user;
-            this.dialogUpdate = true;
-        },
-
-        update(user) {
-
-            this.dialogUpdate = false;
-            this.updateAccount(user)
-        },
-
-        updateMember(member) {
-
-            this.dialogMember = false;
-            this.member.netName = this.netList.selected.text;
-            this.member.netId = this.netList.selected.value;
-
-            this.updateAccount(member)
-        },
-
-        startUpdateMember(member) {
-            if (this.inDelete == true) {
-                this.inDelete = false;
-                return
-            }
-
-            var selected = 0;
-            this.netList.items = [];
-            this.netList.items[0] = { "text": "All Networks", "value": "" };
-            for (let i = 0; i < this.nets.length; i++) {
-                this.netList.items[i + 1] = { "text": this.nets[i].netName, "value": this.nets[i].id }
-                if (this.nets[i].id == member.netId) {
-                    selected = i + 1;
-                }
-            }
-            this.netList.selected = this.netList.items[selected];
-
-            this.member = member;
-            this.dialogMember = true;
 
         },
 
