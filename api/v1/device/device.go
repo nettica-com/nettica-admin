@@ -17,8 +17,6 @@ import (
 	"golang.org/x/oauth2"
 )
 
-//var statusCache *cache.Cache
-
 // ApplyRoutes applies router to gin Router
 func ApplyRoutes(r *gin.RouterGroup) {
 	g := r.Group("/device")
@@ -34,7 +32,7 @@ func ApplyRoutes(r *gin.RouterGroup) {
 		//		g.GET("/:id/email", emailDevice)
 	}
 
-	//	statusCache = cache.New(1*time.Minute, 10*time.Minute)
+	//	StatusCache = cache.New(1*time.Minute, 10*time.Minute)
 }
 
 func createDevice(c *gin.Context) {
@@ -158,6 +156,7 @@ func updateDevice(c *gin.Context) {
 		return
 	}
 
+	core.flushCache(id)
 	c.JSON(http.StatusOK, client)
 }
 
@@ -238,29 +237,14 @@ func statusDevice(c *gin.Context) {
 	apikey := c.Request.Header.Get("X-API-KEY")
 	etag := c.Request.Header.Get("If-None-Match")
 
-	/*
-		m, _ := statusCache.Get(id)
-		if m != nil {
-			msg := m.(model.Message)
-			authorized := false
-
-			for _, config := range msg.Config {
-				for _, net := range config.Devices {
-					if net.DeviceGroup == id && net.APIKey == apikey {
-						authorized = true
-						break
-					}
-				}
-			}
-			if !authorized {
-				c.AbortWithStatus(http.StatusUnauthorized)
-				return
-			}
-
-			c.JSON(http.StatusOK, m)
+	m, _ := core.getCache(deviceId)
+	if m != nil {
+		e := m.(string)
+		if e == etag {
+			c.AbortWithStatus(http.StatusNotModified)
 			return
 		}
-	*/
+	}
 
 	device, err := core.ReadDevice(deviceId)
 	if err != nil {
@@ -411,7 +395,7 @@ func statusDevice(c *gin.Context) {
 		c.JSON(http.StatusOK, msg)
 	}
 
-	//	statusCache.Set(id, msg, 0)
+	core.setCache(deviceId, md5)
 }
 
 /*

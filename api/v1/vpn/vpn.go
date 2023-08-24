@@ -2,9 +2,6 @@ package client
 
 import (
 	"archive/zip"
-	"crypto/md5"
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 
@@ -18,7 +15,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-//var statusCache *cache.Cache
+//var StatusCache *cache.Cache
 
 // ApplyRoutes applies router to gin Router
 func ApplyRoutes(r *gin.RouterGroup) {
@@ -31,10 +28,9 @@ func ApplyRoutes(r *gin.RouterGroup) {
 		g.DELETE("/:id", deleteVPN)
 		g.GET("", readVPNs)
 		g.GET("/:id/config", configVPN)
-		g.GET("/:id/status", statusVPN)
 	}
 
-	//	statusCache = cache.New(1*time.Minute, 10*time.Minute)
+	//	StatusCache = cache.New(1*time.Minute, 10*time.Minute)
 }
 
 func createVPN(c *gin.Context) {
@@ -186,6 +182,24 @@ func deleteVPN(c *gin.Context) {
 
 	log.Infof("User %s deleted vpn %s", user.Name, id)
 
+	vpn, err := core.ReadVPN(id)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to read vpn")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	vpns, err := core.ReadVPN2("netid", vpn.NetId)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to read vpns")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
 	err = core.DeleteVPN(id)
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -193,6 +207,12 @@ func deleteVPN(c *gin.Context) {
 		}).Error("failed to remove client")
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
+	}
+
+	for _, v := range vpns {
+		// flush the cache for this vpn
+
+		core.flushCache(v.DeviceID)
 	}
 
 	c.JSON(http.StatusOK, gin.H{})
@@ -230,190 +250,6 @@ func readVPNs(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, clients)
-}
-
-func statusVPN(c *gin.Context) {
-
-	//	id := c.Param("id")
-	if c.Param("id") == "" {
-		log.Error("DeviceID cannot be empty")
-		c.AbortWithStatus(http.StatusInternalServerError)
-	}
-	deviceId := c.Param("id")
-
-	apikey := c.Request.Header.Get("X-API-KEY")
-	etag := c.Request.Header.Get("If-None-Match")
-
-	/*
-		m, _ := statusCache.Get(id)
-		if m != nil {
-			msg := m.(model.Message)
-			authorized := false
-
-			for _, config := range msg.Config {
-				for _, net := range config.VPNs {
-					if net.VPNGroup == id && net.APIKey == apikey {
-						authorized = true
-						break
-					}
-				}
-			}
-			if !authorized {
-				c.AbortWithStatus(http.StatusUnauthorized)
-				return
-			}
-
-			c.JSON(http.StatusOK, m)
-			return
-		}
-	*/
-
-	device, err := core.ReadDevice(deviceId)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"err": err,
-		}).Error("failed to get device")
-		c.AbortWithStatus(http.StatusInternalServerError)
-		return
-	}
-
-	authorized := false
-
-	if device.ApiKey == apikey {
-		authorized = true
-	}
-
-	if !authorized {
-		c.AbortWithStatus(http.StatusUnauthorized)
-		return
-	}
-
-	nets, err := core.ReadVPN2("deviceId", deviceId)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"err": err,
-		}).Error("failed to read client config")
-		c.AbortWithStatus(http.StatusInternalServerError)
-		return
-	}
-
-	var msg model.Message
-	hconfig := make([]model.VPNConfig, len(nets))
-
-	msg.Id = c.Param("id")
-	msg.Config = hconfig
-
-	for i, net := range nets {
-		clients, err := core.ReadVPN2("netid", net.NetId)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"err": err,
-			}).Error("failed to list clients")
-			c.AbortWithStatus(http.StatusInternalServerError)
-			return
-		}
-
-		msg.Config[i] = model.VPNConfig{}
-		msg.Config[i].NetName = net.NetName
-		msg.Config[i].NetId = net.NetId
-
-		hasIngress := false
-		ingress := &model.VPN{}
-		egress := &model.VPN{}
-		isIngress := false
-		isEgress := false
-
-		// Check the net to see if it has ingress and egress roles
-		for _, client := range clients {
-			// They should all match
-			if client.NetId == msg.Config[i].NetId {
-				if client.Role == "Ingress" {
-					hasIngress = true
-					ingress = client
-					if client.DeviceID == deviceId {
-						isIngress = true
-					}
-				}
-				if client.Role == "Egress" {
-					egress = client
-					if client.DeviceID == deviceId {
-						isEgress = true
-					}
-				}
-			} else {
-				log.Errorf("internal error")
-				c.AbortWithStatus(http.StatusInternalServerError)
-				return
-			}
-		}
-
-		if isEgress && hasIngress {
-			// If this is the egress vpn, only return the ingress and egress vpns
-			// and remove the 0.0.0.0/0 from allowedIPs on the ingress vpn
-			allowed := ingress.Current.AllowedIPs
-			// Remove 0.0.0.0/0 from the allowed IPs
-			for x, ip := range allowed {
-				if ip == "0.0.0.0/0" {
-					allowed = append(allowed[:x], allowed[x+1:]...)
-					break
-				}
-			}
-			msg.Config[i].VPNs = make([]model.VPN, 2)
-			msg.Config[i].VPNs[0] = *ingress
-			msg.Config[i].VPNs[0].Current.AllowedIPs = allowed
-			msg.Config[i].VPNs[1] = *egress
-		}
-
-		for _, client := range clients {
-			// If this config isn't explicitly for this vpn, remove the private key
-			// from the results
-			if client.DeviceID != deviceId {
-				client.Current.PrivateKey = ""
-			} else {
-				//				client.LastSeen = time.Now()
-				//				client2 := *client
-				// update vpn from id with new last seen
-				//				go func() {
-				//					_, err = core.UpdateVPN(client2.Id, &client2, true)
-				//					if err != nil {
-				//						log.Error(err)
-				//					}
-				//				}()
-			}
-			//			client.LastSeen = time.Time{}
-
-			if isEgress {
-				// If this is the egress vpn, only return the ingress and egress vpns
-				// (which was done above)
-				continue
-			}
-
-			if client.Role == "Egress" && hasIngress && !isIngress {
-				// VPNs pointing to ingress do not see the egress vpn
-				// If it's the ingress itself, it needs to see the egress vpn
-				continue
-			}
-
-			// If this isn't the egress vpn, or there is
-			// only an egress vpn, or if it's neither,
-			// include this client in the results
-
-			msg.Config[i].VPNs = append(msg.Config[i].VPNs, *client)
-		}
-	}
-	bytes, err := json.Marshal(msg)
-	if err != nil {
-		log.Errorf("cannot marshal msg %v", err)
-	}
-	md5 := fmt.Sprintf("%x", md5.Sum(bytes))
-	if md5 == etag {
-		c.AbortWithStatus(http.StatusNotModified)
-	} else {
-		c.Header("ETag", md5)
-		c.JSON(http.StatusOK, msg)
-	}
-
-	//	statusCache.Set(id, msg, 0)
 }
 
 func configVPN(c *gin.Context) {
@@ -473,5 +309,4 @@ func configVPN(c *gin.Context) {
 	}
 	c.Data(http.StatusOK, "image/png", png)
 
-	return
 }

@@ -90,7 +90,7 @@ func statusService(c *gin.Context) {
 		c.JSON(http.StatusOK, msg)
 	}
 
-	//	statusCache.Set(id, msg, 0)
+	//	StatusCache.Set(id, msg, 0)
 }
 
 func createService(c *gin.Context) {
