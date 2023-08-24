@@ -79,6 +79,20 @@ func createVPN(c *gin.Context) {
 		return
 	}
 
+	vpns, err := core.ReadVPN2("netid", client.NetId)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to read vpns")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	for _, v := range vpns {
+		// flush the cache for this vpn
+		core.FlushCache(v.DeviceID)
+	}
+
 	c.JSON(http.StatusOK, client)
 }
 
@@ -159,6 +173,20 @@ func updateVPN(c *gin.Context) {
 		}).Error("failed to update vpn")
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
+	}
+
+	vpns, err := core.ReadVPN2("netid", client.NetId)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to read vpns")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	for _, v := range vpns {
+		// flush the cache for this vpn
+		core.FlushCache(v.DeviceID)
 	}
 
 	c.JSON(http.StatusOK, client)
