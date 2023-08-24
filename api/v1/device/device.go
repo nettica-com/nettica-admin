@@ -156,7 +156,7 @@ func updateDevice(c *gin.Context) {
 		return
 	}
 
-	core.flushCache(id)
+	core.FlushCache(id)
 	c.JSON(http.StatusOK, client)
 }
 
@@ -237,7 +237,7 @@ func statusDevice(c *gin.Context) {
 	apikey := c.Request.Header.Get("X-API-KEY")
 	etag := c.Request.Header.Get("If-None-Match")
 
-	m, _ := core.getCache(deviceId)
+	m, _ := core.GetCache(deviceId)
 	if m != nil {
 		e := m.(string)
 		if e == etag {
@@ -395,7 +395,7 @@ func statusDevice(c *gin.Context) {
 		c.JSON(http.StatusOK, msg)
 	}
 
-	core.setCache(deviceId, md5)
+	core.SetCache(deviceId, md5)
 }
 
 /*

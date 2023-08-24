@@ -212,7 +212,7 @@ func deleteVPN(c *gin.Context) {
 	for _, v := range vpns {
 		// flush the cache for this vpn
 
-		core.flushCache(v.DeviceID)
+		core.FlushCache(v.DeviceID)
 	}
 
 	c.JSON(http.StatusOK, gin.H{})
