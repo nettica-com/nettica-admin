@@ -985,7 +985,7 @@ export default {
         },
 
         copyDeviceConfig(device) {
-            var url = "curl http://localhost:53280/config?DeviceID=" + device.id + "&ApiKey=" + device.apiKey + "&Host=https://dev.nettica.com"
+            var url = "curl \"http://localhost:53280/config/?id=" + device.id + "&apiKey=" + device.apiKey + "&server=https://dev.nettica.com\""
 
             // copy to clipboard
             var dummy = document.createElement("textarea");
