@@ -142,10 +142,10 @@ func UpdateDevice(Id string, device *model.Device, fUpdated bool) (*model.Device
 	current.OS = device.OS
 	if current.Platform == "" {
 		if current.OS == "windows" {
-			current.Platform = "Windows"
+			current.Platform = "windows"
 		}
 		if current.OS == "linux" {
-			current.Platform = "Linux"
+			current.Platform = "linux"
 		}
 	}
 	current.Architecture = device.Architecture

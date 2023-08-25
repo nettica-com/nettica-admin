@@ -94,12 +94,14 @@
                                                 </v-chip>
                                             </template>
                                         </v-combobox>
+                                        <v-text-field v-model="selected.device.description" label="Description" :readonly="!inEdit" />
                                         <v-select return-object v-model="selected.platform" :items="platforms.items"
                                             item-text="text" item-value="value" label="Platform of this device" single
                                             persistent-hint :readonly="!inEdit" />
 
                                         <v-switch v-model="selected.device.enable" color="success" inset
                                             :label="selected.device.enable ? 'Enabled' : 'Disabled'" :readonly="!inEdit" />
+                                        <v-text-field v-model="selected.device.server" label="Server" :readonly="!inEdit" />
                                         <v-text-field v-model="selected.device.id" label="Device ID" readonly />
                                         <v-text-field v-model="selected.device.apiKey" label="API Key" readonly />
                                         <div :hidden="!inEdit">
@@ -864,6 +866,7 @@ export default {
 
             this.inEdit = false;
             this.updatevpn(this.vpn)
+            this.Refresh()
         },
 
 
