@@ -167,6 +167,7 @@ func UpdateDevice(Id string, device *model.Device, fUpdated bool) (*model.Device
 	}
 	current.Debug = device.Debug
 	current.Quiet = device.Quiet
+	current.LastSeen = device.LastSeen
 
 	err = mongo.Serialize(device.Id, "id", "devices", current)
 	if err != nil {
