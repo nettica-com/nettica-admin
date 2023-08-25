@@ -237,15 +237,6 @@ func statusDevice(c *gin.Context) {
 	apikey := c.Request.Header.Get("X-API-KEY")
 	etag := c.Request.Header.Get("If-None-Match")
 
-	m, _ := core.GetCache(deviceId)
-	if m != nil {
-		e := m.(string)
-		if e == etag {
-			c.AbortWithStatus(http.StatusNotModified)
-			return
-		}
-	}
-
 	device, err := core.ReadDevice(deviceId)
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -268,6 +259,23 @@ func statusDevice(c *gin.Context) {
 	if !authorized {
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
+	}
+
+	m, _ := core.GetCache(deviceId)
+	if m != nil {
+		e := m.(string)
+		if e == etag {
+			c.AbortWithStatus(http.StatusNotModified)
+			go func() {
+				device.LastSeen = time.Now()
+				_, err = core.UpdateDevice(device.Id, device, true)
+				if err != nil {
+					log.Error(err)
+				}
+			}()
+
+			return
+		}
 	}
 
 	nets, err := core.ReadVPN2("deviceid", deviceId)
