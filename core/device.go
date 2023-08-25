@@ -113,7 +113,62 @@ func UpdateDevice(Id string, device *model.Device, fUpdated bool) (*model.Device
 		return nil, errors.New("failed to validate device")
 	}
 
-	err = mongo.Serialize(device.Id, "id", "devices", device)
+	// copy each field individually
+	if device.Name != "" {
+		current.Name = device.Name
+	}
+	current.Description = device.Description
+	if device.AccountID != "" {
+		current.AccountID = device.AccountID
+	}
+	current.Updated = device.Updated
+	if device.Server != "" {
+		current.Server = device.Server
+	}
+	if device.ApiKey != "" {
+		current.ApiKey = device.ApiKey
+	}
+	if device.UpdatedBy != "" {
+		current.UpdatedBy = device.UpdatedBy
+	} else {
+		if !fUpdated {
+			current.UpdatedBy = "API"
+		}
+	}
+	current.ApiID = device.ApiID
+	current.Enable = device.Enable
+	current.Tags = device.Tags
+	current.Platform = device.Platform
+	current.OS = device.OS
+	if current.Platform == "" {
+		if current.OS == "windows" {
+			current.Platform = "Windows"
+		}
+		if current.OS == "linux" {
+			current.Platform = "Linux"
+		}
+	}
+	current.Architecture = device.Architecture
+	current.Version = device.Version
+	current.ClientID = device.ClientID
+	current.AuthDomain = device.AuthDomain
+	current.AppData = device.AppData
+	if device.CheckInterval != 0 {
+		current.CheckInterval = device.CheckInterval
+	}
+	if current.CheckInterval == 0 {
+		current.CheckInterval = 10
+	}
+	if device.ServiceGroup != "" {
+		current.ServiceGroup = device.ServiceGroup
+	}
+	if device.ServiceApiKey != "" {
+		current.ServiceApiKey = device.ServiceApiKey
+	}
+	current.Debug = device.Debug
+	current.Quiet = device.Quiet
+
+	err = mongo.Serialize(device.Id, "id", "devices", current)
 	if err != nil {
 		return nil, err
 	}

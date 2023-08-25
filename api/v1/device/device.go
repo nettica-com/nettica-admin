@@ -126,6 +126,7 @@ func updateDevice(c *gin.Context) {
 		if device.ApiKey == apikey {
 			authorized = true
 		}
+		data.UpdatedBy = device.Name
 
 		if !authorized {
 			c.AbortWithStatus(http.StatusUnauthorized)
