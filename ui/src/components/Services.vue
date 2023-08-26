@@ -8,13 +8,13 @@
         </div>
         <v-card>
             <v-card-title>
-                Services & Subscriptions
+                Services
                 <v-spacer></v-spacer>
                 <v-text-field v-if="listView" v-model="search" append-icon="mdi-magnify" label="Search" single-line
                     hide-details></v-text-field>
                 <v-spacer></v-spacer>
                 <v-btn color="success" @click="startCreateService">
-                    Add Service Host
+                    Add Service
                     <v-icon right dark>mdi-weather-cloudy</v-icon>
                 </v-btn>&nbsp;
                 <v-btn color="success" @click="startCreateMultihop">
@@ -435,11 +435,9 @@ export default {
             this.ingress.net.netName = this.netList.selected.value;
             this.ingress.net.default = {}
             this.ingress.net.default.dns = []
-            this.ingress.net.default.dns[0] = this.dnsList.selected.value;
             this.ingress.vpn = {}
             this.ingress.vpn.current = {}
             this.ingress.vpn.current.dns = []
-            this.ingress.vpn.current.dns[0] = this.dnsList.selected.value;
             this.ingress.vpn.current.endpoint = this.ingressServer.ipAddress + ":" + portI;
             this.ingress.vpn.current.listenPort = portI;
 
@@ -465,11 +463,9 @@ export default {
             this.egress.net.netName = this.netList.selected.value;
             this.egress.net.default = {}
             this.egress.net.default.dns = []
-            this.egress.net.default.dns[0] = this.dnsList.selected.value;
             this.egress.vpn = {}
             this.egress.vpn.current = {}
             this.egress.vpn.current.dns = []
-            this.egress.vpn.current.dns[0] = this.dnsList.selected.value;
             this.egress.vpn.current.endpoint = this.egressServer.ipAddress + ":" + portE;
             this.egress.vpn.current.listenPort = portE;
 

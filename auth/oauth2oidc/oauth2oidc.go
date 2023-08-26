@@ -205,6 +205,8 @@ func (o *Oauth2idc) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 		//  If there's no error and no account, create one.
 		if len(accounts) == 0 {
 			var account model.Account
+			account.Name = "Me"
+			account.AccountName = "Company"
 			account.Email = user.Email
 			account.Role = "Owner"
 			account.Status = "Active"
