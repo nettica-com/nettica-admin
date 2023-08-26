@@ -292,7 +292,7 @@ func statusDevice(c *gin.Context) {
 	hconfig := make([]model.VPNConfig, len(nets))
 
 	msg.Id = deviceId
-	msg.Device = *device
+	msg.Device = device
 	msg.Config = hconfig
 
 	for i, net := range nets {
