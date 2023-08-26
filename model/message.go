@@ -10,6 +10,7 @@ type VPNConfig struct {
 // Host structure
 type Message struct {
 	Id     string      `json:"id"       bson:"id"`
+	Device Device      `json:"device"   bson:"device"`
 	Config []VPNConfig `json:"config"   bson:"config"`
 }
 
