@@ -609,10 +609,6 @@ export default {
             }
 
             var device = this.devices.find(device => device.id === id)
-            //            if (device) {
-            //                this.platforms.selected.value = device.platform
-            //}
-
             return this.items.find(item => item.id === id)
         },
         ...mapGetters({
