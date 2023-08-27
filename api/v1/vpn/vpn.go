@@ -59,6 +59,8 @@ func createVPN(c *gin.Context) {
 		return
 	}
 	data.CreatedBy = user.Email
+	data.UpdatedBy = user.Email
+
 	if data.AccountID == "" {
 		data.AccountID = user.AccountID
 	}

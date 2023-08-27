@@ -711,7 +711,7 @@ export default {
                         name: this.devices[i].vpns[j].netName,
                         vpn: this.devices[i].vpns[j],
                         icon: "mdi-network-outline",
-                        symbol: "hub",
+                        symbol: "network_node",
                         isDevice: false,
                         children: []
                     }
@@ -988,7 +988,7 @@ export default {
         },
 
         copyDeviceConfig(device) {
-            var url = "curl \"http://localhost:53280/config/?id=" + device.id + "&apiKey=" + device.apiKey + "&server=https://dev.nettica.com\""
+            var url = "curl \"http://localhost:53280/config/?id=" + device.id + "&apiKey=" + device.apiKey + "&server=https://my.nettica.com\""
 
             // copy to clipboard
             var dummy = document.createElement("textarea");

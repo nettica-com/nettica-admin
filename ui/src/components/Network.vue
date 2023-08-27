@@ -40,7 +40,7 @@
             <v-row style="padding-top: 12px;">
                 <v-col cols="6">
                     <v-treeview v-if="showTree" :items="items" :search="search" :active.sync="active" :open.sync="open"
-                        activatable open-all hoverable @update:active="loadNetwork">
+                        activatable hoverable @update:active="loadNetwork">
                         <template v-slot:prepend="{ item }">
                             <span v-if="item.symbol" class="material-symbols-outlined">{{ item.symbol }}</span>
                             <v-icon v-else>
@@ -146,6 +146,144 @@
                                 </v-row>
                             </v-container>
                         </v-card-actions>
+                    </v-card>
+                    <v-card v-else-if="!selected.isNet">
+                        <v-card-text width="600" class="px-3">
+                            <span class="material-symbols-outlined">network_node</span>
+                            <h3 class="text-h5 mb-2">
+                                {{ selected.name }}
+                            </h3>
+                        </v-card-text>
+                        <v-divider></v-divider>
+                        <v-row class="px-3" width="600">
+                            <v-col flex>
+                                <v-text-field v-model="selected.name" label="DNS name" :readonly="!inEdit" />
+                                <v-combobox :readonly="!inEdit" v-model="selected.current.address" chips
+                                    hint="Write IPv4 or IPv6 CIDR and hit enter" label="Addresses" multiple dark>
+                                    <template v-slot:selection="{ attrs, item, select }">
+                                        <v-chip v-bind="attrs" :input-value="selected" close @click="select"
+                                            @click:close="selected.current.address.splice(selected.current.address.indexOf(item), 1)">
+                                            <strong>{{ item }}</strong>&nbsp;
+                                        </v-chip>
+                                    </template>
+                                </v-combobox>
+                                <v-combobox :readonly="!inEdit" v-model="selected.current.dns" chips
+                                    hint="Enter IP address(es) and hit enter or leave empty."
+                                    label="DNS servers for this device" multiple dark>
+                                    <template v-slot:selection="{ attrs, item, select }">
+
+                                        <v-chip v-bind="attrs" :input-value="selected" close @click="select"
+                                            @click:close="selected.current.dns.splice(selected.current.dns.indexOf(item), 1)">
+                                            <strong>{{ item }}</strong>&nbsp;
+                                        </v-chip>
+                                    </template>
+                                </v-combobox>
+                                <v-text-field :readonly="!inEdit" v-model="selected.current.endpoint"
+                                    label="Public endpoint for clients" />
+                                <v-text-field :readonly="!inEdit" v-model="selected.current.listenPort" type="number"
+                                    label="Listen port" />
+                                <v-switch v-model="selected.enable" color="success" inset
+                                    :label="selected.enable ? 'Enabled' : 'Disabled'" :readonly="!inEdit" />
+                                <p class="text-caption">Created by {{ selected.createdBy }} at {{ selected.created |
+                                    formatDate }}<br />
+                                    Last update by {{ selected.updatedBy }} at {{ selected.updated | formatDate }}</p>
+
+                            </v-col>
+                        </v-row>
+                        <v-expansion-panels v-if="inEdit">
+                            <v-expansion-panel>
+                                <v-expansion-panel-header dark>Advanced Configuration</v-expansion-panel-header>
+                                <v-expansion-panel-content>
+                                    <div class="d-flex flex-no-wrap justify-space-between">
+                                        <v-col cols="12">
+                                            <v-combobox v-model="selected.current.allowedIPs" chips
+                                                hint="Write IPv4 or IPv6 CIDR and hit enter" label="Allowed IPs" multiple
+                                                dark>
+
+                                                <template v-slot:selection="{ attrs, item, select }">
+                                                    <v-chip v-bind="attrs" :input-value="selected" close @click="select"
+                                                        @click:close="selected.current.allowedIPs.splice(selected.current.allowedIPs.indexOf(item), 1)">
+                                                        <strong>{{ item }}</strong>&nbsp;
+                                                    </v-chip>
+                                                </template>
+                                            </v-combobox>
+                                            <v-switch v-model="publicSubnets" color="success" inset
+                                                label="Route all public traffic through tunnel" />
+
+                                            <v-text-field v-model="selected.id" label="VPN ID" readonly />
+                                            <v-text-field v-model="selected.netid" label="Network ID" readonly />
+                                            <v-text-field v-model="selected.deviceid" label="Device ID" disabled />
+                                            <v-text-field v-model="selected.current.table" label="Table" />
+                                            <v-text-field v-model="selected.current.publicKey" label="Public key" />
+                                            <v-text-field v-model="selected.current.privateKey" label="Private key"
+                                                autocomplete="off" :append-icon="showPrivate ? 'mdi-eye' : 'mdi-eye-off'"
+                                                :type="showPrivate ? 'text' : 'password'"
+                                                hint="Clear this field to have the client manage its private key"
+                                                @click:append="showPrivate = !showPrivate" />
+                                            <v-text-field v-model="selected.current.presharedKey" label="Preshared Key"
+                                                autocomplete="off" :append-icon="showPreshared ? 'mdi-eye' : 'mdi-eye-off'"
+                                                :type="showPreshared ? 'text' : 'password'"
+                                                @click:append="showPreshared = !showPreshared" />
+                                            <v-text-field type="number" v-model="selected.current.mtu"
+                                                label="Define global MTU" hint="Leave at 0 and let us take care of MTU" />
+                                            <v-text-field type="number" v-model="selected.current.persistentKeepalive"
+                                                label="Persistent keepalive"
+                                                hint="To disable, set to 0.  Recommended value 29 (seconds)" />
+                                            <v-textarea v-model="selected.current.postUp" label="PostUp Script"
+                                                hint="Only applies to linux servers" />
+                                            <v-textarea v-model="selected.current.postDown" label="PostDown Script"
+                                                hint="Only applies to linux servers" />
+                                            <v-switch v-model="selected.current.subnetRouting" color="success" inset
+                                                label="Enable subnet routing" />
+                                            <v-switch v-model="selected.current.upnp" color="success" inset
+                                                label="Enable UPnP" />
+                                            <v-switch v-model="selected.current.enableDns" color="success" inset
+                                                label="Enable Nettica DNS" />
+
+                                        </v-col>
+                                    </div>
+                                </v-expansion-panel-content>
+                            </v-expansion-panel>
+                        </v-expansion-panels>
+
+
+                        <v-card>
+                            <v-card-actions v-if="inEdit">
+                                <v-btn color="success" @click="updateVPN(selected)">
+                                    Submit
+                                    <v-icon right dark>mdi-check-outline</v-icon>
+                                </v-btn>
+                                <v-btn color="primary" @click="inEdit = false">
+                                    Cancel
+                                    <v-icon right dark>mdi-close-circle-outline</v-icon>
+                                </v-btn>
+                            </v-card-actions>
+                            <v-card-actions v-else>
+                                <v-container>
+                                    <v-row>
+                                        <v-col>
+                                            <v-btn color="success" @click="forceFileDownload(selected)">
+                                                Download
+                                                <v-icon right dark>mdi-cloud-download-outline</v-icon>
+                                            </v-btn>
+                                        </v-col>
+                                        <v-col>
+                                            <v-btn class="px-3" color="primary" @click="inEdit = true">
+                                                Edit
+                                                <v-icon right dark>mdi-pencil-outline</v-icon>
+                                            </v-btn>
+                                        </v-col>
+                                        <v-col>
+                                            <v-btn class="px-3" color="error" @click="removeVPN(selected)">
+                                                Delete
+                                                <v-icon right dark>mdi-delete-outline</v-icon>
+                                            </v-btn>
+                                        </v-col>
+                                    </v-row>
+                                </v-container>
+                            </v-card-actions>
+                        </v-card>
+
                     </v-card>
                 </v-col>
             </v-row>
@@ -391,12 +529,20 @@ export default {
             console.log("buildTree = ", this.buildTree())
             this.showTree = true
         },
+        vpns: function (val) {
+            console.log("buildTree = ", this.buildTree())
+            this.showTree = true
+        },
     },
 
 
     methods: {
         ...mapActions('vpn', {
             readAllVPNs: 'readAll',
+            updatevpn: "update",
+            deletevpn: "delete",
+            readvpnconfig: "readConfig",
+
         }),
         ...mapActions('net', {
             errorNet: 'error',
@@ -416,7 +562,6 @@ export default {
             this.readAllAccounts(this.user.email)
             this.readAllVPNs()
             this.readAllNetworks()
-            this.buildTree()
         },
 
         buildTree() {
@@ -448,6 +593,28 @@ export default {
                 // names must be equal
                 return 0;
             });
+
+            k = 0
+            console.log("this.items = ", this.items)
+            console.log("this.vpns = ", this.vpns)
+            for (let i = 0; i < this.items.length; i++) {
+                for (let j = 0; j < this.vpns.length; j++) {
+                    if (this.vpns[j].netName == this.items[i].name) {
+                        this.items[i].children[k] = {
+                            id: this.vpns[j].id,
+                            name: this.vpns[j].name,
+                            vpn: this.vpns[j],
+                            icon: "mdi-network-outline",
+                            symbol: "network_node",
+                            isNet: false,
+                            isNode: true,
+                            children: []
+                        }
+                        k++
+                    }
+                }
+                k = 0
+            }
 
             return this.items
 
@@ -625,6 +792,87 @@ export default {
             }
 
         },
+        updateVPN(vpn) {
+            this.vpn = vpn
+            this.vpn.current.listenPort = parseInt(this.vpn.current.listenPort, 10);
+            // append the port to the endpoint if it is not there
+            if (this.vpn.current.endpoint != null && this.vpn.current.endpoint != "" && this.vpn.current.endpoint.indexOf(":") == -1) {
+                if (this.vpn.current.listenPort == 0) {
+                    this.vpn.current.listenPort = 51820
+                }
+                this.vpn.current.endpoint = this.vpn.current.endpoint + ":" + this.vpn.current.listenPort.toString()
+            }
+
+            this.vpn.current.persistentKeepalive = parseInt(this.vpn.current.persistentKeepalive, 10);
+            this.vpn.current.mtu = parseInt(this.vpn.current.mtu, 10);
+
+            if (this.publicSubnets) {
+                this.vpn.current.allowedIPs.push("0.0.0.0/5", "8.0.0.0/7",
+                    "11.0.0.0/8", "12.0.0.0/6", "16.0.0.0/4", "32.0.0.0/3", "64.0.0.0/3", "96.0.0.0/6",
+                    "101.0.0.0/8", "102.0.0.0/7", "104.0.0.0/5", "112.0.0.0/5", "120.0.0.0/6",
+                    "124.0.0.0/7", "126.0.0.0/8", "128.0.0.0/3", "160.0.0.0/5", "168.0.0.0/6",
+                    "172.0.0.0/12", "172.32.0.0/11", "172.64.0.0/10",
+                    "172.128.0.0/9", "173.0.0.0/8", "174.0.0.0/7", "176.0.0.0/4", "192.0.0.0/9", "192.128.0.0/11", "192.160.0.0/13", "192.169.0.0/16",
+                    "192.170.0.0/15", "192.172.0.0/14", "192.176.0.0/12", "192.192.0.0/10", "193.0.0.0/8", "194.0.0.0/7", "196.0.0.0/6", "200.0.0.0/5", "208.0.0.0/4")
+            }
+
+            // check allowed IPs
+            if (this.vpn.current.allowedIPs.length < 1) {
+                this.errordevice('Please provide at least one valid CIDR address for device allowed IPs');
+                return
+            }
+            for (let i = 0; i < this.vpn.current.allowedIPs.length; i++) {
+                if (this.$isCidr(this.vpn.current.allowedIPs[i]) === 0) {
+                    this.errordevice('Invalid CIDR detected, please correct before submitting');
+                    return
+                }
+            }
+            // check address
+            if (this.vpn.current.address.length < 1) {
+                this.errordevice('Please provide at least one valid CIDR address for device');
+                return;
+            }
+            for (let i = 0; i < this.vpn.current.address.length; i++) {
+                if (this.$isCidr(this.vpn.current.address[i]) === 0) {
+                    this.errordevice('Invalid CIDR detected, please correct before submitting');
+                    return
+                }
+            }
+
+            this.inEdit = false;
+            this.updatevpn(this.vpn)
+            this.Refresh()
+        },
+
+        async removeVPN(vpn) {
+            if (confirm(`Do you really want to delete ${vpn.name} from ${vpn.netName}?`)) {
+                await this.deletevpn(vpn)
+                // refresh the page
+                this.Refresh()
+            }
+        },
+
+        async forceFileDownload(vpn) {
+            console.log(vpn)
+            await this.readvpnconfig(vpn)
+            // sleep for one second
+            await new Promise(r => setTimeout(r, 1000));
+            let config = this.getvpnconfig(vpn.id)
+            if (!config) {
+                console.log("failed to get config")
+                this.errordevice('Failed to download device config');
+                return
+            }
+            console.log('config', config)
+
+            const url = window.URL.createObjectURL(new Blob([config]))
+            const link = document.createElement('a')
+            link.href = url
+            link.setAttribute('download', vpn.name.split(' ').join('-') + '-' + vpn.netName.split(' ').join('-') + '.zip') //or any other extension
+            document.body.appendChild(link)
+            link.click()
+        },
+
     }
 };
 </script>

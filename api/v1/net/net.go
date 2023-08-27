@@ -49,6 +49,11 @@ func createNet(c *gin.Context) {
 		return
 	}
 	data.CreatedBy = user.Email
+	data.UpdatedBy = user.Email
+
+	if data.AccountID == "" {
+		data.AccountID = user.AccountID
+	}
 
 	client, err := core.CreateNet(&data)
 	if err != nil {
