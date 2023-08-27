@@ -182,11 +182,11 @@
                                     label="Public endpoint for clients" />
                                 <v-text-field :readonly="!inEdit" v-model="selected.vpn.current.listenPort" type="number"
                                     label="Listen port" />
-                                <v-switch v-model="selected.enable" color="success" inset
-                                    :label="selected.enable ? 'Enabled' : 'Disabled'" :readonly="!inEdit" />
-                                <p class="text-caption">Created by {{ selected.createdBy }} at {{ selected.created |
+                                <v-switch v-model="selected.vpn.enable" color="success" inset
+                                    :label="selected.vpn.enable ? 'Enabled' : 'Disabled'" :readonly="!inEdit" />
+                                <p class="text-caption">Created by {{ selected.vpn.createdBy }} at {{ selected.vpn.created |
                                     formatDate }}<br />
-                                    Last update by {{ selected.updatedBy }} at {{ selected.updated | formatDate }}</p>
+                                    Last update by {{ selected.vpn.updatedBy }} at {{ selected.vpn.updated | formatDate }}</p>
 
                             </v-col>
                         </v-row>
@@ -210,9 +210,9 @@
                                             <v-switch v-model="publicSubnets" color="success" inset
                                                 label="Route all public traffic through tunnel" />
 
-                                            <v-text-field v-model="selected.id" label="VPN ID" readonly />
-                                            <v-text-field v-model="selected.netid" label="Network ID" readonly />
-                                            <v-text-field v-model="selected.deviceid" label="Device ID" disabled />
+                                            <v-text-field v-model="selected.vpn.id" label="VPN ID" readonly />
+                                            <v-text-field v-model="selected.vpn.netid" label="Network ID" readonly />
+                                            <v-text-field v-model="selected.vpn.deviceid" label="Device ID" disabled />
                                             <v-text-field v-model="selected.vpn.current.table" label="Table" />
                                             <v-text-field v-model="selected.vpn.current.publicKey" label="Public key" />
                                             <v-text-field v-model="selected.vpn.current.privateKey" label="Private key"
