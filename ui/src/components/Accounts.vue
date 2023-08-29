@@ -490,6 +490,7 @@ export default {
             this.account.netName = net.text;
             if (this.account.netName == "All Networks") {
                 this.account.netName = ""
+                this.account.netId = ""
             }
             this.account.from = this.authuser.email;
             this.account.role = "User"
@@ -577,6 +578,7 @@ export default {
 
             if (item.member.netName == "All Networks") {
                 item.member.netName = "";
+                item.member.netId = ""; 
             }
 
             item.member.role = item.role;

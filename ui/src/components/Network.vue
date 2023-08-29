@@ -249,7 +249,7 @@
 
                         <v-card>
                             <v-card-actions v-if="inEdit">
-                                <v-btn color="success" @click="updateVPN(selected)">
+                                <v-btn color="success" @click="updateVPN(selected.vpn)">
                                     Submit
                                     <v-icon right dark>mdi-check-outline</v-icon>
                                 </v-btn>
@@ -262,7 +262,7 @@
                                 <v-container>
                                     <v-row>
                                         <v-col>
-                                            <v-btn color="success" @click="forceFileDownload(selected)">
+                                            <v-btn color="success" @click="forceFileDownload(selected.vpn)">
                                                 Download
                                                 <v-icon right dark>mdi-cloud-download-outline</v-icon>
                                             </v-btn>
@@ -274,7 +274,7 @@
                                             </v-btn>
                                         </v-col>
                                         <v-col>
-                                            <v-btn class="px-3" color="error" @click="removeVPN(selected)">
+                                            <v-btn class="px-3" color="error" @click="removeVPN(selected.vpn)">
                                                 Delete
                                                 <v-icon right dark>mdi-delete-outline</v-icon>
                                             </v-btn>
@@ -518,6 +518,7 @@ export default {
             vpns: 'vpn/vpns',
             hosts: 'host/hosts',
             accounts: 'account/accounts',
+            getvpnconfig: "vpn/getVPNConfig",
 
         }),
         options() {
@@ -870,7 +871,7 @@ export default {
         },
 
         async forceFileDownload(vpn) {
-            console.log(vpn)
+            console.log("vpn = ", vpn)
             await this.readvpnconfig(vpn)
             // sleep for one second
             await new Promise(r => setTimeout(r, 1000));
