@@ -205,7 +205,7 @@ func DeleteDevice(id string) error {
 
 // ReadDeviceByApiKey(device.ApiKey)
 func ReadDeviceByApiKey(apikey string) (*model.Device, error) {
-	v, err := mongo.Deserialize(apikey, "apikey", "devices", reflect.TypeOf(model.Device{}))
+	v, err := mongo.Deserialize(apikey, "apiKey", "devices", reflect.TypeOf(model.Device{}))
 	if err != nil {
 		return nil, err
 	}
