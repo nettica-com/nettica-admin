@@ -234,6 +234,15 @@ func deleteVPN(c *gin.Context) {
 			return
 		}
 
+		if vpn.DeviceID != device.Id {
+			log.WithFields(log.Fields{
+				"vpn":    vpn,
+				"device": device,
+			}).Error("failed to delete vpn, device mismatch")
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+
 	} else {
 
 		oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
