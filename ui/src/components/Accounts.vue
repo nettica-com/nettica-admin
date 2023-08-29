@@ -68,6 +68,7 @@
                         <v-row class="text-left" width="550">
                             <v-col flex>
                                 <v-form ref="form" v-model="valid">
+                                    <v-text-field v-model="selected.member.parent" label="Account ID" readonly />
                                     <v-text-field v-model="selected.member.accountName" label="Account Name"
                                         :rules="[v => !!v || 'Account name is required',]" required />
                                     <v-text-field v-model="selected.member.name" label="Name"
@@ -570,6 +571,8 @@ export default {
 
             this.dialogMember = false;
 
+            console.log( "updateMember: ", item)
+                    
             item.member.netName = item.netName;
 
             if (item.member.netName == "All Networks") {
@@ -579,13 +582,17 @@ export default {
             item.member.role = item.role;
             item.member.status = item.status;
 
+            console.log( "nets = ", this.nets)
+            console.log( "netList = ", this.netList)
+
             for (let i = 0; i < this.nets.length; i++) {
                 if (this.nets[i].netName == item.member.netName) {
-                    item.member.netId = this.nets[i].netId;
+                    item.member.netId = this.nets[i].id;
                     break;
                 }
             }
 
+            console.log( "updateAccount: ", item.member)
             this.updateAccount(item.member)
             this.notification = {
                 show: true,

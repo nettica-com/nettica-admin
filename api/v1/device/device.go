@@ -165,23 +165,51 @@ func updateDevice(c *gin.Context) {
 
 func deleteDevice(c *gin.Context) {
 	id := c.Param("id")
-	// get update user from token and add to client infos
 
-	oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
-	oauth2Client := c.MustGet("oauth2Client").(auth.Auth)
-	user, err := oauth2Client.UserInfo(oauth2Token)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"oauth2Token": oauth2Token,
-			"err":         err,
-		}).Error("failed to get user with oauth token")
-		c.AbortWithStatus(http.StatusUnauthorized)
-		return
+	apikey := c.Request.Header.Get("X-API-KEY")
+
+	if apikey != "" {
+
+		device, err := core.ReadDevice(id)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("failed to read client config")
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+
+		authorized := false
+
+		if device.ApiKey == apikey {
+			authorized = true
+		}
+
+		if !authorized {
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+
+		log.Infof("Device %s deleted VPN %s", device.Name, id)
+
+	} else {
+		// get update user from token and add to client infos
+
+		oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
+		oauth2Client := c.MustGet("oauth2Client").(auth.Auth)
+		user, err := oauth2Client.UserInfo(oauth2Token)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"oauth2Token": oauth2Token,
+				"err":         err,
+			}).Error("failed to get user with oauth token")
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+		log.Infof("User %s deleted device %s", user.Email, id)
 	}
 
-	log.Infof("User %s deleted device %s", user.Name, id)
-
-	err = core.DeleteDevice(id)
+	err := core.DeleteDevice(id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,

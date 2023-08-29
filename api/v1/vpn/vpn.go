@@ -196,29 +196,70 @@ func updateVPN(c *gin.Context) {
 
 func deleteVPN(c *gin.Context) {
 	id := c.Param("id")
-	// get update user from token and add to client infos
 
-	oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
-	oauth2Client := c.MustGet("oauth2Client").(auth.Auth)
-	user, err := oauth2Client.UserInfo(oauth2Token)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"oauth2Token": oauth2Token,
-			"err":         err,
-		}).Error("failed to get user with oauth token")
-		c.AbortWithStatus(http.StatusUnauthorized)
-		return
+	var vpn *model.VPN
+	var err error
+
+	apikey := c.Request.Header.Get("X-API-KEY")
+
+	if apikey != "" {
+
+		device, err := core.ReadDeviceByApiKey(apikey)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("failed to read client config")
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+
+		authorized := false
+
+		if device.ApiKey == apikey {
+			authorized = true
+		}
+
+		if !authorized {
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+
+		log.Infof("Device %s deleted VPN %s", device.Name, id)
+		vpn, err = core.ReadVPN(id)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("failed to read vpn")
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+
+	} else {
+
+		oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
+		oauth2Client := c.MustGet("oauth2Client").(auth.Auth)
+		user, err := oauth2Client.UserInfo(oauth2Token)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"oauth2Token": oauth2Token,
+				"err":         err,
+			}).Error("failed to get user with oauth token")
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+
+		log.Infof("User %s deleted vpn %s", user.Name, id)
 	}
 
-	log.Infof("User %s deleted vpn %s", user.Name, id)
-
-	vpn, err := core.ReadVPN(id)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"err": err,
-		}).Error("failed to read vpn")
-		c.AbortWithStatus(http.StatusInternalServerError)
-		return
+	if vpn == nil {
+		vpn, err = core.ReadVPN(id)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("failed to read vpn")
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
 	}
 
 	vpns, err := core.ReadVPN2("netid", vpn.NetId)

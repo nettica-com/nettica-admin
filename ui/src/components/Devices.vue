@@ -354,6 +354,9 @@
                                     <v-form ref="form" v-model="valid">
                                         <v-text-field v-model="device.name" label="Host friendly name"
                                             :rules="[v => !!v || 'device name is required',]" required />
+                                        <v-select return-object v-model="acntList.selected" :items="acntList.items" item-text="text"
+                                            item-value="value" label="For this account"
+                                            :rules="[v => !!v || 'Account is required',]" single persistent-hint />
 
                                         <v-combobox v-model="device.tags" chips hint="Enter a tag, hit tab, hit enter."
                                             label="Tags" multiple dark>
@@ -546,6 +549,7 @@ export default {
     data: () => ({
 
         notification: {},
+        acntList: {},
         showPrivate: true,
         showPreshared: true,
         showTree: false,
@@ -734,6 +738,7 @@ export default {
         startCreate() {
             this.device = {
                 name: "",
+                accountid: "",
                 email: this.user.email,
                 enable: true,
                 tags: [],
@@ -754,11 +759,28 @@ export default {
             }
 
             this.netList.selected = this.netList.items[selected];
+
+            this.acntList = {
+                selected: { "text": "", "value": "" },
+                items: []
+            }
+
+            selected = 0;
+            for (let i = 0; i < this.accounts.length; i++) {
+                this.acntList.items[i] = { "text": this.accounts[i].accountName + " - " + this.accounts[i].parent, "value": this.accounts[i].parent }
+                if (this.acntList.items[i].value == this.device.accountid) {
+                    selected = i
+                }
+            }
+
+            this.acntList.selected = this.acntList.items[selected];
+
             this.dialogCreate = true;
         },
 
         create(device) {
             this.device.platform = this.platforms.selected.value
+            this.device.accountid = this.acntList.selected.value
 
             this.dialogCreate = false;
             this.createdevice(device)

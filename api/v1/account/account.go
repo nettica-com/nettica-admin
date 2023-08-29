@@ -18,6 +18,7 @@ func ApplyRoutes(r *gin.RouterGroup) {
 	g := r.Group("/accounts")
 	{
 
+		g.GET("/", readAllAccounts)
 		g.POST("/", createAccount)
 		g.POST("/:id/activate", activateAccount)
 		g.PATCH("/:id/activate", activateAccount)
@@ -131,6 +132,32 @@ func createAccount(c *gin.Context) {
 
 func readAllAccounts(c *gin.Context) {
 	email := c.Param("id")
+
+	// get creation user from token and add to client infos
+	oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
+	oauth2Client := c.MustGet("oauth2Client").(auth.Auth)
+	user, err := oauth2Client.UserInfo(oauth2Token)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"oauth2Token": oauth2Token,
+			"err":         err,
+		}).Error("failed to get user with oauth token")
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	if user.Email == "" {
+		log.WithFields(log.Fields{
+			"oauth2Token": oauth2Token,
+			"err":         err,
+		}).Error("failed to get email address from valid oauth token")
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	if email == "" {
+		email = user.Email
+	}
 
 	accounts, err := core.ReadAllAccounts(email)
 	if err != nil {

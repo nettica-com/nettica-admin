@@ -203,6 +203,17 @@ func DeleteDevice(id string) error {
 	return mongo.Delete(id, "id", "devices")
 }
 
+// ReadDeviceByApiKey(device.ApiKey)
+func ReadDeviceByApiKey(apikey string) (*model.Device, error) {
+	v, err := mongo.Deserialize(apikey, "apikey", "devices", reflect.TypeOf(model.Device{}))
+	if err != nil {
+		return nil, err
+	}
+	device := v.(*model.Device)
+
+	return device, nil
+}
+
 // ReadDevice2 device by param and id
 func ReadDevice2(param string, id string) ([]*model.Device, error) {
 	return mongo.ReadAllDevices(param, id)
@@ -223,24 +234,25 @@ func ReadDevicesForUser(email string) ([]*model.Device, error) {
 		if account.Status == "Active" {
 
 			if account.NetId != "" {
-
+				// read all the vpns with this netid
 				vpns, err := mongo.ReadAllVPNs("netid", account.NetId)
 				if err != nil {
 					return nil, err
 				}
-				devices, err := mongo.ReadAllDevices("netid", account.NetId)
+				// read all the devices ...
+				devices, err := mongo.ReadAllDevices("accountid", account.Parent)
 				if err != nil {
 					return nil, err
 				}
+				// ... and filter them by the vpns
 				for _, device := range devices {
 					for _, vpn := range vpns {
 						if device.Id == vpn.DeviceID {
 							device.VPNs = append(device.VPNs, vpn)
+							results = append(results, device)
 						}
 					}
 				}
-				results = append(results, devices...)
-
 			} else {
 				devices, err := mongo.ReadAllDevices("accountid", account.Parent)
 				if err != nil {
@@ -260,7 +272,27 @@ func ReadDevicesForUser(email string) ([]*model.Device, error) {
 				}
 				results = append(results, devices...)
 			}
+			// If this is a child account, read the child devices
+			if account.Id != account.Parent {
+				devices, err := mongo.ReadAllDevices("accountid", account.Id)
+				if err != nil {
+					return nil, err
+				}
 
+				vpns, err := mongo.ReadAllVPNs("accountid", account.Id)
+				if err != nil {
+					return nil, err
+				}
+				for _, device := range devices {
+					for _, vpn := range vpns {
+						if device.Id == vpn.DeviceID {
+							device.VPNs = append(device.VPNs, vpn)
+						}
+					}
+				}
+				results = append(results, devices...)
+
+			}
 		}
 	}
 
