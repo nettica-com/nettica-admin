@@ -65,27 +65,6 @@ func CreateService(service *model.Service) (*model.Service, error) {
 		service.DefaultSubnet = "10.10.10.0/24"
 	}
 
-	// Create a device for the service container
-
-	service.Device = &model.Device{
-		AccountID: service.AccountID,
-		Name:      service.ServiceType + "." + service.Name,
-		Enable:    true,
-		Server:    os.Getenv("SERVER"),
-		Type:      "Service",
-		Platform:  "Linux",
-		Created:   time.Now().UTC(),
-		Updated:   time.Now().UTC(),
-		CreatedBy: service.CreatedBy,
-		UpdatedBy: service.CreatedBy,
-	}
-
-	// Create the device
-	service.Device, err = CreateDevice(service.Device)
-	if err != nil {
-		return nil, err
-	}
-
 	// Find or create the network to use for the service
 
 	if service.Net == nil {
@@ -148,6 +127,27 @@ func CreateService(service *model.Service) (*model.Service, error) {
 
 	if service.VPN == nil {
 		return nil, errors.New("vpn is nil")
+	}
+
+	// Create a device for the service container
+
+	service.Device = &model.Device{
+		AccountID: service.AccountID,
+		Name:      strings.ToLower(service.ServiceType) + "." + service.Net.NetName,
+		Enable:    true,
+		Server:    os.Getenv("SERVER"),
+		Type:      "Service",
+		Platform:  "Linux",
+		Created:   time.Now().UTC(),
+		Updated:   time.Now().UTC(),
+		CreatedBy: service.CreatedBy,
+		UpdatedBy: service.CreatedBy,
+	}
+
+	// Create the device
+	service.Device, err = CreateDevice(service.Device)
+	if err != nil {
+		return nil, err
 	}
 
 	// create a default vpn using the net
