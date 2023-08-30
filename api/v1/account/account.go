@@ -24,6 +24,7 @@ func ApplyRoutes(r *gin.RouterGroup) {
 		g.PATCH("/:id/activate", activateAccount)
 		g.GET("/:id/invite", emailAccount)
 		g.GET("/:id", readAllAccounts)
+		g.GET("/:id/users", readUsers)
 		g.PATCH("/:id", updateAccount)
 		g.DELETE("/:id", deleteAccount)
 	}
@@ -166,6 +167,76 @@ func readAllAccounts(c *gin.Context) {
 		}).Error("failed to read accounts")
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
+	}
+
+	c.JSON(http.StatusOK, accounts)
+}
+
+func readUsers(c *gin.Context) {
+	id := c.Param("id")
+
+	// get creation user from token and add to client infos
+	oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
+	oauth2Client := c.MustGet("oauth2Client").(auth.Auth)
+	user, err := oauth2Client.UserInfo(oauth2Token)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"oauth2Token": oauth2Token,
+			"err":         err,
+		}).Error("failed to get user with oauth token")
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	if user.Email == "" {
+		log.WithFields(log.Fields{
+			"oauth2Token": oauth2Token,
+			"err":         err,
+		}).Error("failed to get email address from valid oauth token")
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	accounts, err := core.ReadAllAccounts(user.Email)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to read accounts")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	role := "None"
+	account := &model.Account{}
+	for _, a := range accounts {
+		if a.Parent == id && a.Email == user.Email {
+			role = a.Role
+			account = a
+			break
+		}
+	}
+
+	if role == "None" {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	if role == "User" || role == "Guest" {
+		result := []*model.Account{}
+		result = append(result, account)
+		c.JSON(http.StatusOK, result)
+		return
+	}
+
+	if role == "Admin" || role == "Owner" {
+		accounts, err = core.ReadAllAccounts(id)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("failed to read accounts")
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, accounts)

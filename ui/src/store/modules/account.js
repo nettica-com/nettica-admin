@@ -24,6 +24,11 @@ const getters = {
   members(state) {
     return state.members;
   },
+  getMembers: (state) => (id) => {
+    let item = state.members.find(item => item.id === id)
+    return item ? item.members : null
+  }
+
 }
 
 const actions = {
@@ -42,7 +47,7 @@ const actions = {
   },
 
   readUsers({ commit, dispatch }, id) {
-    ApiService.get(`/accounts/${id}`)
+    ApiService.get(`/accounts/${id}/users`)
       .then(resp => {
         commit('users', resp)
       })
@@ -52,9 +57,10 @@ const actions = {
   },
 
   readMembers({ commit, dispatch }, id) {
-    ApiService.get(`/accounts/${id}`)
+    ApiService.get(`/accounts/${id}/users`, { responseType: 'arraybuffer' })
       .then(resp => {
-        commit('members', resp)
+        console.log( "readMembers: ", resp)
+        commit('members', {  id: id, members: resp })
       })
       .catch(err => {
         commit('error', err)
@@ -116,8 +122,15 @@ const mutations = {
   users(state, users) {
     state.users = users
   },
-  members(state, members) {
-    state.members = members
+  members(state, { id, members }) {
+    let index = state.members.findIndex(x => x.id === id);
+    if (index !== -1) {
+      state.members.splice(index, 1);
+    }
+    state.members.push({
+      id: id,
+      members: members
+    })
   },
   create(state, account) {
     state.accounts.push(account)
@@ -160,18 +173,18 @@ const mutations = {
     }
   },
   update(state, member) {
-    let index = state.users.findIndex(x => x.id === member.id);
+    let index = state.members.users.findIndex(x => x.id === member.id);
     if (index !== -1) {
-      state.members.splice(index, 1);
-      state.members.push(member);
+      state.members.users.splice(index, 1);
+      state.members.users.push(member);
     } else {
       state.error = "update account (member) failed, not in list"
     }
   },
   delete(state, member) {
-    let index = state.users.findIndex(x => x.id === member.id);
+    let index = state.members.users.findIndex(x => x.id === member.id);
     if (index !== -1) {
-      state.members.splice(index, 1);
+      state.members.users.splice(index, 1);
     } else {
       state.error = "delete user failed, not in list"
     }

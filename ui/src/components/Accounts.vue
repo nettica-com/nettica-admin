@@ -235,6 +235,7 @@ export default {
         networks: ["All Networks"],
         roles: ["Owner", "Admin", "User"],
         statuses: ["Active", "Pending", "Suspended", "Hidden"],
+        allusers: [],
         user: null,
         member: null,
         account: null,
@@ -293,15 +294,15 @@ export default {
             authuser: 'auth/user',
             create_result: 'account/account',
             accounts: 'account/accounts',
-            members: 'account/users',
+            members: 'account/members',
             nets: 'net/nets',
+            getMembers: 'account/getMembers',
         }),
     },
 
-    mounted() {
-        this.readAllAccounts(this.authuser.email)
+mounted() {
         this.readAllNetworks()
-        this.buildTree()
+        this.readAllAccounts(this.authuser.email)
 
     },
 
@@ -309,15 +310,11 @@ export default {
         // whenever accounts changes, this function will run
         accounts(newAccounts, oldAccounts) {
             for (let i = 0; i < newAccounts.length; i++) {
-                if (newAccounts[i].id == newAccounts[i].parent) {
-                    this.readUsers(newAccounts[i].id);
-                }
+                this.readMembers(newAccounts[i].parent);
             }
-            this.buildTree()
         },
         members(newMembers, oldMembers) {
             this.buildTree()
-            this.$refs.tree.updateAll(true)
         },
         nets(newNets, oldNets) {
             this.netList.items[0] = { "text": "All Networks", "value": "" }
@@ -326,7 +323,6 @@ export default {
                 this.netList.items[i + 1] = { "text": this.nets[i].netName, "value": this.nets[i].id }
                 this.networks[i + 1] = this.nets[i].netName
             }
-            console.log("watched nets = ", this.netList)
         },
     },
 
@@ -334,6 +330,7 @@ export default {
         ...mapActions('account', {
             readAllAccounts: 'readAll',
             readUsers: 'readUsers',
+            readMembers: 'readMembers',
             createAccount: 'create',
             updateAccount: 'update',
             delete: 'delete',
@@ -404,14 +401,19 @@ export default {
                 }
                 console.log("account: ", this.accounts[i])
                 var k = 0
+                var members = this.getMembers(this.accounts[i].parent)
 
-                for (let j = 0; j < this.members.length; j++) {
-                    if (this.members[j].parent == this.accounts[i].parent) {
-                        var name = this.members[j].name
-                        if (this.members[j].netName != "") {
-                            name = name + " (" + this.members[j].netName + ")"
+                if (members == null || members == undefined) {
+                    continue
+                }
+
+                for (let j = 0; j < members.length; j++) {
+                    if (members[j].parent == this.accounts[i].parent) {
+                        var name = members[j].name
+                        if (members[j].netName != "") {
+                            name = name + " (" + members[j].netName + ")"
                         }
-                        var netName = this.members[j].netName
+                        var netName = members[j].netName
                         if (netName == "") {
                             netName = "All Networks"
                         }
@@ -420,17 +422,17 @@ export default {
                                 items: []
                             }
 
-                        netList.items[0] = { "text": netName, "value": this.members[j].netId }
-                        netList.selected = { "text": netName, "value": this.members[j].netId }
+                        netList.items[0] = { "text": netName, "value": members[j].netId }
+                        netList.selected = { "text": netName, "value": members[j].netId }
                         this.items[i].children[k] = {
-                            id: "m-" + this.members[j].id + "-" + this.members[j].netName,
+                            id: "m-" + members[j].id + "-" + members[j].netName,
                             name: name,
-                            member: this.members[j],
-                            status: this.members[j].status,
+                            member: members[j],
+                            status: members[j].status,
                             netName: netName,
                             isReadOnly: false,
-                            role: this.members[j].role,
-                            email: this.members[j].email,
+                            role: members[j].role,
+                            email: members[j].email,
                             icon: "mdi-account",
                             isAccount: false,
                             isMember: true,
@@ -438,7 +440,6 @@ export default {
                         }
                         k++
                     }
-                    console.log("member: ", this.members[j])
                 }
             }
 
