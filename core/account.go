@@ -147,29 +147,32 @@ func DeleteAccount(id string) error {
 }
 
 // ActivateAccount when joining
-func ActivateAccount(id string) (string, error) {
+func ActivateAccount(id string) (*model.Account, error) {
 
 	var a *model.Account
 
 	v, err := mongo.Deserialize(id, "id", "accounts", reflect.TypeOf(model.Account{}))
 	if err != nil {
-		return "Error", err
+		return nil, err
 	}
 	a = v.(*model.Account)
 	if a.Status != "Suspended" {
 		a.Status = "Active"
 	} else {
-		return "Error", errors.New("account is suspended")
+		return nil, errors.New("account is suspended")
 	}
 
 	err = mongo.Serialize(id, "id", "accounts", a)
 	if err != nil {
-		return "Error", err
+		return nil, err
+	}
+	if a.NetName == "" {
+		a.NetName = "All Networks"
 	}
 
 	log.Infof("Account Activated: %s %s", a.Email, id)
 
-	return "Account activated.", nil
+	return a, nil
 }
 
 func Email(id string) error {

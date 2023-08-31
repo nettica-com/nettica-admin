@@ -75,7 +75,8 @@
             }
           } else {
             console.log("this.$route.path = %s", this.$route.path);
-            if (this.$route.path != "/join") {
+            if (!location.pathname.startsWith("/join")) {
+              //alert("this.$route.path = " + this.$route.path + "location.pathname=" + location.pathname)
               this.oauth2_url()
             }
           }

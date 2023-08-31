@@ -2,15 +2,15 @@ import ApiService from "../../services/api.service";
 
 const state = {
   error: null,
-  result: "",
+  account: [],
 }
 
 const getters = {
   error(state) {
     return state.error;
   },
-  join(state) {
-    return state.join;
+  account(state) {
+    return state.account;
   },
 }
 
@@ -22,7 +22,7 @@ const actions = {
   activate({ state, commit }, id) {
     ApiService.post("/accounts/" + id + "/activate")
       .then(resp => {
-        commit('result', resp)
+        commit('account', resp)
       })
       .catch(err => {
         commit('error', err)
@@ -35,11 +35,8 @@ const mutations = {
   error(state, error) {
     state.error = error;
   },
-  join(state, join) {
-    state.join = join
-  },
-  create(state, join) {
-    state.join.push(join)
+  account(state, account) {
+    state.account = account;
   },
 
 }
