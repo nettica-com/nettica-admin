@@ -438,6 +438,48 @@ func ReadAllAccountsForID(id string) ([]*model.Account, error) {
 
 }
 
+// ReadAccountForUser from MongoDB
+func ReadAccountForUser(email string, accountid string) (*model.Account, error) {
+	var account *model.Account
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+		return nil, err
+	}
+
+	collection := client.Database("nettica").Collection("accounts")
+
+	filter := bson.D{}
+	if email != "" {
+		findstr := fmt.Sprintf("{\"email\":\"%s\", \"id\":\"%s\"}", email, accountid)
+		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
+
+	}
+
+	cursor, err := collection.Find(ctx, filter)
+
+	if err == nil {
+
+		defer cursor.Close(ctx)
+		for cursor.Next(ctx) {
+			account = &model.Account{}
+			err = cursor.Decode(&account)
+			if err == nil {
+				if accountid == account.Id {
+					return account, nil
+				}
+			}
+		}
+
+	}
+
+	return nil, err
+
+}
+
 // ReadAllSubscriptions from MongoDB
 func ReadAllSubscriptions(email string) ([]*model.Subscription, error) {
 	subscriptions := make([]*model.Subscription, 0)

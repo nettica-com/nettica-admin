@@ -173,20 +173,30 @@ const mutations = {
     }
   },
   update(state, member) {
-    let index = state.members.users.findIndex(x => x.id === member.id);
-    if (index !== -1) {
-      state.members.users.splice(index, 1);
-      state.members.users.push(member);
-    } else {
+    var found = false;
+    for (let i = 0; i < state.members.length; i++) {
+      let index = state.members[i].members.findIndex(x => x.id === member.id);
+      if (index !== -1) {
+        state.members[i].members.splice(index, 1);
+        state.members[i].members.push(member);
+        found = true;
+      }
+    }
+    if (!found) {
       state.error = "update account (member) failed, not in list"
     }
   },
   delete(state, member) {
-    let index = state.members.users.findIndex(x => x.id === member.id);
-    if (index !== -1) {
-      state.members.users.splice(index, 1);
-    } else {
-      state.error = "delete user failed, not in list"
+    var found = false;
+    for (let i = 0; i < state.members.length; i++) {
+      let index = state.members[i].members.findIndex(x => x.id === member.id);
+      if (index !== -1) {
+        state.members[i].members.splice(index, 1);
+        found = true;
+      }
+    }
+    if (!found) {
+      state.error = "delete account (member) failed, not in list"
     }
   },
 }

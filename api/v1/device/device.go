@@ -147,6 +147,43 @@ func updateDevice(c *gin.Context) {
 			c.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
+
+		device, err := core.ReadDevice(id)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("failed to read client config")
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+
+		account, err := core.GetAccount(user.Email, device.AccountID)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("failed to read account")
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+		if account == nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("account not found")
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+
+		authorized := false
+
+		if device.CreatedBy == user.Email || account.Role == "Admin" || account.Role == "Owner" {
+			authorized = true
+		}
+
+		if !authorized {
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+
 		data.UpdatedBy = user.Email
 	}
 

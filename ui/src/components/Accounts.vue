@@ -297,6 +297,7 @@ export default {
             members: 'account/members',
             nets: 'net/nets',
             getMembers: 'account/getMembers',
+            accountError: 'account/error',
         }),
     },
 
@@ -322,6 +323,22 @@ mounted() {
             for (let i = 0; i < this.nets.length; i++) {
                 this.netList.items[i + 1] = { "text": this.nets[i].netName, "value": this.nets[i].id }
                 this.networks[i + 1] = this.nets[i].netName
+            }
+        },
+        accountError(newError, oldError) {
+            if (newError != "") {
+                this.notification = {
+                    show: true,
+                    text: newError,
+                    timeout: 10000,
+                    color: "error",
+                }
+            } else {
+                this.notification = {
+                    show: true,
+                    text: "Changes saved.",
+                    timeout: 2000,
+                }
             }
         },
     },
@@ -516,9 +533,22 @@ mounted() {
 
             if ((this.create_result) && (this.sendEmail)) {
                 this.emailUser(this.create_result)
+                this.notification = {
+                    show: true,
+                    text: "Email sent to " + this.create_result.email,
+                    timeout: 5000,
+                }
+            } else {
+                this.notification = {
+                    show: true,
+                    text: "User created.",
+                    timeout: 2000,
+                }
             }
 
             this.dialogCreate = false;
+            this.Refresh()
+
 
         },
 
@@ -597,13 +627,13 @@ mounted() {
 
             console.log( "updateAccount: ", item.member)
             this.updateAccount(item.member)
+
             this.notification = {
                 show: true,
                 text: "Changes saved.",
                 timeout: 2000,
             }
 
-            this.Refresh()
         },
 
         forceFileDownload(user) {

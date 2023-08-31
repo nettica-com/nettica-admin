@@ -246,6 +246,27 @@ func updateAccount(c *gin.Context) {
 	var data model.Account
 	id := c.Param("id")
 
+	oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
+	oauth2Client := c.MustGet("oauth2Client").(auth.Auth)
+	user, err := oauth2Client.UserInfo(oauth2Token)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"oauth2Token": oauth2Token,
+			"err":         err,
+		}).Error("failed to get user with oauth token")
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	if user.Email == "" {
+		log.WithFields(log.Fields{
+			"oauth2Token": oauth2Token,
+			"err":         err,
+		}).Error("failed to get email address from valid oauth token")
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
 	var bodyBytes []byte
 	if c.Request.Body != nil {
 		bodyBytes, _ = io.ReadAll(c.Request.Body)
@@ -264,6 +285,30 @@ func updateAccount(c *gin.Context) {
 		c.AbortWithStatus(http.StatusUnprocessableEntity)
 		return
 	}
+
+	update, err := core.ReadAccount(id)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to read account")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	account, err := core.GetAccount(user.Email, update.Parent)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to read account")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	if account.Role == "User" || account.Role == "Guest" {
+		c.AbortWithStatus(http.StatusForbidden)
+		return
+	}
+
 	client, err := core.UpdateAccount(id, &data)
 	if err != nil {
 		log.WithFields(log.Fields{

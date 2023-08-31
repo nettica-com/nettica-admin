@@ -69,6 +69,16 @@ func CreateAccount(account *model.Account) (*model.Account, error) {
 	return account, nil
 }
 
+func GetAccount(email string, accountid string) (*model.Account, error) {
+
+	account, err := mongo.ReadAccountForUser(email, accountid)
+	if err != nil {
+		return nil, err
+	}
+
+	return account, nil
+}
+
 // ReadACcount by id
 func ReadAccount(id string) (*model.Account, error) {
 
