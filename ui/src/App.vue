@@ -119,8 +119,8 @@
 
       isAuthenticated(newValue, oldValue) {
         console.log(`Updating isAuthenticated from ${oldValue} to ${newValue}`);
-        // alert("isAuthenticated = " + newValue + " requiresAuth = " + this.requiresAuth)
         if (newValue === true  && this.requiresAuth === true) {
+          alert("isAuthenticated = " + newValue + " requiresAuth = " + this.requiresAuth)
            this.$router.push('/').catch(err => {
             if (err.name != "NavigationDuplicated") {
               throw err;
