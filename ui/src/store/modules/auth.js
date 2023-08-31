@@ -6,6 +6,7 @@ const state = {
   user: null,
   authStatus: '',
   authRedirectUrl: '',
+  requiresAuth: true,
 };
 
 const getters = {
@@ -17,6 +18,9 @@ const getters = {
   },
   isAuthenticated(state) {
     return state.user !== null;
+  },
+  requiresAuth(state) {
+    return state.requiresAuth;
   },
   authRedirectUrl(state) {
     return state.authRedirectUrl
@@ -102,6 +106,9 @@ const mutations = {
   },
   authStatus(state, authStatus) {
     state.authStatus = authStatus;
+  },
+  requiresAuth(state, requiresAuth) {
+    state.requiresAuth = requiresAuth;
   },
   authRedirectUrl(state, resp) {
     state.authRedirectUrl = resp.codeUrl;

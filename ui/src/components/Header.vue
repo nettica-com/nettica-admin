@@ -29,7 +29,7 @@
                 <template v-slot:activator="{ on }">
                     <v-btn icon v-on="on">
                         <v-avatar size="36">
-                            <img :src="user.picture" />
+                            <img :src="picture" />
                         </v-avatar>
                     </v-btn>
                 </template>
@@ -37,14 +37,14 @@
                     <v-list-item three-line v-show="isAuthenticated">
                         <v-list-item-content>
                             <div class="overline mb-4">connected as</div>
-                            <v-list-item-title class="headline mb-1">{{ user.name }}
+                            <v-list-item-title class="headline mb-1">{{ name }}
                                 <v-avatar size="64">
-                                    <img alt="user.name" :src="user.picture" />
+                                    <img alt="name" :src="picture" />
                                 </v-avatar>
                             </v-list-item-title>
-                            <v-list-item-subtitle>Email: {{ user.email }}</v-list-item-subtitle>
-                            <v-list-item-subtitle>Issuer: {{ user.issuer }}</v-list-item-subtitle>
-                            <v-list-item-subtitle>Issued at: {{ user.issuedAt | formatDate }}</v-list-item-subtitle>
+                            <v-list-item-subtitle>Email: {{ email }}</v-list-item-subtitle>
+                            <v-list-item-subtitle>Issuer: {{ issuer }}</v-list-item-subtitle>
+                            <v-list-item-subtitle>Issued at: {{ issuedAt | formatDate }}</v-list-item-subtitle>
                         </v-list-item-content>
                     </v-list-item>
                     <v-card-actions>
@@ -101,6 +101,12 @@ export default {
         title: env.title,
         showMenu: false,
         showServices: env.showServicesTab,
+        name: "",
+        picture: "",
+        email: "",
+        issuer: "",
+        issuedAt: "",
+
     }),
 
 
@@ -109,6 +115,16 @@ export default {
             user: 'auth/user',
             isAuthenticated: 'auth/isAuthenticated',
         }),
+    },
+
+    watch: {
+        user: function (val) {
+            this.name = val.name;
+            this.picture = val.picture;
+            this.email = val.email;
+            this.issuer = val.issuer;
+            this.issuedAt = val.issuedAt;
+        }
     },
 
     methods: {

@@ -43,6 +43,7 @@
         isAuthenticated: 'auth/isAuthenticated',
         authStatus: 'auth/authStatus',
         authRedirectUrl: 'auth/authRedirectUrl',
+        requiresAuth: 'auth/requiresAuth',
         authError: 'auth/error',
         clientError: 'host/error',
         netError: 'net/error',
@@ -57,24 +58,26 @@
     },
 
     mounted() {
-      if (this.isAuthenticated == false) {
-        if (this.$route.query.code && this.$route.query.state) {
-            try {
-              this.oauth2_exchange({
-                code: this.$route.query.code,
-                state: this.$route.query.state
-            })
-          } catch (e) {
-            this.notification = {
-              show: true,
-              color: 'error',
-              text: e.message,
+      if (this.requiresAuth || this.$route.path == "/") {
+        if (this.isAuthenticated == false) {
+          if (this.$route.query.code && this.$route.query.state) {
+              try {
+                this.oauth2_exchange({
+                  code: this.$route.query.code,
+                  state: this.$route.query.state
+              })
+            } catch (e) {
+              this.notification = {
+                show: true,
+                color: 'error',
+                text: e.message,
+              }
             }
-          }
-        } else {
-          console.log("this.$route.path = %s", this.$route.path);
-          if (this.$route.path != "/join") {
-            this.oauth2_url()
+          } else {
+            console.log("this.$route.path = %s", this.$route.path);
+            if (this.$route.path != "/join") {
+              this.oauth2_url()
+            }
           }
         }
       }
@@ -110,10 +113,14 @@
         console.log(newValue)
         this.notify('error', newValue);
       },
+      requiresAuth(newValue, oldValue) {
+        console.log(`Updating requiresAuth from ${oldValue} to ${newValue}`);
+      },
 
       isAuthenticated(newValue, oldValue) {
         console.log(`Updating isAuthenticated from ${oldValue} to ${newValue}`);
-        if (newValue === true) {
+        // alert("isAuthenticated = " + newValue + " requiresAuth = " + this.requiresAuth)
+        if (newValue === true  && this.requiresAuth === true) {
            this.$router.push('/').catch(err => {
             if (err.name != "NavigationDuplicated") {
               throw err;
