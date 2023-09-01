@@ -20,7 +20,7 @@ ui/node_modules
 # local env files
 ui/.env.local
 ui/.env.*.local
-
+ui/env.json
 .idea
 
 # Log files
