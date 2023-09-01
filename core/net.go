@@ -137,12 +137,10 @@ func UpdateNet(Id string, net *model.Network) (*model.Network, error) {
 	return net, nil
 }
 
-// DeleteNet from disk
+// DeleteNet from database
 func DeleteNet(id string) error {
 
 	err := mongo.Delete(id, "id", "networks")
-	//	path := filepath.Join(os.Getenv("WG_CONF_DIR"), id)
-	//	err := os.Remove(path)
 	if err != nil {
 		return err
 	}
