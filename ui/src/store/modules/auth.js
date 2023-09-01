@@ -50,7 +50,13 @@ const actions = {
     }
     ApiService.get("/auth/oauth2_url")
       .then(resp => {
-        if (resp.codeUrl === '_magic_string_fake_auth_no_redirect_') {
+        if (resp.codeUrl === '/login') {
+          console.log("server report oauth2 is disabled, basic auth")
+          commit('authStatus', 'disabled')
+          TokenService.saveClientId(resp.clientId)
+          commit('authStatus', 'redirect')
+          commit('authRedirectUrl', resp)
+        } else if (resp.codeUrl === '_magic_string_fake_auth_no_redirect_') {
           console.log("server report oauth2 is disabled, fake exchange")
           commit('authStatus', 'disabled')
           TokenService.saveClientId(resp.clientId)

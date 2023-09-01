@@ -58,7 +58,7 @@
     },
 
     mounted() {
-      if (this.requiresAuth || this.$route.path == "/") {
+      if (this.requiresAuth || location.pathname == "/") {
         if (this.isAuthenticated == false) {
           if (this.$route.query.code && this.$route.query.state) {
               try {

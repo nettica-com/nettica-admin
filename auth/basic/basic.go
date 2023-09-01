@@ -39,7 +39,7 @@ func (o *Oauth2Basic) Logout() error {
 
 // CodeUrl get url to redirect client for auth
 func (o *Oauth2Basic) CodeUrl(state string) string {
-	return "_magic_string_fake_auth_no_redirect_"
+	return "/login"
 }
 
 // Exchange exchange code for Oauth2 token
@@ -168,6 +168,9 @@ func (o *Oauth2Basic) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 		//  If there's no error and no account, create one.
 		if len(accounts) == 0 {
 			var account model.Account
+			host, _ := os.Hostname()
+			account.AccountName = host
+			account.Name = user.Sub
 			account.Email = user.Email
 			account.Role = "Owner"
 			account.Status = "Active"

@@ -84,6 +84,10 @@
 
     mounted() {
       this.basic_auth()
+      this.authStatus = 'basic'
+      this.authRedirectUrl = "/"
+      this.requiresAuth = false
+
 /*      if (this.isAuthenticated == false) {
         if (this.$route.query.code && this.$route.query.state) {
             try {
@@ -118,16 +122,17 @@
 
       isAuthenticated(newValue, oldValue) {
         console.log(`login: Updating isAuthenticated from ${oldValue} to ${newValue}`);
-//        if (newValue === true) {
-//           this.$router.push('/')
-//        }
+        if (newValue === true) {
+           this.$router.push('/')
+        }
       },
 
       authStatus(newValue, oldValue) {
         console.log(`login: Updating authStatus from ${oldValue} to ${newValue}`);
-//        if (newValue === 'redirect') {
+        if (newValue === 'redirect') {
+          this.authStatus = 'basic_auth'
 //          window.location.replace(this.authRedirectUrl)
-//        }
+        }
       },
     },
 
