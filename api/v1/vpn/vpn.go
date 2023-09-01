@@ -129,11 +129,22 @@ func updateVPN(c *gin.Context) {
 		return
 	}
 
+	authorized := false
+
+	vpn, err := core.ReadVPN(id)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to read vpn")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
 	apikey := c.Request.Header.Get("X-API-KEY")
 
 	if apikey != "" {
 
-		device, err := core.ReadDevice(data.DeviceID)
+		device, err := core.ReadDevice(vpn.DeviceID)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"err": err,
@@ -142,11 +153,11 @@ func updateVPN(c *gin.Context) {
 			return
 		}
 
-		authorized := false
-
 		if device.ApiKey == apikey {
 			authorized = true
 		}
+
+		data.UpdatedBy = device.Name
 
 		if !authorized {
 			c.AbortWithStatus(http.StatusUnauthorized)
@@ -165,6 +176,32 @@ func updateVPN(c *gin.Context) {
 			c.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
+
+		account, err := core.GetAccount(user.Email, vpn.AccountID)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("failed to read account")
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+		if account == nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("account not found")
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+
+		if vpn.CreatedBy == user.Email || account.Role == "Admin" || account.Role == "Owner" {
+			authorized = true
+		}
+
+		if !authorized {
+			c.AbortWithStatus(http.StatusForbidden)
+			return
+		}
+
 		data.UpdatedBy = user.Email
 	}
 

@@ -6,7 +6,7 @@ import (
 	"github.com/patrickmn/go-cache"
 )
 
-var StatusCache *cache.Cache = cache.New((60 * time.Minute), (10 * time.Minute))
+var StatusCache *cache.Cache = cache.New((1 * time.Minute), (1 * time.Minute))
 
 func FlushCache(id string) {
 	StatusCache.Delete(id)

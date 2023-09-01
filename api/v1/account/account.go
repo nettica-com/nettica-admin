@@ -304,7 +304,7 @@ func updateAccount(c *gin.Context) {
 		return
 	}
 
-	if account.Role == "User" || account.Role == "Guest" {
+	if account == nil || account.Role == "User" || account.Role == "Guest" {
 		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}

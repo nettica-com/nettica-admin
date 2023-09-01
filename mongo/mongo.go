@@ -454,7 +454,7 @@ func ReadAccountForUser(email string, accountid string) (*model.Account, error) 
 
 	filter := bson.D{}
 	if email != "" {
-		findstr := fmt.Sprintf("{\"email\":\"%s\", \"id\":\"%s\"}", email, accountid)
+		findstr := fmt.Sprintf("{\"email\":\"%s\", \"parent\":\"%s\"}", email, accountid)
 		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
 
 	}
@@ -468,9 +468,7 @@ func ReadAccountForUser(email string, accountid string) (*model.Account, error) 
 			account = &model.Account{}
 			err = cursor.Decode(&account)
 			if err == nil {
-				if accountid == account.Id {
-					return account, nil
-				}
+				return account, nil
 			}
 		}
 

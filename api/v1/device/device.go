@@ -180,7 +180,7 @@ func updateDevice(c *gin.Context) {
 		}
 
 		if !authorized {
-			c.AbortWithStatus(http.StatusUnauthorized)
+			c.AbortWithStatus(http.StatusForbidden)
 			return
 		}
 

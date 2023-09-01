@@ -106,6 +106,44 @@ func updateNet(c *gin.Context) {
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
+
+	net, err := core.ReadNet(id)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to read net")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	account, err := core.GetAccount(user.Email, net.AccountID)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to read account")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	if account == nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to read account")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	authorized := false
+
+	if net.CreatedBy == user.Email || account.Role == "Admin" || account.Role == "Owner" {
+		authorized = true
+	}
+
+	if !authorized {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
 	data.UpdatedBy = user.Email
 
 	client, err := core.UpdateNet(id, &data)
