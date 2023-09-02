@@ -35,23 +35,38 @@ func createNet(c *gin.Context) {
 		return
 	}
 
-	// get creation user from token and add to client infos
-	oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
-	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
-	user, err := oauth2Client.UserInfo(oauth2Token)
+	account, _, err := core.GetFromContext(c, data.AccountID)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"oauth2Token": oauth2Token,
-			"err":         err,
-		}).Error("failed to get user with oauth token")
-		c.AbortWithStatus(http.StatusUnauthorized)
+			"err": err,
+		}).Error("failed to get account from context")
+		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	data.CreatedBy = user.Email
-	data.UpdatedBy = user.Email
+
+	if account.Status == "Suspended" {
+		log.Infof("createNet: account %s is suspended", account.Email)
+		c.AbortWithStatus(http.StatusForbidden)
+		return
+	}
+
+	if account.Role != "Admin" && account.Role != "Owner" {
+		log.Infof("createNet: user %s is not an admin of %s", account.Email, account.Id)
+		c.AbortWithStatus(http.StatusForbidden)
+		return
+	}
+
+	if account.NetId != "" {
+		log.Infof("createNet: user %s cannot create new nets in this account", account.Email)
+		c.AbortWithStatus(http.StatusForbidden)
+		return
+	}
+
+	data.CreatedBy = account.Email
+	data.UpdatedBy = account.Email
 
 	if data.AccountID == "" {
-		data.AccountID = user.AccountID
+		data.AccountID = account.Id
 	}
 
 	client, err := core.CreateNet(&data)
@@ -69,16 +84,22 @@ func createNet(c *gin.Context) {
 func readNet(c *gin.Context) {
 	id := c.Param("id")
 
-	client, err := core.ReadNet(id)
+	account, net, err := core.GetFromContext(c, id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
-		}).Error("failed to read client")
+		}).Error("failed to get account from context")
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
-	c.JSON(http.StatusOK, client)
+	if account.Status == "Suspended" {
+		log.Infof("readNet: account %s is suspended", account.Email)
+		c.AbortWithStatus(http.StatusForbidden)
+		return
+	}
+
+	c.JSON(http.StatusOK, net)
 }
 
 func updateNet(c *gin.Context) {
@@ -93,48 +114,34 @@ func updateNet(c *gin.Context) {
 		return
 	}
 
-	// get update user from token and add to client infos
-	oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
-	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
-	user, err := oauth2Client.UserInfo(oauth2Token)
-	if err != nil {
+	if data.Id != id {
 		log.WithFields(log.Fields{
-			"oauth2Token": oauth2Token,
-			"err":         err,
-		}).Error("failed to get user with oauth token")
-		c.AbortWithStatus(http.StatusUnauthorized)
+			"id":  id,
+			"req": data.Id,
+		}).Error("id mismatch")
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
-	net, err := core.ReadNet(id)
+	account, v, err := core.GetFromContext(c, id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
-		}).Error("failed to read net")
+		}).Error("failed to get account from context")
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
+	net := v.(*model.Network)
 
-	account, err := core.GetAccount(user.Email, net.AccountID)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"err": err,
-		}).Error("failed to read account")
-		c.AbortWithStatus(http.StatusInternalServerError)
-		return
-	}
-
-	if account == nil {
-		log.WithFields(log.Fields{
-			"err": err,
-		}).Error("failed to read account")
-		c.AbortWithStatus(http.StatusInternalServerError)
+	if account.Status == "Suspended" {
+		log.Infof("updateNet: account %s is suspended", account.Email)
+		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
 
 	authorized := false
 
-	if net.CreatedBy == user.Email || account.Role == "Admin" || account.Role == "Owner" {
+	if net.CreatedBy == account.Email || account.Role == "Admin" || account.Role == "Owner" {
 		authorized = true
 	}
 
@@ -143,28 +150,43 @@ func updateNet(c *gin.Context) {
 		return
 	}
 
-	data.UpdatedBy = user.Email
+	data.UpdatedBy = account.Email
 
-	client, err := core.UpdateNet(id, &data)
+	result, err := core.UpdateNet(id, &data)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
-		}).Error("failed to update client")
+		}).Error("failed to update network")
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
-	c.JSON(http.StatusOK, client)
+	c.JSON(http.StatusOK, result)
 }
 
 func deleteNet(c *gin.Context) {
 	id := c.Param("id")
 
-	err := core.DeleteNet(id)
+	account, _, err := core.GetFromContext(c, id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
-		}).Error("failed to remove client")
+		}).Error("failed to get account from context")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	if account.Status == "Suspended" {
+		log.Infof("deleteNet: account %s is suspended", account.Email)
+		c.AbortWithStatus(http.StatusForbidden)
+		return
+	}
+
+	err = core.DeleteNet(id)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to delete network")
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}

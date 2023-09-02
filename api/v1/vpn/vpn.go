@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	core "github.com/nettica-com/nettica-admin/core"
@@ -45,33 +46,24 @@ func createVPN(c *gin.Context) {
 
 	a := util.GetCleanAuthToken(c)
 	log.Infof("%v", a)
-	// get creation user from token and add to client infos
-	oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
-	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
-	user, err := oauth2Client.UserInfo(oauth2Token)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"oauth2Token": oauth2Token,
-			"err":         err,
-		}).Error("failed to get user with oauth token")
-		c.AbortWithStatus(http.StatusUnauthorized)
-		return
-	}
-	data.CreatedBy = user.Email
-	data.UpdatedBy = user.Email
 
-	if data.AccountID == "" {
-		data.AccountID = user.AccountID
-	}
-
+	account, _, err := core.GetFromContext(c, data.AccountID)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
-		}).Error("failed to generate state random string")
+		}).Error("failed to get account from context")
 		c.AbortWithStatus(http.StatusInternalServerError)
+		return
 	}
 
-	client, err := core.CreateVPN(&data)
+	data.CreatedBy = account.Email
+	data.UpdatedBy = account.Email
+
+	if data.AccountID == "" {
+		data.AccountID = account.Id
+	}
+
+	vpn, err := core.CreateVPN(&data)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
@@ -80,7 +72,7 @@ func createVPN(c *gin.Context) {
 		return
 	}
 
-	vpns, err := core.ReadVPN2("netid", client.NetId)
+	vpns, err := core.ReadVPN2("netid", vpn.NetId)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
@@ -94,22 +86,29 @@ func createVPN(c *gin.Context) {
 		core.FlushCache(v.DeviceID)
 	}
 
-	c.JSON(http.StatusOK, client)
+	c.JSON(http.StatusOK, vpn)
 }
 
 func readVPN(c *gin.Context) {
 	id := c.Param("id")
 
-	client, err := core.ReadVPN(id)
+	account, v, err := core.GetFromContext(c, id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
-		}).Error("failed to read client")
+		}).Error("failed to get account from context")
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
+	vpn := v.(*model.VPN)
 
-	c.JSON(http.StatusOK, client)
+	if account.Status == "Suspended" {
+		log.Errorf("readVPN: account %s is suspended", account.Email)
+		c.AbortWithStatus(http.StatusForbidden)
+		return
+	}
+
+	c.JSON(http.StatusOK, vpn)
 }
 
 func updateVPN(c *gin.Context) {
@@ -128,20 +127,27 @@ func updateVPN(c *gin.Context) {
 		return
 	}
 
-	authorized := false
-
-	vpn, err := core.ReadVPN(id)
+	account, v, err := core.GetFromContext(c, id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
-		}).Error("failed to read vpn")
+		}).Error("failed to get account from context")
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
+	vpn := v.(*model.VPN)
+
+	if account.Status == "Suspended" {
+		log.Errorf("updateVPN: account %s is suspended", account.Email)
+		c.AbortWithStatus(http.StatusForbidden)
+		return
+	}
+
+	authorized := false
 
 	apikey := c.Request.Header.Get("X-API-KEY")
 
-	if apikey != "" {
+	if apikey != "" && strings.HasPrefix(apikey, "device-api-") {
 
 		device, err := core.ReadDevice(vpn.DeviceID)
 		if err != nil {
@@ -163,36 +169,8 @@ func updateVPN(c *gin.Context) {
 			return
 		}
 	} else {
-		// get update user from token and add to client infos
-		oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
-		oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
-		user, err := oauth2Client.UserInfo(oauth2Token)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"oauth2Token": oauth2Token,
-				"err":         err,
-			}).Error("failed to get user with oauth token")
-			c.AbortWithStatus(http.StatusUnauthorized)
-			return
-		}
 
-		account, err := core.GetAccount(user.Email, vpn.AccountID)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"err": err,
-			}).Error("failed to read account")
-			c.AbortWithStatus(http.StatusInternalServerError)
-			return
-		}
-		if account == nil {
-			log.WithFields(log.Fields{
-				"err": err,
-			}).Error("account not found")
-			c.AbortWithStatus(http.StatusUnauthorized)
-			return
-		}
-
-		if vpn.CreatedBy == user.Email || account.Role == "Admin" || account.Role == "Owner" {
+		if vpn.CreatedBy == account.Email || account.Role == "Admin" || account.Role == "Owner" {
 			authorized = true
 		}
 
@@ -201,10 +179,10 @@ func updateVPN(c *gin.Context) {
 			return
 		}
 
-		data.UpdatedBy = user.Email
+		data.UpdatedBy = account.Email
 	}
 
-	client, err := core.UpdateVPN(id, &data, false)
+	result, err := core.UpdateVPN(id, &data, false)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
@@ -213,7 +191,7 @@ func updateVPN(c *gin.Context) {
 		return
 	}
 
-	vpns, err := core.ReadVPN2("netid", client.NetId)
+	vpns, err := core.ReadVPN2("netid", result.NetId)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
@@ -227,18 +205,31 @@ func updateVPN(c *gin.Context) {
 		core.FlushCache(v.DeviceID)
 	}
 
-	c.JSON(http.StatusOK, client)
+	c.JSON(http.StatusOK, result)
 }
 
 func deleteVPN(c *gin.Context) {
 	id := c.Param("id")
 
-	var vpn *model.VPN
-	var err error
+	account, v, err := core.GetFromContext(c, id)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to get account from context")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	vpn := v.(*model.VPN)
+
+	if account.Status == "Suspended" {
+		log.Errorf("deleteVPN: account %s is suspended", account.Email)
+		c.AbortWithStatus(http.StatusForbidden)
+		return
+	}
 
 	apikey := c.Request.Header.Get("X-API-KEY")
 
-	if apikey != "" {
+	if apikey != "" && strings.HasPrefix(apikey, "device-api-") {
 
 		device, err := core.ReadDeviceByApiKey(apikey)
 		if err != nil {
@@ -261,50 +252,10 @@ func deleteVPN(c *gin.Context) {
 		}
 
 		log.Infof("Device %s deleted VPN %s", device.Name, id)
-		vpn, err = core.ReadVPN(id)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"err": err,
-			}).Error("failed to read vpn")
-			c.AbortWithStatus(http.StatusInternalServerError)
-			return
-		}
-
-		if vpn.DeviceID != device.Id {
-			log.WithFields(log.Fields{
-				"vpn":    vpn,
-				"device": device,
-			}).Error("failed to delete vpn, device mismatch")
-			c.AbortWithStatus(http.StatusInternalServerError)
-			return
-		}
 
 	} else {
 
-		oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
-		oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
-		user, err := oauth2Client.UserInfo(oauth2Token)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"oauth2Token": oauth2Token,
-				"err":         err,
-			}).Error("failed to get user with oauth token")
-			c.AbortWithStatus(http.StatusUnauthorized)
-			return
-		}
-
-		log.Infof("User %s deleted vpn %s", user.Name, id)
-	}
-
-	if vpn == nil {
-		vpn, err = core.ReadVPN(id)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"err": err,
-			}).Error("failed to read vpn")
-			c.AbortWithStatus(http.StatusInternalServerError)
-			return
-		}
+		log.Infof("User %s deleted vpn %s", account.Email, id)
 	}
 
 	vpns, err := core.ReadVPN2("netid", vpn.NetId)
@@ -370,10 +321,32 @@ func readVPNs(c *gin.Context) {
 
 func configVPN(c *gin.Context) {
 
+	id := c.Param("id")
+
+	if id == "" {
+		log.Error("vpnid cannot be empty")
+		c.AbortWithStatus(http.StatusInternalServerError)
+	}
+
+	account, _, err := core.GetFromContext(c, id)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to get account from context")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	if account.Status == "Suspended" {
+		log.Errorf("configVPN: account %s is suspended", account.Email)
+		c.AbortWithStatus(http.StatusForbidden)
+		return
+	}
+
 	formatQr := c.DefaultQuery("qrcode", "false")
 	zipcode := c.DefaultQuery("zip", "false")
 
-	data, net, err := core.ReadVPNConfig(c.Param("id"))
+	data, net, err := core.ReadVPNConfig(id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
