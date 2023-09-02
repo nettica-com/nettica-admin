@@ -19,19 +19,19 @@
         </div>
         <v-card>
             <v-card-title>
-                <v-row>
-                    <v-col cols="4" >Account</v-col>
-                    <v-col cols="4">
-                        <v-text-field v-if="listView" v-model="search" append-icon="mdi-magnify" label="Search" single-line
-                            hide-details></v-text-field>
-                    </v-col>
-                    <v-col cols="4" class="text-right">
-                        <v-btn color="success" @click="startInvite">
-                            Invite
-                            <v-icon right dark>mdi-account-group</v-icon>
-                        </v-btn>
-                    </v-col>
-                </v-row>
+                Accounts
+                <v-spacer></v-spacer>
+                <v-text-field v-if="listView" v-model="search" append-icon="mdi-magnify" label="Search" single-line
+                    hide-details></v-text-field>
+                <v-spacer></v-spacer>
+                <v-btn color="success" @click="startInvite">
+                    Invite
+                    <v-icon right dark>mdi-account-group</v-icon>
+                </v-btn>&nbsp;
+                <v-btn color="primary" @click="dialogAPI = true">
+                    API
+                    <v-icon right dark>mdi-key</v-icon>
+                </v-btn>
             </v-card-title>
         </v-card>
         <v-card>
@@ -138,6 +138,28 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
+        <v-dialog v-if="accounts" v-model="dialogAPI" max-width="550">
+            <v-card>
+                <v-card-title class="headline">API Keys</v-card-title>
+                <v-card-text>
+                    <v-row>
+                        <v-col cols="12">
+                            <v-form ref="form" v-model="valid">
+                                <v-data-table :headers="kheaders" :items="accounts" :items-per-page="5"
+                                    class="elevation-1">
+                                </v-data-table>
+                            </v-form>
+                        </v-col>
+                    </v-row>
+                </v-card-text>
+                <v-card-actions>
+                    <v-btn color="primary" @click="dialogAPI = false">
+                        OK
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+
         <v-dialog v-if="user" v-model="dialogUpdate" max-width="550">
             <v-card>
                 <v-card-title class="headline">Edit User</v-card-title>
@@ -225,6 +247,7 @@ export default {
         dialogCreate: false,
         dialogUpdate: false,
         dialogMember: false,
+        dialogAPI: false,
         inDelete: false,
         netList: {
             items: [],
@@ -251,6 +274,10 @@ export default {
             { text: 'Status', value: 'status', },
             { text: 'Actions', value: 'action', sortable: false, },
 
+        ],
+        kheaders: [
+            { text: 'Account Name', value: 'accountName', },
+            { text: 'API Key', value: 'apiKey', },
         ],
         bottom_headers: [
             { text: 'Email', value: 'email', },
