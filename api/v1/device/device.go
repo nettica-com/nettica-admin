@@ -48,23 +48,21 @@ func createDevice(c *gin.Context) {
 
 	a := util.GetCleanAuthToken(c)
 	log.Infof("%v", a)
-	// get creation user from token and add to client infos
-	oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
-	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
-	user, err := oauth2Client.UserInfo(oauth2Token)
+
+	account, _, err := core.GetFromContext(c, "")
 	if err != nil {
 		log.WithFields(log.Fields{
-			"oauth2Token": oauth2Token,
-			"err":         err,
-		}).Error("failed to get user with oauth token")
-		c.AbortWithStatus(http.StatusUnauthorized)
+			"err": err,
+		}).Error("failed to get account from context")
+		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	data.CreatedBy = user.Email
-	data.UpdatedBy = user.Email
+
+	data.CreatedBy = account.Email
+	data.UpdatedBy = account.Email
 
 	if data.AccountID == "" {
-		data.AccountID = user.AccountID
+		data.AccountID = account.Parent
 	}
 
 	client, err := core.CreateDevice(&data)
@@ -82,16 +80,22 @@ func createDevice(c *gin.Context) {
 func readDevice(c *gin.Context) {
 	id := c.Param("id")
 
-	client, err := core.ReadDevice(id)
+	account, device, err := core.GetFromContext(c, id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
-		}).Error("failed to read client")
+		}).Error("failed to get account from context")
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
-	c.JSON(http.StatusOK, client)
+	if account.Status == "Suspended" {
+		log.Infof("Account %s is suspended", account.Email)
+		c.AbortWithStatus(http.StatusForbidden)
+		return
+	}
+
+	c.JSON(http.StatusOK, device)
 }
 
 func updateDevice(c *gin.Context) {
@@ -110,18 +114,19 @@ func updateDevice(c *gin.Context) {
 		return
 	}
 
+	account, v, err := core.GetFromContext(c, id)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to get account from context")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	device := v.(*model.Device)
+
 	apikey := c.Request.Header.Get("X-API-KEY")
 
 	if apikey != "" && strings.HasPrefix(apikey, "device-api-") {
-
-		device, err := core.ReadDevice(id)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"err": err,
-			}).Error("failed to read client config")
-			c.AbortWithStatus(http.StatusInternalServerError)
-			return
-		}
 
 		authorized := false
 
@@ -135,29 +140,8 @@ func updateDevice(c *gin.Context) {
 			return
 		}
 	} else {
-		// get update user from token and add to client infos
-		oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
-		oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
-		user, err := oauth2Client.UserInfo(oauth2Token)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"oauth2Token": oauth2Token,
-				"err":         err,
-			}).Error("failed to get user with oauth token")
-			c.AbortWithStatus(http.StatusUnauthorized)
-			return
-		}
 
-		device, err := core.ReadDevice(id)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"err": err,
-			}).Error("failed to read client config")
-			c.AbortWithStatus(http.StatusInternalServerError)
-			return
-		}
-
-		account, err := core.GetAccount(user.Email, device.AccountID)
+		account, err := core.GetAccount(account.Email, device.AccountID)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"err": err,
@@ -175,7 +159,7 @@ func updateDevice(c *gin.Context) {
 
 		authorized := false
 
-		if device.CreatedBy == user.Email || account.Role == "Admin" || account.Role == "Owner" {
+		if device.CreatedBy == account.Email || account.Role == "Admin" || account.Role == "Owner" {
 			authorized = true
 		}
 
@@ -184,7 +168,7 @@ func updateDevice(c *gin.Context) {
 			return
 		}
 
-		data.UpdatedBy = user.Email
+		data.UpdatedBy = account.Email
 	}
 
 	client, err := core.UpdateDevice(id, &data, false)
@@ -203,54 +187,31 @@ func updateDevice(c *gin.Context) {
 func deleteDevice(c *gin.Context) {
 	id := c.Param("id")
 
+	account, v, err := core.GetFromContext(c, id)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to get account from context")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	device := v.(*model.Device)
+
 	apikey := c.Request.Header.Get("X-API-KEY")
 
 	if apikey != "" {
 
-		device, err := core.ReadDevice(id)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"err": err,
-			}).Error("failed to read client config")
-			c.AbortWithStatus(http.StatusInternalServerError)
-			return
-		}
-
-		authorized := false
-
-		if device.ApiKey == apikey {
-			authorized = true
-		}
-
-		if !authorized {
-			c.AbortWithStatus(http.StatusUnauthorized)
-			return
-		}
-
 		log.Infof("Device %s deleted VPN %s", device.Name, id)
 
 	} else {
-		// get update user from token and add to client infos
-
-		oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
-		oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
-		user, err := oauth2Client.UserInfo(oauth2Token)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"oauth2Token": oauth2Token,
-				"err":         err,
-			}).Error("failed to get user with oauth token")
-			c.AbortWithStatus(http.StatusUnauthorized)
-			return
-		}
-		log.Infof("User %s deleted device %s", user.Email, id)
+		log.Infof("User %s deleted device %s", account.Email, id)
 	}
 
-	err := core.DeleteDevice(id)
+	err = core.DeleteDevice(id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
-		}).Error("failed to remove client")
+		}).Error("failed to delete device")
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
@@ -474,80 +435,3 @@ func statusDevice(c *gin.Context) {
 
 	core.SetCache(deviceId, md5)
 }
-
-/*
-func configDevice(c *gin.Context) {
-
-	formatQr := c.DefaultQuery("qrcode", "false")
-	zipcode := c.DefaultQuery("zip", "false")
-
-	data, net, err := core.ReadDeviceConfig(c.Param("id"))
-	if err != nil {
-		log.WithFields(log.Fields{
-			"err": err,
-		}).Error("failed to read device config")
-		c.AbortWithStatus(http.StatusNotFound)
-		return
-	}
-	sdata := string(data)
-
-	if zipcode == "false" {
-		c.Writer.Header().Set("Content-Type", "application/zip")
-		c.Writer.Header().Set("Content-Disposition", "attachment; filename="+*net+".zip")
-		w := zip.NewWriter(c.Writer)
-		defer w.Close()
-		// Make a zip file with the config file
-		f, err := w.Create(*net + ".conf")
-		if err != nil {
-			log.WithFields(log.Fields{
-				"err": err,
-			}).Error("failed to create zip file")
-			c.AbortWithStatus(http.StatusInternalServerError)
-			return
-		}
-		_, err = f.Write(data)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"err": err,
-			}).Error("failed to write zip file")
-			c.AbortWithStatus(http.StatusInternalServerError)
-			return
-		}
-		return
-	}
-
-	if formatQr == "false" {
-		// return config as txt file
-		c.Header("Content-Disposition", "attachment; filename=nettica.conf")
-		c.Data(http.StatusOK, "application/config", data)
-		return
-	}
-	// return config as png qrcode
-	png, err := qrcode.Encode(sdata, qrcode.Medium, 250)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"err": err,
-		}).Error("failed to create qrcode")
-		c.AbortWithStatus(http.StatusInternalServerError)
-		return
-	}
-	c.Data(http.StatusOK, "image/png", png)
-
-	return
-}
-
-func emailDevice(c *gin.Context) {
-	id := c.Param("id")
-
-	err := core.EmailDevice(id)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"err": err,
-		}).Error("failed to send email to client")
-		c.AbortWithStatus(http.StatusInternalServerError)
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{})
-}
-*/

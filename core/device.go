@@ -272,26 +272,26 @@ func ReadDevicesForUser(email string) ([]*model.Device, error) {
 				}
 				results = append(results, devices...)
 			}
-			// If this is a child account, read the child devices
+			// If this is a child account, read the devices created by the user
 			if account.Id != account.Parent {
-				devices, err := mongo.ReadAllDevices("accountid", account.Id)
+				devices, err := mongo.ReadAllDevices("createdBy", account.Email)
 				if err != nil {
 					return nil, err
 				}
 
-				vpns, err := mongo.ReadAllVPNs("accountid", account.Id)
-				if err != nil {
-					return nil, err
-				}
+				// loop through the results and add any missing devices
 				for _, device := range devices {
-					for _, vpn := range vpns {
-						if device.Id == vpn.DeviceID {
-							device.VPNs = append(device.VPNs, vpn)
+					found := false
+					for _, result := range results {
+						if device.Id == result.Id {
+							found = true
+							break
 						}
 					}
+					if !found {
+						results = append(results, device)
+					}
 				}
-				results = append(results, devices...)
-
 			}
 		}
 	}

@@ -67,6 +67,16 @@ func GetFromContext(c *gin.Context, id string) (*model.Account, interface{}, err
 			return nil, nil, err
 		}
 
+		if len(accounts) > 0 {
+			account = accounts[0]
+		}
+
+		if len(accounts) == 0 {
+			log.Errorf("ERROR: Failed to get account for user %s", user.Email)
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return nil, nil, errors.New("failed to get account for user")
+		}
+
 	}
 
 	if strings.HasPrefix(id, "device-") {
@@ -85,12 +95,10 @@ func GetFromContext(c *gin.Context, id string) (*model.Account, interface{}, err
 			}
 		}
 
-		if accounts != nil {
-			for _, a := range accounts {
-				if a.Id == device.AccountID {
-					account = a
-					break
-				}
+		for _, a := range accounts {
+			if a.Id == device.AccountID {
+				account = a
+				break
 			}
 		}
 
@@ -114,12 +122,10 @@ func GetFromContext(c *gin.Context, id string) (*model.Account, interface{}, err
 			return nil, nil, err
 		}
 
-		if accounts != nil {
-			for _, a := range accounts {
-				if a.Id == net.AccountID {
-					account = a
-					break
-				}
+		for _, a := range accounts {
+			if a.Id == net.AccountID {
+				account = a
+				break
 			}
 		}
 
@@ -133,12 +139,10 @@ func GetFromContext(c *gin.Context, id string) (*model.Account, interface{}, err
 			return nil, nil, err
 		}
 
-		if accounts != nil {
-			for _, a := range accounts {
-				if a.Id == vpn.AccountID {
-					account = a
-					break
-				}
+		for _, a := range accounts {
+			if a.Id == vpn.AccountID {
+				account = a
+				break
 			}
 		}
 
