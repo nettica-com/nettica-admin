@@ -103,19 +103,26 @@ func createService(c *gin.Context) {
 		return
 	}
 
-	// get creation user from token and add to client infos
-	oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
-	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
-	user, err := oauth2Client.UserInfo(oauth2Token)
+	account, _, err := core.GetFromContext(c, data.AccountID)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"oauth2Token": oauth2Token,
-			"err":         err,
-		}).Error("failed to get user with oauth token")
-		c.AbortWithStatus(http.StatusUnauthorized)
+			"err": err,
+		}).Error("failed to get account")
+		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	data.CreatedBy = user.Email
+
+	data.CreatedBy = account.Email
+
+	if data.AccountID == "" {
+		data.AccountID = account.Id
+	}
+
+	if account.Role != "Admin" && account.Role != "Owner" {
+		log.Errorf("createService: You must be an admin with credits to create a service")
+		c.AbortWithStatus(http.StatusForbidden)
+		return
+	}
 
 	client, err := core.CreateService(&data)
 	if err != nil {
@@ -132,12 +139,18 @@ func createService(c *gin.Context) {
 func readService(c *gin.Context) {
 	id := c.Param("id")
 
-	service, err := core.ReadService(id)
+	account, service, err := core.GetFromContext(c, id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
-		}).Error("failed to read client")
+		}).Error("failed to get account")
 		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	if account.Status == "Suspended" {
+		log.Errorf("readService: Account %s is suspended", account.Email)
+		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
 
@@ -156,18 +169,26 @@ func updateService(c *gin.Context) {
 		return
 	}
 
+	account, v, err := core.GetFromContext(c, id)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to get account")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	service := v.(*model.Service)
+
+	if account.Role != "Admin" && account.Role != "Owner" {
+		log.Errorf("updateService: You must be an admin to update a service")
+		c.AbortWithStatus(http.StatusForbidden)
+		return
+	}
+
 	apikey := c.Request.Header.Get("X-API-KEY")
 
 	if apikey != "" {
-
-		service, err := core.ReadService(id)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"err": err,
-			}).Error("failed to read client config")
-			c.AbortWithStatus(http.StatusInternalServerError)
-			return
-		}
 
 		authorized := false
 
@@ -179,20 +200,12 @@ func updateService(c *gin.Context) {
 			c.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
+
+		data.UpdatedBy = "API"
+
 	} else {
-		// get update user from token and add to client infos
-		oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
-		oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
-		user, err := oauth2Client.UserInfo(oauth2Token)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"oauth2Token": oauth2Token,
-				"err":         err,
-			}).Error("failed to get user with oauth token")
-			c.AbortWithStatus(http.StatusUnauthorized)
-			return
-		}
-		data.UpdatedBy = user.Email
+
+		data.UpdatedBy = account.Email
 	}
 	client, err := core.UpdateService(id, &data)
 	if err != nil {
@@ -209,7 +222,28 @@ func updateService(c *gin.Context) {
 func deleteService(c *gin.Context) {
 	id := c.Param("id")
 
-	err := core.DeleteService(id)
+	account, _, err := core.GetFromContext(c, id)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to get account")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	if account.Status == "Suspended" {
+		log.Errorf("deleteService: Account %s is suspended", account.Email)
+		c.AbortWithStatus(http.StatusForbidden)
+		return
+	}
+
+	if account.Role != "Admin" && account.Role != "Owner" {
+		log.Errorf("deleteService: You must be an admin to delete a service")
+		c.AbortWithStatus(http.StatusForbidden)
+		return
+	}
+
+	err = core.DeleteService(id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,

@@ -20,6 +20,7 @@ func GetFromContext(c *gin.Context, id string) (*model.Account, interface{}, err
 	var accounts []*model.Account
 	var device *model.Device
 	var account *model.Account
+	var service *model.Service
 	var err error
 
 	apikey := c.Request.Header.Get("X-API-KEY")
@@ -35,6 +36,13 @@ func GetFromContext(c *gin.Context, id string) (*model.Account, interface{}, err
 	} else if strings.HasPrefix(apikey, "device-api-") {
 
 		device, err = ReadDevice(id)
+		if err != nil {
+			return nil, nil, err
+		}
+
+	} else if strings.HasPrefix(apikey, "service-api-") {
+
+		service, err = ReadService(id)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -147,6 +155,32 @@ func GetFromContext(c *gin.Context, id string) (*model.Account, interface{}, err
 		}
 
 		return account, vpn, nil
+	}
+
+	if strings.HasPrefix(id, "service-") {
+
+		if service != nil {
+			if service.Id == id {
+				// do nothing
+			} else {
+				return nil, nil, errors.New("service id mismatch")
+			}
+		} else {
+
+			service, err = ReadService(id)
+			if err != nil {
+				return nil, nil, err
+			}
+		}
+
+		for _, a := range accounts {
+			if a.Id == service.AccountID {
+				account = a
+				break
+			}
+		}
+
+		return account, service, nil
 	}
 
 	return account, nil, nil
