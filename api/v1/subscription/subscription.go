@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	auth "github.com/nettica-com/nettica-admin/auth"
 	"github.com/nettica-com/nettica-admin/core"
 	model "github.com/nettica-com/nettica-admin/model"
 	"github.com/nettica-com/nettica-admin/mongo"
@@ -239,7 +238,7 @@ func updateSubscription(c *gin.Context) {
 
 	// get update user from token and add to client infos
 	oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
-	oauth2Client := c.MustGet("oauth2Client").(auth.Auth)
+	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
 	user, err := oauth2Client.UserInfo(oauth2Token)
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -285,7 +284,7 @@ func readSubscriptions(c *gin.Context) {
 		return
 	}
 	oauth2Token := value.(*oauth2.Token)
-	oauth2Client := c.MustGet("oauth2Client").(auth.Auth)
+	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
 	user, err := oauth2Client.UserInfo(oauth2Token)
 	if err != nil {
 		log.WithFields(log.Fields{

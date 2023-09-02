@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	auth "github.com/nettica-com/nettica-admin/auth"
 	model "github.com/nettica-com/nettica-admin/model"
 	util "github.com/nettica-com/nettica-admin/util"
 	"github.com/patrickmn/go-cache"
@@ -49,7 +48,7 @@ func oauth2URL(c *gin.Context) {
 	// save clientId and state so we can retrieve for verification
 	cacheDb.Set(clientId, state, 5*time.Minute)
 
-	oauth2Client := c.MustGet("oauth2Client").(auth.Auth)
+	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
 
 	data := &model.Auth{
 		Oauth2:   true,
@@ -90,7 +89,7 @@ func oauth2Exchange(c *gin.Context) {
 			return
 		}
 	}
-	oauth2Client := c.MustGet("oauth2Client").(auth.Auth)
+	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
 
 	oauth2Token, err := oauth2Client.Exchange(loginVals.Code)
 	if err != nil {
@@ -136,7 +135,7 @@ func token(c *gin.Context) {
 	//		c.AbortWithStatus(http.StatusBadRequest)
 	//		return
 	//	}
-	//oauth2Client := c.MustGet("oauth2Client").(auth.Auth)
+	//oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
 
 	//	oauth2Token, err := oauth2Client.Exchange(loginVals.Code)
 	//	if err != nil {
@@ -170,7 +169,7 @@ func user(c *gin.Context) {
 	oauth2Token, exists := cacheDb.Get(util.GetCleanAuthToken(c))
 
 	if exists && oauth2Token.(*oauth2.Token).AccessToken == util.GetCleanAuthToken(c) {
-		oauth2Client := c.MustGet("oauth2Client").(auth.Auth)
+		oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
 
 		user, err := oauth2Client.UserInfo(oauth2Token.(*oauth2.Token))
 		if err != nil {

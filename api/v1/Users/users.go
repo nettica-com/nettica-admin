@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	auth "github.com/nettica-com/nettica-admin/auth"
 	core "github.com/nettica-com/nettica-admin/core"
 	model "github.com/nettica-com/nettica-admin/model"
 	log "github.com/sirupsen/logrus"
@@ -39,7 +38,7 @@ func inviteUser(c *gin.Context) {
 
 	// get creation user from token and add to client infos
 	oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
-	oauth2Client := c.MustGet("oauth2Client").(auth.Auth)
+	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
 	user, err := oauth2Client.UserInfo(oauth2Token)
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -93,7 +92,7 @@ func updateUser(c *gin.Context) {
 
 	// get update user from token and add to client infos
 	oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
-	oauth2Client := c.MustGet("oauth2Client").(auth.Auth)
+	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
 	user, err := oauth2Client.UserInfo(oauth2Token)
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -148,7 +147,7 @@ func readUsers(c *gin.Context) {
 func emailUser(c *gin.Context) {
 
 	oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
-	oauth2Client := c.MustGet("oauth2Client").(auth.Auth)
+	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
 	user, err := oauth2Client.UserInfo(oauth2Token)
 	if err != nil {
 		log.WithFields(log.Fields{

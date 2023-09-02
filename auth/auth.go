@@ -11,20 +11,11 @@ import (
 	"github.com/nettica-com/nettica-admin/auth/oauth2oidc"
 	model "github.com/nettica-com/nettica-admin/model"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/oauth2"
 )
 
-// Auth interface to implement as auth provider
-type Auth interface {
-	Setup() error
-	CodeUrl(state string) string
-	Exchange(code string) (*oauth2.Token, error)
-	UserInfo(oauth2Token *oauth2.Token) (*model.User, error)
-}
-
 // GetAuthProvider  get an instance of auth provider based on config
-func GetAuthProvider() (Auth, error) {
-	var oauth2Client Auth
+func GetAuthProvider() (model.Authentication, error) {
+	var oauth2Client model.Authentication
 	var err error
 
 	switch os.Getenv("OAUTH2_PROVIDER_NAME") {

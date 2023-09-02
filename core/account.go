@@ -79,6 +79,18 @@ func GetAccount(email string, accountid string) (*model.Account, error) {
 	return account, nil
 }
 
+func GetAccountFromApiKey(apikey string) (*model.Account, error) {
+
+	v, err := mongo.Deserialize(apikey, "apiKey", "accounts", reflect.TypeOf(model.Account{}))
+	if err != nil {
+		return nil, err
+	}
+
+	account := v.(*model.Account)
+
+	return account, nil
+}
+
 // ReadACcount by id
 func ReadAccount(id string) (*model.Account, error) {
 

@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	auth "github.com/nettica-com/nettica-admin/auth"
 	core "github.com/nettica-com/nettica-admin/core"
 	model "github.com/nettica-com/nettica-admin/model"
 	util "github.com/nettica-com/nettica-admin/util"
@@ -50,7 +50,7 @@ func createDevice(c *gin.Context) {
 	log.Infof("%v", a)
 	// get creation user from token and add to client infos
 	oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
-	oauth2Client := c.MustGet("oauth2Client").(auth.Auth)
+	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
 	user, err := oauth2Client.UserInfo(oauth2Token)
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -112,7 +112,7 @@ func updateDevice(c *gin.Context) {
 
 	apikey := c.Request.Header.Get("X-API-KEY")
 
-	if apikey != "" {
+	if apikey != "" && strings.HasPrefix(apikey, "device-api-") {
 
 		device, err := core.ReadDevice(id)
 		if err != nil {
@@ -137,7 +137,7 @@ func updateDevice(c *gin.Context) {
 	} else {
 		// get update user from token and add to client infos
 		oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
-		oauth2Client := c.MustGet("oauth2Client").(auth.Auth)
+		oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
 		user, err := oauth2Client.UserInfo(oauth2Token)
 		if err != nil {
 			log.WithFields(log.Fields{
@@ -233,7 +233,7 @@ func deleteDevice(c *gin.Context) {
 		// get update user from token and add to client infos
 
 		oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
-		oauth2Client := c.MustGet("oauth2Client").(auth.Auth)
+		oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
 		user, err := oauth2Client.UserInfo(oauth2Token)
 		if err != nil {
 			log.WithFields(log.Fields{
@@ -265,7 +265,7 @@ func readDevices(c *gin.Context) {
 		return
 	}
 	oauth2Token := value.(*oauth2.Token)
-	oauth2Client := c.MustGet("oauth2Client").(auth.Auth)
+	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
 	user, err := oauth2Client.UserInfo(oauth2Token)
 	if err != nil {
 		log.WithFields(log.Fields{

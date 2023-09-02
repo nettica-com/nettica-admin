@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	auth "github.com/nettica-com/nettica-admin/auth"
 	core "github.com/nettica-com/nettica-admin/core"
 	model "github.com/nettica-com/nettica-admin/model"
 	util "github.com/nettica-com/nettica-admin/util"
@@ -48,7 +47,7 @@ func createVPN(c *gin.Context) {
 	log.Infof("%v", a)
 	// get creation user from token and add to client infos
 	oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
-	oauth2Client := c.MustGet("oauth2Client").(auth.Auth)
+	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
 	user, err := oauth2Client.UserInfo(oauth2Token)
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -166,7 +165,7 @@ func updateVPN(c *gin.Context) {
 	} else {
 		// get update user from token and add to client infos
 		oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
-		oauth2Client := c.MustGet("oauth2Client").(auth.Auth)
+		oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
 		user, err := oauth2Client.UserInfo(oauth2Token)
 		if err != nil {
 			log.WithFields(log.Fields{
@@ -283,7 +282,7 @@ func deleteVPN(c *gin.Context) {
 	} else {
 
 		oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
-		oauth2Client := c.MustGet("oauth2Client").(auth.Auth)
+		oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
 		user, err := oauth2Client.UserInfo(oauth2Token)
 		if err != nil {
 			log.WithFields(log.Fields{
@@ -342,7 +341,7 @@ func readVPNs(c *gin.Context) {
 		return
 	}
 	oauth2Token := value.(*oauth2.Token)
-	oauth2Client := c.MustGet("oauth2Client").(auth.Auth)
+	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
 	user, err := oauth2Client.UserInfo(oauth2Token)
 	if err != nil {
 		log.WithFields(log.Fields{
