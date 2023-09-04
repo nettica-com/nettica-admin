@@ -22,6 +22,17 @@ func ApplyRoutes(r *gin.RouterGroup) {
 	}
 }
 
+// CreateNet creates a new network
+// @Summary Create a new network
+// @Description Create a new network
+// @tags net
+// @Accept  json
+// @Produce  json
+// @Security apiKey
+// @Param net body model.Network true "Network"
+// @Success 200 {object} model.Network
+// @Failure 400 {object} string
+// @Router /net [post]
 func createNet(c *gin.Context) {
 	var data model.Network
 
@@ -72,6 +83,16 @@ func createNet(c *gin.Context) {
 	c.JSON(http.StatusOK, client)
 }
 
+// ReadNet reads a network
+// @Summary Read a network
+// @Description Read a network
+// @tags net
+// @Produce  json
+// @Security apiKey
+// @Param id path string true "Network ID"
+// @Success 200 {object} model.Network
+// @Failure 400 {object} string
+// @Router /net/{id} [get]
 func readNet(c *gin.Context) {
 	id := c.Param("id")
 
@@ -92,6 +113,18 @@ func readNet(c *gin.Context) {
 	c.JSON(http.StatusOK, net)
 }
 
+// UpdateNet updates a network
+// @Summary Update a network
+// @Description Update a network
+// @tags net
+// @Accept  json
+// @Produce  json
+// @Security apiKey
+// @Param id path string true "Network ID"
+// @Param net body model.Network true "Network"
+// @Success 200 {object} model.Network
+// @Failure 400 {object} error
+// @Router /net/{id} [patch]
 func updateNet(c *gin.Context) {
 	var data model.Network
 	id := c.Param("id")
@@ -147,6 +180,15 @@ func updateNet(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+// DeleteNet deletes a network
+// @Summary Delete a network
+// @Description Delete a network
+// @tags net
+// @Security apiKey
+// @Param id path string true "Network ID"
+// @Success 200 {object} string
+// @Failure 400 {object} error
+// @Router /net/{id} [delete]
 func deleteNet(c *gin.Context) {
 	id := c.Param("id")
 
@@ -173,9 +215,18 @@ func deleteNet(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(http.StatusOK, gin.H{"status": "OK"})
 }
 
+// ReadNetworks reads all networks
+// @Summary Read all networks
+// @Description Read all networks
+// @tags net
+// @Produce  json
+// @Security apiKey
+// @Success 200 {array} []model.Network
+// @Failure 400 {object} error
+// @Router /net [get]
 func readNetworks(c *gin.Context) {
 
 	account, _, err := core.AuthFromContext(c, "")

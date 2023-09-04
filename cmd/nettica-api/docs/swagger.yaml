@@ -103,6 +103,33 @@ definitions:
       id:
         type: string
     type: object
+  model.Network:
+    properties:
+      accountid:
+        type: string
+      created:
+        type: string
+      createdBy:
+        type: string
+      default:
+        $ref: '#/definitions/model.Settings'
+      description:
+        type: string
+      enabled:
+        type: boolean
+      id:
+        type: string
+      netName:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      updated:
+        type: string
+      updatedBy:
+        type: string
+    type: object
   model.Settings:
     properties:
       address:
@@ -524,6 +551,262 @@ paths:
       summary: Read state for a device
       tags:
       - devices
+  /net:
+    get:
+      description: Read all networks
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              items:
+                $ref: '#/definitions/model.Network'
+              type: array
+            type: array
+        "400":
+          description: Bad Request
+          schema: {}
+      security:
+      - apiKey: []
+      summary: Read all networks
+      tags:
+      - net
+    post:
+      consumes:
+      - application/json
+      description: Create a new network
+      parameters:
+      - description: Network
+        in: body
+        name: net
+        required: true
+        schema:
+          $ref: '#/definitions/model.Network'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Network'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      security:
+      - apiKey: []
+      summary: Create a new network
+      tags:
+      - net
+  /net/{id}:
+    delete:
+      description: Delete a network
+      parameters:
+      - description: Network ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+      security:
+      - apiKey: []
+      summary: Delete a network
+      tags:
+      - net
+    get:
+      description: Read a network
+      parameters:
+      - description: Network ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Network'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      security:
+      - apiKey: []
+      summary: Read a network
+      tags:
+      - net
+    patch:
+      consumes:
+      - application/json
+      description: Update a network
+      parameters:
+      - description: Network ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Network
+        in: body
+        name: net
+        required: true
+        schema:
+          $ref: '#/definitions/model.Network'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Network'
+        "400":
+          description: Bad Request
+          schema: {}
+      security:
+      - apiKey: []
+      summary: Update a network
+      tags:
+      - net
+  /vpn:
+    get:
+      description: Read all VPNs
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.VPN'
+            type: array
+      security:
+      - apiKey: []
+      summary: Read all VPNs
+      tags:
+      - vpn
+    post:
+      consumes:
+      - application/json
+      description: Create a new VPN for a device
+      parameters:
+      - description: VPN
+        in: body
+        name: vpn
+        required: true
+        schema:
+          $ref: '#/definitions/model.VPN'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.VPN'
+      security:
+      - apiKey: []
+      summary: Create a new VPN for a device
+      tags:
+      - vpn
+  /vpn/{id}:
+    delete:
+      description: Delete a VPN
+      parameters:
+      - description: VPN ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      security:
+      - apiKey: []
+      summary: Delete a VPN
+      tags:
+      - vpn
+    get:
+      description: Read a VPN
+      parameters:
+      - description: VPN ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.VPN'
+      security:
+      - apiKey: []
+      summary: Read a VPN
+      tags:
+      - vpn
+    patch:
+      consumes:
+      - application/json
+      description: Update a VPN
+      parameters:
+      - description: VPN ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: VPN
+        in: body
+        name: vpn
+        required: true
+        schema:
+          $ref: '#/definitions/model.VPN'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.VPN'
+      security:
+      - apiKey: []
+      summary: Update a VPN
+      tags:
+      - vpn
+  /vpn/{id}/config:
+    get:
+      description: Get VPN config
+      parameters:
+      - description: VPN ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/zip
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: integer
+            type: array
+      security:
+      - apiKey: []
+      summary: Get VPN config
+      tags:
+      - vpn
 produces:
 - application/json
 schemes:

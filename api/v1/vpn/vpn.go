@@ -3,7 +3,6 @@ package client
 import (
 	"archive/zip"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -12,10 +11,7 @@ import (
 	util "github.com/nettica-com/nettica-admin/util"
 	log "github.com/sirupsen/logrus"
 	"github.com/skip2/go-qrcode"
-	"golang.org/x/oauth2"
 )
-
-//var StatusCache *cache.Cache
 
 // ApplyRoutes applies router to gin Router
 func ApplyRoutes(r *gin.RouterGroup) {
@@ -30,9 +26,18 @@ func ApplyRoutes(r *gin.RouterGroup) {
 		g.GET("/:id/config", configVPN)
 	}
 
-	//	StatusCache = cache.New(1*time.Minute, 10*time.Minute)
 }
 
+// CreateVPN creates a new VPN for a device
+// @Summary Create a new VPN for a device
+// @Description Create a new VPN for a device
+// @Tags vpn
+// @Security apiKey
+// @Accept  json
+// @Produce  json
+// @Param vpn body model.VPN true "VPN"
+// @Success 200 {object} model.VPN
+// @Router /vpn [post]
 func createVPN(c *gin.Context) {
 	var data model.VPN
 
@@ -88,6 +93,15 @@ func createVPN(c *gin.Context) {
 	c.JSON(http.StatusOK, vpn)
 }
 
+// ReadVPN reads a VPN
+// @Summary Read a VPN
+// @Description Read a VPN
+// @Tags vpn
+// @Produce  json
+// @Param id path string true "VPN ID"
+// @Security apiKey
+// @Success 200 {object} model.VPN
+// @Router /vpn/{id} [get]
 func readVPN(c *gin.Context) {
 	id := c.Param("id")
 
@@ -109,6 +123,17 @@ func readVPN(c *gin.Context) {
 	c.JSON(http.StatusOK, vpn)
 }
 
+// UpdateVPN updates a VPN
+// @Summary Update a VPN
+// @Description Update a VPN
+// @Tags vpn
+// @Security apiKey
+// @Accept  json
+// @Produce  json
+// @Param id path string true "VPN ID"
+// @Param vpn body model.VPN true "VPN"
+// @Success 200 {object} model.VPN
+// @Router /vpn/{id} [patch]
 func updateVPN(c *gin.Context) {
 	var data model.VPN
 	id := c.Param("id")
@@ -200,6 +225,14 @@ func updateVPN(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+// DeleteVPN deletes a VPN
+// @Summary Delete a VPN
+// @Description Delete a VPN
+// @Tags vpn
+// @Security apiKey
+// @Success 200 {object} string "OK"
+// @Param id path string true "VPN ID"
+// @Router /vpn/{id} [delete]
 func deleteVPN(c *gin.Context) {
 	id := c.Param("id")
 
@@ -270,29 +303,25 @@ func deleteVPN(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }
 
+// ReadVPNs reads all VPNs
+// @Summary Read all VPNs
+// @Description Read all VPNs
+// @Tags vpn
+// @Security apiKey
+// @Produce  json
+// @Success 200 {object} []model.VPN
+// @Router /vpn [get]
 func readVPNs(c *gin.Context) {
-	value, exists := c.Get("oauth2Token")
-	if !exists {
-		c.AbortWithStatus(401)
-		return
-	}
-	oauth2Token := value.(*oauth2.Token)
-	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
-	user, err := oauth2Client.UserInfo(oauth2Token)
+
+	account, _, err := core.AuthFromContext(c, "")
 	if err != nil {
 		log.WithFields(log.Fields{
-			"oauth2Token": oauth2Token,
-			"err":         err,
-		}).Error("failed to get user with oauth token")
-		c.AbortWithStatus(http.StatusUnauthorized)
+			"err": err,
+		}).Error("failed to get account from context")
 		return
 	}
 
-	if user.Email == "" && os.Getenv("OAUTH2_PROVIDER_NAME") != "fake" {
-		log.Error("security alert: Email empty on authenticated token")
-		c.AbortWithStatus(http.StatusForbidden)
-	}
-	clients, err := core.ReadVPNsForUser(user.Email)
+	clients, err := core.ReadVPNsForUser(account.Email)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
@@ -304,6 +333,15 @@ func readVPNs(c *gin.Context) {
 	c.JSON(http.StatusOK, clients)
 }
 
+// ConfigVPN returns the wireguard configuration file for a VPN in a .zip file
+// @Summary Get VPN config
+// @Description Get VPN config
+// @Tags vpn
+// @Security apiKey
+// @Produce  application/zip
+// @Param id path string true "VPN ID"
+// @Router /vpn/{id}/config [get]
+// @Success 200 {array} byte
 func configVPN(c *gin.Context) {
 
 	id := c.Param("id")

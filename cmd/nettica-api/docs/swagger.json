@@ -511,6 +511,414 @@
                     }
                 }
             }
+        },
+        "/net": {
+            "get": {
+                "security": [
+                    {
+                        "apiKey": []
+                    }
+                ],
+                "description": "Read all networks",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "net"
+                ],
+                "summary": "Read all networks",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/definitions/model.Network"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "apiKey": []
+                    }
+                ],
+                "description": "Create a new network",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "net"
+                ],
+                "summary": "Create a new network",
+                "parameters": [
+                    {
+                        "description": "Network",
+                        "name": "net",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.Network"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Network"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/net/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "apiKey": []
+                    }
+                ],
+                "description": "Read a network",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "net"
+                ],
+                "summary": "Read a network",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Network ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Network"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "apiKey": []
+                    }
+                ],
+                "description": "Delete a network",
+                "tags": [
+                    "net"
+                ],
+                "summary": "Delete a network",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Network ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "apiKey": []
+                    }
+                ],
+                "description": "Update a network",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "net"
+                ],
+                "summary": "Update a network",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Network ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Network",
+                        "name": "net",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.Network"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Network"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    }
+                }
+            }
+        },
+        "/vpn": {
+            "get": {
+                "security": [
+                    {
+                        "apiKey": []
+                    }
+                ],
+                "description": "Read all VPNs",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vpn"
+                ],
+                "summary": "Read all VPNs",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/model.VPN"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "apiKey": []
+                    }
+                ],
+                "description": "Create a new VPN for a device",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vpn"
+                ],
+                "summary": "Create a new VPN for a device",
+                "parameters": [
+                    {
+                        "description": "VPN",
+                        "name": "vpn",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.VPN"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.VPN"
+                        }
+                    }
+                }
+            }
+        },
+        "/vpn/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "apiKey": []
+                    }
+                ],
+                "description": "Read a VPN",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vpn"
+                ],
+                "summary": "Read a VPN",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "VPN ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.VPN"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "apiKey": []
+                    }
+                ],
+                "description": "Delete a VPN",
+                "tags": [
+                    "vpn"
+                ],
+                "summary": "Delete a VPN",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "VPN ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "apiKey": []
+                    }
+                ],
+                "description": "Update a VPN",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vpn"
+                ],
+                "summary": "Update a VPN",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "VPN ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "VPN",
+                        "name": "vpn",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.VPN"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.VPN"
+                        }
+                    }
+                }
+            }
+        },
+        "/vpn/{id}/config": {
+            "get": {
+                "security": [
+                    {
+                        "apiKey": []
+                    }
+                ],
+                "description": "Get VPN config",
+                "produces": [
+                    "application/zip"
+                ],
+                "tags": [
+                    "vpn"
+                ],
+                "summary": "Get VPN config",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "VPN ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -666,6 +1074,47 @@
                     "$ref": "#/definitions/model.Device"
                 },
                 "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Network": {
+            "type": "object",
+            "properties": {
+                "accountid": {
+                    "type": "string"
+                },
+                "created": {
+                    "type": "string"
+                },
+                "createdBy": {
+                    "type": "string"
+                },
+                "default": {
+                    "$ref": "#/definitions/model.Settings"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "netName": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "updated": {
+                    "type": "string"
+                },
+                "updatedBy": {
                     "type": "string"
                 }
             }
