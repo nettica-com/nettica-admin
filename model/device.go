@@ -6,6 +6,9 @@ import (
 	"time"
 )
 
+// Device structure
+// swagger:model Device
+// Defines the device model
 type Device struct {
 	Id            string    `json:"id"                        bson:"id"`
 	Server        string    `json:"server"                    bson:"server"`

@@ -31,14 +31,20 @@ func init() {
 	log.SetLevel(log.DebugLevel)
 }
 
-// @title Nettica API
-// @description Nettica API documentation
-// @BasePath /api/v1
-// @host my.nettica.com
-// @schemes https
-// @produce json
-// @consumes json
-
+//		@title			Nettica API
+//		@description	Nettica API documentation
+//		@BasePath		/api/v1.0
+//		@host			my.nettica.com
+//	 @contactName	Nettica
+//	 @contactEmail	support@nettica.com
+//	 @contactURL	https://nettica.com
+//		@schemes		https
+//		@produce		json
+//		@consumes		json
+//		@license		MIT
+//	 @securityDefinitions.apiKey apiKey
+//	 @in header
+//	 @name X-API-KEY
 func main() {
 	log.Infof("Starting Nettica version: %s", version.Version)
 
@@ -64,8 +70,8 @@ func main() {
 
 	// creates a gin router with default middleware: logger and recovery (crash-free) middleware
 	app := gin.Default()
-	docs.SwaggerInfo.BasePath = "/api/v1"
-	docs.SwaggerInfo.Host = os.Getenv("SERVER")
+	docs.SwaggerInfo.BasePath = "/api/v1.0"
+	docs.SwaggerInfo.Host = os.Getenv("SERVER")[8:]
 	docs.SwaggerInfo.Schemes = []string{"https"}
 
 	// cors middleware

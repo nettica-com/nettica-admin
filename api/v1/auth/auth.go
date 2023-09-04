@@ -35,7 +35,7 @@ func oauth2URL(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to generate state random string")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 
 	clientId, err := util.GenerateRandomString(32)
@@ -43,7 +43,7 @@ func oauth2URL(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to generate state random string")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 	// save clientId and state so we can retrieve for verification
 	cacheDb.Set(clientId, state, 5*time.Minute)

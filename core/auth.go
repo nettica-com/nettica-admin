@@ -15,7 +15,7 @@ import (
 // object used to find the account, along with any error.
 //
 //	Example: account, device, err := GetFromContext(c, id)
-func GetFromContext(c *gin.Context, id string) (*model.Account, interface{}, error) {
+func AuthFromContext(c *gin.Context, id string) (*model.Account, interface{}, error) {
 
 	var accounts []*model.Account
 	var device *model.Device
@@ -30,13 +30,19 @@ func GetFromContext(c *gin.Context, id string) (*model.Account, interface{}, err
 		account, err = GetAccountFromApiKey(apikey)
 
 		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			return nil, nil, err
+		}
+		if account.Status == "Suspended" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+			return nil, nil, errors.New("account is suspended")
 		}
 
 	} else if strings.HasPrefix(apikey, "device-api-") {
 
 		device, err = ReadDevice(id)
 		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			return nil, nil, err
 		}
 
@@ -44,12 +50,18 @@ func GetFromContext(c *gin.Context, id string) (*model.Account, interface{}, err
 
 		service, err = ReadService(id)
 		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			return nil, nil, err
 		}
 
 	} else {
 
-		oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
+		value, exists := c.Get("oauth2Token")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			return nil, nil, errors.New("failed to get oauth2Token from context")
+		}
+		oauth2Token := value.(*oauth2.Token)
 		oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
 		user, err := oauth2Client.UserInfo(oauth2Token)
 		if err != nil {
@@ -57,7 +69,7 @@ func GetFromContext(c *gin.Context, id string) (*model.Account, interface{}, err
 				"oauth2Token": oauth2Token,
 				"err":         err,
 			}).Error("failed to get user with oauth token")
-			c.AbortWithStatus(http.StatusUnauthorized)
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			return nil, nil, err
 		}
 
@@ -66,12 +78,13 @@ func GetFromContext(c *gin.Context, id string) (*model.Account, interface{}, err
 				"oauth2Token": oauth2Token,
 				"err":         err,
 			}).Error("SECURITY ALERT: failed to get user email with valid oauth token")
-			c.AbortWithStatus(http.StatusUnauthorized)
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			return nil, nil, errors.New("SECURITY ALERT: failed to get user email with valid oauth token")
 		}
 
 		accounts, err = ReadAllAccounts(user.Email)
 		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return nil, nil, err
 		}
 
@@ -81,7 +94,7 @@ func GetFromContext(c *gin.Context, id string) (*model.Account, interface{}, err
 
 		if len(accounts) == 0 {
 			log.Errorf("ERROR: Failed to get account for user %s", user.Email)
-			c.AbortWithStatus(http.StatusUnauthorized)
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			return nil, nil, errors.New("failed to get account for user")
 		}
 
@@ -94,11 +107,13 @@ func GetFromContext(c *gin.Context, id string) (*model.Account, interface{}, err
 			if device.Id == id {
 				// do nothing
 			} else {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "device id mismatch"})
 				return nil, nil, errors.New("device id mismatch")
 			}
 		} else {
 			device, err = ReadDevice(id)
 			if err != nil {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Not Found"})
 				return nil, nil, err
 			}
 		}
@@ -110,6 +125,11 @@ func GetFromContext(c *gin.Context, id string) (*model.Account, interface{}, err
 			}
 		}
 
+		if account.Status == "Suspended" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+			return nil, nil, errors.New("account is suspended")
+		}
+
 		return account, device, nil
 	}
 
@@ -117,7 +137,13 @@ func GetFromContext(c *gin.Context, id string) (*model.Account, interface{}, err
 
 		a, err := ReadAccount(id)
 		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Not Found"})
 			return nil, nil, err
+		}
+
+		if account.Status == "Suspended" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+			return nil, nil, errors.New("account is suspended")
 		}
 
 		return account, a, nil
@@ -127,6 +153,7 @@ func GetFromContext(c *gin.Context, id string) (*model.Account, interface{}, err
 
 		net, err := ReadNet(id)
 		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Not Found"})
 			return nil, nil, err
 		}
 
@@ -137,6 +164,11 @@ func GetFromContext(c *gin.Context, id string) (*model.Account, interface{}, err
 			}
 		}
 
+		if account.Status == "Suspended" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+			return nil, nil, errors.New("account is suspended")
+		}
+
 		return account, net, nil
 	}
 
@@ -144,6 +176,7 @@ func GetFromContext(c *gin.Context, id string) (*model.Account, interface{}, err
 
 		vpn, err := ReadVPN(id)
 		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Not Found"})
 			return nil, nil, err
 		}
 
@@ -152,6 +185,11 @@ func GetFromContext(c *gin.Context, id string) (*model.Account, interface{}, err
 				account = a
 				break
 			}
+		}
+
+		if account.Status == "Suspended" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+			return nil, nil, errors.New("account is suspended")
 		}
 
 		return account, vpn, nil
@@ -163,12 +201,14 @@ func GetFromContext(c *gin.Context, id string) (*model.Account, interface{}, err
 			if service.Id == id {
 				// do nothing
 			} else {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "service id mismatch"})
 				return nil, nil, errors.New("service id mismatch")
 			}
 		} else {
 
 			service, err = ReadService(id)
 			if err != nil {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Not Found"})
 				return nil, nil, err
 			}
 		}
@@ -178,6 +218,11 @@ func GetFromContext(c *gin.Context, id string) (*model.Account, interface{}, err
 				account = a
 				break
 			}
+		}
+
+		if account.Status == "Suspended" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+			return nil, nil, errors.New("account is suspended")
 		}
 
 		return account, service, nil

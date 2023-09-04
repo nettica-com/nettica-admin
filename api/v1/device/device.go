@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -14,7 +13,6 @@ import (
 	model "github.com/nettica-com/nettica-admin/model"
 	util "github.com/nettica-com/nettica-admin/util"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/oauth2"
 )
 
 // ApplyRoutes applies router to gin Router
@@ -40,10 +38,10 @@ func ApplyRoutes(r *gin.RouterGroup) {
 // @Security OAuth2
 // @Accept  json
 // @Produce  json
-// @Param device body Device true "Device"
-// @Success 200 {object} Device
-// @Failure 400 {object} Error
-// @Failure 422 {object} Error
+// @Param device body model.Device true "model.Device"
+// @Success 200 {object} model.Device
+// @Failure 400 {object} error
+// @Failure 422 {object} error
 // @Router /device [post]
 func createDevice(c *gin.Context) {
 	var data model.Device
@@ -59,12 +57,11 @@ func createDevice(c *gin.Context) {
 	a := util.GetCleanAuthToken(c)
 	log.Infof("%v", a)
 
-	account, _, err := core.GetFromContext(c, "")
+	account, _, err := core.AuthFromContext(c, "")
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to get account from context")
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -95,18 +92,18 @@ func createDevice(c *gin.Context) {
 // @Security OAuth2
 // @Produce  json
 // @Param id path string true "Device ID"
-// @Success 200 {object} Device
-// @Failure 400 {object} Error
-// @Failure 403 {object} Error
+// @Success 200 {object} model.Device
+// @Failure 400 {object} error
+// @Failure 403 {object} error
+// @Router /device/{id} [get]
 func readDevice(c *gin.Context) {
 	id := c.Param("id")
 
-	account, device, err := core.GetFromContext(c, id)
+	account, device, err := core.AuthFromContext(c, id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to get account from context")
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -124,7 +121,7 @@ func updateDevice(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
 		log.Error("deviceid cannot be empty")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "devceid cannot be empty"})
 	}
 
 	if err := c.ShouldBindJSON(&data); err != nil {
@@ -135,12 +132,11 @@ func updateDevice(c *gin.Context) {
 		return
 	}
 
-	account, v, err := core.GetFromContext(c, id)
+	account, v, err := core.AuthFromContext(c, id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to get account from context")
-		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 	device := v.(*model.Device)
@@ -167,7 +163,7 @@ func updateDevice(c *gin.Context) {
 			log.WithFields(log.Fields{
 				"err": err,
 			}).Error("failed to read account")
-			c.AbortWithStatus(http.StatusInternalServerError)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 		if account == nil {
@@ -197,7 +193,7 @@ func updateDevice(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to update device")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -208,12 +204,11 @@ func updateDevice(c *gin.Context) {
 func deleteDevice(c *gin.Context) {
 	id := c.Param("id")
 
-	account, v, err := core.GetFromContext(c, id)
+	account, v, err := core.AuthFromContext(c, id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to get account from context")
-		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 	device := v.(*model.Device)
@@ -233,41 +228,39 @@ func deleteDevice(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to delete device")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{})
 }
 
+// ReadDevices reads all devices
+// @Summary Read all devices
+// @Description Read all devices
+// @Tags devices
+// @Security apiKey
+// @Produce  json
+// @Success 200 {object} model.Device
+// @Failure 400 {object} error
+// @Failure 401 {object} error
+// @Failure 422 {object} error
+// @Router /device [get]
 func readDevices(c *gin.Context) {
-	value, exists := c.Get("oauth2Token")
-	if !exists {
-		c.AbortWithStatus(401)
-		return
-	}
-	oauth2Token := value.(*oauth2.Token)
-	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
-	user, err := oauth2Client.UserInfo(oauth2Token)
+
+	account, _, err := core.AuthFromContext(c, "")
 	if err != nil {
 		log.WithFields(log.Fields{
-			"oauth2Token": oauth2Token,
-			"err":         err,
-		}).Error("failed to get user with oauth token")
-		c.AbortWithStatus(http.StatusUnauthorized)
+			"err": err,
+		}).Error("failed to get account from context")
 		return
 	}
-
-	if user.Email == "" && os.Getenv("OAUTH2_PROVIDER_NAME") != "fake" {
-		log.Error("security alert: Email empty on authenticated token")
-		c.AbortWithStatus(http.StatusForbidden)
-	}
-	clients, err := core.ReadDevicesForUser(user.Email)
+	clients, err := core.ReadDevicesForUser(account.Email)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to list clients")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -279,7 +272,7 @@ func statusDevice(c *gin.Context) {
 	//	id := c.Param("id")
 	if c.Param("id") == "" {
 		log.Error("deviceid cannot be empty")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "deviceid cannot be empty"})
 		return
 	}
 	deviceId := c.Param("id")
@@ -295,7 +288,7 @@ func statusDevice(c *gin.Context) {
 		if err.Error() == "mongo: no documents in result" {
 			c.AbortWithStatus(http.StatusNotFound)
 		} else {
-			c.AbortWithStatus(http.StatusInternalServerError)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}
 		return
 	}
@@ -333,7 +326,7 @@ func statusDevice(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to read client config")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -350,7 +343,7 @@ func statusDevice(c *gin.Context) {
 			log.WithFields(log.Fields{
 				"err": err,
 			}).Error("failed to list clients")
-			c.AbortWithStatus(http.StatusInternalServerError)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
@@ -383,7 +376,7 @@ func statusDevice(c *gin.Context) {
 				}
 			} else {
 				log.Errorf("internal error")
-				c.AbortWithStatus(http.StatusInternalServerError)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
 		}

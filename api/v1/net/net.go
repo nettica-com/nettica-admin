@@ -2,13 +2,11 @@ package net
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 	core "github.com/nettica-com/nettica-admin/core"
 	model "github.com/nettica-com/nettica-admin/model"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/oauth2"
 )
 
 // ApplyRoutes applies router to gin Router
@@ -35,30 +33,23 @@ func createNet(c *gin.Context) {
 		return
 	}
 
-	account, _, err := core.GetFromContext(c, data.AccountID)
+	account, _, err := core.AuthFromContext(c, data.AccountID)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to get account from context")
-		c.AbortWithStatus(http.StatusInternalServerError)
-		return
-	}
-
-	if account.Status == "Suspended" {
-		log.Infof("createNet: account %s is suspended", account.Email)
-		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
 
 	if account.Role != "Admin" && account.Role != "Owner" {
 		log.Infof("createNet: user %s is not an admin of %s", account.Email, account.Id)
-		c.AbortWithStatus(http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "user is not an admin of this account"})
 		return
 	}
 
 	if account.NetId != "" {
 		log.Infof("createNet: user %s cannot create new nets in this account", account.Email)
-		c.AbortWithStatus(http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "user cannot create new nets in this account"})
 		return
 	}
 
@@ -74,7 +65,7 @@ func createNet(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to create net")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -84,12 +75,11 @@ func createNet(c *gin.Context) {
 func readNet(c *gin.Context) {
 	id := c.Param("id")
 
-	account, net, err := core.GetFromContext(c, id)
+	account, net, err := core.AuthFromContext(c, id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to get account from context")
-		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
@@ -110,7 +100,7 @@ func updateNet(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to bind")
-		c.AbortWithStatus(http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -123,21 +113,14 @@ func updateNet(c *gin.Context) {
 		return
 	}
 
-	account, v, err := core.GetFromContext(c, id)
+	account, v, err := core.AuthFromContext(c, id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to get account from context")
-		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 	net := v.(*model.Network)
-
-	if account.Status == "Suspended" {
-		log.Infof("updateNet: account %s is suspended", account.Email)
-		c.AbortWithStatus(http.StatusForbidden)
-		return
-	}
 
 	authorized := false
 
@@ -157,7 +140,7 @@ func updateNet(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to update network")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -167,12 +150,11 @@ func updateNet(c *gin.Context) {
 func deleteNet(c *gin.Context) {
 	id := c.Param("id")
 
-	account, _, err := core.GetFromContext(c, id)
+	account, _, err := core.AuthFromContext(c, id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to get account from context")
-		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
@@ -187,7 +169,7 @@ func deleteNet(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to delete network")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -195,34 +177,21 @@ func deleteNet(c *gin.Context) {
 }
 
 func readNetworks(c *gin.Context) {
-	value, exists := c.Get("oauth2Token")
-	if !exists {
-		c.AbortWithStatus(http.StatusUnauthorized)
-		return
-	}
-	oauth2Token := value.(*oauth2.Token)
-	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
-	user, err := oauth2Client.UserInfo(oauth2Token)
+
+	account, _, err := core.AuthFromContext(c, "")
 	if err != nil {
 		log.WithFields(log.Fields{
-			"oauth2Token": oauth2Token,
-			"err":         err,
-		}).Error("failed to get user with oauth token")
-		c.AbortWithStatus(http.StatusUnauthorized)
+			"err": err,
+		}).Error("failed to get account from context")
 		return
 	}
 
-	if user.Email == "" && os.Getenv("OAUTH2_PROVIDER_NAME") != "fake" {
-		log.Error("security alert: Email empty on authenticated token")
-		c.AbortWithStatus(http.StatusForbidden)
-	}
-
-	nets, err := core.ReadNetworks(user.Email)
+	nets, err := core.ReadNetworks(account.Email)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to list nets")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 

@@ -32,7 +32,7 @@ node_modules/
 
 # output
 cmd/nettica-api/nettica-api
-__debug_bin
+__debug_bin*
 
 # Editor directories and files
 *.suo

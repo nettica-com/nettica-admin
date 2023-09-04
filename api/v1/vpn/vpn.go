@@ -40,19 +40,18 @@ func createVPN(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to bind")
-		c.AbortWithStatus(http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
 
 	a := util.GetCleanAuthToken(c)
 	log.Infof("%v", a)
 
-	account, _, err := core.GetFromContext(c, data.AccountID)
+	account, _, err := core.AuthFromContext(c, data.AccountID)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to get account from context")
-		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
@@ -68,7 +67,7 @@ func createVPN(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to create client")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -77,7 +76,7 @@ func createVPN(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to read vpns")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -92,12 +91,11 @@ func createVPN(c *gin.Context) {
 func readVPN(c *gin.Context) {
 	id := c.Param("id")
 
-	account, v, err := core.GetFromContext(c, id)
+	account, v, err := core.AuthFromContext(c, id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to get account from context")
-		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 	vpn := v.(*model.VPN)
@@ -116,7 +114,8 @@ func updateVPN(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
 		log.Error("vpnid cannot be empty")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "vpnid cannot be empty"})
+		return
 	}
 
 	if err := c.ShouldBindJSON(&data); err != nil {
@@ -127,21 +126,14 @@ func updateVPN(c *gin.Context) {
 		return
 	}
 
-	account, v, err := core.GetFromContext(c, id)
+	account, v, err := core.AuthFromContext(c, id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to get account from context")
-		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 	vpn := v.(*model.VPN)
-
-	if account.Status == "Suspended" {
-		log.Errorf("updateVPN: account %s is suspended", account.Email)
-		c.AbortWithStatus(http.StatusForbidden)
-		return
-	}
 
 	authorized := false
 
@@ -154,7 +146,7 @@ func updateVPN(c *gin.Context) {
 			log.WithFields(log.Fields{
 				"err": err,
 			}).Error("failed to read client config")
-			c.AbortWithStatus(http.StatusInternalServerError)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
@@ -165,7 +157,7 @@ func updateVPN(c *gin.Context) {
 		data.UpdatedBy = device.Name
 
 		if !authorized {
-			c.AbortWithStatus(http.StatusUnauthorized)
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			return
 		}
 	} else {
@@ -175,7 +167,7 @@ func updateVPN(c *gin.Context) {
 		}
 
 		if !authorized {
-			c.AbortWithStatus(http.StatusForbidden)
+			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
 			return
 		}
 
@@ -187,7 +179,7 @@ func updateVPN(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to update vpn")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -196,7 +188,7 @@ func updateVPN(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to read vpns")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -211,21 +203,14 @@ func updateVPN(c *gin.Context) {
 func deleteVPN(c *gin.Context) {
 	id := c.Param("id")
 
-	account, v, err := core.GetFromContext(c, id)
+	account, v, err := core.AuthFromContext(c, id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to get account from context")
-		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 	vpn := v.(*model.VPN)
-
-	if account.Status == "Suspended" {
-		log.Errorf("deleteVPN: account %s is suspended", account.Email)
-		c.AbortWithStatus(http.StatusForbidden)
-		return
-	}
 
 	apikey := c.Request.Header.Get("X-API-KEY")
 
@@ -236,7 +221,7 @@ func deleteVPN(c *gin.Context) {
 			log.WithFields(log.Fields{
 				"err": err,
 			}).Error("failed to read client config")
-			c.AbortWithStatus(http.StatusInternalServerError)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
@@ -263,7 +248,7 @@ func deleteVPN(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to read vpns")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -272,7 +257,7 @@ func deleteVPN(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to remove client")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -312,7 +297,7 @@ func readVPNs(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to list clients")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -325,15 +310,14 @@ func configVPN(c *gin.Context) {
 
 	if id == "" {
 		log.Error("vpnid cannot be empty")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "vpnid cannot be empty"})
 	}
 
-	account, _, err := core.GetFromContext(c, id)
+	account, _, err := core.AuthFromContext(c, id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to get account from context")
-		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 
@@ -367,7 +351,7 @@ func configVPN(c *gin.Context) {
 			log.WithFields(log.Fields{
 				"err": err,
 			}).Error("failed to create zip file")
-			c.AbortWithStatus(http.StatusInternalServerError)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 		_, err = f.Write(data)
@@ -375,7 +359,7 @@ func configVPN(c *gin.Context) {
 			log.WithFields(log.Fields{
 				"err": err,
 			}).Error("failed to write zip file")
-			c.AbortWithStatus(http.StatusInternalServerError)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 		return
@@ -393,7 +377,7 @@ func configVPN(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to create qrcode")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.Data(http.StatusOK, "image/png", png)

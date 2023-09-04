@@ -1,12 +1,247 @@
-basePath: /api/v1
+basePath: /api/v1.0
+definitions:
+  model.Device:
+    properties:
+      accountid:
+        type: string
+      apiKey:
+        type: string
+      apiid:
+        type: string
+      appdata:
+        type: string
+      arch:
+        type: string
+      authdomain:
+        type: string
+      checkInterval:
+        type: integer
+      clientid:
+        type: string
+      created:
+        type: string
+      createdBy:
+        type: string
+      debug:
+        type: boolean
+      description:
+        type: string
+      enable:
+        type: boolean
+      id:
+        type: string
+      lastSeen:
+        type: string
+      name:
+        type: string
+      os:
+        type: string
+      platform:
+        type: string
+      quiet:
+        type: boolean
+      server:
+        type: string
+      serviceApiKey:
+        type: string
+      serviceGroup:
+        type: string
+      sourceAddress:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      type:
+        type: string
+      updated:
+        type: string
+      updatedBy:
+        type: string
+      version:
+        type: string
+      vpns:
+        items:
+          $ref: '#/definitions/model.VPN'
+        type: array
+    type: object
+  model.Settings:
+    properties:
+      address:
+        items:
+          type: string
+        type: array
+      allowedIPs:
+        items:
+          type: string
+        type: array
+      dns:
+        items:
+          type: string
+        type: array
+      enableDns:
+        type: boolean
+      endpoint:
+        type: string
+      listenPort:
+        type: integer
+      mtu:
+        type: integer
+      persistentKeepalive:
+        type: integer
+      postDown:
+        type: string
+      postUp:
+        type: string
+      preDown:
+        type: string
+      preUp:
+        type: string
+      presharedKey:
+        type: string
+      privateKey:
+        type: string
+      publicKey:
+        type: string
+      subnetRouting:
+        type: boolean
+      table:
+        type: string
+      upnp:
+        type: boolean
+    type: object
+  model.VPN:
+    properties:
+      accountid:
+        type: string
+      created:
+        type: string
+      createdBy:
+        type: string
+      current:
+        $ref: '#/definitions/model.Settings'
+      default:
+        $ref: '#/definitions/model.Settings'
+      deviceid:
+        type: string
+      enable:
+        type: boolean
+      id:
+        type: string
+      name:
+        type: string
+      netName:
+        type: string
+      netid:
+        type: string
+      role:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      type:
+        type: string
+      updated:
+        type: string
+      updatedBy:
+        type: string
+    type: object
 host: my.nettica.com
 info:
   contact: {}
   description: Nettica API documentation
   title: Nettica API
-paths: {}
+paths:
+  /device:
+    get:
+      description: Read all devices
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Device'
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "422":
+          description: Unprocessable Entity
+          schema: {}
+      security:
+      - apiKey: []
+      summary: Read all devices
+      tags:
+      - devices
+    post:
+      consumes:
+      - application/json
+      description: Create a device
+      parameters:
+      - description: model.Device
+        in: body
+        name: device
+        required: true
+        schema:
+          $ref: '#/definitions/model.Device'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Device'
+        "400":
+          description: Bad Request
+          schema: {}
+        "422":
+          description: Unprocessable Entity
+          schema: {}
+      security:
+      - ApiKeyAuth true "X-API-KEY" "device-api-<apikey>": []
+      - OAuth2: []
+      summary: Create a device
+      tags:
+      - devices
+  /device/{id}:
+    get:
+      description: Read a device
+      parameters:
+      - description: Device ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Device'
+        "400":
+          description: Bad Request
+          schema: {}
+        "403":
+          description: Forbidden
+          schema: {}
+      security:
+      - ApiKeyAuth true "X-API-KEY" "device-api-<apikey>": []
+      - OAuth2: []
+      summary: Read a device
+      tags:
+      - devices
 produces:
 - application/json
 schemes:
 - https
+securityDefinitions:
+  apiKey:
+    in: header
+    name: X-API-KEY
+    type: apiKey
 swagger: "2.0"
