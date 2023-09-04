@@ -859,7 +859,6 @@ export default {
 
             this.inEdit = false;
             this.updatevpn(this.vpn)
-            this.Refresh()
         },
 
         async removeVPN(vpn) {
