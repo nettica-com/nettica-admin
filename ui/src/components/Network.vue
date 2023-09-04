@@ -157,7 +157,7 @@
                         <v-divider></v-divider>
                         <v-row class="px-3" width="600">
                             <v-col flex>
-                                <v-text-field v-model="selected.name" label="DNS name" :readonly="!inEdit" />
+                                <v-text-field v-model="selected.vpn.name" label="DNS name" :readonly="!inEdit" />
                                 <v-combobox :readonly="!inEdit" v-model="selected.vpn.current.address" chips
                                     hint="Write IPv4 or IPv6 CIDR and hit enter" label="Addresses" multiple dark>
                                     <template v-slot:selection="{ attrs, item, select }">
