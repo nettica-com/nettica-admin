@@ -1,0 +1,17 @@
+{
+    "produces": [
+        "application/json"
+    ],
+    "schemes": [
+        "https"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "Nettica API documentation",
+        "title": "Nettica API",
+        "contact": {}
+    },
+    "host": "my.nettica.com",
+    "basePath": "/api/v1",
+    "paths": {}
+}

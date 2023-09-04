@@ -18,7 +18,6 @@ import (
 	version "github.com/nettica-com/nettica-admin/version"
 	"github.com/patrickmn/go-cache"
 	log "github.com/sirupsen/logrus"
-	"github.com/swaggo/swag/example/basic/docs"
 	"golang.org/x/oauth2"
 )
 

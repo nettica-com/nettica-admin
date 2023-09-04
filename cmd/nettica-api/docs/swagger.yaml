@@ -1,0 +1,12 @@
+basePath: /api/v1
+host: my.nettica.com
+info:
+  contact: {}
+  description: Nettica API documentation
+  title: Nettica API
+paths: {}
+produces:
+- application/json
+schemes:
+- https
+swagger: "2.0"
