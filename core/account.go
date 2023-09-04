@@ -194,14 +194,9 @@ func Email(id string) error {
 	}
 
 	account := v.(*model.Account)
-	net := account.NetName
-
-	if net == "" {
-		net = "All Networks"
-	}
 
 	// get email body
-	emailBody, err := template.DumpUserEmail(id, net)
+	emailBody, err := template.DumpUserEmail(account.Id)
 	if err != nil {
 		return err
 	}

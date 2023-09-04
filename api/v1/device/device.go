@@ -34,13 +34,13 @@ func ApplyRoutes(r *gin.RouterGroup) {
 // @Summary Create a device
 // @Description Create a device
 // @Tags devices
-// @Security ApiKeyAuth true "X-API-KEY" "device-api-<apikey>"
-// @Security OAuth2
+// @Security apiKey
 // @Accept  json
 // @Produce  json
-// @Param device body model.Device true "model.Device"
 // @Success 200 {object} model.Device
 // @Failure 400 {object} error
+// @Failure 401 {object} error
+// @Failure 403 {object} error
 // @Failure 422 {object} error
 // @Router /device [post]
 func createDevice(c *gin.Context) {
@@ -88,8 +88,7 @@ func createDevice(c *gin.Context) {
 // @Summary Read a device
 // @Description Read a device
 // @Tags devices
-// @Security ApiKeyAuth true "X-API-KEY" "device-api-<apikey>"
-// @Security OAuth2
+// @Security apiKey
 // @Produce  json
 // @Param id path string true "Device ID"
 // @Success 200 {object} model.Device
@@ -116,6 +115,21 @@ func readDevice(c *gin.Context) {
 	c.JSON(http.StatusOK, device)
 }
 
+// UpdateDevice updates a device
+// @Summary Update a device
+// @Description Update a device
+// @Tags devices
+// @Security apiKey
+// @Accept  json
+// @Produce  json
+// @Param id path string true "Device ID"
+// @Param device body model.Device true "Device"
+// @Success 200 {object} model.Device
+// @Failure 400 {object} error
+// @Failure 401 {object} error
+// @Failure 403 {object} error
+// @Failure 422 {object} error
+// @Router /device/{id} [patch]
 func updateDevice(c *gin.Context) {
 	var data model.Device
 	id := c.Param("id")
@@ -201,6 +215,19 @@ func updateDevice(c *gin.Context) {
 	c.JSON(http.StatusOK, client)
 }
 
+// DeleteDevice deletes a device
+// @Summary Delete a device
+// @Description Delete a device
+// @Tags devices
+// @Security apiKey
+// @Produce  json
+// @Param id path string true "Device ID"
+// @Success 200 {object} string "OK"
+// @Failure 400 {object} error
+// @Failure 401 {object} error
+// @Failure 403 {object} error
+// @Failure 404 {object} error
+// @Router /device/{id} [delete]
 func deleteDevice(c *gin.Context) {
 	id := c.Param("id")
 
@@ -232,7 +259,7 @@ func deleteDevice(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(http.StatusOK, gin.H{"status": "OK"})
 }
 
 // ReadDevices reads all devices
@@ -267,15 +294,27 @@ func readDevices(c *gin.Context) {
 	c.JSON(http.StatusOK, clients)
 }
 
+// StatusDevice reads state for a device
+// @Summary Read state for a device
+// @Description Read state for a device
+// @Tags devices
+// @Security apiKey
+// @Produce  json
+// @Param id path string true "Device ID"
+// @Success 200 {object} model.Message
+// @Failure 400 {object} error
+// @Failure 401 {object} error
+// @Failure 404 {object} error
+// @Router /device/{id}/status [get]
 func statusDevice(c *gin.Context) {
 
-	//	id := c.Param("id")
-	if c.Param("id") == "" {
+	deviceId := c.Param("id")
+
+	if deviceId == "" {
 		log.Error("deviceid cannot be empty")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "deviceid cannot be empty"})
 		return
 	}
-	deviceId := c.Param("id")
 
 	apikey := c.Request.Header.Get("X-API-KEY")
 	etag := c.Request.Header.Get("If-None-Match")

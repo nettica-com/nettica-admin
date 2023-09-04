@@ -9,7 +9,6 @@ import (
 	core "github.com/nettica-com/nettica-admin/core"
 	model "github.com/nettica-com/nettica-admin/model"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/oauth2"
 )
 
 // ApplyRoutes applies router to gin Router
@@ -34,8 +33,8 @@ func ApplyRoutes(r *gin.RouterGroup) {
 // @Description Set an account to "active"
 // @Tags accounts
 // @Security none
-// @Success 200 {object} Account
-// @Failure 400 {object} Error
+// @Success 200 {object} model.Account
+// @Failure 400 {object} error
 // @Router /accounts/{id}/activate [post]
 // @Router /accounts/{id}/activate [patch]
 // @Param id path string true "Account ID"
@@ -55,43 +54,30 @@ func activateAccount(c *gin.Context) {
 	c.JSON(http.StatusOK, v)
 }
 
+// EmailAccount sends an email invitation to join an account
+// @Summary Email an account invitation
+// @Description Send an email invitation to join an account
+// @Tags accounts
+// @Security apiKey
+// @Success 200 {object} string "OK"
+// @Failure 400 {object} error
+// @Router /accounts/{id}/invite [get]
+// @Param id path string true "Account ID"
 func emailAccount(c *gin.Context) {
 	id := c.Param("id")
 
-	oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
-	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
-
-	user, err := oauth2Client.UserInfo(oauth2Token)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"oauth2Token": oauth2Token,
-			"err":         err,
-		}).Error("failed to get user with oauth token")
-		c.AbortWithStatus(http.StatusUnauthorized)
-		return
-	}
-
-	if user.Email == "" {
-		log.WithFields(log.Fields{
-			"oauth2Token": oauth2Token,
-			"err":         err,
-		}).Error("failed to get user with oauth token")
-		c.AbortWithStatus(http.StatusUnauthorized)
-		return
-	}
-
-	account, err := core.ReadAccount(id)
+	account, v, err := core.AuthFromContext(c, id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to read account")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	a := v.(*model.Account)
 
-	account.From = user.Email
+	a.From = account.Email
 
-	err = core.EmailUser(account.Email, account.Id, account.NetId)
+	err = core.EmailUser(a.Email, a.Id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
@@ -103,6 +89,17 @@ func emailAccount(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 }
 
+// CreateAccount creates a new account
+// @Summary Create a new account
+// @Description Create a new account
+// @Tags accounts
+// @Security apiKey
+// @Accept  json
+// @Produce  json
+// @Param account body model.Account true "Account"
+// @Success 200 {object} model.Account
+// @Failure 400 {object} error
+// @Router /accounts [post]
 func createAccount(c *gin.Context) {
 	var account model.Account
 
@@ -110,24 +107,19 @@ func createAccount(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to bind")
-		c.AbortWithStatus(http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
 
-	// get creation user from token and add to client infos
-	oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
-	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
-	user, err := oauth2Client.UserInfo(oauth2Token)
+	acnt, _, err := core.AuthFromContext(c, "")
 	if err != nil {
 		log.WithFields(log.Fields{
-			"oauth2Token": oauth2Token,
-			"err":         err,
-		}).Error("failed to get user with oauth token")
-		c.AbortWithStatus(http.StatusUnauthorized)
+			"err": err,
+		}).Error("failed to read account from context")
 		return
 	}
 
-	account.From = user.Email
+	account.From = acnt.Email
 
 	v, err := core.CreateAccount(&account)
 	if err != nil {
@@ -141,33 +133,29 @@ func createAccount(c *gin.Context) {
 	c.JSON(http.StatusOK, v)
 }
 
+// ReadAllAccounts reads all accounts for a user
+// @Summary Read all accounts for a user
+// @Description Read all accounts for a user
+// @Tags accounts
+// @Security apiKey
+// @Success 200 {array} model.Account
+// @Failure 400 {object} error
+// @Router /accounts [get]
+// @Router /accounts/{id} [get]
+// @Param id path string false "Account ID"
 func readAllAccounts(c *gin.Context) {
 	email := c.Param("id")
 
-	// get creation user from token and add to client infos
-	oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
-	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
-	user, err := oauth2Client.UserInfo(oauth2Token)
+	account, _, err := core.AuthFromContext(c, "")
 	if err != nil {
 		log.WithFields(log.Fields{
-			"oauth2Token": oauth2Token,
-			"err":         err,
-		}).Error("failed to get user with oauth token")
-		c.AbortWithStatus(http.StatusUnauthorized)
-		return
-	}
-
-	if user.Email == "" {
-		log.WithFields(log.Fields{
-			"oauth2Token": oauth2Token,
-			"err":         err,
-		}).Error("failed to get email address from valid oauth token")
-		c.AbortWithStatus(http.StatusUnauthorized)
+			"err": err,
+		}).Error("failed to read account from context")
 		return
 	}
 
 	if email == "" {
-		email = user.Email
+		email = account.Email
 	}
 
 	accounts, err := core.ReadAllAccounts(email)
@@ -182,32 +170,28 @@ func readAllAccounts(c *gin.Context) {
 	c.JSON(http.StatusOK, accounts)
 }
 
+// ReadUsers reads all users for an account
+// @Summary Read all users for an account
+// @Description Read all users for an account
+// @Tags accounts
+// @Security apiKey
+// @Success 200 {array} model.Account
+// @Failure 400 {object} error
+// @Router /accounts/{id}/users [get]
+// @Param id path string true "Account ID"
+
 func readUsers(c *gin.Context) {
 	id := c.Param("id")
 
-	// get creation user from token and add to client infos
-	oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
-	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
-	user, err := oauth2Client.UserInfo(oauth2Token)
+	account, _, err := core.AuthFromContext(c, "")
 	if err != nil {
 		log.WithFields(log.Fields{
-			"oauth2Token": oauth2Token,
-			"err":         err,
-		}).Error("failed to get user with oauth token")
-		c.AbortWithStatus(http.StatusUnauthorized)
+			"err": err,
+		}).Error("failed to read account from context")
 		return
 	}
 
-	if user.Email == "" {
-		log.WithFields(log.Fields{
-			"oauth2Token": oauth2Token,
-			"err":         err,
-		}).Error("failed to get email address from valid oauth token")
-		c.AbortWithStatus(http.StatusUnauthorized)
-		return
-	}
-
-	accounts, err := core.ReadAllAccounts(user.Email)
+	accounts, err := core.ReadAllAccounts(account.Email)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
@@ -217,11 +201,11 @@ func readUsers(c *gin.Context) {
 	}
 
 	role := "None"
-	account := &model.Account{}
+	acnt := &model.Account{}
 	for _, a := range accounts {
-		if a.Parent == id && a.Email == user.Email {
+		if a.Parent == id && a.Email == account.Email {
 			role = a.Role
-			account = a
+			acnt = a
 			break
 		}
 	}
@@ -233,7 +217,7 @@ func readUsers(c *gin.Context) {
 
 	if role == "User" || role == "Guest" {
 		result := []*model.Account{}
-		result = append(result, account)
+		result = append(result, acnt)
 		c.JSON(http.StatusOK, result)
 		return
 	}
@@ -252,30 +236,30 @@ func readUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, accounts)
 }
 
+// UpdateAccount updates an account
+// @Summary Update an account
+// @Description Update an account
+// @Tags accounts
+// @Security apiKey
+// @Accept  json
+// @Produce  json
+// @Param id path string true "Account ID"
+// @Param account body model.Account true "Account"
+// @Success 200 {object} model.Account
+// @Failure 400 {object} error
+// @Router /accounts/{id} [patch]
 func updateAccount(c *gin.Context) {
 	var data model.Account
 	id := c.Param("id")
 
-	oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
-	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
-	user, err := oauth2Client.UserInfo(oauth2Token)
+	account, v, err := core.AuthFromContext(c, id)
 	if err != nil {
 		log.WithFields(log.Fields{
-			"oauth2Token": oauth2Token,
-			"err":         err,
-		}).Error("failed to get user with oauth token")
-		c.AbortWithStatus(http.StatusUnauthorized)
+			"err": err,
+		}).Error("failed to read account from context")
 		return
 	}
-
-	if user.Email == "" {
-		log.WithFields(log.Fields{
-			"oauth2Token": oauth2Token,
-			"err":         err,
-		}).Error("failed to get email address from valid oauth token")
-		c.AbortWithStatus(http.StatusUnauthorized)
-		return
-	}
+	update := v.(*model.Account)
 
 	var bodyBytes []byte
 	if c.Request.Body != nil {
@@ -292,20 +276,11 @@ func updateAccount(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to bind")
-		c.AbortWithStatus(http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
 
-	update, err := core.ReadAccount(id)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"err": err,
-		}).Error("failed to read account")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	account, err := core.GetAccount(user.Email, update.Parent)
+	account, err = core.GetAccount(account.Email, update.Parent)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
@@ -331,10 +306,34 @@ func updateAccount(c *gin.Context) {
 	c.JSON(http.StatusOK, client)
 }
 
+// DeleteAccount deletes an account
+// @Summary Delete an account
+// @Description Delete an account
+// @Tags accounts
+// @Security apiKey
+// @Success 200 {object} string "OK"
+// @Failure 400 {object} error
+// @Router /accounts/{id} [delete]
+// @Param id path string true "Account ID"
 func deleteAccount(c *gin.Context) {
 	id := c.Param("id")
 
-	err := core.DeleteAccount(id)
+	account, _, err := core.AuthFromContext(c, id)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to read account from context")
+		return
+	}
+
+	if account.Role == "User" || account.Role == "Guest" {
+		if account.Id != id {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to delete this account"})
+			return
+		}
+	}
+
+	err = core.DeleteAccount(id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
@@ -343,5 +342,5 @@ func deleteAccount(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(http.StatusOK, gin.H{"status": "OK"})
 }

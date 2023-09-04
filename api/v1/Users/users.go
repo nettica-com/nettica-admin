@@ -188,7 +188,7 @@ func emailUser(c *gin.Context) {
 
 	log.Infof("emailUser account = %v %v %v", pa, a.NetId, err)
 
-	err = core.EmailUser(id, pa.Id, a.NetId)
+	err = core.EmailUser(id, pa.Id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,

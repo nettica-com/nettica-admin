@@ -1,5 +1,32 @@
 basePath: /api/v1.0
 definitions:
+  model.Account:
+    properties:
+      accountName:
+        type: string
+      apiKey:
+        type: string
+      created:
+        type: string
+      email:
+        type: string
+      from:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      netId:
+        type: string
+      netName:
+        type: string
+      parent:
+        type: string
+      role:
+        type: string
+      status:
+        type: string
+    type: object
   model.Device:
     properties:
       accountid:
@@ -64,6 +91,17 @@ definitions:
         items:
           $ref: '#/definitions/model.VPN'
         type: array
+    type: object
+  model.Message:
+    properties:
+      config:
+        items:
+          $ref: '#/definitions/model.VPNConfig'
+        type: array
+      device:
+        $ref: '#/definitions/model.Device'
+      id:
+        type: string
     type: object
   model.Settings:
     properties:
@@ -147,12 +185,164 @@ definitions:
       updatedBy:
         type: string
     type: object
+  model.VPNConfig:
+    properties:
+      netName:
+        type: string
+      netid:
+        type: string
+      vpns:
+        items:
+          $ref: '#/definitions/model.VPN'
+        type: array
+    type: object
 host: my.nettica.com
 info:
   contact: {}
   description: Nettica API documentation
   title: Nettica API
 paths:
+  /accounts:
+    get:
+      description: Read all accounts for a user
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Account'
+            type: array
+        "400":
+          description: Bad Request
+          schema: {}
+      security:
+      - apiKey: []
+      summary: Read all accounts for a user
+      tags:
+      - accounts
+    post:
+      consumes:
+      - application/json
+      description: Create a new account
+      parameters:
+      - description: Account
+        in: body
+        name: account
+        required: true
+        schema:
+          $ref: '#/definitions/model.Account'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Account'
+        "400":
+          description: Bad Request
+          schema: {}
+      security:
+      - apiKey: []
+      summary: Create a new account
+      tags:
+      - accounts
+  /accounts/{id}:
+    delete:
+      description: Delete an account
+      parameters:
+      - description: Account ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+      security:
+      - apiKey: []
+      summary: Delete an account
+      tags:
+      - accounts
+    get:
+      description: Read all accounts for a user
+      parameters:
+      - description: Account ID
+        in: path
+        name: id
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Account'
+            type: array
+        "400":
+          description: Bad Request
+          schema: {}
+      security:
+      - apiKey: []
+      summary: Read all accounts for a user
+      tags:
+      - accounts
+    patch:
+      consumes:
+      - application/json
+      description: Update an account
+      parameters:
+      - description: Account ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Account
+        in: body
+        name: account
+        required: true
+        schema:
+          $ref: '#/definitions/model.Account'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Account'
+        "400":
+          description: Bad Request
+          schema: {}
+      security:
+      - apiKey: []
+      summary: Update an account
+      tags:
+      - accounts
+  /accounts/{id}/invite:
+    get:
+      description: Send an email invitation to join an account
+      parameters:
+      - description: Account ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+      security:
+      - apiKey: []
+      summary: Email an account invitation
+      tags:
+      - accounts
   /device:
     get:
       description: Read all devices
@@ -181,13 +371,6 @@ paths:
       consumes:
       - application/json
       description: Create a device
-      parameters:
-      - description: model.Device
-        in: body
-        name: device
-        required: true
-        schema:
-          $ref: '#/definitions/model.Device'
       produces:
       - application/json
       responses:
@@ -198,16 +381,53 @@ paths:
         "400":
           description: Bad Request
           schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "403":
+          description: Forbidden
+          schema: {}
         "422":
           description: Unprocessable Entity
           schema: {}
       security:
-      - ApiKeyAuth true "X-API-KEY" "device-api-<apikey>": []
-      - OAuth2: []
+      - apiKey: []
       summary: Create a device
       tags:
       - devices
   /device/{id}:
+    delete:
+      description: Delete a device
+      parameters:
+      - description: Device ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "403":
+          description: Forbidden
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+      security:
+      - apiKey: []
+      summary: Delete a device
+      tags:
+      - devices
     get:
       description: Read a device
       parameters:
@@ -230,9 +450,78 @@ paths:
           description: Forbidden
           schema: {}
       security:
-      - ApiKeyAuth true "X-API-KEY" "device-api-<apikey>": []
-      - OAuth2: []
+      - apiKey: []
       summary: Read a device
+      tags:
+      - devices
+    patch:
+      consumes:
+      - application/json
+      description: Update a device
+      parameters:
+      - description: Device ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Device
+        in: body
+        name: device
+        required: true
+        schema:
+          $ref: '#/definitions/model.Device'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Device'
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "403":
+          description: Forbidden
+          schema: {}
+        "422":
+          description: Unprocessable Entity
+          schema: {}
+      security:
+      - apiKey: []
+      summary: Update a device
+      tags:
+      - devices
+  /device/{id}/status:
+    get:
+      description: Read state for a device
+      parameters:
+      - description: Device ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Message'
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+      security:
+      - apiKey: []
+      summary: Read state for a device
       tags:
       - devices
 produces:
