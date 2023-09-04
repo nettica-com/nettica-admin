@@ -13,7 +13,7 @@ import (
 	"github.com/joho/godotenv"
 	api "github.com/nettica-com/nettica-admin/api"
 	auth "github.com/nettica-com/nettica-admin/auth"
-	docs "github.com/nettica-com/nettica-admin/docs"
+	docs "github.com/nettica-com/nettica-admin/cmd/nettica-api/docs"
 	util "github.com/nettica-com/nettica-admin/util"
 	version "github.com/nettica-com/nettica-admin/version"
 	"github.com/patrickmn/go-cache"
