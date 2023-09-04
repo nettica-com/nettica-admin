@@ -13,10 +13,12 @@ import (
 	"github.com/joho/godotenv"
 	api "github.com/nettica-com/nettica-admin/api"
 	auth "github.com/nettica-com/nettica-admin/auth"
+	docs "github.com/nettica-com/nettica-admin/docs"
 	util "github.com/nettica-com/nettica-admin/util"
 	version "github.com/nettica-com/nettica-admin/version"
 	"github.com/patrickmn/go-cache"
 	log "github.com/sirupsen/logrus"
+	"github.com/swaggo/swag/example/basic/docs"
 	"golang.org/x/oauth2"
 )
 
@@ -29,6 +31,14 @@ func init() {
 	log.SetOutput(os.Stderr)
 	log.SetLevel(log.DebugLevel)
 }
+
+// @title Nettica API
+// @description Nettica API documentation
+// @BasePath /api/v1
+// @host my.nettica.com
+// @schemes https
+// @produce json
+// @consumes json
 
 func main() {
 	log.Infof("Starting Nettica version: %s", version.Version)
@@ -55,6 +65,9 @@ func main() {
 
 	// creates a gin router with default middleware: logger and recovery (crash-free) middleware
 	app := gin.Default()
+	docs.SwaggerInfo.BasePath = "/api/v1"
+	docs.SwaggerInfo.Host = os.Getenv("SERVER")
+	docs.SwaggerInfo.Schemes = []string{"https"}
 
 	// cors middleware
 	config := cors.DefaultConfig()

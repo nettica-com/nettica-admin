@@ -27,14 +27,24 @@ func ApplyRoutes(r *gin.RouterGroup) {
 		g.PATCH("/:id", updateDevice)
 		g.DELETE("/:id", deleteDevice)
 		g.GET("", readDevices)
-		//		g.GET("/:id/config", configDevice)
 		g.GET("/:id/status", statusDevice)
-		//		g.GET("/:id/email", emailDevice)
 	}
 
-	//	StatusCache = cache.New(1*time.Minute, 10*time.Minute)
 }
 
+// CreateDevice creates a device
+// @Summary Create a device
+// @Description Create a device
+// @Tags devices
+// @Security ApiKeyAuth true "X-API-KEY" "device-api-<apikey>"
+// @Security OAuth2
+// @Accept  json
+// @Produce  json
+// @Param device body Device true "Device"
+// @Success 200 {object} Device
+// @Failure 400 {object} Error
+// @Failure 422 {object} Error
+// @Router /device [post]
 func createDevice(c *gin.Context) {
 	var data model.Device
 
@@ -42,7 +52,7 @@ func createDevice(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to bind")
-		c.AbortWithStatus(http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -54,7 +64,7 @@ func createDevice(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to get account from context")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -70,13 +80,24 @@ func createDevice(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to create client")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, client)
 }
 
+// ReadDevice reads a device
+// @Summary Read a device
+// @Description Read a device
+// @Tags devices
+// @Security ApiKeyAuth true "X-API-KEY" "device-api-<apikey>"
+// @Security OAuth2
+// @Produce  json
+// @Param id path string true "Device ID"
+// @Success 200 {object} Device
+// @Failure 400 {object} Error
+// @Failure 403 {object} Error
 func readDevice(c *gin.Context) {
 	id := c.Param("id")
 
@@ -85,13 +106,13 @@ func readDevice(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to get account from context")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	if account.Status == "Suspended" {
 		log.Infof("Account %s is suspended", account.Email)
-		c.AbortWithStatus(http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Account is suspended"})
 		return
 	}
 

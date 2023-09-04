@@ -29,6 +29,17 @@ func ApplyRoutes(r *gin.RouterGroup) {
 	}
 }
 
+// ActivateAccount activates an account from pending to active
+// @Summary Activate an account
+// @Description Set an account to "active"
+// @Tags accounts
+// @Security none
+// @Success 200 {object} Account
+// @Failure 400 {object} Error
+// @Router /accounts/{id}/activate [post]
+// @Router /accounts/{id}/activate [patch]
+// @Param id path string true "Account ID"
+
 func activateAccount(c *gin.Context) {
 	id := c.Param("id")
 
@@ -37,7 +48,7 @@ func activateAccount(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to create account")
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
