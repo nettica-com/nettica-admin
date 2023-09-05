@@ -571,8 +571,16 @@ mounted() {
                 }
             }
 
+            var name = item.member.name
+            if (item.member.netName != "") {
+                name = name + " (" + item.member.netName + ")"
+            }
+            item.name = name           
+
             console.log( "updateAccount: ", item.member)
             this.updateAccount(item.member)
+            this.readAllAccounts(this.authuser.email)
+            this.buildTree()
 
             this.notification = {
                 show: true,
