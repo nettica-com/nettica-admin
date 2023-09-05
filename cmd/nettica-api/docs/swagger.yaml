@@ -348,6 +348,49 @@ paths:
       summary: Update an account
       tags:
       - accounts
+  /accounts/{id}/activate:
+    patch:
+      description: Set an account to "active"
+      parameters:
+      - description: Account ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Account'
+        "400":
+          description: Bad Request
+          schema: {}
+      security:
+      - none: []
+      summary: Activate an account
+      tags:
+      - accounts
+    post:
+      description: Set an account to "active"
+      parameters:
+      - description: Account ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Account'
+        "400":
+          description: Bad Request
+          schema: {}
+      security:
+      - none: []
+      summary: Activate an account
+      tags:
+      - accounts
   /accounts/{id}/invite:
     get:
       description: Send an email invitation to join an account
@@ -368,6 +411,30 @@ paths:
       security:
       - apiKey: []
       summary: Email an account invitation
+      tags:
+      - accounts
+  /accounts/{id}/users:
+    get:
+      description: Read all users for an account
+      parameters:
+      - description: Account ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Account'
+            type: array
+        "400":
+          description: Bad Request
+          schema: {}
+      security:
+      - apiKey: []
+      summary: Read all users for an account
       tags:
       - accounts
   /device:
