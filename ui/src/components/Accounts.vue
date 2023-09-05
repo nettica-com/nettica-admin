@@ -21,7 +21,7 @@
             <v-card-title>
                 Accounts
                 <v-spacer></v-spacer>
-                <v-text-field v-if="listView" v-model="search" append-icon="mdi-magnify" label="Search" single-line
+                <v-text-field v-model="search" append-icon="mdi-magnify" label="Search" single-line
                     hide-details></v-text-field>
                 <v-spacer></v-spacer>
                 <v-btn color="success" @click="startInvite">
@@ -160,73 +160,6 @@
             </v-card>
         </v-dialog>
 
-        <v-dialog v-if="user" v-model="dialogUpdate" max-width="550">
-            <v-card>
-                <v-card-title class="headline">Edit User</v-card-title>
-                <v-card-text>
-
-                    <v-row>
-                        <v-col cols="12">
-                            <v-form ref="form" v-model="valid">
-                                <v-text-field v-model="user.accountName" label="Account Name"
-                                    :rules="[v => !!v || 'Account name is required',]" required />
-                                <v-text-field v-model="user.email" label="Email Address"
-                                    :rules="[v => !!v || 'Email address is required',]" required />
-                                <v-text-field v-model="user.name" label="Name"
-                                    :rules="[v => !!v || 'User name is required',]" required />
-                                <v-select :items="roles" v-model="user.role" label="Role"></v-select>
-                                <v-select :items="statuses" v-model="user.status" label="Status"></v-select>
-                            </v-form>
-                        </v-col>
-                    </v-row>
-                </v-card-text>
-                <v-card-actions>
-                    <v-btn :disabled="!valid" color="success" @click="update(user)">
-                        Submit
-                        <v-icon right dark>mdi-check-outline</v-icon>
-                    </v-btn>
-                    <v-btn color="primary" @click="dialogUpdate = false">
-                        Cancel
-                        <v-icon right dark>mdi-close-circle-outline</v-icon>
-                    </v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-dialog>
-        <v-dialog v-if="member" v-model="dialogMember" max-width="550">
-            <v-card>
-                <v-card-title class="headline">Edit Member</v-card-title>
-                <v-card-text>
-
-                    <v-row>
-                        <v-col cols="12">
-                            <v-form ref="form" v-model="valid">
-                                <v-text-field v-model="member.accountName" label="Account Name"
-                                    :rules="[v => !!v || 'Account name is required',]" required />
-                                <v-text-field v-model="member.email" label="Email Address"
-                                    :rules="[v => !!v || 'Email address is required',]" required />
-                                <v-text-field v-model="member.name" label="Name" :rules="[v => !!v || 'Name is required',]"
-                                    required />
-                                <v-select return-object v-model="netList.selected" :items="netList.items" item-text="text"
-                                    item-value="value" label="To this net" :rules="[v => !!v || 'Net is required',]" single
-                                    persistent-hint required />
-                                <v-select :items="roles" v-model="member.role" label="Role"></v-select>
-                                <v-select :items="statuses" v-model="member.status" label="Status"></v-select>
-                            </v-form>
-                        </v-col>
-                    </v-row>
-                </v-card-text>
-                <v-card-actions>
-                    <v-btn :disabled="!valid" color="success" @click="updateMember(member)">
-                        Submit
-                        <v-icon right dark>mdi-check-outline</v-icon>
-                    </v-btn>
-                    <v-btn color="primary" @click="dialogMember = false">
-                        Cancel
-                        <v-icon right dark>mdi-close-circle-outline</v-icon>
-                    </v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-dialog>
     </v-container>
 </template>
 <script>
@@ -243,10 +176,7 @@ export default {
         open: [],
         active: [],
 
-        listView: true,
         dialogCreate: false,
-        dialogUpdate: false,
-        dialogMember: false,
         dialogAPI: false,
         inDelete: false,
         netList: {
@@ -265,29 +195,9 @@ export default {
         panel: 1,
         valid: false,
         search: '',
-        headers: [
-            { text: 'Account Name', value: 'accountName', },
-            { text: 'Name', value: 'name', },
-            { text: "Role", value: 'role', },
-            { text: 'Net', value: 'netName', },
-            { text: 'From', value: 'from', },
-            { text: 'Status', value: 'status', },
-            { text: 'Actions', value: 'action', sortable: false, },
-
-        ],
         kheaders: [
             { text: 'Account Name', value: 'accountName', },
             { text: 'API Key', value: 'apiKey', },
-        ],
-        bottom_headers: [
-            { text: 'Email', value: 'email', },
-            { text: 'Name', value: 'name', },
-            { text: "Role", value: 'role', },
-            { text: 'Net', value: 'netName', },
-            { text: 'Account Name', value: 'accountName', },
-            { text: 'Status', value: 'status', },
-            { text: 'Actions', value: 'action', sortable: false, },
-
         ],
     }),
 

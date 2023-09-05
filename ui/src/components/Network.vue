@@ -24,7 +24,7 @@
                         Networks
                     </v-col>
                     <v-col cols="4">
-                        <v-text-field v-if="listView" v-model="search" append-icon="mdi-magnify" label="Search" single-line
+                        <v-text-field v-model="search" append-icon="mdi-magnify" label="Search" single-line
                             hide-details></v-text-field>
                     </v-col>
                     <v-col cols="4" class="text-right">
@@ -46,6 +46,10 @@
                             <v-icon v-else>
                                 {{ item.icon }}
                             </v-icon>
+                        </template>
+                        <template v-slot:append="{ item }">
+                            <v-spacer></v-spacer>
+                            <span v-if="!item.isNet" class="hidden-xs-only" >{{  item.address }}</span>
                         </template>
                     </v-treeview>
                 </v-col>
@@ -346,65 +350,6 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
-        <v-dialog v-if="net" v-model="dialogUpdate" max-width="550">
-            <v-card>
-                <v-card-title class="headline">Edit Net</v-card-title>
-                <v-card-text>
-
-                    <v-row>
-                        <v-col cols="12">
-                            <v-form ref="form" v-model="valid">
-                                <v-text-field v-model="net.id" label="Id" :rules="[v => !!v || 'Net id is required',]"
-                                    required />
-                                <v-text-field v-model="net.netName" label="Friendly name"
-                                    :rules="[v => !!v || 'Net name is required',]" required />
-                                <v-text-field v-model="net.description" label="Description" />
-                                <v-combobox v-model="net.default.address" chips hint="Write IPv4 or IPv6 CIDR and hit enter"
-                                    label="Addresses" multiple dark>
-                                    <template v-slot:selection="{ attrs, item, select, selected }">
-                                        <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                            @click:close="net.default.address.splice(net.default.address.indexOf(item), 1)">
-                                            <strong>{{ item }}</strong>&nbsp;
-                                        </v-chip>
-                                    </template>
-                                </v-combobox>
-                                <v-combobox v-model="net.default.dns" chips
-                                    hint="Write IP address(es) and hit enter or leave empty.  If not empty, be sure to include your local resolver."
-                                    label="DNS servers for this net" multiple dark>
-                                    <template v-slot:selection="{ attrs, item, select, selected }">
-                                        <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                            @click:close="net.default.dns.splice(net.default.dns.indexOf(item), 1)">
-                                            <strong>{{ item }}</strong>&nbsp;
-                                        </v-chip>
-                                    </template>
-                                </v-combobox>
-                                <v-combobox v-model="net.tags" chips hint="Write tag name and hit enter" label="Tags"
-                                    multiple dark>
-                                    <template v-slot:selection="{ attrs, item, select, selected }">
-                                        <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                            @click:close="net.tags.splice(net.tags.indexOf(item), 1)">
-                                            <strong>{{ item }}</strong>&nbsp;
-                                        </v-chip>
-                                    </template>
-                                </v-combobox>
-                            </v-form>
-                        </v-col>
-                    </v-row>
-                </v-card-text>
-            </v-card>
-            <v-card>
-                <v-card-actions>
-                    <v-btn :disabled="!valid" color="success" @click="update(net)">
-                        Submit
-                        <v-icon right dark>mdi-check-outline</v-icon>
-                    </v-btn>
-                    <v-btn color="primary" @click="dialogUpdate = false">
-                        Cancel
-                        <v-icon right dark>mdi-close-circle-outline</v-icon>
-                    </v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-dialog>
     </v-container>
 </template>
 
@@ -455,24 +400,13 @@ export default {
         active: [],
         open: [],
         inEdit: false,
-        listView: true,
         dialogCreate: false,
-        dialogUpdate: false,
         publicSubnets: false,
         noEdit: false,
         net: null,
         panel: 1,
         valid: false,
         search: '',
-        headers: [
-            { text: 'Name', value: 'netName', },
-            { text: 'Description', value: 'description' },
-            { text: 'Subnet', value: 'default.address', },
-            { text: 'Created', value: 'created', sortable: false, },
-            { text: 'Tags', value: 'tags', },
-            { text: 'Actions', value: 'action', sortable: false, },
-
-        ],
         nodes: [
         ],
         links: [
@@ -619,6 +553,7 @@ export default {
                         this.items[i].children[k] = {
                             id: this.vpns[j].id,
                             name: this.vpns[j].name,
+                            address: this.vpns[j].current.address[0],
                             net: this.items[i].net,
                             vpn: this.vpns[j],
                             icon: "mdi-network-outline",
@@ -640,6 +575,7 @@ export default {
 
         loadNetwork(id) {
             let item = this.selected
+            if (!item) return
             let net = item.net
             console.log("net = ", net)
             let name = net.netName

@@ -23,7 +23,7 @@
                             <v-col cols="4">Devices</v-col>
                             <v-col cols="4">
 
-                                <v-text-field v-if="listView" v-model="search" append-icon="mdi-magnify" label="Search" single-line
+                                <v-text-field v-model="search" append-icon="mdi-magnify" label="Search" single-line
                                     hide-details></v-text-field>
                             </v-col>
                             <v-col cols="4" class="text-right">
@@ -103,7 +103,10 @@
                                             :label="selected.device.enable ? 'Enabled' : 'Disabled'" :readonly="!inEdit" />
                                         <v-text-field v-model="selected.device.server" label="Server" :readonly="!inEdit" />
                                         <v-text-field v-model="selected.device.id" label="Device ID" readonly />
-                                        <v-text-field v-model="selected.device.apiKey" label="API Key" readonly />
+                                        <v-text-field v-model="selected.device.apiKey" label="API Key" readonly
+                                            :append-icon="showApiKey ? 'mdi-eye' : 'mdi-eye-off'"
+                                            :type="showApiKey ? 'text' : 'password'"
+                                            @click:append="showApiKey = !showApiKey" />
                                         <div :hidden="!inEdit">
                                             <v-text-field v-model="selected.device.name" label="Device friendly name"
                                                 :rules="[v => !!v || 'device name is required',]" required />
@@ -433,72 +436,6 @@
                         </v-card-actions>
                     </v-card>
                 </v-dialog>
-                <v-dialog v-if="device" v-model="dialogUpdate" max-width="550">
-                    <v-card>
-                        <v-card-title class="headline">Edit Host</v-card-title>
-                        <v-card-text>
-
-                            <v-row>
-                                <v-col cols="12">
-                                    <v-form ref="form" v-model="valid">
-
-                                        <v-select return-object v-model="netList.selected" :items="netList.items"
-                                            item-text="text" item-value="value" label="Join this net"
-                                            :rules="[v => !!v || 'Net is required',]" single persistent-hint required />
-                                        <v-combobox v-model="device.tags" chips hint="Write tag name and hit enter"
-                                            label="Tags" multiple dark>
-                                            <template v-slot:selection="{ attrs, item, select }">
-                                                <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                                    @click:close="device.tags.splice(device.tags.indexOf(item), 1)">
-                                                    <strong>{{ item }}</strong>&nbsp;
-                                                </v-chip>
-                                            </template>
-                                        </v-combobox>
-                                        <v-btn color="success" @click="forceFileDownload(device)">
-                                            Download Config
-                                            <v-icon right dark>mdi-cloud-download-outline</v-icon>
-                                        </v-btn>
-                                        <!--                                <v-img :src="'data:image/png;base64, ' + getdeviceQrcode(device.id)"/> -->
-                                    </v-form>
-                                </v-col>
-                            </v-row>
-                        </v-card-text>
-                    </v-card>
-
-                </v-dialog>
-                <v-dialog v-if="device" v-model="dialogCopy" max-width="550">
-                    <v-card>
-                        <v-card-title class="headline">Copy Host to Net</v-card-title>
-                        <v-card-text>
-
-                            <v-row>
-                                <v-col cols="12">
-                                    <v-form ref="form" v-model="valid">
-                                        <v-text-field v-model="device.name" label="New name for device"
-                                            :rules="[v => !!v || 'device name is required',]" required />
-
-                                        <v-select return-object v-model="netList.selected" :items="netList.items"
-                                            item-text="text" item-value="value" label="Copy to this net"
-                                            :rules="[v => !!v || 'Net is required',]" single persistent-hint required />
-                                    </v-form>
-                                </v-col>
-                            </v-row>
-                        </v-card-text>
-                    </v-card>
-                    <v-card>
-                        <v-card-actions>
-                            <v-btn :disabled="!valid" color="success" @click="copy(device)">
-                                Submit
-                                <v-icon right dark>mdi-check-outline</v-icon>
-                            </v-btn>
-                            <v-btn color="primary" @click="dialogCopy = false">
-                                Cancel
-                                <v-icon right dark>mdi-close-circle-outline</v-icon>
-                            </v-btn>
-                        </v-card-actions>
-                    </v-card>
-
-                </v-dialog>
                 <v-dialog v-if="vpn" v-model="dialogServiceHost" max-width="550">
                     <v-card>
                         <v-card-title class="headline">Manage Service: {{ vpn.name }}</v-card-title>
@@ -550,15 +487,13 @@ export default {
 
         notification: {},
         acntList: {},
-        showPrivate: true,
-        showPreshared: true,
+        showPrivate: false,
+        showPreshared: false,
+        showApiKey: false,
         showTree: false,
         footerProps: { 'items-per-page-options': [25, 50, 100, -1] },
-        listView: true,
         dialogCreate: false,
         dialogAddVPN: false,
-        dialogUpdate: false,
-        dialogCopy: false,
         dialogServiceHost: false,
         device: null,
         net: null,
@@ -586,18 +521,6 @@ export default {
             ],
         },
         search: '',
-        headers: [
-            { text: 'Name', value: 'name', },
-            { text: 'Status', value: 'status', },
-            { text: 'Net', value: 'netName', },
-            { text: 'IP addresses', value: 'current.address', },
-            //        { text: 'ID', value:'id', },
-            { text: "Endpoint", value: 'current.endpoint', },
-            //        { text: 'Created by', value: 'created', sortable: false, },
-            { text: 'Tags', value: 'tags', },
-            { text: 'Actions', value: 'action', sortable: false, },
-
-        ],
     }),
 
     computed: {
