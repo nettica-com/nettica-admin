@@ -40,7 +40,7 @@ func AuthFromContext(c *gin.Context, id string) (*model.Account, interface{}, er
 
 	} else if strings.HasPrefix(apikey, "device-api-") {
 
-		device, err = ReadDevice(id)
+		device, err = ReadDeviceByApiKey(apikey)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			return nil, nil, err
@@ -125,7 +125,7 @@ func AuthFromContext(c *gin.Context, id string) (*model.Account, interface{}, er
 			}
 		}
 
-		if account.Status == "Suspended" {
+		if account != nil && account.Status == "Suspended" {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
 			return nil, nil, errors.New("account is suspended")
 		}
@@ -164,7 +164,7 @@ func AuthFromContext(c *gin.Context, id string) (*model.Account, interface{}, er
 			}
 		}
 
-		if account.Status == "Suspended" {
+		if account != nil && account.Status == "Suspended" {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
 			return nil, nil, errors.New("account is suspended")
 		}
@@ -187,7 +187,7 @@ func AuthFromContext(c *gin.Context, id string) (*model.Account, interface{}, er
 			}
 		}
 
-		if account.Status == "Suspended" {
+		if account != nil && account.Status == "Suspended" {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
 			return nil, nil, errors.New("account is suspended")
 		}
