@@ -126,6 +126,15 @@ func UpdateAccount(Id string, user *model.Account) (*model.Account, error) {
 		return nil, errors.New("records Id mismatch")
 	}
 
+	// if the API key is empty, generate a new one
+	if user.ApiKey == "" {
+		user.ApiKey, err = util.RandomString(32)
+		if err != nil {
+			return nil, err
+		}
+		user.ApiKey = "nettica-api-" + user.ApiKey
+	}
+
 	// check if user is valid
 	errs := user.IsValid()
 	if len(errs) != 0 {

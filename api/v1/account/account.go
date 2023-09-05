@@ -38,7 +38,6 @@ func ApplyRoutes(r *gin.RouterGroup) {
 // @Router /accounts/{id}/activate [post]
 // @Router /accounts/{id}/activate [patch]
 // @Param id path string true "Account ID"
-
 func activateAccount(c *gin.Context) {
 	id := c.Param("id")
 
@@ -179,7 +178,6 @@ func readAllAccounts(c *gin.Context) {
 // @Failure 400 {object} error
 // @Router /accounts/{id}/users [get]
 // @Param id path string true "Account ID"
-
 func readUsers(c *gin.Context) {
 	id := c.Param("id")
 
