@@ -40,12 +40,23 @@ func AuthFromContext(c *gin.Context, id string) (*model.Account, interface{}, er
 
 	} else if strings.HasPrefix(apikey, "device-api-") {
 
-		device, err = ReadDeviceByApiKey(apikey)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-			return nil, nil, err
+		if strings.HasPrefix(id, "device-") {
+			device, err = ReadDevice(id)
+			if err != nil {
+				c.JSON(http.StatusNotFound, gin.H{"error": "Not Found"})
+				return nil, nil, err
+			}
+			if device.ApiKey != apikey {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+				return nil, nil, err
+			}
+		} else {
+			device, err = ReadDeviceByApiKey(apikey)
+			if err != nil {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+				return nil, nil, err
+			}
 		}
-
 	} else if strings.HasPrefix(apikey, "service-api-") {
 
 		service, err = ReadService(id)
@@ -141,7 +152,7 @@ func AuthFromContext(c *gin.Context, id string) (*model.Account, interface{}, er
 			return nil, nil, err
 		}
 
-		if account.Status == "Suspended" {
+		if account != nil && account.Status == "Suspended" {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
 			return nil, nil, errors.New("account is suspended")
 		}
@@ -178,6 +189,11 @@ func AuthFromContext(c *gin.Context, id string) (*model.Account, interface{}, er
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Not Found"})
 			return nil, nil, err
+		}
+
+		if device != nil && device.Id != vpn.DeviceID {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "device id mismatch"})
+			return nil, nil, errors.New("device id mismatch")
 		}
 
 		for _, a := range accounts {
@@ -220,7 +236,7 @@ func AuthFromContext(c *gin.Context, id string) (*model.Account, interface{}, er
 			}
 		}
 
-		if account.Status == "Suspended" {
+		if account != nil && account.Status == "Suspended" {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
 			return nil, nil, errors.New("account is suspended")
 		}
