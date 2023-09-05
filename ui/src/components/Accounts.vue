@@ -138,7 +138,7 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
-        <v-dialog v-if="accounts" v-model="dialogAPI" max-width="550">
+        <v-dialog v-if="accounts" v-model="dialogAPI" max-width="650">
             <v-card>
                 <v-card-title class="headline">API Keys</v-card-title>
                 <v-card-text>
@@ -147,6 +147,14 @@
                             <v-form ref="form" v-model="valid">
                                 <v-data-table :headers="kheaders" :items="accounts" :items-per-page="5"
                                     class="elevation-1">
+                                    <template v-slot:item.action="{ item }">
+                                        <v-row>
+                                            <v-icon class="pr-1 pl-1" @click="regenerateKey(item)"
+                                                title="Regenerate API Key (immediate change)">
+                                                mdi-refresh
+                                            </v-icon>
+                                        </v-row>
+                                    </template>
                                 </v-data-table>
                             </v-form>
                         </v-col>
@@ -196,8 +204,9 @@ export default {
         valid: false,
         search: '',
         kheaders: [
-            { text: 'Account Name', value: 'accountName', },
+            { text: 'Account', value: 'accountName', },
             { text: 'API Key', value: 'apiKey', },
+            { text: 'Actions', value: 'action', sortable: false, },
         ],
     }),
 
@@ -571,6 +580,22 @@ mounted() {
                 timeout: 2000,
             }
 
+        },
+
+        regenerateKey(item) {
+            if (confirm(`Do you really want to regenerate the API key for ${item.accountName} ?`)) {
+                item.apiKey = "";
+                this.updateAccount(item)
+                // We have to force a refresh here because the API key
+                // updated to blank in the vuex store
+                this.Refresh()
+                this.readAllAccounts(this.authuser.email)
+                this.notification = {
+                    show: true,
+                    text: "API key regenerated.",
+                    timeout: 2000,
+                }
+            }
         },
 
         forceFileDownload(user) {
