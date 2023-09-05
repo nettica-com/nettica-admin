@@ -18,3 +18,8 @@ type ServiceMessage struct {
 	Id     string    `json:"id"       bson:"id"`
 	Config []Service `json:"config"   bson:"config"`
 }
+
+type StatusResponse struct {
+	Status  int    `json:"status" bson:"status"`
+	Message string `json:"message" bson:"message"`
+}
