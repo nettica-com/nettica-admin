@@ -3,7 +3,6 @@ module github.com/nettica-com/nettica-admin
 go 1.14
 
 require (
-	github.com/PuerkitoBio/purell v1.2.0 // indirect
 	github.com/PuerkitoBio/rehttp v1.2.0 // indirect
 	github.com/amoghe/go-crypt v0.0.0-20220222110647-20eada5f5964
 	github.com/bytedance/sonic v1.10.0 // indirect
@@ -26,14 +25,13 @@ require (
 	github.com/pquerna/cachecontrol v0.2.0 // indirect
 	github.com/sirupsen/logrus v1.9.3
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
-	github.com/swaggo/files v1.0.1 // indirect
-	github.com/swaggo/gin-swagger v1.6.0 // indirect
+	github.com/swaggo/files v1.0.1
+	github.com/swaggo/gin-swagger v1.6.0
 	github.com/swaggo/swag v1.16.2
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
 	go.mongodb.org/mongo-driver v1.12.1
 	golang.org/x/arch v0.4.0 // indirect
 	golang.org/x/oauth2 v0.11.0
-	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.12.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/tools v0.12.0 // indirect
