@@ -289,23 +289,32 @@ func updateAccount(c *gin.Context) {
 		return
 	}
 
-	if account == nil || account.Role == "User" || account.Role == "Guest" {
+	if account == nil || account.Role == "User" || account.Role == "Guest" && account.Id != id {
 		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
 
+	if account.Role == "Admin" || account.Role == "Owner" {
+		update = &data
+	} else {
+		update.Name = data.Name
+		update.Picture = data.Picture
+		update.Email = data.Email
+		update.ApiKey = data.ApiKey
+	}
+
 	data.UpdatedBy = account.Email
 
-	client, err := core.UpdateAccount(id, &data)
+	result, err := core.UpdateAccount(id, update)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
-		}).Error("failed to update client")
+		}).Error("failed to update account")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, client)
+	c.JSON(http.StatusOK, result)
 }
 
 // DeleteAccount deletes an account
