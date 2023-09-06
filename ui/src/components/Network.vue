@@ -68,7 +68,7 @@
                         </v-card-text>
                         <v-divider></v-divider>
 
-                        <v-row class="text-left" width="550">
+                        <v-row class="px-3" width="600">
                             <v-col flex>
                                 <v-text-field v-model="selected.net.description" label="Description" />
                                 <v-combobox v-model="selected.net.default.address" chips

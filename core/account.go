@@ -42,6 +42,7 @@ func CreateAccount(account *model.Account) (*model.Account, error) {
 	}
 
 	account.Created = time.Now()
+	account.Updated = time.Now()
 
 	errs := account.IsValid()
 	if len(errs) != 0 {
@@ -134,6 +135,8 @@ func UpdateAccount(Id string, user *model.Account) (*model.Account, error) {
 		}
 		user.ApiKey = "nettica-api-" + user.ApiKey
 	}
+
+	user.Updated = time.Now()
 
 	// check if user is valid
 	errs := user.IsValid()

@@ -65,7 +65,7 @@
                         </v-card-text>
                         <v-divider></v-divider>
 
-                        <v-row class="text-left" width="550">
+                        <v-row class="px-3" width="600">
                             <v-col flex>
                                 <v-form ref="form" v-model="valid">
                                     <v-text-field v-model="selected.member.parent" label="Account ID" readonly />
@@ -86,6 +86,9 @@
                                         :readonly="selected.isReadOnly" ></v-select>
                                     <v-select :items="roles" v-model="selected.role" label="Role" :readonly="selected.isReadOnly"></v-select>
                                     <v-select :items="statuses" v-model="selected.status" label="Status"></v-select>
+                                    <p class="text-caption">Created by {{ selected.member.createdBy }} at {{ selected.member.created | formatDate }}<br/>
+                                                            Last update by {{ selected.member.updatedBy }} at {{ selected.member.updated | formatDate }}</p>
+
                                 </v-form>
                             </v-col>
                         </v-row>

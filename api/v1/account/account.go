@@ -119,6 +119,8 @@ func createAccount(c *gin.Context) {
 	}
 
 	account.From = acnt.Email
+	account.CreatedBy = acnt.Email
+	account.UpdatedBy = acnt.Email
 
 	v, err := core.CreateAccount(&account)
 	if err != nil {
@@ -291,6 +293,8 @@ func updateAccount(c *gin.Context) {
 		c.AbortWithStatus(http.StatusForbidden)
 		return
 	}
+
+	data.UpdatedBy = account.Email
 
 	client, err := core.UpdateAccount(id, &data)
 	if err != nil {

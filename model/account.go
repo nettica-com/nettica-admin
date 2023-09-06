@@ -19,7 +19,10 @@ type Account struct {
 	ApiKey      string    `json:"apiKey"      bson:"apiKey"`
 	From        string    `json:"from"        bson:"from"`
 	AccountName string    `json:"accountName" bson:"accountName"`
+	CreatedBy   string    `json:"createdBy"   bson:"createdBy"`
+	UpdatedBy   string    `json:"updatedBy"   bson:"updatedBy"`
 	Created     time.Time `json:"created"     bson:"created"`
+	Updated     time.Time `json:"updated"     bson:"updated"`
 }
 
 // IsValid check if model is valid

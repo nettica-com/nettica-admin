@@ -82,7 +82,7 @@
                                 </v-card-text>
                                 <v-divider></v-divider>
 
-                                <v-row class="px-3" width="300">
+                                <v-row class="px-3" width="600">
                                     <v-col flex>
                                         <v-combobox v-model="selected.device.tags" chips
                                             hint="Enter a tag, hit tab, hit enter." label="Tags" multiple dark
