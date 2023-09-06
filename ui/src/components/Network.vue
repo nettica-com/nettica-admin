@@ -61,7 +61,7 @@
                     </div>
                     <v-card v-else-if="selected.isNet" :key="selected.id" class="px-3 mx-auto" flat>
                         <v-card-text width="550">
-                            <span class="material-symbols-outlined">hub</span>
+                            <v-icon size="50" class="material-symbols-outlined">hub</v-icon>
                             <h3 class="text-h5 mb-2">
                                 {{ selected.name }}
                             </h3>
@@ -71,26 +71,6 @@
                         <v-row class="px-3" width="600">
                             <v-col flex>
                                 <v-text-field v-model="selected.net.description" label="Description" />
-                                <v-combobox v-model="selected.net.default.address" chips
-                                    hint="Write IPv4 or IPv6 CIDR and hit enter" label="Addresses" multiple dark>
-                                    <template v-slot:selection="{ attrs, item, select }">
-                                        <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                            @click:close="selected.net.default.address.splice(selected.net.default.address.indexOf(item), 1)">
-                                            <strong>{{ item }}</strong>&nbsp;
-                                        </v-chip>
-                                    </template>
-                                </v-combobox>
-                                <v-combobox :readonly="!inEdit" v-model="selected.net.default.dns" chips
-                                    hint="Enter IP address(es) and hit enter or leave empty."
-                                    label="DNS servers for this device" multiple dark>
-                                    <template v-slot:selection="{ attrs, item, select }">
-
-                                        <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                            @click:close="selected.net.default.dns.splice(selected.net.default.dns.indexOf(item), 1)">
-                                            <strong>{{ item }}</strong>&nbsp;
-                                        </v-chip>
-                                    </template>
-                                </v-combobox>
                                 <v-combobox v-model="selected.net.tags" chips hint="Enter a tag, hit tab, hit enter."
                                     label="Tags" multiple dark>
                                     <template v-slot:selection="{ attrs, item, select }">
@@ -100,8 +80,15 @@
                                         </v-chip>
                                     </template>
                                 </v-combobox>
-                                <v-text-field v-model="selected.net.id" label="Network ID" readonly />
-                                <v-text-field v-model="selected.net.default.presharedKey" label="Preshared Key" />
+                                <v-combobox v-model="selected.net.default.address" chips
+                                    hint="Write IPv4 or IPv6 CIDR and hit enter" label="Addresses" multiple dark>
+                                    <template v-slot:selection="{ attrs, item, select }">
+                                        <v-chip v-bind="attrs" :input-value="selected" close @click="select"
+                                            @click:close="selected.net.default.address.splice(selected.net.default.address.indexOf(item), 1)">
+                                            <strong>{{ item }}</strong>&nbsp;
+                                        </v-chip>
+                                    </template>
+                                </v-combobox>
                                 <v-combobox v-model="selected.net.default.allowedIPs" chips
                                     hint="Write IPv4 or IPv6 CIDR and hit enter" label="Allowed IPs" multiple dark>
                                     <template v-slot:selection="{ attrs, item, select }">
@@ -111,6 +98,22 @@
                                         </v-chip>
                                     </template>
                                 </v-combobox>
+                                <v-combobox :readonly="!inEdit" v-model="selected.net.default.dns" chips
+                                    hint="Enter IP address(es) and hit enter or leave empty."
+                                    label="DNS servers for this network" multiple dark>
+                                    <template v-slot:selection="{ attrs, item, select }">
+
+                                        <v-chip v-bind="attrs" :input-value="selected" close @click="select"
+                                            @click:close="selected.net.default.dns.splice(selected.net.default.dns.indexOf(item), 1)">
+                                            <strong>{{ item }}</strong>&nbsp;
+                                        </v-chip>
+                                    </template>
+                                </v-combobox>
+                                <v-text-field v-model="selected.net.id" label="Network ID" readonly />
+                                <v-text-field v-model="selected.net.default.presharedKey" label="Preshared Key" autocomplete="off"
+                                                        :append-icon="showPreshared ? 'mdi-eye' : 'mdi-eye-off'"
+                                                        :type="showPreshared ? 'text' : 'password'"
+                                                        @click:append="showPreshared = !showPreshared" />
 
                                 <v-text-field type="number" v-model="selected.net.default.mtu"
                                     label="Define default global MTU" hint="Leave at 0 and let us take care of MTU" />
@@ -153,7 +156,7 @@
                     </v-card>
                     <v-card v-else-if="!selected.isNet">
                         <v-card-text width="600" class="px-3">
-                            <span class="material-symbols-outlined">network_node</span>
+                            <v-icon size="50" class="material-symbols-outlined">network_node</v-icon>
                             <h3 class="text-h5 mb-2">
                                 {{ selected.name }}
                             </h3>

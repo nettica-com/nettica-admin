@@ -89,11 +89,14 @@
         </v-card>
         <v-dialog v-if="subscriptions" v-model="dialogCreateService" max-width="550">
             <v-card>
-                <v-card-title class="headline">Create New Service Host</v-card-title>
+                <v-card-title class="headline">Create New Service</v-card-title>
                 <v-card-text>
                     <v-row>
                         <v-col cols="12">
                             <v-form ref="form" v-model="valid">
+                                <v-select return-object v-model="svcList.selected" :items="svcList.items" item-text="text"
+                                    item-value="value" label="Choose type of Service"
+                                    :rules="[v => !!v || 'Service is required',]" single persistent-hint required />
                                 <v-select return-object v-model="serverList.selected" :items="serverList.items"
                                     item-text="text" item-value="value" label="Pick a region"
                                     :rules="[v => !!v || 'Server is required',]" single persistent-hint required />
@@ -103,10 +106,6 @@
                                 <v-select return-object v-model="dnsList.selected" :items="dnsList.items" item-text="text"
                                     item-value="value" label="Select a DNS provider"
                                     :rules="[v => !!v || 'DNS is required',]" single persistent-hint required />
-                                <v-select return-object v-model="svcList.selected" :items="svcList.items" item-text="text"
-                                    item-value="value" label="Choose type of Service"
-                                    :rules="[v => !!v || 'Service is required',]" single persistent-hint required />
-
                             </v-form>
                         </v-col>
                     </v-row>

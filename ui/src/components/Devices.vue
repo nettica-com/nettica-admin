@@ -63,8 +63,8 @@
                             </div>
                             <v-card v-else-if="selected.isDevice" :key="selected.id" class="px-3 mx-auto" flat>
                                 <v-card-text width="600">
-                                    <v-icon v-if="selected.device.type=='Service'">mdi-cloud</v-icon>
-                                    <v-icon v-else>mdi-devices</v-icon>
+                                    <v-icon v-if="selected.device.type=='Service'" size="50">mdi-cloud</v-icon>
+                                    <v-icon v-else size="50">mdi-devices</v-icon>
                                     <h3 class="text-h5 mb-2">
                                         {{ selected.name }}
                                     </h3>
@@ -84,6 +84,7 @@
 
                                 <v-row class="px-3" width="600">
                                     <v-col flex>
+                                        <v-text-field v-model="selected.device.description" label="Description" :readonly="!inEdit" />
                                         <v-combobox v-model="selected.device.tags" chips
                                             hint="Enter a tag, hit tab, hit enter." label="Tags" multiple dark
                                             :readonly="!inEdit">
@@ -94,7 +95,6 @@
                                                 </v-chip>
                                             </template>
                                         </v-combobox>
-                                        <v-text-field v-model="selected.device.description" label="Description" :readonly="!inEdit" />
                                         <v-select return-object v-model="selected.platform" :items="platforms.items"
                                             item-text="text" item-value="value" label="Platform of this device" single
                                             persistent-hint :readonly="!inEdit" />
@@ -152,7 +152,7 @@
                             </v-card>
                             <v-card v-else-if="!selected.isDevice">
                                 <v-card-text width="600" class="px-3">
-                                    <span class="material-symbols-outlined">hub</span>
+                                    <v-icon class="material-symbols-outlined" size="50">hub</v-icon>
                                     <h3 class="text-h5 mb-2">
                                         {{ selected.netName }}
                                     </h3>
