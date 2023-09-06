@@ -174,9 +174,13 @@ func (o *Oauth2Msft) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 		//  If there's no error and no account, create one.
 		if len(accounts) == 0 {
 			var account model.Account
+			account.Name = "Me"
+			account.AccountName = "Company"
 			account.Email = user.Email
 			account.Role = "Owner"
 			account.Status = "Active"
+			account.CreatedBy = user.Email
+			account.UpdatedBy = user.Email
 			a, err := core.CreateAccount(&account)
 			log.Infof("CREATE ACCOUNT = %v", a)
 			if err != nil {

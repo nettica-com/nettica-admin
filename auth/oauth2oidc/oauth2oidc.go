@@ -210,6 +210,9 @@ func (o *Oauth2idc) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 			account.Email = user.Email
 			account.Role = "Owner"
 			account.Status = "Active"
+			account.CreatedBy = user.Email
+			account.UpdatedBy = user.Email
+
 			a, err := core.CreateAccount(&account)
 			log.Infof("CREATE ACCOUNT = %v", a)
 			if err != nil {
