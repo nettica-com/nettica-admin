@@ -54,8 +54,10 @@
                     </div>
                     <v-card v-else-if="selected.isMember" :key="selected.id" class="px-3 mx-auto" style="align-self: center;" flat>
                         <v-card-text width="550">
-                            <img v-if="selected.member.picture != ''" :src="selected.member.picture" class="mx-auto d-block" width="50" height="50" />
-                            <v-icon v-else >mdi-account</v-icon>
+                            <v-avatar v-if="selected.member.picture != ''" size="50">
+                                <img :src="selected.member.picture" class="mx-auto d-block" width="50" height="50" />
+                            </v-avatar>
+                            <v-icon v-else size="50" >mdi-account</v-icon>
 
                             <h3 class="text-h5 mb-2">
                                 {{ selected.name }}
