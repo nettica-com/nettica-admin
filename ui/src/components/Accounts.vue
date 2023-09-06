@@ -54,7 +54,8 @@
                     </div>
                     <v-card v-else-if="selected.isMember" :key="selected.id" class="px-3 mx-auto" style="align-self: center;" flat>
                         <v-card-text width="550">
-                            <v-icon>mdi-account</v-icon>
+                            <img v-if="selected.member.picture != ''" :src="selected.member.picture" class="mx-auto d-block" width="50" height="50" />
+                            <v-icon v-else >mdi-account</v-icon>
 
                             <h3 class="text-h5 mb-2">
                                 {{ selected.name }}
@@ -82,6 +83,7 @@
                                                     </v-btn>
                                         </template>
                                     </v-text-field>
+                                    <v-text-field v-model="selected.member.picture" label="Picture" />
                                     <v-select  :items="networks" v-model="selected.netName" label="To this net" 
                                         :readonly="selected.isReadOnly" ></v-select>
                                     <v-select :items="roles" v-model="selected.role" label="Role" :readonly="selected.isReadOnly"></v-select>

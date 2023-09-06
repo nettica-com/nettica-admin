@@ -628,3 +628,38 @@ func ReadServiceHost(id string) ([]*model.Service, error) {
 	return services, err
 
 }
+
+// UpsertUser to MongoDB
+func UpsertUser(user *model.User) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+		return err
+	}
+
+	collection := client.Database("nettica").Collection("users")
+
+	data, err := json.Marshal(user)
+	//	json := fmt.Sprintf("%v", user)
+	var b interface{}
+	err = bson.UnmarshalExtJSON([]byte(data), true, &b)
+
+	findstr := fmt.Sprintf("{\"email\":\"%s\"}", user.Email)
+	var filter interface{}
+	err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
+
+	update := bson.M{
+		"$set": b,
+	}
+
+	opts := options.Update().SetUpsert(true)
+	_, err = collection.UpdateOne(ctx, filter, update, opts)
+	if err != nil {
+		log.Error(err)
+	}
+
+	return nil
+}

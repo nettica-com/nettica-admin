@@ -1,7 +1,6 @@
 package basic
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -15,9 +14,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/coreos/go-oidc"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/nettica-com/nettica-admin/core"
 	model "github.com/nettica-com/nettica-admin/model"
@@ -125,42 +121,7 @@ func (o *Oauth2Basic) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 	user.IssuedAt = idToken.IssuedAt
 	log.Infof("user %v", user)
 
-	// save to mongoDB
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("MONGODB_CONNECTION_STRING")))
-	if err != nil {
-		log.Error(err)
-		return nil, err
-	}
-
-	defer func() {
-		if err = client.Disconnect(ctx); err != nil {
-			log.Error(err)
-		}
-	}()
-
-	collection := client.Database("nettica").Collection("users")
-
-	data, err := json.Marshal(user)
-	//	json := fmt.Sprintf("%v", user)
-	var b interface{}
-	err = bson.UnmarshalExtJSON([]byte(data), true, &b)
-
-	findstr := fmt.Sprintf("{\"email\":\"%s\"}", user.Email)
-	var filter interface{}
-	err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
-
-	update := bson.M{
-		"$set": b,
-	}
-
-	opts := options.Update().SetUpsert(true)
-	res, err := collection.UpdateOne(ctx, filter, update, opts)
-	if err != nil {
-		log.Error(err)
-	}
-
+	// check if user exists
 	accounts, err := mongodb.ReadAllAccounts(user.Email)
 	if err != nil {
 		log.Error(err)
@@ -176,6 +137,7 @@ func (o *Oauth2Basic) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 			account.Status = "Active"
 			account.CreatedBy = user.Email
 			account.UpdatedBy = user.Email
+			account.Picture = user.Picture
 			a, err := core.CreateAccount(&account)
 			log.Infof("CREATE ACCOUNT = %v", a)
 			if err != nil {
@@ -198,8 +160,9 @@ func (o *Oauth2Basic) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 		user.AccountID = accounts[0].Id
 	}
 
-	//res, err := collection.InsertOne(ctx, b)
-
-	log.Infof("Res: %v", res)
+	err = mongodb.UpsertUser(user)
+	if err != nil {
+		log.Error(err)
+	}
 	return user, nil
 }
