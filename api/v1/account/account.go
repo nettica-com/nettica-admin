@@ -280,27 +280,16 @@ func updateAccount(c *gin.Context) {
 		return
 	}
 
-	account, err = core.GetAccount(account.Email, update.Parent)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"err": err,
-		}).Error("failed to read account")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	if account == nil || account.Role == "User" || account.Role == "Guest" && account.Id != id {
-		c.AbortWithStatus(http.StatusForbidden)
-		return
-	}
-
 	if account.Role == "Admin" || account.Role == "Owner" {
 		update = &data
-	} else {
+	} else if account.Id == id {
 		update.Name = data.Name
 		update.Picture = data.Picture
 		update.Email = data.Email
 		update.ApiKey = data.ApiKey
+	} else {
+		c.AbortWithStatus(http.StatusForbidden)
+		return
 	}
 
 	data.UpdatedBy = account.Email
