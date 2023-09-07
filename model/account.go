@@ -18,7 +18,6 @@ type Account struct {
 	Role        string    `json:"role"        bson:"role"`
 	Status      string    `json:"status"      bson:"status"`
 	ApiKey      string    `json:"apiKey"      bson:"apiKey"`
-	From        string    `json:"from"        bson:"from"`
 	AccountName string    `json:"accountName" bson:"accountName"`
 	CreatedBy   string    `json:"createdBy"   bson:"createdBy"`
 	UpdatedBy   string    `json:"updatedBy"   bson:"updatedBy"`

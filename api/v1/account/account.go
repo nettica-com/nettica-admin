@@ -74,7 +74,7 @@ func emailAccount(c *gin.Context) {
 	}
 	a := v.(*model.Account)
 
-	a.From = account.Email
+	log.Infof("emailAccount: %s sending invite to %s", account.Email, a.Email)
 
 	err = core.EmailUser(a.Email, a.Id)
 	if err != nil {
@@ -110,7 +110,12 @@ func createAccount(c *gin.Context) {
 		return
 	}
 
-	acnt, _, err := core.AuthFromContext(c, "")
+	id := ""
+	if account.Parent != "" {
+		id = account.Parent
+	}
+
+	acnt, _, err := core.AuthFromContext(c, id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
@@ -118,7 +123,12 @@ func createAccount(c *gin.Context) {
 		return
 	}
 
-	account.From = acnt.Email
+	if acnt.Role == "User" || acnt.Role == "Guest" {
+		log.Infof("createAccount: %s is not authorized to create an account", acnt.Email)
+		c.AbortWithStatus(http.StatusForbidden)
+		return
+	}
+
 	account.CreatedBy = acnt.Email
 	account.UpdatedBy = acnt.Email
 

@@ -49,7 +49,7 @@ func inviteUser(c *gin.Context) {
 		return
 	}
 	data.Created = time.Now()
-	data.From = user.Email
+	data.CreatedBy = user.Email
 
 	u, err := core.CreateAccount(&data)
 	if err != nil {
@@ -181,7 +181,7 @@ func emailUser(c *gin.Context) {
 	a.Role = "User"
 	a.Status = "Pending"
 	a.Created = time.Now()
-	a.From = user.Email
+	a.CreatedBy = user.Email
 	a.AccountName = accountName
 
 	pa, err := core.CreateAccount(&a)

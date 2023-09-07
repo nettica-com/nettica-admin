@@ -123,7 +123,11 @@
                                 <v-text-field v-model="selected.net.default.listenPort" type="number" :rules="[
                                     v => !!v || 'Listen port is required',
                                 ]" label="Listen port" required />
-                                <v-switch v-model="selected.net.default.upnp" color="success" inset
+                                <v-switch v-model="selected.net.policies.userEndpoints" color="success" inset
+                                    label="Users can create Endpoints" />
+                                <v-switch v-model="selected.net.policies.onlyEndpoints" color="success" inset
+                                    label="Clients cannot see other clients" />
+                                    <v-switch v-model="selected.net.default.upnp" color="success" inset
                                     label="Enable UPnP where possible" />
                                 <v-switch v-model="selected.net.default.enableDns" color="success" inset
                                     label="Enable Nettica DNS" />

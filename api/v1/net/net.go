@@ -177,6 +177,21 @@ func updateNet(c *gin.Context) {
 		return
 	}
 
+	// Clear the device cache for policy changes
+	vpns, err := core.ReadVPN2("netid", net.Id)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to read vpns")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	for _, v := range vpns {
+		// flush the cache for this vpn
+		core.FlushCache(v.DeviceID)
+	}
+
 	c.JSON(http.StatusOK, result)
 }
 

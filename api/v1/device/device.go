@@ -386,6 +386,25 @@ func statusDevice(c *gin.Context) {
 			return
 		}
 
+		network, err := core.ReadNet(net.NetId)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("failed to read network")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		onlyEndpoints := false
+		if network.Policies.OnlyEndpoints {
+			onlyEndpoints = true
+		}
+
+		isEndpoint := false
+		if net.Current.Endpoint != "" {
+			isEndpoint = true
+		}
+
 		msg.Config[i] = model.VPNConfig{}
 		msg.Config[i].NetName = net.NetName
 		msg.Config[i].NetId = net.NetId
@@ -438,12 +457,16 @@ func statusDevice(c *gin.Context) {
 		}
 
 		for _, client := range clients {
+			isClient := false
+
 			// If this config isn't explicitly for this device, remove the private key
 			// from the results
 			if client.DeviceID != deviceId {
 				client.Current.PrivateKey = ""
 			} else {
+				// This is the current client
 				device2 := *device
+				isClient = true
 				// update device from id with new last seen
 				go func() {
 					device2.LastSeen = time.Now()
@@ -471,7 +494,11 @@ func statusDevice(c *gin.Context) {
 			// only an egress device, or if it's neither,
 			// include this client in the results
 
-			msg.Config[i].VPNs = append(msg.Config[i].VPNs, *client)
+			if onlyEndpoints && !isClient && !isEndpoint && client.Current.Endpoint == "" {
+				// skip (network policy says clients can't see each other)
+			} else {
+				msg.Config[i].VPNs = append(msg.Config[i].VPNs, *client)
+			}
 		}
 	}
 	bytes, err := json.Marshal(msg)

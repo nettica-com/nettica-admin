@@ -67,6 +67,23 @@ func createVPN(c *gin.Context) {
 		data.AccountID = account.Id
 	}
 
+	if data.Current.Endpoint != "" && account.Role != "Admin" && account.Role != "Owner" {
+		// check the policy of the network to see if the endpoint is allowed
+		network, err := core.ReadNet(data.NetId)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("failed to read network")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		if !network.Policies.UserEndpoints {
+			log.Infof("User %s tried to set endpoint %s for network %s", account.Email, data.Current.Endpoint, data.NetId)
+			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+			return
+		}
+	}
+
 	vpn, err := core.CreateVPN(&data)
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -197,6 +214,23 @@ func updateVPN(c *gin.Context) {
 		}
 
 		data.UpdatedBy = account.Email
+	}
+
+	if data.Current.Endpoint != "" && vpn.Current.Endpoint == "" && account.Role != "Admin" && account.Role != "Owner" {
+		// check the policy of the network to see if the endpoint is allowed
+		network, err := core.ReadNet(vpn.NetId)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("failed to read network")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		if !network.Policies.UserEndpoints {
+			log.Infof("User %s tried to set endpoint %s for network %s", account.Email, data.Current.Endpoint, data.NetId)
+			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+			return
+		}
 	}
 
 	result, err := core.UpdateVPN(id, &data, false)
