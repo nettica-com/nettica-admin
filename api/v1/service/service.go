@@ -146,7 +146,7 @@ func readService(c *gin.Context) {
 
 	if account.Status == "Suspended" {
 		log.Errorf("readService: Account %s is suspended", account.Email)
-		c.AbortWithStatus(http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Account is suspended"})
 		return
 	}
 
@@ -161,7 +161,7 @@ func updateService(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to bind")
-		c.AbortWithStatus(http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -177,7 +177,7 @@ func updateService(c *gin.Context) {
 
 	if account.Role != "Admin" && account.Role != "Owner" {
 		log.Errorf("updateService: You must be an admin to update a service")
-		c.AbortWithStatus(http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "You must be an admin to update a service"})
 		return
 	}
 

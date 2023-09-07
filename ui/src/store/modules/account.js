@@ -68,22 +68,28 @@ const actions = {
   },
 
   create({ commit, dispatch }, account) {
+    commit('error', null)
     ApiService.post(`/accounts/`, account)
-    .then(resp => {
-      commit('account', resp)
-    }) 
-    .catch(err => {
-        commit('error', err)
+      .then(resp => {
+        commit('account', resp)
+      }) 
+      .catch(error => {
+        if (error.response) {
+          commit('error', error.response.data.error)
+        }
       })
   },
 
   update({ commit, dispatch }, account) {
+    commit('error', null)
     ApiService.patch(`/accounts/${account.id}`, account)
       .then(resp => {
         commit('update', resp)
       })
-      .catch(err => {
-        commit('error', err)
+      .catch(error => {
+        if (error.response) {
+          commit('error', error.response.data.error)
+        }
       })
   },
 

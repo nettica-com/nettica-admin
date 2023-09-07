@@ -462,6 +462,8 @@ export default {
             hosts: 'host/hosts',
             accounts: 'account/accounts',
             getvpnconfig: "vpn/getVPNConfig",
+            vpnError: 'vpn/error',
+            netError: 'net/error',
 
         }),
         options() {
@@ -492,6 +494,27 @@ export default {
             console.log("buildTree = ", this.buildTree())
             this.showTree = true
         },
+        vpnError: function (val) {
+            if (val == null) {
+                return
+            }
+            this.notification = {
+                show: true,
+                text: val,
+                timeout: 5000
+            }
+        },
+        netError: function (val) {
+            if (val == null) {
+                return
+            }
+            this.notification = {
+                show: true,
+                text: val,
+                timeout: 5000
+            }
+        },
+
     },
 
 
@@ -649,6 +672,10 @@ export default {
                 enableDns: false,
                 upnp: false,
             }
+            this.net.policies = {
+                userEndpoints: false,
+                onlyEndpoints: false,
+            }
             this.acntList = {
                 selected: { "text": "", "value": "" },
                 items: []
@@ -723,7 +750,7 @@ export default {
 
 
             // check allowed IPs
-            if (net.default.allowedIPs.length < 0) {
+            if (net.default.allowedIPs.length < 1) {
                 this.errorNet('Please provide at least one valid CIDR address for net allowed IPs');
                 return;
             }

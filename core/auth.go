@@ -34,7 +34,7 @@ func AuthFromContext(c *gin.Context, id string) (*model.Account, interface{}, er
 			return nil, nil, err
 		}
 		if account.Status == "Suspended" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+			c.JSON(http.StatusForbidden, gin.H{"error": "Account Suspended"})
 			return nil, nil, errors.New("account is suspended")
 		}
 
@@ -137,7 +137,7 @@ func AuthFromContext(c *gin.Context, id string) (*model.Account, interface{}, er
 		}
 
 		if account != nil && account.Status == "Suspended" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+			c.JSON(http.StatusForbidden, gin.H{"error": "Account Suspended"})
 			return nil, nil, errors.New("account is suspended")
 		}
 
@@ -153,7 +153,7 @@ func AuthFromContext(c *gin.Context, id string) (*model.Account, interface{}, er
 		}
 
 		if account != nil && account.Status == "Suspended" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+			c.JSON(http.StatusForbidden, gin.H{"error": "Account Suspended"})
 			return nil, nil, errors.New("account is suspended")
 		}
 
@@ -176,7 +176,7 @@ func AuthFromContext(c *gin.Context, id string) (*model.Account, interface{}, er
 		}
 
 		if account != nil && account.Status == "Suspended" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+			c.JSON(http.StatusForbidden, gin.H{"error": "Account Suspended"})
 			return nil, nil, errors.New("account is suspended")
 		}
 
@@ -204,7 +204,7 @@ func AuthFromContext(c *gin.Context, id string) (*model.Account, interface{}, er
 		}
 
 		if account != nil && account.Status == "Suspended" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+			c.JSON(http.StatusForbidden, gin.H{"error": "Account Suspended"})
 			return nil, nil, errors.New("account is suspended")
 		}
 
@@ -237,7 +237,7 @@ func AuthFromContext(c *gin.Context, id string) (*model.Account, interface{}, er
 		}
 
 		if account != nil && account.Status == "Suspended" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+			c.JSON(http.StatusForbidden, gin.H{"error": "Account Suspended"})
 			return nil, nil, errors.New("account is suspended")
 		}
 

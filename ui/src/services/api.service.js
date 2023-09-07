@@ -11,7 +11,7 @@ const ApiService = {
     return Vue.axios.get(resource)
       .then(response => response.data)
       .catch(error => {
-        throw new Error(`ApiService: ${error}`)
+        throw (error)
       });
   },
 
@@ -19,7 +19,7 @@ const ApiService = {
     return Vue.axios.post(resource, params)
       .then(response => response.data)
       .catch(error => {
-        throw new Error(`ApiService: ${error}`)
+        throw (error)
       });
   },
 
@@ -27,7 +27,7 @@ const ApiService = {
     return Vue.axios.put(resource, params)
       .then(response => response.data)
       .catch(error => {
-        throw new Error(`ApiService: ${error}`)
+        throw (error)
       });
   },
 
@@ -35,7 +35,7 @@ const ApiService = {
     return Vue.axios.patch(resource, params)
       .then(response => response.data)
       .catch(error => {
-        throw new Error(`ApiService: ${error}`)
+        throw (error)
       });
   },
 
@@ -43,7 +43,7 @@ const ApiService = {
     return Vue.axios.delete(resource)
       .then(response => response.data)
       .catch(error => {
-        throw new Error(`ApiService: ${error}`)
+        throw (error)
       });
   },
 
@@ -51,7 +51,7 @@ const ApiService = {
     return Vue.axios.get(resource, config)
       .then(response => response.data)
       .catch(error => {
-        throw new Error(`ApiService: ${error}`)
+        throw (error)
       });
   },
 };

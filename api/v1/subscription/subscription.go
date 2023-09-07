@@ -47,7 +47,7 @@ func createSubscription(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to read request body")
-		c.AbortWithStatus(http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -232,7 +232,7 @@ func updateSubscription(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to bind")
-		c.AbortWithStatus(http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -298,7 +298,7 @@ func readSubscriptions(c *gin.Context) {
 	if user.Email == "" && os.Getenv("OAUTH2_PROVIDER_NAME") != "fake" {
 
 		log.Error("security alert: Email empty on authenticated token")
-		c.AbortWithStatus(http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "This error has been logged"})
 	}
 
 	subscriptions, err := core.ReadSubscriptions(user.Email)

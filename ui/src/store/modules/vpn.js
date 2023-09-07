@@ -60,36 +60,42 @@ const actions = {
   },
 
   create({ commit, dispatch }, vpn) {
+    commit('error', null)
     ApiService.post("/vpn", vpn)
       .then(resp => {
-        //        dispatch('readQrcode', resp)
-        //        dispatch('readConfig', resp)
         commit('create', resp)
       })
-      .catch(err => {
-        commit('error', err)
+      .catch((error) => {
+        if (error.response) {
+          commit('error', error.response.data.error)
+        }
       })
   },
 
   update({ commit, dispatch }, vpn) {
+    commit('error', null)
     ApiService.patch(`/vpn/${vpn.id}`, vpn)
       .then(resp => {
-        //        dispatch('readQrcode', resp)
-        //        dispatch('readConfig', vpn.id)
         commit('update', resp)
       })
-      .catch(err => {
-        commit('error', err)
+      .catch((error) => {
+        if (error.response) {
+          commit('error', error.response.data.error)
+        }
+        console.log(error)
       })
   },
 
   delete({ commit }, vpn) {
+    commit('error', null)
     ApiService.delete(`/vpn/${vpn.id}`)
       .then(() => {
         commit('delete', vpn)
       })
-      .catch(err => {
-        commit('error', err)
+      .catch(error => {
+        if (error.response) {
+          commit('error', error.response.data.error)
+        }
       })
   },
 

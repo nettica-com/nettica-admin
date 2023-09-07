@@ -40,7 +40,7 @@ func createNet(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to bind")
-		c.AbortWithStatus(http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -54,13 +54,13 @@ func createNet(c *gin.Context) {
 
 	if account.Role != "Admin" && account.Role != "Owner" {
 		log.Infof("createNet: user %s is not an admin of %s", account.Email, account.Id)
-		c.JSON(http.StatusForbidden, gin.H{"error": "user is not an admin of this account"})
+		c.JSON(http.StatusForbidden, gin.H{"error": "You are not an admin of this account"})
 		return
 	}
 
 	if account.NetId != "" {
 		log.Infof("createNet: user %s cannot create new nets in this account", account.Email)
-		c.JSON(http.StatusForbidden, gin.H{"error": "user cannot create new nets in this account"})
+		c.JSON(http.StatusForbidden, gin.H{"error": "You cannot create new nets in this account"})
 		return
 	}
 
@@ -106,7 +106,7 @@ func readNet(c *gin.Context) {
 
 	if account.Status == "Suspended" {
 		log.Infof("readNet: account %s is suspended", account.Email)
-		c.AbortWithStatus(http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "account is suspended"})
 		return
 	}
 
@@ -142,7 +142,7 @@ func updateNet(c *gin.Context) {
 			"id":  id,
 			"req": data.Id,
 		}).Error("id mismatch")
-		c.AbortWithStatus(http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id mismatch"})
 		return
 	}
 
@@ -162,7 +162,7 @@ func updateNet(c *gin.Context) {
 	}
 
 	if !authorized {
-		c.AbortWithStatus(http.StatusUnauthorized)
+		c.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to update this network"})
 		return
 	}
 
@@ -217,7 +217,7 @@ func deleteNet(c *gin.Context) {
 
 	if account.Status == "Suspended" {
 		log.Infof("deleteNet: account %s is suspended", account.Email)
-		c.AbortWithStatus(http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "account is suspended"})
 		return
 	}
 

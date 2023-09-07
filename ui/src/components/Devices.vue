@@ -539,8 +539,6 @@ export default {
             return this.items.find(item => item.id === id)
         },
         ...mapGetters({
-            getdeviceQrcode: 'device/getdeviceQrcode',
-            getdeviceConfig: 'device/getdeviceConfig',
             user: 'auth/user',
             servers: 'server/servers',
             accounts: 'account/accounts',
@@ -548,6 +546,8 @@ export default {
             nets: 'net/nets',
             deviceQrcodes: 'device/deviceQrcodes',
             getvpnconfig: "vpn/getVPNConfig",
+            vpnError: "vpn/error",
+            deviceError: "device/error",
 
         }),
     },
@@ -562,6 +562,26 @@ export default {
         devices: function (val) {
             console.log("buildTree = ", this.buildTree())
             this.showTree = true
+        },
+        vpnError: function (val) {
+            if (val == null) {
+                return
+            }
+            this.notification = {
+                show: true,
+                text: val,
+                timeout: 5000
+            }
+        },
+        deviceError: function (val) {
+            if (val == null) {
+                return
+            }
+            this.notification = {
+                show: true,
+                text: val,
+                timeout: 5000
+            }
         },
     },
 

@@ -123,7 +123,7 @@ func createAccount(c *gin.Context) {
 
 	if acnt.Role == "User" || acnt.Role == "Guest" {
 		log.Infof("createAccount: %s is not authorized to create an account", acnt.Email)
-		c.AbortWithStatus(http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to create an account"})
 		return
 	}
 
@@ -291,12 +291,16 @@ func updateAccount(c *gin.Context) {
 	if account.Role == "Admin" || account.Role == "Owner" {
 		update = &data
 	} else if account.Id == id {
+		if update.NetName != data.NetName {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to update that field"})
+			return
+		}
 		update.Name = data.Name
 		update.Picture = data.Picture
 		update.Email = data.Email
 		update.ApiKey = data.ApiKey
 	} else {
-		c.AbortWithStatus(http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to update this account"})
 		return
 	}
 

@@ -59,26 +59,29 @@ const actions = {
   },
 
   create({ commit, dispatch }, device) {
+    commit('error', null)
     ApiService.post("/device", device)
       .then(resp => {
-        //        dispatch('readQrcode', resp)
         dispatch('readConfig', resp)
         commit('create', resp)
       })
-      .catch(err => {
-        commit('error', err)
+      .catch(error => {
+        if (error.response) {
+          commit('error', error.response.data.error)
+        }
       })
   },
 
   update({ commit, dispatch }, device) {
+    commit('error', null)
     ApiService.patch(`/device/${device.id}`, device)
       .then(resp => {
-        //        dispatch('readQrcode', resp)
-        //        dispatch('readConfig', device.id)
         commit('update', resp)
       })
-      .catch(err => {
-        commit('error', err)
+      .catch(error => {
+        if (error.response) {
+          commit('error', error.response.data.error)
+        }
       })
   },
 

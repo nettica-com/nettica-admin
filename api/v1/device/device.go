@@ -142,7 +142,7 @@ func updateDevice(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to bind")
-		c.AbortWithStatus(http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -195,7 +195,7 @@ func updateDevice(c *gin.Context) {
 		}
 
 		if !authorized {
-			c.AbortWithStatus(http.StatusForbidden)
+			c.JSON(http.StatusForbidden, gin.H{"error": "You cannot update this device"})
 			return
 		}
 
@@ -325,7 +325,7 @@ func statusDevice(c *gin.Context) {
 			"err": err,
 		}).Error("failed to read client config")
 		if err.Error() == "mongo: no documents in result" {
-			c.AbortWithStatus(http.StatusNotFound)
+			c.JSON(http.StatusNotFound, gin.H{"error": "device not found"})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}

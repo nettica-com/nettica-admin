@@ -133,7 +133,7 @@ func readVPN(c *gin.Context) {
 
 	if account.Status == "Suspended" {
 		log.Errorf("readVPN: account %s is suspended", account.Email)
-		c.AbortWithStatus(http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Account is suspended"})
 		return
 	}
 
@@ -164,7 +164,7 @@ func updateVPN(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to bind")
-		c.AbortWithStatus(http.StatusUnprocessableEntity)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -228,7 +228,7 @@ func updateVPN(c *gin.Context) {
 		}
 		if !network.Policies.UserEndpoints {
 			log.Infof("User %s tried to set endpoint %s for network %s", account.Email, data.Current.Endpoint, data.NetId)
-			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+			c.JSON(http.StatusForbidden, gin.H{"error": "User Endpoints are disabled for this network"})
 			return
 		}
 	}
@@ -395,7 +395,7 @@ func configVPN(c *gin.Context) {
 
 	if account.Status == "Suspended" {
 		log.Errorf("configVPN: account %s is suspended", account.Email)
-		c.AbortWithStatus(http.StatusForbidden)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Account is suspended"})
 		return
 	}
 
@@ -407,7 +407,7 @@ func configVPN(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to read vpn config")
-		c.AbortWithStatus(http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 	sdata := string(data)
