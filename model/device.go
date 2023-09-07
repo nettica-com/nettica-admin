@@ -12,8 +12,8 @@ import (
 type Device struct {
 	Id            string    `json:"id"                        bson:"id"`
 	Server        string    `json:"server"                    bson:"server"`
-	AccountID     string    `json:"accountid"                 bson:"accountid"`
 	ApiKey        string    `json:"apiKey"                    bson:"apiKey"`
+	AccountID     string    `json:"accountid"                 bson:"accountid"`
 	Name          string    `json:"name"                      bson:"name"`
 	Description   string    `json:"description"               bson:"description"`
 	Type          string    `json:"type"                      bson:"type"`
