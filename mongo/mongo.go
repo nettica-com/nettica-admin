@@ -776,10 +776,6 @@ func Initialize() error {
 	if err != nil {
 		log.Error(err)
 	}
-	_, err = client.Database("nettica").Collection("devices").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"serviceGroup": 1}, Options: nil})
-	if err != nil {
-		log.Error(err)
-	}
 
 	// networks
 
