@@ -239,39 +239,6 @@ const docTemplate = `{
                         "schema": {}
                     }
                 }
-            },
-            "patch": {
-                "security": [
-                    {
-                        "none": []
-                    }
-                ],
-                "description": "Set an account to \"active\"",
-                "tags": [
-                    "accounts"
-                ],
-                "summary": "Activate an account",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Account ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/model.Account"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {}
-                    }
-                }
             }
         },
         "/accounts/{id}/invite": {
@@ -1044,10 +1011,10 @@ const docTemplate = `{
                 "created": {
                     "type": "string"
                 },
-                "email": {
+                "createdBy": {
                     "type": "string"
                 },
-                "from": {
+                "email": {
                     "type": "string"
                 },
                 "id": {
@@ -1065,10 +1032,19 @@ const docTemplate = `{
                 "parent": {
                     "type": "string"
                 },
+                "picture": {
+                    "type": "string"
+                },
                 "role": {
                     "type": "string"
                 },
                 "status": {
+                    "type": "string"
+                },
+                "updated": {
+                    "type": "string"
+                },
+                "updatedBy": {
                     "type": "string"
                 }
             }
@@ -1206,14 +1182,14 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "enabled": {
-                    "type": "boolean"
-                },
                 "id": {
                     "type": "string"
                 },
                 "netName": {
                     "type": "string"
+                },
+                "policies": {
+                    "$ref": "#/definitions/model.Policies"
                 },
                 "tags": {
                     "type": "array",
@@ -1226,6 +1202,17 @@ const docTemplate = `{
                 },
                 "updatedBy": {
                     "type": "string"
+                }
+            }
+        },
+        "model.Policies": {
+            "type": "object",
+            "properties": {
+                "onlyEndpoints": {
+                    "type": "boolean"
+                },
+                "userEndpoints": {
+                    "type": "boolean"
                 }
             }
         },

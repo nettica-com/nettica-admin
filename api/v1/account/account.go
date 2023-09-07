@@ -19,7 +19,6 @@ func ApplyRoutes(r *gin.RouterGroup) {
 		g.GET("/", readAllAccounts)
 		g.POST("/", createAccount)
 		g.POST("/:id/activate", activateAccount)
-		g.PATCH("/:id/activate", activateAccount)
 		g.GET("/:id/invite", emailAccount)
 		g.GET("/:id", readAllAccounts)
 		g.GET("/:id/users", readUsers)
@@ -36,7 +35,6 @@ func ApplyRoutes(r *gin.RouterGroup) {
 // @Success 200 {object} model.Account
 // @Failure 400 {object} error
 // @Router /accounts/{id}/activate [post]
-// @Router /accounts/{id}/activate [patch]
 // @Param id path string true "Account ID"
 func activateAccount(c *gin.Context) {
 	id := c.Param("id")

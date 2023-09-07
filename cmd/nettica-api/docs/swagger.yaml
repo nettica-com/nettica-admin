@@ -8,9 +8,9 @@ definitions:
         type: string
       created:
         type: string
-      email:
+      createdBy:
         type: string
-      from:
+      email:
         type: string
       id:
         type: string
@@ -22,9 +22,15 @@ definitions:
         type: string
       parent:
         type: string
+      picture:
+        type: string
       role:
         type: string
       status:
+        type: string
+      updated:
+        type: string
+      updatedBy:
         type: string
     type: object
   model.Device:
@@ -115,12 +121,12 @@ definitions:
         $ref: '#/definitions/model.Settings'
       description:
         type: string
-      enabled:
-        type: boolean
       id:
         type: string
       netName:
         type: string
+      policies:
+        $ref: '#/definitions/model.Policies'
       tags:
         items:
           type: string
@@ -129,6 +135,13 @@ definitions:
         type: string
       updatedBy:
         type: string
+    type: object
+  model.Policies:
+    properties:
+      onlyEndpoints:
+        type: boolean
+      userEndpoints:
+        type: boolean
     type: object
   model.Settings:
     properties:
@@ -349,27 +362,6 @@ paths:
       tags:
       - accounts
   /accounts/{id}/activate:
-    patch:
-      description: Set an account to "active"
-      parameters:
-      - description: Account ID
-        in: path
-        name: id
-        required: true
-        type: string
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.Account'
-        "400":
-          description: Bad Request
-          schema: {}
-      security:
-      - none: []
-      summary: Activate an account
-      tags:
-      - accounts
     post:
       description: Set an account to "active"
       parameters:

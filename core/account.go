@@ -180,16 +180,26 @@ func ActivateAccount(id string) (*model.Account, error) {
 		return nil, err
 	}
 	a = v.(*model.Account)
+
+	alreadyActive := false
+	if a.Status == "Active" {
+		alreadyActive = true
+	}
+
 	if a.Status != "Suspended" {
 		a.Status = "Active"
 	} else {
 		return nil, errors.New("account is suspended")
 	}
 
-	err = mongo.Serialize(id, "id", "accounts", a)
-	if err != nil {
-		return nil, err
+	// since this api is unauthenticated, we lets cut in half the pressure on the db in case of abuse
+	if !alreadyActive {
+		err = mongo.Serialize(id, "id", "accounts", a)
+		if err != nil {
+			return nil, err
+		}
 	}
+
 	if a.NetName == "" {
 		a.NetName = "All Networks"
 	}
