@@ -220,12 +220,12 @@ func CreateService(service *model.Service) (*model.Service, error) {
 	}
 
 	// create the service
-	err = mongo.Serialize(service.Id, "id", "service", service)
+	err = mongo.Serialize(service.Id, "id", "services", service)
 	if err != nil {
 		return nil, err
 	}
 
-	v, err := mongo.Deserialize(service.Id, "id", "service", reflect.TypeOf(model.Service{}))
+	v, err := mongo.Deserialize(service.Id, "id", "services", reflect.TypeOf(model.Service{}))
 	if err != nil {
 		return nil, err
 	}
@@ -237,7 +237,7 @@ func CreateService(service *model.Service) (*model.Service, error) {
 
 // ReadService service by id
 func ReadService(id string) (*model.Service, error) {
-	v, err := mongo.Deserialize(id, "id", "service", reflect.TypeOf(model.Service{}))
+	v, err := mongo.Deserialize(id, "id", "services", reflect.TypeOf(model.Service{}))
 	if err != nil {
 		return nil, err
 	}
@@ -248,7 +248,7 @@ func ReadService(id string) (*model.Service, error) {
 
 // UpdateService preserve keys
 func UpdateService(Id string, service *model.Service) (*model.Service, error) {
-	v, err := mongo.Deserialize(Id, "id", "service", reflect.TypeOf(model.Service{}))
+	v, err := mongo.Deserialize(Id, "id", "services", reflect.TypeOf(model.Service{}))
 	if err != nil {
 		return nil, err
 	}
@@ -277,12 +277,12 @@ func UpdateService(Id string, service *model.Service) (*model.Service, error) {
 
 	service.Updated = time.Now().UTC()
 
-	err = mongo.Serialize(service.Id, "id", "service", service)
+	err = mongo.Serialize(service.Id, "id", "services", service)
 	if err != nil {
 		return nil, err
 	}
 
-	v, err = mongo.Deserialize(Id, "id", "service", reflect.TypeOf(model.Service{}))
+	v, err = mongo.Deserialize(Id, "id", "services", reflect.TypeOf(model.Service{}))
 	if err != nil {
 		return nil, err
 	}
@@ -296,7 +296,7 @@ func UpdateService(Id string, service *model.Service) (*model.Service, error) {
 func DeleteService(id string) error {
 
 	// Get the service
-	v, err := mongo.Deserialize(id, "id", "service", reflect.TypeOf(model.Service{}))
+	v, err := mongo.Deserialize(id, "id", "services", reflect.TypeOf(model.Service{}))
 	if err != nil {
 		log.Errorf("failed to delete service %s", id)
 		return err
@@ -336,7 +336,7 @@ func DeleteService(id string) error {
 
 	// Now delete the service
 
-	err = mongo.Delete(id, "id", "service")
+	err = mongo.Delete(id, "id", "services")
 	if err != nil {
 		return err
 	}

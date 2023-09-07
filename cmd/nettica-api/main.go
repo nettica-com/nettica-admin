@@ -14,6 +14,7 @@ import (
 	api "github.com/nettica-com/nettica-admin/api"
 	auth "github.com/nettica-com/nettica-admin/auth"
 	docs "github.com/nettica-com/nettica-admin/cmd/nettica-api/docs"
+	"github.com/nettica-com/nettica-admin/mongo"
 	util "github.com/nettica-com/nettica-admin/util"
 	version "github.com/nettica-com/nettica-admin/version"
 	"github.com/patrickmn/go-cache"
@@ -136,6 +137,12 @@ func main() {
 
 	// apply api router private
 	api.ApplyRoutes(app, true)
+
+	// Initialize the database
+	err = mongo.Initialize()
+	if err != nil {
+		log.Error(err)
+	}
 
 	err = app.Run(fmt.Sprintf("%s:%s", os.Getenv("LISTEN_ADDR"), os.Getenv("PORT")))
 	if err != nil {

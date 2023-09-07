@@ -6,13 +6,13 @@ import (
 
 // Server structure
 type Server struct {
-	Id            string `json:"id" bson:"id"`
-	Name          string `json:"name" bson:"name"`
-	Description   string `json:"description" bson:"description"`
-	IpAddress     string `json:"ipAddress" bson:"ipAddress"`
-	PortMin       int    `json:"portMin" bson:"portMin"`
-	PortMax       int    `json:"portMax" bson:"portMax"`
-	ServiceGroup  string `json:"serviceGroup" bson:"serviceGroup"`
+	Id            string `json:"id"            bson:"id"`
+	Name          string `json:"name"          bson:"name"`
+	Description   string `json:"description"   bson:"description"`
+	IpAddress     string `json:"ipAddress"     bson:"ipAddress"`
+	PortMin       int    `json:"portMin"       bson:"portMin"`
+	PortMax       int    `json:"portMax"       bson:"portMax"`
+	ServiceGroup  string `json:"serviceGroup"  bson:"serviceGroup"`
 	ServiceApiKey string `json:"serviceApiKey" bson:"serviceApiKey"`
 	DefaultSubnet string `json:"defaultSubnet" bson:"defaultSubnet"`
 }

@@ -58,12 +58,12 @@ func CreateSubscription(service *model.Subscription) (*model.Subscription, error
 			return nil, errors.New("failed to validate service")
 		}
 
-		err := mongo.Serialize(service.Id, "id", "service", service)
+		err := mongo.Serialize(service.Id, "id", "services", service)
 		if err != nil {
 			return nil, err
 		}
 
-		v, err := mongo.Deserialize(service.Id, "id", "service", reflect.TypeOf(model.Service{}))
+		v, err := mongo.Deserialize(service.Id, "id", "services", reflect.TypeOf(model.Service{}))
 		if err != nil {
 			return nil, err
 		}

@@ -68,15 +68,24 @@ func Serialize(id string, parm string, col string, c interface{}) error {
 	}
 
 	data, err := json.Marshal(c)
+	if err != nil {
+		return err
+	}
 	//	json := fmt.Sprintf("%v", user)
 	var b interface{}
 	err = bson.UnmarshalExtJSON([]byte(data), true, &b)
+	if err != nil {
+		return err
+	}
 
 	collection := client.Database("nettica").Collection(col)
 
 	findstr := fmt.Sprintf("{\"%s\":\"%s\"}", parm, id)
 	var filter interface{}
 	err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
+	if err != nil {
+		return err
+	}
 
 	update := bson.M{
 		"$set": b,
@@ -109,6 +118,9 @@ func Deserialize(id string, parm string, col string, t reflect.Type) (interface{
 	findstr := fmt.Sprintf("{\"%s\":\"%s\"}", parm, id)
 	var filter interface{}
 	err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
+	if err != nil {
+		return nil, err
+	}
 
 	switch t.String() {
 	case "model.Account":
@@ -173,6 +185,9 @@ func DeleteVPN(id string, col string) error {
 	findstr := fmt.Sprintf("{\"id\":\"%s\"}", id)
 	var filter interface{}
 	err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
+	if err != nil {
+		return err
+	}
 
 	collection.FindOneAndDelete(ctx, filter)
 
@@ -196,6 +211,9 @@ func Delete(id string, ident string, col string) error {
 	findstr := fmt.Sprintf("{\"%s\":\"%s\"}", ident, id)
 	var filter interface{}
 	err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
+	if err != nil {
+		return err
+	}
 
 	collection.FindOneAndDelete(ctx, filter)
 
@@ -221,6 +239,9 @@ func ReadAllDevices(param string, id string) ([]*model.Device, error) {
 	if id != "" {
 		findstr := fmt.Sprintf("{\"%s\":\"%s\"}", param, id)
 		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
+		if err != nil {
+			return nil, err
+		}
 
 	}
 
@@ -262,6 +283,9 @@ func ReadAllVPNs(param string, id string) ([]*model.VPN, error) {
 	if id != "" {
 		findstr := fmt.Sprintf("{\"%s\":\"%s\"}", param, id)
 		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
+		if err != nil {
+			return nil, err
+		}
 
 	}
 
@@ -301,6 +325,9 @@ func ReadAllNetworks(param string, id string) ([]*model.Network, error) {
 	if id != "" {
 		findstr := fmt.Sprintf("{\"%s\":\"%s\"}", param, id)
 		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
+		if err != nil {
+			return nil, err
+		}
 
 	}
 
@@ -375,6 +402,9 @@ func ReadAllAccounts(email string) ([]*model.Account, error) {
 	if email != "" {
 		findstr := fmt.Sprintf("{\"%s\":\"%s\"}", "email", email)
 		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
+		if err != nil {
+			return nil, err
+		}
 
 	}
 
@@ -416,6 +446,9 @@ func ReadAllAccountsForID(id string) ([]*model.Account, error) {
 	if id != "" {
 		findstr := fmt.Sprintf("{\"%s\":\"%s\"}", "parent", id)
 		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
+		if err != nil {
+			return nil, err
+		}
 
 	}
 
@@ -456,6 +489,9 @@ func ReadAccountForUser(email string, accountid string) (*model.Account, error) 
 	if email != "" {
 		findstr := fmt.Sprintf("{\"email\":\"%s\", \"parent\":\"%s\"}", email, accountid)
 		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
+		if err != nil {
+			return nil, err
+		}
 
 	}
 
@@ -497,6 +533,9 @@ func ReadAllSubscriptions(email string) ([]*model.Subscription, error) {
 	if email != "" {
 		findstr := fmt.Sprintf("{\"%s\":\"%s\"}", "email", email)
 		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
+		if err != nil {
+			return nil, err
+		}
 
 	}
 
@@ -532,12 +571,15 @@ func ReadAllServices(email string) ([]*model.Service, error) {
 		return nil, err
 	}
 
-	collection := client.Database("nettica").Collection("service")
+	collection := client.Database("nettica").Collection("services")
 
 	filter := bson.D{}
 	if email != "" {
 		findstr := fmt.Sprintf("{\"%s\":\"%s\"}", "email", email)
 		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
+		if err != nil {
+			return nil, err
+		}
 
 	}
 
@@ -601,12 +643,15 @@ func ReadServiceHost(id string) ([]*model.Service, error) {
 		return nil, err
 	}
 
-	collection := client.Database("nettica").Collection("service")
+	collection := client.Database("nettica").Collection("services")
 
 	filter := bson.D{}
 	if id != "" {
 		findstr := fmt.Sprintf("{\"%s\":\"%s\"}", "serviceGroup", id)
 		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
+		if err != nil {
+			return nil, err
+		}
 
 	}
 
@@ -643,13 +688,21 @@ func UpsertUser(user *model.User) error {
 	collection := client.Database("nettica").Collection("users")
 
 	data, err := json.Marshal(user)
-	//	json := fmt.Sprintf("%v", user)
+	if err != nil {
+		return err
+	}
 	var b interface{}
 	err = bson.UnmarshalExtJSON([]byte(data), true, &b)
+	if err != nil {
+		return err
+	}
 
 	findstr := fmt.Sprintf("{\"email\":\"%s\"}", user.Email)
 	var filter interface{}
 	err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
+	if err != nil {
+		return err
+	}
 
 	update := bson.M{
 		"$set": b,
@@ -657,6 +710,148 @@ func UpsertUser(user *model.User) error {
 
 	opts := options.Update().SetUpsert(true)
 	_, err = collection.UpdateOne(ctx, filter, update, opts)
+	if err != nil {
+		log.Error(err)
+	}
+
+	return nil
+}
+
+// Initialize the mongo db and create the indexes
+func Initialize() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+		return err
+	}
+
+	// users
+
+	collection := client.Database("nettica").Collection("users")
+
+	// create an index for the email field
+	index := mongo.IndexModel{Keys: bson.M{"email": 1}, Options: nil}
+	_, err = collection.Indexes().CreateOne(ctx, index)
+	if err != nil {
+		log.Error(err)
+	}
+
+	// accounts
+
+	_, err = client.Database("nettica").Collection("accounts").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"id": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+	_, err = client.Database("nettica").Collection("accounts").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"email": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+	_, err = client.Database("nettica").Collection("accounts").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"parent": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+	_, err = client.Database("nettica").Collection("accounts").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"apiKey": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+
+	// devices
+
+	_, err = client.Database("nettica").Collection("devices").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"id": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+	_, err = client.Database("nettica").Collection("devices").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"accountid": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+	_, err = client.Database("nettica").Collection("devices").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"createdBy": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+	_, err = client.Database("nettica").Collection("devices").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"apiKey": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+
+	// networks
+
+	_, err = client.Database("nettica").Collection("networks").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"id": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+	_, err = client.Database("nettica").Collection("networks").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"accountid": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+
+	// vpns
+
+	_, err = client.Database("nettica").Collection("vpns").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"id": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+	_, err = client.Database("nettica").Collection("vpns").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"accountid": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+	_, err = client.Database("nettica").Collection("vpns").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"deviceid": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+	_, err = client.Database("nettica").Collection("vpns").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"netid": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+	_, err = client.Database("nettica").Collection("vpns").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"createdBy": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+
+	// subscriptions
+
+	_, err = client.Database("nettica").Collection("subscriptions").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"id": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+	_, err = client.Database("nettica").Collection("subscriptions").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"accountid": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+	_, err = client.Database("nettica").Collection("subscriptions").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"email": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+
+	// services
+
+	_, err = client.Database("nettica").Collection("services").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"id": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+	_, err = client.Database("nettica").Collection("services").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"accountid": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+	_, err = client.Database("nettica").Collection("services").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"email": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+	_, err = client.Database("nettica").Collection("services").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"serviceGroup": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+
+	// servers
+
+	_, err = client.Database("nettica").Collection("servers").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"id": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+	_, err = client.Database("nettica").Collection("servers").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"serviceGroup": 1}, Options: nil})
 	if err != nil {
 		log.Error(err)
 	}
