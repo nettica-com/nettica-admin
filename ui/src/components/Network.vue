@@ -312,8 +312,15 @@
                                 <v-select return-object v-model="acntList.selected" :items="acntList.items" item-text="text"
                                     item-value="value" label="For this account"
                                     :rules="[v => !!v || 'Account is required',]" single persistent-hint />
-
-
+                                <v-combobox v-model="net.tags" chips hint="Enter a tag, hit tab, hit enter." label="Tags"
+                                    multiple dark>
+                                    <template v-slot:selection="{ attrs, item, select, selected }">
+                                        <v-chip v-bind="attrs" :input-value="selected" close @click="select"
+                                            @click:close="net.tags.splice(net.tags.indexOf(item), 1)">
+                                            <strong>{{ item }}</strong>&nbsp;
+                                        </v-chip>
+                                    </template>
+                                </v-combobox>
                                 <v-combobox v-model="net.default.address" :items="net.default.address"
                                     label="IP subnet for this network (ex. 10.10.10.0/24)"
                                     :rules="[v => !!v || 'Subnet is required',]" multiple chips persistent-hint required />
@@ -327,15 +334,10 @@
                                         </v-chip>
                                     </template>
                                 </v-combobox>
-                                <v-combobox v-model="net.tags" chips hint="Enter a tag, hit tab, hit enter." label="Tags"
-                                    multiple dark>
-                                    <template v-slot:selection="{ attrs, item, select, selected }">
-                                        <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                            @click:close="net.tags.splice(net.tags.indexOf(item), 1)">
-                                            <strong>{{ item }}</strong>&nbsp;
-                                        </v-chip>
-                                    </template>
-                                </v-combobox>
+                                <v-switch v-model="net.policies.userEndpoints" color="success" inset
+                                    label="Users can create Endpoints" />
+                                <v-switch v-model="net.policies.onlyEndpoints" color="success" inset
+                                    label="Clients cannot see other clients" />
                                 <v-switch v-model="net.default.upnp" color="success" inset
                                     label="Enable UPnP where possible" />
                                 <v-switch v-model="net.default.enableDns" color="success" inset
