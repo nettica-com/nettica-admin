@@ -225,8 +225,12 @@ func ReadDevices() ([]*model.Device, error) {
 }
 
 // ReadDevices all devices
+// This code needs a severe rewrite
 func ReadDevicesForUser(email string) ([]*model.Device, error) {
 	accounts, err := mongo.ReadAllAccounts(email)
+	if err != nil {
+		return nil, err
+	}
 
 	results := make([]*model.Device, 0)
 
@@ -234,65 +238,89 @@ func ReadDevicesForUser(email string) ([]*model.Device, error) {
 		if account.Status == "Active" {
 
 			if account.NetId != "" {
-				// read all the vpns with this netid
-				vpns, err := mongo.ReadAllVPNs("netid", account.NetId)
-				if err != nil {
-					return nil, err
-				}
-				// read all the devices ...
-				devices, err := mongo.ReadAllDevices("accountid", account.Parent)
-				if err != nil {
-					return nil, err
-				}
-				// ... and filter them by the vpns
-				for _, device := range devices {
-					for _, vpn := range vpns {
-						if device.Id == vpn.DeviceID {
-							device.VPNs = append(device.VPNs, vpn)
-							results = append(results, device)
+				if account.Role == "User" || account.Role == "Guest" {
+					// users and guests cannot see devices they did not create
+				} else {
+
+					// read all the vpns with this netid
+					vpns, err := mongo.ReadAllVPNs("netid", account.NetId)
+					if err != nil {
+						return nil, err
+					}
+					// read all the devices ...
+					devices, err := mongo.ReadAllDevices("accountid", account.Parent)
+					if err != nil {
+						return nil, err
+					}
+					// ... and filter them by the vpns
+					for _, device := range devices {
+						for _, vpn := range vpns {
+							if device.Id == vpn.DeviceID {
+								device.VPNs = append(device.VPNs, vpn)
+								results = append(results, device)
+							}
 						}
 					}
 				}
 			} else {
-				devices, err := mongo.ReadAllDevices("accountid", account.Parent)
-				if err != nil {
-					return nil, err
-				}
+				if account.Role == "User" || account.Role == "Guest" {
+					// users and guests cannot see devices they did not create
+				} else {
 
-				vpns, err := mongo.ReadAllVPNs("accountid", account.Parent)
-				if err != nil {
-					return nil, err
-				}
-				for _, device := range devices {
-					for _, vpn := range vpns {
-						if device.Id == vpn.DeviceID {
-							device.VPNs = append(device.VPNs, vpn)
+					devices, err := mongo.ReadAllDevices("accountid", account.Parent)
+					if err != nil {
+						return nil, err
+					}
+
+					vpns, err := mongo.ReadAllVPNs("accountid", account.Parent)
+					if err != nil {
+						return nil, err
+					}
+					for _, device := range devices {
+						for _, vpn := range vpns {
+							if device.Id == vpn.DeviceID {
+								device.VPNs = append(device.VPNs, vpn)
+							}
 						}
 					}
+					results = append(results, devices...)
 				}
-				results = append(results, devices...)
 			}
-			// If this is a child account, read the devices created by the user
-			if account.Id != account.Parent {
-				devices, err := mongo.ReadAllDevices("createdBy", account.Email)
-				if err != nil {
-					return nil, err
-				}
+		}
+	}
 
-				// loop through the results and add any missing devices
-				for _, device := range devices {
-					found := false
-					for _, result := range results {
-						if device.Id == result.Id {
-							found = true
-							break
-						}
-					}
-					if !found {
-						results = append(results, device)
-					}
-				}
+	// now handle users and guests who can only see devices they created
+	vpns, err := mongo.ReadAllVPNs("createdBy", email)
+	if err != nil {
+		return nil, err
+	}
+
+	// now read devices created by this user and add any missing
+	devices, err := mongo.ReadAllDevices("createdBy", email)
+	if err != nil {
+		return nil, err
+	}
+
+	// loop through the results and add any missing devices
+	for _, device := range devices {
+
+		// associate any vpns to the device
+		for _, vpn := range vpns {
+			if device.Id == vpn.DeviceID {
+				device.VPNs = append(device.VPNs, vpn)
 			}
+		}
+
+		// and add the device
+		found := false
+		for _, result := range results {
+			if device.Id == result.Id {
+				found = true
+				break
+			}
+		}
+		if !found {
+			results = append(results, device)
 		}
 	}
 
