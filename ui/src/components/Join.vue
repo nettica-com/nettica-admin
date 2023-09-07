@@ -22,7 +22,7 @@
           <v-text-field label="Name" v-model="account.name" readonly></v-text-field>
           <v-text-field label="Role" v-model="account.role" readonly></v-text-field>
           <v-text-field label="Email" v-model="account.email" readonly></v-text-field>
-          <v-text-field label="Invitation From" v-model="account.from" readonly></v-text-field>
+          <v-text-field label="Invitation From" v-model="account.createdBy" readonly></v-text-field>
           <v-text-field label="Network" v-model="account.netName" readonly></v-text-field>
           <v-text-field label="Status" v-model="account.status" readonly></v-text-field>
           <v-btn color="primary" v-on:click="login">Login</v-btn>
