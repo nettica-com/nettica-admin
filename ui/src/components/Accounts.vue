@@ -109,6 +109,9 @@
                     <v-row>
                         <v-col cols="12">
                             <v-form ref="form" v-model="valid">
+                                <v-select return-object v-model="acntList.selected" :items="acntList.items" item-text="text"
+                                    item-value="value" label="To this account" :rules="[v => !!v || 'Account is required',]" single
+                                    persistent-hint required />
                                 <v-select return-object v-model="netList.selected" :items="netList.items" item-text="text"
                                     item-value="value" label="To this net" :rules="[v => !!v || 'Net is required',]" single
                                     persistent-hint required />
@@ -179,7 +182,7 @@ export default {
         inEdit: false,
         open: [],
         active: [],
-
+        acntList: {},
         dialogCreate: false,
         dialogAPI: false,
         inDelete: false,
@@ -407,13 +410,16 @@ mounted() {
 
 
         startInvite() {
-            this.dialogCreate = true;
             this.account = {
                 name: "",
                 from: this.authuser.email,
                 email: "",
             }
             this.netList = {
+                selected: { "text": "", "value": "" },
+                items: []
+            }
+            this.acntList = {
                 selected: { "text": "", "value": "" },
                 items: []
             }
@@ -425,6 +431,27 @@ mounted() {
             }
 
             this.netList.selected = this.netList.items[selected];
+
+            selected = 0;
+            var x = 0;
+            console.log("accounts = ", this.accounts)
+            for (let i = 0; i < this.accounts.length; i++) {
+                if (this.accounts[i].role == "Owner" || this.accounts[i].role == "Admin") {
+                    this.acntList.items[x] = { "text": this.accounts[i].accountName + " - " + this.accounts[i].parent, "value": this.accounts[i].parent }
+                    if (this.acntList.items[x].value == this.accounts[i].id) {
+                        selected = x;
+                    }
+                    x++;
+                }
+            }   
+
+            this.acntList.selected = this.acntList.items[selected];
+
+            if (x == 0) {
+                this.errorAccount("You must be an admin or owner to invte a member")
+                return
+            }
+            this.dialogCreate = true;
 
         },
 
