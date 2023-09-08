@@ -53,17 +53,18 @@ const actions = {
         //        dispatch('readQrcodes')
         //        dispatch('readConfigs')
       })
-      .catch(err => {
-        commit('error', err)
+      .catch(error => {
+        if (error.response) {
+          commit('error', error.response.data.error)
+        }
       })
   },
 
   create({ commit, dispatch }, device) {
-    commit('error', null)
     ApiService.post("/device", device)
       .then(resp => {
-        dispatch('readConfig', resp)
         commit('create', resp)
+        commit('error', "Device created")
       })
       .catch(error => {
         if (error.response) {
@@ -73,10 +74,10 @@ const actions = {
   },
 
   update({ commit, dispatch }, device) {
-    commit('error', null)
     ApiService.patch(`/device/${device.id}`, device)
       .then(resp => {
         commit('update', resp)
+        commit('error', "Device updated")
       })
       .catch(error => {
         if (error.response) {
@@ -89,9 +90,12 @@ const actions = {
     ApiService.delete(`/device/${device.id}`)
       .then(() => {
         commit('delete', device)
+        commit('error', "Device deleted")
       })
-      .catch(err => {
-        commit('error', err)
+      .catch(error => {
+        if (error.response) {
+          commit('error', error.response.data.error)
+        }
       })
   },
 

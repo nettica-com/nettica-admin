@@ -8,21 +8,24 @@ import (
 )
 
 type Account struct {
-	Id          string    `json:"id"          bson:"id"`
-	Parent      string    `json:"parent"      bson:"parent"`
-	Email       string    `json:"email"       bson:"email"`
-	Name        string    `json:"name"        bson:"name"`
-	AccountName string    `json:"accountName" bson:"accountName"`
-	NetId       string    `json:"netId"       bson:"netId"`
-	NetName     string    `json:"netName"     bson:"netName"`
-	Picture     string    `json:"picture"     bson:"picture"`
-	Role        string    `json:"role"        bson:"role"`
-	Status      string    `json:"status"      bson:"status"`
-	ApiKey      string    `json:"apiKey"      bson:"apiKey"`
-	CreatedBy   string    `json:"createdBy"   bson:"createdBy"`
-	UpdatedBy   string    `json:"updatedBy"   bson:"updatedBy"`
-	Created     time.Time `json:"created"     bson:"created"`
-	Updated     time.Time `json:"updated"     bson:"updated"`
+	Id          string     `json:"id"          bson:"id"`
+	Parent      string     `json:"parent"      bson:"parent"`
+	Email       string     `json:"email"       bson:"email"`
+	Name        string     `json:"name"        bson:"name"`
+	AccountName string     `json:"accountName" bson:"accountName"`
+	NetId       string     `json:"netId"       bson:"netId"`
+	NetName     string     `json:"netName"     bson:"netName"`
+	Picture     string     `json:"picture"     bson:"picture"`
+	Role        string     `json:"role"        bson:"role"`
+	Status      string     `json:"status"      bson:"status"`
+	ApiKey      string     `json:"apiKey"      bson:"apiKey"`
+	CreatedBy   string     `json:"createdBy"   bson:"createdBy"`
+	UpdatedBy   string     `json:"updatedBy"   bson:"updatedBy"`
+	Created     time.Time  `json:"created"     bson:"created"`
+	Updated     time.Time  `json:"updated"     bson:"updated"`
+	Networks    []*Network `json:"networks"    bson:"networks"`
+	VPNs        []*VPN     `json:"vpns"        bson:"vpns"`
+	Devices     []*Device  `json:"devices"     bson:"devices"`
 }
 
 // IsValid check if model is valid

@@ -41,8 +41,10 @@ const actions = {
       .then(resp => {
         commit('accounts', resp)
       })
-      .catch(err => {
-        commit('error', err)
+      .catch(error => {
+        if (error.response) {
+          commit('error', error.response.data.error)
+        }
       })
   },
 
@@ -62,16 +64,18 @@ const actions = {
         console.log( "readMembers: ", resp)
         commit('members', {  id: id, members: resp })
       })
-      .catch(err => {
-        commit('error', err)
+      .catch(error => {
+        if (error.response) {
+          commit('error', error.response.data.error)
+        }
       })
   },
 
   create({ commit, dispatch }, account) {
-    commit('error', null)
     ApiService.post(`/accounts/`, account)
       .then(resp => {
         commit('account', resp)
+        commit('error', "Account created")
       }) 
       .catch(error => {
         if (error.response) {
@@ -81,10 +85,10 @@ const actions = {
   },
 
   update({ commit, dispatch }, account) {
-    commit('error', null)
     ApiService.patch(`/accounts/${account.id}`, account)
       .then(resp => {
         commit('update', resp)
+        commit('error', "Account updated")
       })
       .catch(error => {
         if (error.response) {
@@ -97,18 +101,24 @@ const actions = {
     ApiService.delete(`/accounts/${account.id}`)
       .then(() => {
         commit('delete', account)
+        commit('error', "Account deleted")
       })
-      .catch(err => {
-        commit('error', err)
+      .catch(error => {
+        if (error.response) {
+          commit('error', error.response.data.error)
+        }
       })
   },
 
   email({ commit }, account) {
     ApiService.get(`/accounts/${account.id}/invite`)
       .then(() => {
+        commit('error', "Email sent")
       })
-      .catch(err => {
-        commit('error', err)
+      .catch(error => {
+        if (error.response) {
+          commit('error', error.response.data.error)
+        }
       })
   },
 

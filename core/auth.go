@@ -130,7 +130,7 @@ func AuthFromContext(c *gin.Context, id string) (*model.Account, interface{}, er
 		}
 
 		for _, a := range accounts {
-			if a.Id == device.AccountID {
+			if a.Parent == device.AccountID {
 				account = a
 				break
 			}
@@ -169,7 +169,7 @@ func AuthFromContext(c *gin.Context, id string) (*model.Account, interface{}, er
 		}
 
 		for _, a := range accounts {
-			if a.Id == net.AccountID {
+			if a.Parent == net.AccountID {
 				account = a
 				break
 			}
@@ -197,7 +197,7 @@ func AuthFromContext(c *gin.Context, id string) (*model.Account, interface{}, er
 		}
 
 		for _, a := range accounts {
-			if a.Id == vpn.AccountID {
+			if a.Parent == vpn.AccountID {
 				account = a
 				break
 			}
@@ -230,7 +230,7 @@ func AuthFromContext(c *gin.Context, id string) (*model.Account, interface{}, er
 		}
 
 		for _, a := range accounts {
-			if a.Id == service.AccountID {
+			if a.Parent == service.AccountID {
 				account = a
 				break
 			}

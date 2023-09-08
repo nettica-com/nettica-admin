@@ -54,16 +54,18 @@ const actions = {
         //        dispatch('readQrcodes')
         //        dispatch('readConfigs')
       })
-      .catch(err => {
-        commit('error', err)
+      .catch(error => {
+        if (error.response) {
+          commit('error', error.response.data.error)
+        }
       })
   },
 
   create({ commit, dispatch }, vpn) {
-    commit('error', null)
     ApiService.post("/vpn", vpn)
       .then(resp => {
         commit('create', resp)
+        commit('error', "VPN created")
       })
       .catch((error) => {
         if (error.response) {
@@ -73,10 +75,10 @@ const actions = {
   },
 
   update({ commit, dispatch }, vpn) {
-    commit('error', null)
     ApiService.patch(`/vpn/${vpn.id}`, vpn)
       .then(resp => {
         commit('update', resp)
+        commit('error', "VPN updated")
       })
       .catch((error) => {
         if (error.response) {
@@ -87,10 +89,10 @@ const actions = {
   },
 
   delete({ commit }, vpn) {
-    commit('error', null)
     ApiService.delete(`/vpn/${vpn.id}`)
       .then(() => {
         commit('delete', vpn)
+        commit('error', "VPN deleted")
       })
       .catch(error => {
         if (error.response) {

@@ -29,17 +29,19 @@ const actions = {
         commit('nets', resp)
         //        dispatch('readNetConfigs')
       })
-      .catch(err => {
-        commit('error', err)
+      .catch(error => {
+        if (error.response) {
+          commit('error', error.response.data.error)
+        }
       })
   },
 
   create({ commit, dispatch }, net) {
-    commit('error', null)
     ApiService.post("/net", net)
       .then(resp => {
         //        dispatch('readNetConfig', resp)
         commit('create', resp)
+        commit('error', "Net created")
       })
       .catch(error => {
         if (error.response) {
@@ -49,11 +51,11 @@ const actions = {
   },
 
   update({ commit, dispatch }, net) {
-    commit('error', null)
     ApiService.patch(`/net/${net.id}`, net)
       .then(resp => {
         //        dispatch('readNetConfig', resp)
         commit('update', resp)
+        commit('error', "Net updated")
       })
       .catch(error => {
         if (error.response) {
@@ -63,10 +65,10 @@ const actions = {
   },
 
   delete({ commit }, net) {
-    commit('error', null)
     ApiService.delete(`/net/${net.id}`)
       .then(() => {
         commit('delete', net)
+        commit('error', "Net deleted")
       })
       .catch(error => {
         if (error.response) {

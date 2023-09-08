@@ -1,15 +1,5 @@
 <template>
     <v-container style="padding-top:0px">
-        <v-snackbar v-model="notification.show" :center="true" :bottom="true" :color="notification.color">
-            <v-row>
-                <v-col cols="9" class="text-center">
-                    {{ notification.text }}
-                </v-col>
-                <v-col cols="3">
-                    <v-btn text @click="notification.show = false">close</v-btn>
-                </v-col>
-            </v-row>
-        </v-snackbar>
         <v-row><v-col cols="12">
                 <div>
                     <v-btn class="mb-3 mt-0" @click="Refresh()">
@@ -485,7 +475,6 @@ export default {
 
     data: () => ({
 
-        notification: {},
         acntList: {},
         showPrivate: false,
         showPreshared: false,
@@ -544,10 +533,9 @@ export default {
             accounts: 'account/accounts',
             devices: 'device/devices',
             nets: 'net/nets',
+            vpns: 'vpn/vpns',
             deviceQrcodes: 'device/deviceQrcodes',
             getvpnconfig: "vpn/getVPNConfig",
-            vpnError: "vpn/error",
-            deviceError: "device/error",
 
         }),
     },
@@ -555,7 +543,9 @@ export default {
     mounted() {
         this.readAllAccounts(this.user.email)
         this.readAllDevices()
+        this.readAllVPNs()
         this.readAllNetworks()
+
     },
 
     watch: {
@@ -563,31 +553,11 @@ export default {
             console.log("buildTree = ", this.buildTree())
             this.showTree = true
         },
-        vpnError: function (val) {
-            if (val == null) {
-                return
-            }
-            this.notification = {
-                show: true,
-                text: val,
-                timeout: 5000
-            }
-        },
-        deviceError: function (val) {
-            if (val == null) {
-                return
-            }
-            this.notification = {
-                show: true,
-                text: val,
-                timeout: 5000
-            }
-        },
     },
 
     methods: {
         ...mapActions('device', {
-            errordevice: 'error',
+            errorDevice: 'error',
             readAllDevices: 'readAll',
             readQrCode: 'readQrcode',
             readConfig: 'readConfig',
@@ -613,6 +583,7 @@ export default {
             this.readAllAccounts(this.user.email)
             this.readAllDevices()
             this.readAllNetworks()
+            this.readAllVPNs()
             console.log("buildTree = ", this.buildTree())
         },
 
@@ -620,6 +591,7 @@ export default {
             await this.readAllAccounts(this.user.email)
             await this.readAllDevices()
             await this.readAllNetworks()
+            await this.readAllVPNs()
             console.log("buildTree = ", this.buildTree())
         },
 
@@ -827,7 +799,6 @@ export default {
 
             this.inEdit = false;
             this.updatevpn(this.vpn)
-            this.Refresh()
         },
 
 
@@ -886,62 +857,7 @@ export default {
             this.dialogServiceHost = true;
 
         },
-        startCopy(device) {
 
-            this.device = device;
-            //        this.readConfig(device);
-
-            this.netList = {
-                selected: { "text": this.device.netName, "value": this.device.netid },
-                items: []
-            }
-
-            var selected = 0;
-            for (let i = 0; i < this.nets.length; i++) {
-                this.netList.items[i] = { "text": this.nets[i].netName, "value": this.nets[i].id }
-                if (this.netList.items[i].text == this.device.netName) {
-                    selected = i
-                }
-            }
-
-            this.netList.selected = this.netList.items[selected];
-
-            this.dialogCopy = true;
-            this.dialogUpdate = false;
-
-        },
-        copy(device) {
-
-            this.noEdit = true;
-            this.device = device;
-
-            this.device.current.listenPort = parseInt(this.device.current.listenPort, 10);
-            this.device.current.persistentKeepalive = parseInt(this.device.current.persistentKeepalive, 10);
-            this.device.current.mtu = parseInt(this.device.current.mtu, 10);
-
-            var changed = false;
-            if (this.device.netid != this.netList.selected.value) {
-                this.device.netName = this.netList.selected.text
-                this.device.netid = this.netList.selected.value
-                changed = true;
-            }
-            this.device.netName = this.netList.selected.text
-            this.device.platform = this.platforms.selected.value
-
-            if (changed) {
-                this.device.id = ""
-                this.device.current.endpoint = ""
-                this.device.current.listenPort = 0
-                this.device.netName = this.netList.selected.text
-                this.device.netid = this.netList.selected.value
-                this.createdevice(device)
-
-            }
-
-            this.readAllHosts();
-
-            this.dialogCopy = false;
-        },
 
         updateEnable(device) {
             // the switch automatically updates device.enable to the proper value
@@ -959,12 +875,7 @@ export default {
             document.execCommand("copy");
             document.body.removeChild(dummy);
 
-            this.notification = {
-                show: true,
-                color: 'success',
-                text: "Copied to clipboard",
-                timeout: 2000,
-            }
+            this.errorDevice('Copied to clipboard');
 
         },
 
@@ -973,18 +884,13 @@ export default {
             this.noEdit = true;
             this.device = device;
 
-            device.platform = this.selected.platform.value
+            //device.platform = this.selected.platform.value
             console.log("platform = ", device.platform)
 
             // all good, submit
             this.dialogUpdate = false;
             this.dialogServiceHost = false;
             this.inEdit = false;
-            this.notification = {
-                show: true,
-                text: "Saved",
-                timeout: 2000,
-            }
 
             await this.updatedevice(device)
             await new Promise(r => setTimeout(r, 1000));

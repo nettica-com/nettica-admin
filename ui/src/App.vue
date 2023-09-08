@@ -46,7 +46,10 @@
         requiresAuth: 'auth/requiresAuth',
         authError: 'auth/error',
         clientError: 'host/error',
+        vpnError: 'vpn/error',
+        deviceError: 'device/error',
         netError: 'net/error',
+        accountError: 'account/error',
         serverError: 'server/error',
         serviceError: 'service/error',
         subscriptionError: 'subscription/error',
@@ -87,32 +90,47 @@
     watch: {
       authError(newValue, oldValue) {
         console.log(newValue)
-        this.notify('error', newValue);
+        this.notify(newValue);
       },
 
       clientError(newValue, oldValue) {
         console.log(newValue)
-        this.notify('error', newValue);
+        this.notify(newValue);
       },
 
       netError(newValue, oldValue) {
-        console.log(newValue)
-        this.notify('error', newValue);
+        this.notify(newValue);
+        this.errorNet(null)
+      },
+
+      accountError(newValue) {
+        this.notify(newValue);
+        this.errorAccount(null)
+      },
+
+      vpnError(newValue, oldValue) {
+        this.notify(newValue);
+        this.errorVpn(null)
+      },
+
+      deviceError(newValue, oldValue) {
+        this.notify(newValue);
+        this.errorDevice(null)
       },
 
       serviceError(newValue, oldValue) {
-        console.log(newValue)
-        this.notify('error', newValue);
+        this.notify(newValue);
+        this.errorService(null)
       },
 
       subscriptionError(newValue, oldValue) {
-        console.log(newValue)
-        this.notify('error', newValue);
+        this.notify(newValue);
+        this.errorSubscription(null)
       },
 
       serverError(newValue, oldValue) {
-        console.log(newValue)
-        this.notify('error', newValue);
+        this.notify(newValue);
+        this.errorServer(null)
       },
       requiresAuth(newValue, oldValue) {
         console.log(`Updating requiresAuth from ${oldValue} to ${newValue}`);
@@ -143,10 +161,36 @@
         oauth2_exchange: 'oauth2_exchange',
         oauth2_url: 'oauth2_url',
       }),
+      ...mapActions('account', {
+        errorAccount: 'error',
+      }),
+      ...mapActions('device', {
+        errorDevice: 'error',
+      }),
+      ...mapActions('vpn', {
+        errorVpn: 'error',
+      }),
+      ...mapActions('net', {
+        errorNet: 'error',
+      }),
+      ...mapActions('client', {
+        errorClient: 'error',
+      }),
+      ...mapActions('server', {
+        errorServer: 'error',
+      }),
+      ...mapActions('service', {
+        errorService: 'error',
+      }),
+      ...mapActions('subscription', {
+        errorSubscription: 'error',
+      }),
 
-      notify(color, msg) {
+      notify(msg) {
+        if (msg == null) {
+          return;
+        }
         this.notification.show = true;
-        this.notification.color = color;
         this.notification.text = msg;
         this.notification.timeout = 10;
       }

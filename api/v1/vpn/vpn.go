@@ -209,7 +209,7 @@ func updateVPN(c *gin.Context) {
 		}
 
 		if !authorized {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden"})
+			c.JSON(http.StatusForbidden, gin.H{"error": "You cannot update this VPN"})
 			return
 		}
 
@@ -306,6 +306,12 @@ func deleteVPN(c *gin.Context) {
 		log.Infof("Device %s deleted VPN %s", device.Name, id)
 
 	} else {
+
+		if vpn.CreatedBy != account.Email && account.Role != "Admin" && account.Role != "Owner" {
+			log.Infof("User %s is not an admin of %s", account.Email, account.Id)
+			c.JSON(http.StatusForbidden, gin.H{"error": "You cannot delete this VPN"})
+			return
+		}
 
 		log.Infof("User %s deleted vpn %s", account.Email, id)
 	}

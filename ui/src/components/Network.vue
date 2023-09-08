@@ -1,16 +1,5 @@
 <template>
     <v-container style="padding-top:0px">
-        <v-snackbar v-model="notification.show" :center="true" :bottom="true" :color="notification.color">
-            <v-row>
-                <v-col cols="9" class="text-center">
-                    {{ notification.text }}
-                </v-col>
-                <v-col cols="3">
-                    <v-btn text @click="notification.show = false">close</v-btn>
-                </v-col>
-            </v-row>
-        </v-snackbar>
-
         <div>
             <v-btn class="mb-3 mt-0" @click="Refresh()">
                 <v-icon dark>mdi-refresh</v-icon>
@@ -400,7 +389,6 @@ export default {
     name: 'Networks',
 
     data: () => ({
-        notification: {},
         acntList: {},
         showTree: false,
         showPrivate: false,
@@ -462,8 +450,6 @@ export default {
             hosts: 'host/hosts',
             accounts: 'account/accounts',
             getvpnconfig: "vpn/getVPNConfig",
-            vpnError: 'vpn/error',
-            netError: 'net/error',
 
         }),
         options() {
@@ -494,27 +480,6 @@ export default {
             console.log("buildTree = ", this.buildTree())
             this.showTree = true
         },
-        vpnError: function (val) {
-            if (val == null) {
-                return
-            }
-            this.notification = {
-                show: true,
-                text: val,
-                timeout: 5000
-            }
-        },
-        netError: function (val) {
-            if (val == null) {
-                return
-            }
-            this.notification = {
-                show: true,
-                text: val,
-                timeout: 5000
-            }
-        },
-
     },
 
 
@@ -532,9 +497,6 @@ export default {
             createNet: 'create',
             updateNet: 'update',
             deleteNet: 'delete',
-        }),
-        ...mapActions('server', {
-            readServer: 'read',
         }),
         ...mapActions('account', {
             readAllAccounts: 'readAll',
@@ -774,12 +736,6 @@ export default {
             // all good, submit
             this.dialogUpdate = false;
             this.updateNet(net)
-
-            this.notification = {
-                show: true,
-                text: "Net updated",
-                timeout: 2000,
-            }
 
         },
         updateVPN(vpn) {

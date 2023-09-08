@@ -1,15 +1,5 @@
 <template>
     <v-container style="padding-top:0px">
-        <v-snackbar v-model="notification.show" :center="true" :bottom="true" :color="notification.color">
-            <v-row>
-                <v-col cols="9" class="text-center">
-                    {{ notification.text }}
-                </v-col>
-                <v-col cols="3">
-                    <v-btn text @click="notification.show = false">close</v-btn>
-                </v-col>
-            </v-row>
-        </v-snackbar>
         <v-row><v-col cols="12">
         <div>
             <v-btn class="mb-3 mt-0" @click="Refresh()">
@@ -184,7 +174,6 @@ export default {
     name: 'Accounts',
 
     data: () => ({
-        notification: {},
         showTree: false,
         items: [],
         inEdit: false,
@@ -250,7 +239,6 @@ export default {
             members: 'account/members',
             nets: 'net/nets',
             getMembers: 'account/getMembers',
-            accountError: 'account/error',
         }),
     },
 
@@ -278,26 +266,11 @@ mounted() {
                 this.networks[i + 1] = this.nets[i].netName
             }
         },
-        accountError(newError, oldError) {
-            if (newError != "") {
-                this.notification = {
-                    show: true,
-                    text: newError,
-                    timeout: 10000,
-                    color: "error",
-                }
-            } else {
-                this.notification = {
-                    show: true,
-                    text: "Changes saved.",
-                    timeout: 2000,
-                }
-            }
-        },
     },
 
     methods: {
         ...mapActions('account', {
+            errorAccount: 'error',
             readAllAccounts: 'readAll',
             readUsers: 'readUsers',
             readMembers: 'readMembers',
@@ -486,17 +459,6 @@ mounted() {
 
             if ((this.create_result) && (this.sendEmail)) {
                 this.emailUser(this.create_result)
-                this.notification = {
-                    show: true,
-                    text: "Email sent to " + this.create_result.email,
-                    timeout: 5000,
-                }
-            } else {
-                this.notification = {
-                    show: true,
-                    text: "User created.",
-                    timeout: 2000,
-                }
             }
 
             this.dialogCreate = false;
@@ -507,11 +469,6 @@ mounted() {
 
         resendEmail(account) {
             this.emailUser(account)
-            this.notification = {
-                show: true,
-                text: "Email sent to " + account.email,
-                timeout: 5000,
-            }
         },
 
         remove(item) {
@@ -522,14 +479,13 @@ mounted() {
                 this.delete(item)
             }
             this.readAllAccounts(this.authuser.email)
-            this.readAllNetworks()
 
         },
 
         email(account) {
             this.dialogCreate = false;
             if (account.Email == "") {
-                this.errorUser('email address is not defined')
+                this.errorAccount('email address is not defined')
                 return
             }
 
@@ -587,13 +543,7 @@ mounted() {
             console.log( "updateAccount: ", item.member)
             this.updateAccount(item.member)
             this.readAllAccounts(this.authuser.email)
-            this.buildTree()
 
-            this.notification = {
-                show: true,
-                text: "Changes saved.",
-                timeout: 2000,
-            }
 
         },
 
@@ -605,11 +555,7 @@ mounted() {
                 // updated to blank in the vuex store
                 this.Refresh()
                 this.readAllAccounts(this.authuser.email)
-                this.notification = {
-                    show: true,
-                    text: "API key regenerated.",
-                    timeout: 2000,
-                }
+                this.errorAccount("API key regenerated")
             }
         },
 

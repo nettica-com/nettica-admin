@@ -207,17 +207,24 @@ func updateNet(c *gin.Context) {
 func deleteNet(c *gin.Context) {
 	id := c.Param("id")
 
-	account, _, err := core.AuthFromContext(c, id)
+	account, v, err := core.AuthFromContext(c, id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to get account from context")
 		return
 	}
+	net := v.(*model.Network)
 
 	if account.Status == "Suspended" {
 		log.Infof("deleteNet: account %s is suspended", account.Email)
 		c.JSON(http.StatusForbidden, gin.H{"error": "account is suspended"})
+		return
+	}
+
+	if (account.Role != "Admin" && account.Role != "Owner") && account.Email != net.CreatedBy {
+		log.Infof("deleteNet: user %s is not an admin of %s", account.Email, account.Id)
+		c.JSON(http.StatusForbidden, gin.H{"error": "You cannot delete this network"})
 		return
 	}
 
