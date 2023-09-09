@@ -175,12 +175,6 @@ func updateService(c *gin.Context) {
 
 	service := v.(*model.Service)
 
-	if account.Role != "Admin" && account.Role != "Owner" {
-		log.Errorf("updateService: You must be an admin to update a service")
-		c.JSON(http.StatusForbidden, gin.H{"error": "You must be an admin to update a service"})
-		return
-	}
-
 	apikey := c.Request.Header.Get("X-API-KEY")
 
 	if apikey != "" {
