@@ -257,6 +257,7 @@ mounted() {
             for (let i = 0; i < newAccounts.length; i++) {
                 this.readMembers(newAccounts[i].parent);
             }
+            this.buildTree()
         },
         members(newMembers, oldMembers) {
             this.buildTree()
@@ -311,18 +312,38 @@ mounted() {
         buildTree() {
             // build the treeview using the accounts and users/members
             this.items = []
+            // create a root node for each parent account
+            let x = 0;
             for (let i = 0; i < this.accounts.length; i++) {
-                this.items[i] = {
-                    id: this.accounts[i].parent,
-                    name: this.accounts[i].accountName,
-                    account: this.accounts[i],
-                    status: this.accounts[i].status,
-                    icon: "mdi-account-group",
-                    isAccount: true,
-                    children: []
+                let found = false;
+                for (let j = 0; j < this.items.length; j++) {
+                    if (this.items[j].idx == this.accounts[i].parent) {
+                        found = true;
+                        break;
+                    }
                 }
-                if (this.accounts[i].id != this.accounts[i].parent) {
-                    var name = this.accounts[i].name
+                if (found == false) {
+                    this.items[x] = {
+                        id: "p-" + this.accounts[i].parent,
+                        idx: this.accounts[i].parent,
+                        name: this.accounts[i].accountName,
+                        account: this.accounts[i],
+                        status: this.accounts[i].status,
+                        icon: "mdi-account-group",
+                        isAccount: true,
+                        children: []
+                    }
+                    x++;
+                }
+            }
+
+            // create a child node for each account
+            let child = 0;
+            for (let i = 0; i < this.accounts.length; i++) {
+                for (let j = 0; j< this.items.length; j++) {
+                    if (this.accounts[i].parent == this.items[j].idx) {
+                        // append the account to the children of the parent
+                        var name = this.accounts[i].name
                         if (this.accounts[i].netName != "") {
                             name = name + " (" + this.accounts[i].netName + ")"
                         }
@@ -330,31 +351,46 @@ mounted() {
                         if (netName == "") {
                             netName = "All Networks"
                         }
-
-                    this.items[i].children[0] = {
-                        id: "m-" + this.accounts[i].id,
-                        name: name,
-                        netName: netName,
-                        isReadOnly: true,
-                        member: this.accounts[i],
-                        status: this.accounts[i].status,
-                        role: this.accounts[i].role,
-                        icon: "mdi-account",
-                        isAccount: false,
-                        isMember: true,
-                        children: []
+                        this.items[j].children[child] = {
+                            id: "c-" + this.accounts[i].id,
+                            idx: this.accounts[i].id,
+                            name: name,
+                            netName: netName,
+                            isReadOnly: true,
+                            member: this.accounts[i],
+                            status: this.accounts[i].status,
+                            role: this.accounts[i].role,
+                            icon: "mdi-account",
+                            isAccount: false,
+                            isMember: true,
+                            children: []
+                        }
                     }
                 }
+            }
+
+            // now loop through the members and add them if they are not already in the tree
+            for (let i = 0; i < this.items.length; i++) {
+
                 console.log("account: ", this.accounts[i])
-                var k = 0
                 var members = this.getMembers(this.accounts[i].parent)
 
                 if (members == null || members == undefined) {
                     continue
                 }
-
+                child = this.items[i].children.length
                 for (let j = 0; j < members.length; j++) {
-                    if (members[j].parent == this.accounts[i].parent) {
+                    if (members[j].parent == this.items[i].idx) {
+                        var found = false;
+                        for (let k = 0; k < this.items[i].children.length; k++) {
+                            if (this.items[i].children[k].idx == members[j].id) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (found == true) {
+                            continue
+                        }
                         var name = members[j].name
                         if (members[j].netName != "") {
                             name = name + " (" + members[j].netName + ")"
@@ -370,8 +406,9 @@ mounted() {
 
                         netList.items[0] = { "text": netName, "value": members[j].netId }
                         netList.selected = { "text": netName, "value": members[j].netId }
-                        this.items[i].children[k] = {
+                        this.items[i].children[child] = {
                             id: "m-" + members[j].id + "-" + members[j].netName,
+                            idx: members[j].id,
                             name: name,
                             member: members[j],
                             status: members[j].status,
@@ -384,7 +421,7 @@ mounted() {
                             isMember: true,
                             children: []
                         }
-                        k++
+                        child++
                     }
                 }
             }

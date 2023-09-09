@@ -106,7 +106,7 @@ func readDevice(c *gin.Context) {
 		return
 	}
 
-	if account.Status == "Suspended" {
+	if account != nil && account.Status == "Suspended" {
 		log.Infof("Account %s is suspended", account.Email)
 		c.JSON(http.StatusForbidden, gin.H{"error": "Account is suspended"})
 		return
@@ -164,12 +164,13 @@ func updateDevice(c *gin.Context) {
 		if device.ApiKey == apikey {
 			authorized = true
 		}
-		data.UpdatedBy = device.Name
 
 		if !authorized {
-			c.AbortWithStatus(http.StatusUnauthorized)
+			c.JSON(http.StatusForbidden, gin.H{"error": "You cannot update this device"})
 			return
 		}
+		data.UpdatedBy = device.Name
+
 	} else {
 
 		account, err := core.GetAccount(account.Email, device.AccountID)
@@ -242,12 +243,15 @@ func deleteDevice(c *gin.Context) {
 
 	apikey := c.Request.Header.Get("X-API-KEY")
 
-	if apikey != "" {
-
-		log.Infof("Device %s deleted VPN %s", device.Name, id)
-
-	} else {
+	if account != nil {
+		if account.Role != "Admin" && account.Role != "Owner" && device.CreatedBy != account.Email {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You cannot delete this device"})
+			return
+		}
 		log.Infof("User %s deleted device %s", account.Email, id)
+
+	} else if device != nil && device.Id == id && device.ApiKey == apikey {
+		log.Infof("Device %s deleted itself", device.Id)
 	}
 
 	err = core.DeleteDevice(id)
