@@ -87,7 +87,7 @@
                                         </v-chip>
                                     </template>
                                 </v-combobox>
-                                <v-combobox :readonly="!inEdit" v-model="selected.net.default.dns" chips
+                                <v-combobox v-model="selected.net.default.dns" chips
                                     hint="Enter IP address(es) and hit enter or leave empty."
                                     label="DNS servers for this network" multiple dark>
                                     <template v-slot:selection="{ attrs, item, select }">
