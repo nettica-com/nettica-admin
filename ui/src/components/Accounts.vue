@@ -440,6 +440,23 @@ mounted() {
             return 0;
             });
 
+            // now sort the children of each parent
+            for (let i = 0; i < this.items.length; i++) {
+                this.items[i].children.sort((a, b) => {
+                const nameA = a.name.toUpperCase(); // ignore upper and lowercase
+                const nameB = b.name.toUpperCase(); // ignore upper and lowercase
+                if (nameA < nameB) {
+                    return -1;
+                }
+                if (nameA > nameB) {
+                    return 1;
+                }
+
+                // names must be equal
+                return 0;
+                });
+            }
+
             this.showTree = true
             return this.items
 

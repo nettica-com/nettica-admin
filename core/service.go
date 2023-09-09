@@ -132,16 +132,17 @@ func CreateService(service *model.Service) (*model.Service, error) {
 	// Create a device for the service container
 
 	service.Device = &model.Device{
-		AccountID: service.AccountID,
-		Name:      strings.ToLower(service.ServiceType) + "." + service.Net.NetName,
-		Enable:    true,
-		Server:    os.Getenv("SERVER"),
-		Type:      "Service",
-		Platform:  "Linux",
-		Created:   time.Now().UTC(),
-		Updated:   time.Now().UTC(),
-		CreatedBy: service.CreatedBy,
-		UpdatedBy: service.CreatedBy,
+		AccountID:   service.AccountID,
+		Name:        strings.ToLower(service.ServiceType) + "." + service.Net.NetName,
+		Description: service.Description,
+		Enable:      true,
+		Server:      os.Getenv("SERVER"),
+		Type:        "Service",
+		Platform:    "Linux",
+		Created:     time.Now().UTC(),
+		Updated:     time.Now().UTC(),
+		CreatedBy:   service.CreatedBy,
+		UpdatedBy:   service.CreatedBy,
 	}
 
 	// Create the device

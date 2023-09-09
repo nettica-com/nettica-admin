@@ -219,7 +219,7 @@ func deleteService(c *gin.Context) {
 		return
 	}
 
-	if account.Role != "Admin" && account.Role != "Owner" {
+	if account != nil && account.Role != "Admin" && account.Role != "Owner" {
 		log.Errorf("deleteService: You must be an admin to delete a service")
 		c.JSON(http.StatusForbidden, gin.H{"error": "You must be an admin to delete a service"})
 		return
