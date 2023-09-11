@@ -282,20 +282,31 @@ func ReadVPNsForUser(email string) ([]*model.VPN, error) {
 
 	for _, account := range accounts {
 		if account.Status == "Active" {
-
+			var vpns []*model.VPN
 			if account.NetId != "" {
-				vpns, err := mongo.ReadAllVPNs("netid", account.NetId)
+				vpns, err = mongo.ReadAllVPNs("netid", account.NetId)
 				if err != nil {
 					return nil, err
 				}
-				results = append(results, vpns...)
 
 			} else {
-				vpns, err := mongo.ReadAllVPNs("accountid", account.Parent)
+				vpns, err = mongo.ReadAllVPNs("accountid", account.Parent)
 				if err != nil {
 					return nil, err
 				}
-				results = append(results, vpns...)
+			}
+			// if the vpn is not already in the results, add it
+			for _, vpn := range vpns {
+				found := false
+				for _, result := range results {
+					if result.Id == vpn.Id {
+						found = true
+						break
+					}
+				}
+				if !found {
+					results = append(results, vpn)
+				}
 			}
 
 		}

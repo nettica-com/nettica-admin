@@ -91,8 +91,11 @@
 
                                         <v-switch v-model="selected.device.enable" color="success" inset
                                             :label="selected.device.enable ? 'Enabled' : 'Disabled'" :readonly="!inEdit" />
-                                        <v-text-field v-model="selected.device.server" label="Server" :readonly="!inEdit" />
+                                        <v-select return-object v-model="selected.device.accountid" :items="acntList.items"
+                                            item-text="text" item-value="value" label="Account ID" single
+                                            persistent-hint :readonly="!inEdit" />
                                         <v-text-field v-model="selected.device.id" label="Device ID" readonly />
+                                        <v-text-field v-model="selected.device.server" label="Server" :readonly="!inEdit" />
                                         <v-text-field v-model="selected.device.apiKey" label="API Key" readonly
                                             :append-icon="showApiKey ? 'mdi-eye' : 'mdi-eye-off'"
                                             :type="showApiKey ? 'text' : 'password'"
@@ -487,7 +490,6 @@ export default {
         device: null,
         net: null,
         vpn: null,
-        vpns: [],
         items: [],
         active: [],
         open: [],
@@ -553,6 +555,17 @@ export default {
             console.log("buildTree = ", this.buildTree())
             this.showTree = true
         },
+
+        accounts: function (val) {
+            this.acntList = {
+                selected: { "text": "", "value": "" },
+                items: []
+            }
+
+            for (let i = 0; i < this.accounts.length; i++) {
+                this.acntList.items[i] = { "text": this.accounts[i].accountName + " - " + this.accounts[i].parent, "value": this.accounts[i].parent }
+            }           
+        },
     },
 
     methods: {
@@ -600,6 +613,7 @@ export default {
             this.items = []
             var k = 0
             for (let i = 0; i < this.devices.length; i++) {
+
                 this.items[i] = {
                     id: this.devices[i].id,
                     name: this.devices[i].name,
@@ -611,6 +625,7 @@ export default {
                     isDevice: true,
                     children: []
                 }
+ 
                 if (this.devices[i].type == "Service") {
                     this.items[i].icon = "mdi-cloud"
                     this.items[i].symbol = "cloud"
@@ -645,6 +660,7 @@ export default {
             // names must be equal
             return 0;
             });
+            console.log("items = ", this.items)
 
             return this.items
 
@@ -886,6 +902,9 @@ export default {
 
             //device.platform = this.selected.platform.value
             console.log("platform = ", device.platform)
+
+            // set the account id
+            device.accountid = this.acntList.selected.value
 
             // all good, submit
             this.dialogUpdate = false;

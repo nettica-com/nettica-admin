@@ -156,19 +156,33 @@ func ReadNetworks(email string) ([]*model.Network, error) {
 	results := make([]*model.Network, 0)
 
 	for _, account := range accounts {
+		var nets []*model.Network
+
 		if account.NetId != "" && account.Status == "Active" {
-			nets, err := mongo.ReadAllNetworks("id", account.NetId)
+			nets, err = mongo.ReadAllNetworks("id", account.NetId)
 			if err != nil {
 				return nil, err
 			}
-			results = append(results, nets...)
 		} else if account.Status == "Active" {
-			nets, err := mongo.ReadAllNetworks("accountid", account.Parent)
+			nets, err = mongo.ReadAllNetworks("accountid", account.Parent)
 			if err != nil {
 				return nil, err
 			}
-			results = append(results, nets...)
 		}
+		// if the network is not already in the results, add it
+		for _, net := range nets {
+			found := false
+			for _, result := range results {
+				if result.Id == net.Id {
+					found = true
+					break
+				}
+			}
+			if !found {
+				results = append(results, net)
+			}
+		}
+
 	}
 
 	sort.Slice(results, func(i, j int) bool {
