@@ -147,41 +147,41 @@
                                 <v-card-text width="600" class="px-3">
                                     <v-icon class="material-symbols-outlined" size="50">hub</v-icon>
                                     <h3 class="text-h5 mb-2">
-                                        {{ selected.netName }}
+                                        {{ selected.vpn.netName }}
                                     </h3>
                                 </v-card-text>
                                 <v-divider></v-divider>
                                 <v-row class="px-3" width="600">
                                     <v-col flex>
-                                        <v-text-field v-model="selected.name" label="DNS name" :readonly="!inEdit" />
-                                        <v-combobox :readonly="!inEdit" v-model="selected.current.address" chips
+                                        <v-text-field v-model="selected.vpn.name" label="DNS name" :readonly="!inEdit" />
+                                        <v-combobox :readonly="!inEdit" v-model="selected.vpn.current.address" chips
                                             hint="Write IPv4 or IPv6 CIDR and hit enter" label="Addresses" multiple dark>
                                             <template v-slot:selection="{ attrs, item, select }">
                                                 <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                                    @click:close="selected.current.address.splice(selected.current.address.indexOf(item), 1)">
+                                                    @click:close="selected.vpn.current.address.splice(selected.vpn.current.address.indexOf(item), 1)">
                                                     <strong>{{ item }}</strong>&nbsp;
                                                 </v-chip>
                                             </template>
                                         </v-combobox>
-                                        <v-combobox :readonly="!inEdit" v-model="selected.current.dns" chips
+                                        <v-combobox :readonly="!inEdit" v-model="selected.vpn.current.dns" chips
                                             hint="Enter IP address(es) and hit enter or leave empty."
                                             label="DNS servers for this device" multiple dark>
                                             <template v-slot:selection="{ attrs, item, select }">
 
                                                 <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                                    @click:close="selected.current.dns.splice(selected.current.dns.indexOf(item), 1)">
+                                                    @click:close="selected.vpn.current.dns.splice(selected.vpn.current.dns.indexOf(item), 1)">
                                                     <strong>{{ item }}</strong>&nbsp;
                                                 </v-chip>
                                             </template>
                                         </v-combobox>
-                                        <v-text-field :readonly="!inEdit" v-model="selected.current.endpoint"
+                                        <v-text-field :readonly="!inEdit" v-model="selected.vpn.current.endpoint"
                                             label="Public endpoint for clients" />
-                                        <v-text-field :readonly="!inEdit" v-model="selected.current.listenPort"
+                                        <v-text-field :readonly="!inEdit" v-model="selected.vpn.current.listenPort"
                                             type="number" label="Listen port" />
-                                        <v-switch v-model="selected.enable" color="success" inset
-                                        :label="selected.enable ? 'Enabled' : 'Disabled'" :readonly="!inEdit" />
-                                        <p class="text-caption">Created by {{ selected.createdBy }} at {{ selected.created | formatDate }}<br/>
-                                                            Last update by {{ selected.updatedBy }} at {{ selected.updated | formatDate }}</p>
+                                        <v-switch v-model="selected.vpn.enable" color="success" inset
+                                        :label="selected.vpn.enable ? 'Enabled' : 'Disabled'" :readonly="!inEdit" />
+                                        <p class="text-caption">Created by {{ selected.vpn.createdBy }} at {{ selected.vpn.created | formatDate }}<br/>
+                                                            Last update by {{ selected.vpn.updatedBy }} at {{ selected.vpn.updated | formatDate }}</p>
 
                                     </v-col>
                                 </v-row>
@@ -191,13 +191,13 @@
                                         <v-expansion-panel-content>
                                             <div class="d-flex flex-no-wrap justify-space-between">
                                                 <v-col cols="12">
-                                                    <v-combobox v-model="selected.current.allowedIPs" chips
+                                                    <v-combobox v-model="selected.vpn.current.allowedIPs" chips
                                                         hint="Write IPv4 or IPv6 CIDR and hit enter" label="Allowed IPs"
                                                         multiple dark>
 
                                                         <template v-slot:selection="{ attrs, item, select }">
                                                             <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                                                @click:close="selected.current.allowedIPs.splice(selected.current.allowedIPs.indexOf(item), 1)">
+                                                                @click:close="selected.vpn.current.allowedIPs.splice(selected.vpn.current.allowedIPs.indexOf(item), 1)">
                                                                 <strong>{{ item }}</strong>&nbsp;
                                                             </v-chip>
                                                         </template>
@@ -205,38 +205,38 @@
                                                     <v-switch v-model="publicSubnets" color="success" inset
                                                         label="Route all public traffic through tunnel" />
 
-                                                    <v-text-field v-model="selected.id" label="VPN ID" readonly />
-                                                    <v-text-field v-model="selected.netid" label="Network ID" readonly />
-                                                    <v-text-field v-model="selected.deviceid" label="Device ID" disabled />
-                                                    <v-text-field v-model="selected.current.table" label="Table" />
-                                                    <v-text-field v-model="selected.current.publicKey" label="Public key" />
-                                                    <v-text-field v-model="selected.current.privateKey" label="Private key"
+                                                    <v-text-field v-model="selected.vpn.id" label="VPN ID" readonly />
+                                                    <v-text-field v-model="selected.vpn.netid" label="Network ID" readonly />
+                                                    <v-text-field v-model="selected.vpn.deviceid" label="Device ID" disabled />
+                                                    <v-text-field v-model="selected.vpn.current.table" label="Table" />
+                                                    <v-text-field v-model="selected.vpn.current.publicKey" label="Public key" />
+                                                    <v-text-field v-model="selected.vpn.current.privateKey" label="Private key"
                                                         autocomplete="off"
                                                         :append-icon="showPrivate ? 'mdi-eye' : 'mdi-eye-off'"
                                                         :type="showPrivate ? 'text' : 'password'"
                                                         hint="Clear this field to have the client manage its private key"
                                                         @click:append="showPrivate = !showPrivate" />
-                                                    <v-text-field v-model="selected.current.presharedKey"
+                                                    <v-text-field v-model="selected.vpn.current.presharedKey"
                                                         label="Preshared Key" autocomplete="off"
                                                         :append-icon="showPreshared ? 'mdi-eye' : 'mdi-eye-off'"
                                                         :type="showPreshared ? 'text' : 'password'"
                                                         @click:append="showPreshared = !showPreshared" />
-                                                    <v-text-field type="number" v-model="selected.current.mtu"
+                                                    <v-text-field type="number" v-model="selected.vpn.current.mtu"
                                                         label="Define global MTU"
                                                         hint="Leave at 0 and let us take care of MTU" />
                                                     <v-text-field type="number"
-                                                        v-model="selected.current.persistentKeepalive"
+                                                        v-model="selected.vpn.current.persistentKeepalive"
                                                         label="Persistent keepalive"
                                                         hint="To disable, set to 0.  Recommended value 29 (seconds)" />
-                                                    <v-textarea v-model="selected.current.postUp" label="PostUp Script"
+                                                    <v-textarea v-model="selected.vpn.current.postUp" label="PostUp Script"
                                                         hint="Only applies to linux servers" />
-                                                    <v-textarea v-model="selected.current.postDown" label="PostDown Script"
+                                                    <v-textarea v-model="selected.vpn.current.postDown" label="PostDown Script"
                                                         hint="Only applies to linux servers" />
-                                                    <v-switch v-model="selected.current.subnetRouting" color="success" inset
+                                                    <v-switch v-model="selected.vpn.current.subnetRouting" color="success" inset
                                                         label="Enable subnet routing" />
-                                                    <v-switch v-model="selected.current.upnp" color="success" inset
+                                                    <v-switch v-model="selected.vpn.current.upnp" color="success" inset
                                                         label="Enable UPnP" />
-                                                    <v-switch v-model="selected.current.enableDns" color="success" inset
+                                                    <v-switch v-model="selected.vpn.current.enableDns" color="success" inset
                                                         label="Enable Nettica DNS" />
 
                                                 </v-col>
@@ -248,7 +248,7 @@
 
                                 <v-card>
                                     <v-card-actions v-if="inEdit">
-                                        <v-btn color="success" @click="updateVPN(selected)">
+                                        <v-btn color="success" @click="updateVPN(selected.vpn)">
                                             Submit
                                             <v-icon right dark>mdi-check-outline</v-icon>
                                         </v-btn>
@@ -261,7 +261,7 @@
                                         <v-container>
                                             <v-row>
                                                 <v-col>
-                                                    <v-btn color="success" @click="forceFileDownload(selected)">
+                                                    <v-btn color="success" @click="forceFileDownload(selected.vpn)">
                                                         Download
                                                         <v-icon right dark>mdi-cloud-download-outline</v-icon>
                                                     </v-btn>
@@ -273,7 +273,7 @@
                                                     </v-btn>
                                                 </v-col>
                                                 <v-col>
-                                                    <v-btn class="px-3" color="error" @click="removeVPN(selected)">
+                                                    <v-btn class="px-3" color="error" @click="removeVPN(selected.vpn)">
                                                         Delete
                                                         <v-icon right dark>mdi-delete-outline</v-icon>
                                                     </v-btn>
@@ -521,13 +521,16 @@ export default {
             const id = this.active[0]
             console.log("selected id = ", id)
 
-            var vpn = this.vpns.find(vpn => vpn.id === id)
-            if (vpn) {
-                return vpn
+            for (let i = 0; i < this.items.length; i++) {
+                if (this.items[i].id == id) {
+                    return this.items[i]
+                }
+                for (let j = 0; j < this.items[i].children.length; j++) {
+                    if (this.items[i].children[j].id == id) {
+                        return this.items[i].children[j]
+                    }
+                }
             }
-
-            var device = this.devices.find(device => device.id === id)
-            return this.items.find(item => item.id === id)
         },
         ...mapGetters({
             user: 'auth/user',
@@ -660,7 +663,6 @@ export default {
             // names must be equal
             return 0;
             });
-            console.log("items = ", this.items)
 
             return this.items
 

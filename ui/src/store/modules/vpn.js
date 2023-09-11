@@ -35,21 +35,7 @@ const actions = {
   readAll({ commit, dispatch }) {
     ApiService.get("/vpn")
       .then(resp => {
-        for (var i = 0; i < resp.length; i++) {
-          var vpn = resp[i]
-          var last = new Date(vpn.lastSeen)
-          var diff = Math.abs(Date.now() - last)
-          console.log("VPN: " + vpn.name + " lastSeen: " + vpn.lastSeen + " ms: " + diff)
-          if (diff > 30000) {
-            vpn.status = "Offline"
-            if (vpn.platform == "Native" || vpn.platform == "iOS" || vpn.platform == "Android" || vpn.platform == "MacOS") {
-              vpn.status = "Native"
-            }
-          } else {
-            vpn.status = "Online"
-          }
-          commit('vpns', resp)
-        }
+        commit('vpns', resp)
 
         //        dispatch('readQrcodes')
         //        dispatch('readConfigs')
