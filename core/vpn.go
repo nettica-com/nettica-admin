@@ -277,6 +277,20 @@ func ReadVPNs() ([]*model.VPN, error) {
 // ReadVPNs all vpns
 func ReadVPNsForUser(email string) ([]*model.VPN, error) {
 	accounts, err := mongo.ReadAllAccounts(email)
+	if err != nil {
+		return nil, err
+	}
+
+	nets, err := ReadNetworks(email)
+	if err != nil {
+		return nil, err
+	}
+
+	// put the nets into a map for easy lookup
+	netMap := make(map[string]*model.Network)
+	for _, net := range nets {
+		netMap[net.Id] = net
+	}
 
 	results := make([]*model.VPN, 0)
 
@@ -295,8 +309,18 @@ func ReadVPNsForUser(email string) ([]*model.VPN, error) {
 					return nil, err
 				}
 			}
+
 			// if the vpn is not already in the results, add it
 			for _, vpn := range vpns {
+				// check the network policy to see if we should show this vpn
+				if account.Role == "User" || account.Role == "Guest" {
+					net, ok := netMap[vpn.NetId]
+					if ok {
+						if net.Policies.OnlyEndpoints && vpn.Current.Endpoint == "" && vpn.CreatedBy != email {
+							continue
+						}
+					}
+				}
 				found := false
 				for _, result := range results {
 					if result.Id == vpn.Id {

@@ -264,6 +264,100 @@ func ReadAllDevices(param string, id string) ([]*model.Device, error) {
 
 }
 
+// ReadDevicesAndVPNsForAccount
+func ReadDevicesAndVPNsForAccount(accountid string) ([]*model.Device, error) {
+
+	devices := make([]*model.Device, 0)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+		return nil, err
+	}
+
+	// Open an aggregation cursor
+	coll := client.Database("nettica").Collection("devices")
+	cursor, err := coll.Aggregate(ctx, bson.A{
+		bson.D{{Key: "$match", Value: bson.D{{Key: "accountid", Value: accountid}}}},
+		bson.D{
+			{Key: "$lookup",
+				Value: bson.D{
+					{Key: "from", Value: "vpns"},
+					{Key: "localField", Value: "id"},
+					{Key: "foreignField", Value: "deviceid"},
+					{Key: "as", Value: "vpns"},
+				},
+			},
+		},
+	})
+
+	if err == nil {
+
+		defer cursor.Close(ctx)
+		for cursor.Next(ctx) {
+			var device *model.Device
+			err = cursor.Decode(&device)
+			if err == nil {
+				devices = append(devices, device)
+			}
+		}
+
+	}
+
+	return devices, err
+
+}
+
+// ReadVPNsforNetwork from MongoDB
+func ReadVPNsforNetwork(netid string) ([]*model.VPN, error) {
+
+	vpns := make([]*model.VPN, 0)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+		return vpns, err
+	}
+
+	// Open an aggregation cursor
+	coll := client.Database("nettica").Collection("vpns")
+	cursor, err := coll.Aggregate(ctx, bson.A{
+		bson.D{{Key: "$match", Value: bson.D{{Key: "netid", Value: netid}}}},
+		bson.D{
+			{Key: "$lookup",
+				Value: bson.D{
+					{Key: "from", Value: "devices"},
+					{Key: "localField", Value: "deviceid"},
+					{Key: "foreignField", Value: "id"},
+					{Key: "as", Value: "devices"},
+				},
+			},
+		},
+	})
+
+	if err == nil {
+
+		defer cursor.Close(ctx)
+		for cursor.Next(ctx) {
+			var vpn *model.VPN
+			err = cursor.Decode(&vpn)
+			if err == nil {
+				vpns = append(vpns, vpn)
+			}
+		}
+
+	}
+
+	return vpns, err
+
+}
+
 // ReadAllHosts from MongoDB
 func ReadAllVPNs(param string, id string) ([]*model.VPN, error) {
 	vpns := make([]*model.VPN, 0)

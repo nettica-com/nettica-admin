@@ -26,6 +26,7 @@ type VPN struct {
 	Updated   time.Time `json:"updated"                   bson:"updated"`
 	Current   Settings  `json:"current"                   bson:"current"`
 	Default   Settings  `json:"default"                   bson:"default"`
+	Devices   []*Device `json:"devices,omitempty"         bson:"devices,omitempty"`
 }
 
 // IsValid check if model is valid

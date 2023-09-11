@@ -236,52 +236,29 @@ func ReadDevicesForUser(email string) ([]*model.Device, error) {
 
 	for _, account := range accounts {
 		if account.Status == "Active" {
+			if account.Role == "User" || account.Role == "Guest" {
+				// users and guests cannot see devices they did not create
+			} else {
 
-			if account.NetId != "" {
-				if account.Role == "User" || account.Role == "Guest" {
-					// users and guests cannot see devices they did not create
-				} else {
+				if account.NetId != "" {
 
 					// read all the vpns with this netid
-					vpns, err := mongo.ReadAllVPNs("netid", account.NetId)
+					vpns, err := mongo.ReadVPNsforNetwork(account.NetId)
 					if err != nil {
 						return nil, err
 					}
-					// read all the devices ...
-					devices, err := mongo.ReadAllDevices("accountid", account.Parent)
-					if err != nil {
-						return nil, err
+
+					for _, vpn := range vpns {
+						device := vpn.Devices[0]
+						vpn.Devices = nil
+						device.VPNs = append(device.VPNs, vpn)
+						results = append(results, device)
 					}
-					// ... and filter them by the vpns
-					for _, device := range devices {
-						for _, vpn := range vpns {
-							if device.Id == vpn.DeviceID {
-								device.VPNs = append(device.VPNs, vpn)
-								results = append(results, device)
-							}
-						}
-					}
-				}
-			} else {
-				if account.Role == "User" || account.Role == "Guest" {
-					// users and guests cannot see devices they did not create
 				} else {
 
-					devices, err := mongo.ReadAllDevices("accountid", account.Parent)
+					devices, err := mongo.ReadDevicesAndVPNsForAccount(account.Parent)
 					if err != nil {
 						return nil, err
-					}
-
-					vpns, err := mongo.ReadAllVPNs("accountid", account.Parent)
-					if err != nil {
-						return nil, err
-					}
-					for _, device := range devices {
-						for _, vpn := range vpns {
-							if device.Id == vpn.DeviceID {
-								device.VPNs = append(device.VPNs, vpn)
-							}
-						}
 					}
 					results = append(results, devices...)
 				}
@@ -304,14 +281,7 @@ func ReadDevicesForUser(email string) ([]*model.Device, error) {
 	// loop through the results and add any missing devices
 	for _, device := range devices {
 
-		// associate any vpns to the device
-		for _, vpn := range vpns {
-			if device.Id == vpn.DeviceID {
-				device.VPNs = append(device.VPNs, vpn)
-			}
-		}
-
-		// and add the device
+		// add the device if it hasn't already been added
 		found := false
 		for _, result := range results {
 			if device.Id == result.Id {
@@ -320,6 +290,13 @@ func ReadDevicesForUser(email string) ([]*model.Device, error) {
 			}
 		}
 		if !found {
+			// associate any vpns to the device
+			for _, vpn := range vpns {
+				if device.Id == vpn.DeviceID {
+					device.VPNs = append(device.VPNs, vpn)
+				}
+			}
+
 			results = append(results, device)
 		}
 	}

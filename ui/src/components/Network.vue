@@ -210,9 +210,10 @@
                                             <v-switch v-model="publicSubnets" color="success" inset
                                                 label="Route all public traffic through tunnel" />
 
+                                            <v-text-field v-model="selected.vpn.accountid" label="Account ID" readonly />
                                             <v-text-field v-model="selected.vpn.id" label="VPN ID" readonly />
                                             <v-text-field v-model="selected.vpn.netid" label="Network ID" readonly />
-                                            <v-text-field v-model="selected.vpn.deviceid" label="Device ID" disabled />
+                                            <v-text-field v-model="selected.vpn.deviceid" label="Device ID" readonly />
                                             <v-text-field v-model="selected.vpn.current.table" label="Table" />
                                             <v-text-field v-model="selected.vpn.current.publicKey" label="Public key" />
                                             <v-text-field v-model="selected.vpn.current.privateKey" label="Private key"
@@ -480,6 +481,15 @@ export default {
             console.log("buildTree = ", this.buildTree())
             this.showTree = true
         },
+        accounts: function(val) {
+            this.acntList = {
+                selected: { "text": "", "value": "" },
+                items: []
+            }
+            for (let i = 0; i < this.accounts.length; i++) {
+                this.acntList.items[i] = { "text": this.accounts[i].accountName + " - " + this.accounts[i].parent, "value": this.accounts[i].parent }
+            }
+        }
     },
 
 

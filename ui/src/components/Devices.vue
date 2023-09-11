@@ -904,7 +904,8 @@ export default {
             console.log("platform = ", device.platform)
 
             // set the account id
-            device.accountid = this.acntList.selected.value
+            device.accountid = device.accountid.value
+            console.log("accountid = ", device.accountid)
 
             // all good, submit
             this.dialogUpdate = false;
