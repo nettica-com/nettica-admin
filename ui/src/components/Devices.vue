@@ -574,6 +574,19 @@ export default {
             }
 
             for (let i = 0; i < this.nets.length; i++) {
+                // check if this net is already on the device
+                if (this.device != null && this.device.vpns != null) {
+                    var found = false
+                    for (let j = 0; j < this.device.vpns.length; j++) {
+                        if (this.device.vpns[j].netid == this.nets[i].id) {
+                            found = true
+                            break
+                        }
+                    }
+                    if (found) {
+                        continue
+                    }
+                }
                 this.netList.items[i] = { "text": this.nets[i].netName, "value": this.nets[i].id }
             }           
         },
