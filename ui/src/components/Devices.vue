@@ -548,8 +548,6 @@ export default {
     mounted() {
         this.readAllAccounts(this.user.email)
         this.readAllDevices()
-        this.readAllVPNs()
-        this.readAllNetworks()
 
     },
 
@@ -567,6 +565,16 @@ export default {
 
             for (let i = 0; i < this.accounts.length; i++) {
                 this.acntList.items[i] = { "text": this.accounts[i].accountName + " - " + this.accounts[i].parent, "value": this.accounts[i].parent }
+            }           
+        },
+        nets: function (val) {
+            this.netList = {
+                selected: { "text": "", "value": "" },
+                items: []
+            }
+
+            for (let i = 0; i < this.nets.length; i++) {
+                this.netList.items[i] = { "text": this.nets[i].netName, "value": this.nets[i].id }
             }           
         },
     },
@@ -598,16 +606,12 @@ export default {
         Refresh() {
             this.readAllAccounts(this.user.email)
             this.readAllDevices()
-            this.readAllNetworks()
-            this.readAllVPNs()
             console.log("buildTree = ", this.buildTree())
         },
 
         async asyncRefresh() {
             await this.readAllAccounts(this.user.email)
             await this.readAllDevices()
-            await this.readAllNetworks()
-            await this.readAllVPNs()
             console.log("buildTree = ", this.buildTree())
         },
 
@@ -721,6 +725,7 @@ export default {
 
         startAddVPN(device) {
             this.device = device
+            this.readAllNetworks()
             this.vpn = {
                 name: "",
                 deviceid: device.id,
