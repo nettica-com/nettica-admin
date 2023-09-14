@@ -41,7 +41,7 @@ const actions = {
           console.log("Host: " + device.name + " lastSeen: " + device.lastSeen + " ms: " + diff)
           if (diff > 30000) {
             device.status = "Offline"
-            if (device.platform == "Native" || device.platform == "iOS" || device.platform == "Android" || device.platform == "MacOS") {
+            if (device.platform == "Windows" || device.platform == "Native" || device.platform == "iOS" || device.platform == "Android" || device.platform == "MacOS") {
               device.status = "Native"
             }
           } else {
