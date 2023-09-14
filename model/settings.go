@@ -21,6 +21,7 @@ type Settings struct {
 	Mtu                 int      `json:"mtu"                       bson:"mtu"`
 	SubnetRouting       bool     `json:"subnetRouting"             bson:"subnetRouting"`
 	UPnP                bool     `json:"upnp"                      bson:"upnp"`
+	SyncEndpoint        bool     `json:"syncEndpoint"              bson:"syncEndpoint"`
 	EnableDns           bool     `json:"enableDns"                 bson:"enableDns"`
 	PreUp               string   `json:"preUp"                     bson:"preUp"`
 	PostUp              string   `json:"postUp"                    bson:"postUp"`
