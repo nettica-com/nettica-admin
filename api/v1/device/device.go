@@ -322,6 +322,7 @@ func statusDevice(c *gin.Context) {
 
 	apikey := c.Request.Header.Get("X-API-KEY")
 	etag := c.Request.Header.Get("If-None-Match")
+	ip := c.ClientIP()
 
 	device, err := core.ReadDevice(deviceId)
 	if err != nil {
@@ -471,6 +472,26 @@ func statusDevice(c *gin.Context) {
 				// This is the current client
 				device2 := *device
 				isClient = true
+				if client.Current.SyncEndpoint {
+					// If this client has syncEndpoint on see if the ip has changed
+					update := false
+					if client.Current.Endpoint == "" {
+						// do nothing.  user must prove they can set an endpoint
+					} else {
+						if client.Current.ListenPort == 0 {
+							client.Current.ListenPort = 51820
+						}
+						if client.Current.Endpoint != ip+":"+fmt.Sprintf("%d", client.Current.ListenPort) {
+							client.Current.Endpoint = ip + ":" + fmt.Sprintf("%d", client.Current.ListenPort)
+							update = true
+						}
+					}
+					if update {
+						client.UpdatedBy = device.Name
+						core.UpdateVPN(client.Id, client, true)
+					}
+				}
+				//
 				// update device from id with new last seen
 				go func() {
 					device2.LastSeen = time.Now()

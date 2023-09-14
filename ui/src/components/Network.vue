@@ -236,6 +236,8 @@
                                                 hint="Only applies to linux servers" />
                                             <v-switch v-model="selected.vpn.current.subnetRouting" color="success" inset
                                                 label="Enable subnet routing" />
+                                            <v-switch v-model="selected.vpn.current.syncEndpoint" color="success" inset
+                                                label="Sync endpoint using server" />
                                             <v-switch v-model="selected.vpn.current.upnp" color="success" inset
                                                 label="Enable UPnP" />
                                             <v-switch v-model="selected.vpn.current.enableDns" color="success" inset
