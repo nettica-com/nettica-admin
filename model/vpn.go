@@ -37,9 +37,9 @@ func (a VPN) IsValid() []error {
 	if a.Name == "" {
 		errs = append(errs, fmt.Errorf("name is required"))
 	}
-	// check the name field is between 2 to 16 chars
-	if len(a.Name) < 2 || len(a.Name) > 16 {
-		errs = append(errs, fmt.Errorf("name field must be between 2-16 chars"))
+	// check the name field is between 2 to 40 chars
+	if len(a.Name) < 2 || len(a.Name) > 40 {
+		errs = append(errs, fmt.Errorf("name field must be between 2-40 chars"))
 	}
 	match, err := regexp.MatchString(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`, a.Name)
 
