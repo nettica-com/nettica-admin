@@ -120,9 +120,9 @@
                                     label="Enable UPnP where possible" />
                                 <v-switch v-model="selected.net.default.enableDns" color="success" inset
                                     label="Enable Nettica DNS" />
-                                <v-switch v-model="selected.vpn.current.hasSSH" color="success" inset
+                                <v-switch v-model="selected.vpn.default.hasSSH" color="success" inset
                                     label="Has SSH" />
-                                <v-switch v-model="selected.vpn.current.hasRDP" color="success" inset
+                                <v-switch v-model="selected.vpn.default.hasRDP" color="success" inset
                                     label="Has Remote Desktop" />
 
 
