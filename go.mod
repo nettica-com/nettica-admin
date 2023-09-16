@@ -32,8 +32,6 @@ require (
 	go.mongodb.org/mongo-driver v1.12.1
 	golang.org/x/arch v0.5.0 // indirect
 	golang.org/x/oauth2 v0.12.0
-	golang.org/x/sys v0.12.0 // indirect
-	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/tools v0.13.0 // indirect
 	golang.zx2c4.com/wireguard v0.0.20200121 // indirect
 	golang.zx2c4.com/wireguard/wgctrl v0.0.0-20230429144221-925a1e7659e6

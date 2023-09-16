@@ -38,6 +38,10 @@ func CreateDevice(device *model.Device) (*model.Device, error) {
 		device.Server = os.Getenv("SERVER")
 	}
 
+	if device.Version == "" {
+		device.Version = "2.0"
+	}
+
 	// check if device is valid
 	errs := device.IsValid()
 	if len(errs) != 0 {

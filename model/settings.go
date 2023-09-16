@@ -23,6 +23,8 @@ type Settings struct {
 	UPnP                bool     `json:"upnp"                      bson:"upnp"`
 	SyncEndpoint        bool     `json:"syncEndpoint"              bson:"syncEndpoint"`
 	EnableDns           bool     `json:"enableDns"                 bson:"enableDns"`
+	HasSSH              bool     `json:"hasSSH"                    bson:"hasSSH"`
+	HasRDP              bool     `json:"hasRDP"                    bson:"hasRDP"`
 	PreUp               string   `json:"preUp"                     bson:"preUp"`
 	PostUp              string   `json:"postUp"                    bson:"postUp"`
 	PreDown             string   `json:"preDown"                   bson:"preDown"`
