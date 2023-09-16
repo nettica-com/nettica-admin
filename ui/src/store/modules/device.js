@@ -36,6 +36,9 @@ const actions = {
       .then(resp => {
         for (var i = 0; i < resp.length; i++) {
           var device = resp[i]
+          if (device.lastSeen == null) {
+            continue
+          }
           var last = new Date(device.lastSeen)
           var diff = Math.abs(Date.now() - last)
           console.log("Host: " + device.name + " lastSeen: " + device.lastSeen + " ms: " + diff)

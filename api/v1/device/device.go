@@ -354,7 +354,8 @@ func statusDevice(c *gin.Context) {
 		if e == etag {
 			c.AbortWithStatus(http.StatusNotModified)
 			go func() {
-				device.LastSeen = time.Now()
+				now := time.Now()
+				device.LastSeen = &now
 				_, err = core.UpdateDevice(device.Id, device, true)
 				if err != nil {
 					log.Error(err)
@@ -494,14 +495,15 @@ func statusDevice(c *gin.Context) {
 				//
 				// update device from id with new last seen
 				go func() {
-					device2.LastSeen = time.Now()
+					now := time.Now()
+					device2.LastSeen = &now
 					_, err = core.UpdateDevice(device2.Id, &device2, true)
 					if err != nil {
 						log.Error(err)
 					}
 				}()
 			}
-			device.LastSeen = time.Time{}
+			device.LastSeen = nil
 
 			if isEgress {
 				// If this is the egress device, only return the ingress and egress devices

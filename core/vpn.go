@@ -87,7 +87,15 @@ func CreateVPN(vpn *model.VPN) (*model.VPN, error) {
 	vpn.Current.Address = ips
 	vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, ips...)
 	if vpn.Current.EnableDns {
-		vpn.Current.Dns = append(vpn.Current.Dns, ipsDns[0])
+		device, err := ReadDevice(vpn.DeviceID)
+		if err != nil {
+			return nil, err
+		}
+		if device.OS == "darwin" {
+			vpn.Current.Dns = append(vpn.Current.Dns, "127.0.0.1")
+		} else {
+			vpn.Current.Dns = append(vpn.Current.Dns, ipsDns[0])
+		}
 	}
 
 	if vpn.Current.SubnetRouting && len(vpn.Current.PostUp) == 0 {
@@ -204,11 +212,23 @@ func UpdateVPN(Id string, vpn *model.VPN, flag bool) (*model.VPN, error) {
 	}
 
 	if vpn.Current.EnableDns {
-		// Append the first address to the dns list
-		address, err := util.GetIpFromCidr(vpn.Current.Address[0])
+
+		// on mac the dns is at 127.0.0.1
+		address := "127.0.0.1"
+
+		device, err := ReadDevice(vpn.DeviceID)
 		if err != nil {
 			return nil, err
 		}
+		// if its not a mac its running on the vpn's ip address
+		if device.OS != "darwin" {
+			// Append the first address to the dns list
+			address, err = util.GetIpFromCidr(vpn.Current.Address[0])
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		found := false
 		for _, dns := range vpn.Current.Dns {
 			if dns == address {
