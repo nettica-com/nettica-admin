@@ -79,7 +79,7 @@
                 <template v-slot:item.action="{ item }">
                     <v-row>
 
-                        <v-icon class="pr-1 pl-1" @click="remove(item)" title="Delete Service Host">
+                        <v-icon class="pr-1 pl-1" @click="remove(item)" title="Delete Service">
                             mdi-trash-can-outline
                         </v-icon>
                     </v-row>
@@ -487,9 +487,6 @@ export default {
             if (confirm(`Do you really want to delete ${item.name} ?`)) {
                 this.deleteSubscription(item)
             }
-            this.readAllNetworks()
-            this.readServices(this.authuser.email)
-
         },
 
 
@@ -498,9 +495,6 @@ export default {
             if (confirm(`Do you really want to delete ${item.name} ?`)) {
                 this.deleteService(item)
             }
-            this.readAllNetworks()
-            this.readServices(this.authuser.email)
-
         },
 
         startUpdateSubscription(subscription) {
