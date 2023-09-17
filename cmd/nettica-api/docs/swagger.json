@@ -1010,6 +1010,12 @@
                 "createdBy": {
                     "type": "string"
                 },
+                "devices": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Device"
+                    }
+                },
                 "email": {
                     "type": "string"
                 },
@@ -1024,6 +1030,12 @@
                 },
                 "netName": {
                     "type": "string"
+                },
+                "networks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Network"
+                    }
                 },
                 "parent": {
                     "type": "string"
@@ -1042,6 +1054,12 @@
                 },
                 "updatedBy": {
                     "type": "string"
+                },
+                "vpns": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.VPN"
+                    }
                 }
             }
         },
@@ -1239,6 +1257,12 @@
                 "endpoint": {
                     "type": "string"
                 },
+                "hasRDP": {
+                    "type": "boolean"
+                },
+                "hasSSH": {
+                    "type": "boolean"
+                },
                 "listenPort": {
                     "type": "integer"
                 },
@@ -1272,6 +1296,9 @@
                 "subnetRouting": {
                     "type": "boolean"
                 },
+                "syncEndpoint": {
+                    "type": "boolean"
+                },
                 "table": {
                     "type": "string"
                 },
@@ -1300,6 +1327,12 @@
                 },
                 "deviceid": {
                     "type": "string"
+                },
+                "devices": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Device"
+                    }
                 },
                 "enable": {
                     "type": "boolean"

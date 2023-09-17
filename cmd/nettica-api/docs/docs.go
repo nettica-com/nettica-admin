@@ -1014,6 +1014,12 @@ const docTemplate = `{
                 "createdBy": {
                     "type": "string"
                 },
+                "devices": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Device"
+                    }
+                },
                 "email": {
                     "type": "string"
                 },
@@ -1028,6 +1034,12 @@ const docTemplate = `{
                 },
                 "netName": {
                     "type": "string"
+                },
+                "networks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Network"
+                    }
                 },
                 "parent": {
                     "type": "string"
@@ -1046,6 +1058,12 @@ const docTemplate = `{
                 },
                 "updatedBy": {
                     "type": "string"
+                },
+                "vpns": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.VPN"
+                    }
                 }
             }
         },
@@ -1243,6 +1261,12 @@ const docTemplate = `{
                 "endpoint": {
                     "type": "string"
                 },
+                "hasRDP": {
+                    "type": "boolean"
+                },
+                "hasSSH": {
+                    "type": "boolean"
+                },
                 "listenPort": {
                     "type": "integer"
                 },
@@ -1276,6 +1300,9 @@ const docTemplate = `{
                 "subnetRouting": {
                     "type": "boolean"
                 },
+                "syncEndpoint": {
+                    "type": "boolean"
+                },
                 "table": {
                     "type": "string"
                 },
@@ -1304,6 +1331,12 @@ const docTemplate = `{
                 },
                 "deviceid": {
                     "type": "string"
+                },
+                "devices": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Device"
+                    }
                 },
                 "enable": {
                     "type": "boolean"

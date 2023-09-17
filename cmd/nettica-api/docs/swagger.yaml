@@ -10,6 +10,10 @@ definitions:
         type: string
       createdBy:
         type: string
+      devices:
+        items:
+          $ref: '#/definitions/model.Device'
+        type: array
       email:
         type: string
       id:
@@ -20,6 +24,10 @@ definitions:
         type: string
       netName:
         type: string
+      networks:
+        items:
+          $ref: '#/definitions/model.Network'
+        type: array
       parent:
         type: string
       picture:
@@ -32,6 +40,10 @@ definitions:
         type: string
       updatedBy:
         type: string
+      vpns:
+        items:
+          $ref: '#/definitions/model.VPN'
+        type: array
     type: object
   model.Device:
     properties:
@@ -161,6 +173,10 @@ definitions:
         type: boolean
       endpoint:
         type: string
+      hasRDP:
+        type: boolean
+      hasSSH:
+        type: boolean
       listenPort:
         type: integer
       mtu:
@@ -183,6 +199,8 @@ definitions:
         type: string
       subnetRouting:
         type: boolean
+      syncEndpoint:
+        type: boolean
       table:
         type: string
       upnp:
@@ -202,6 +220,10 @@ definitions:
         $ref: '#/definitions/model.Settings'
       deviceid:
         type: string
+      devices:
+        items:
+          $ref: '#/definitions/model.Device'
+        type: array
       enable:
         type: boolean
       id:
