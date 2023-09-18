@@ -50,8 +50,8 @@ const actions = {
           } else {
             device.status = "Online"
           }
-          commit('devices', resp)
         }
+        commit('devices', resp)
 
         //        dispatch('readQrcodes')
         //        dispatch('readConfigs')
