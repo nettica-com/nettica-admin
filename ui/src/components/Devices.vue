@@ -926,7 +926,7 @@ export default {
             this.noEdit = true;
             this.device = device;
 
-            //device.platform = this.selected.platform.value
+            device.platform = this.selected.platform.value
             console.log("platform = ", device.platform)
 
             // set the account id
