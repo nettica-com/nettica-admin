@@ -112,21 +112,51 @@
                                 <v-text-field v-model="selected.net.default.listenPort" type="number" :rules="[
                                     v => !!v || 'Listen port is required',
                                 ]" label="Listen port" required />
-                                <v-switch v-model="selected.net.policies.userEndpoints" color="success" inset
-                                    label="Users can create Endpoints" />
-                                <v-switch v-model="selected.net.policies.onlyEndpoints" color="success" inset
-                                    label="Clients cannot see other clients" />
-                                    <v-switch v-model="selected.net.default.upnp" color="success" inset
-                                    label="Enable UPnP where possible" />
-                                <v-switch v-model="selected.net.default.enableDns" color="success" inset
-                                    label="Enable Nettica DNS" />
-                                <v-switch v-model="selected.net.default.hasSSH" color="success" inset
-                                    label="Has SSH" />
-                                <v-switch v-model="selected.net.default.hasRDP" color="success" inset
-                                    label="Has Remote Desktop" />
-
-
-
+                                <v-divider></v-divider>
+                                <table>
+                                    <tr>
+                                        <td colspan="2">
+                                            <v-switch v-model="selected.net.policies.userEndpoints" color="success" inset
+                                                label="Users can create Endpoints" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <v-switch v-model="selected.net.policies.onlyEndpoints" color="success" inset
+                                                label="Clients cannot see other clients" />
+                                        </td>
+                                    </tr>
+                                </table>
+                                <v-divider></v-divider>
+                                <table width="100%">
+                                    <tr>
+                                        <td>
+                                            <v-switch v-model="selected.net.default.syncEndpoint" color="success" inset
+                                                label="Sync Endpoint" />
+                                        </td>
+                                        <td>
+                                            <v-switch v-model="selected.net.default.hasSSH" color="success" inset
+                                                label="SSH" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <v-switch v-model="selected.net.default.upnp" color="success" inset
+                                                label="Enable UPnP" />
+                                        </td>
+                                        <td>
+                                            <v-switch v-model="selected.net.default.hasRDP" color="success" inset
+                                                label="Remote Desktop" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <v-switch v-model="selected.net.default.enableDns" color="success" inset
+                                                label="Enable Nettica DNS" />
+                                        </td>
+                                    </tr>
+                                </table>
+                                <v-divider></v-divider>
                                 <p class="text-caption">Created by {{ selected.net.createdBy }} at {{
                                     selected.net.created | formatDate }}<br />
                                     Last update by {{ selected.net.updatedBy }} at {{ selected.net.updated |
@@ -241,18 +271,35 @@
                                                 hint="Only applies to linux servers" />
                                             <v-switch v-model="selected.vpn.current.subnetRouting" color="success" inset
                                                 label="Enable subnet routing" />
-                                            <v-switch v-model="selected.vpn.current.syncEndpoint" color="success" inset
-                                                label="Sync endpoint using server" />
-                                            <v-switch v-model="selected.vpn.current.upnp" color="success" inset
-                                                label="Enable UPnP" />
-                                            <v-switch v-model="selected.vpn.current.enableDns" color="success" inset
-                                                label="Enable Nettica DNS" />
-                                            <v-switch v-model="selected.vpn.current.hasSSH" color="success" inset
-                                                label="Has SSH" />
-                                            <v-switch v-model="selected.vpn.current.hasRDP" color="success" inset
-                                                label="Has Remote Desktop" />
-
-
+                                            <v-divider></v-divider>
+                                            <table width="100%">
+                                                <tr>
+                                                    <td>
+                                                        <v-switch v-model="selected.vpn.current.syncEndpoint" color="success" inset
+                                                            label="Sync Endpoint" />
+                                                    </td>
+                                                    <td>
+                                                        <v-switch v-model="selected.vpn.current.hasSSH" color="success" inset
+                                                            label="SSH" />
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <v-switch v-model="selected.vpn.current.upnp" color="success" inset
+                                                            label="Enable UPnP" />
+                                                    </td>
+                                                    <td>
+                                                        <v-switch v-model="selected.vpn.current.hasRDP" color="success" inset
+                                                            label="Remote Desktop" />
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td colspan="2">
+                                                        <v-switch v-model="selected.vpn.current.enableDns" color="success" inset
+                                                            label="Enable Nettica DNS" />
+                                                    </td>
+                                                </tr>
+                                            </table>
                                         </v-col>
                                     </div>
                                 </v-expansion-panel-content>

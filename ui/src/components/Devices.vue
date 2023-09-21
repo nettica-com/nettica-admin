@@ -234,17 +234,35 @@
                                                         hint="Only applies to linux servers" />
                                                     <v-switch v-model="selected.vpn.current.subnetRouting" color="success" inset
                                                         label="Enable subnet routing" />
-                                                    <v-switch v-model="selected.vpn.current.syncEndpoint" color="success" inset
-                                                        label="Sync endpoint using server" />
-                                                    <v-switch v-model="selected.vpn.current.upnp" color="success" inset
-                                                        label="Enable UPnP" />
-                                                    <v-switch v-model="selected.vpn.current.enableDns" color="success" inset
-                                                        label="Enable Nettica DNS" />
-                                                    <v-switch v-model="selected.vpn.current.hasSSH" color="success" inset
-                                                        label="Has SSH" />
-                                                    <v-switch v-model="selected.vpn.current.hasRDP" color="success" inset
-                                                        label="Has Remote Desktop" />
-
+                                                    <v-divider></v-divider>
+                                                    <table width="100%">
+                                                        <tr>
+                                                            <td>
+                                                                <v-switch v-model="selected.vpn.current.syncEndpoint" color="success" inset
+                                                                    label="Sync endpoint using server" />
+                                                            </td>
+                                                            <td>
+                                                                <v-switch v-model="selected.vpn.current.hasSSH" color="success" inset
+                                                                    label="Has SSH" />
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>
+                                                                <v-switch v-model="selected.vpn.current.upnp" color="success" inset
+                                                                    label="Enable UPnP" />
+                                                            </td>
+                                                            <td>
+                                                                <v-switch v-model="selected.vpn.current.hasRDP" color="success" inset
+                                                                    label="Has Remote Desktop" />
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td colspan="2">
+                                                                <v-switch v-model="selected.vpn.current.enableDns" color="success" inset
+                                                                    label="Enable Nettica DNS" />
+                                                            </td>
+                                                        </tr>
+                                                    </table>
                                                 </v-col>
                                             </div>
                                         </v-expansion-panel-content>
