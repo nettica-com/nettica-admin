@@ -196,12 +196,13 @@ func updateVPN(c *gin.Context) {
 			authorized = true
 		}
 
-		data.UpdatedBy = device.Name
-
 		if !authorized {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			return
 		}
+
+		data.UpdatedBy = device.Name
+
 	} else {
 
 		if vpn.CreatedBy == account.Email || account.Role == "Admin" || account.Role == "Owner" {
@@ -214,6 +215,13 @@ func updateVPN(c *gin.Context) {
 		}
 
 		data.UpdatedBy = account.Email
+	}
+
+	// this is to allow the logic below to work from device updates without crashing.
+	// the device has effective rights of a user so it will not be allowed to change
+	// from a client to endpoint, or change the allowedIPs
+	if account == nil {
+		account = &model.Account{}
 	}
 
 	if data.Current.Endpoint != "" && vpn.Current.Endpoint == "" && account.Role != "Admin" && account.Role != "Owner" {
@@ -231,6 +239,15 @@ func updateVPN(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": "User Endpoints are disabled for this network"})
 			return
 		}
+	}
+
+	// do not allow changes to the AllowedIPs unless it's an endpoint
+	// admins are allowed to do this, for example, extending an AWS subnet through a relay
+	// this code is in place to prevent users from breaking the VPN accidentally (or on purpose)
+	if data.Current.Endpoint == "" && !CompareArrays(vpn.Current.AllowedIPs, data.Current.AllowedIPs) && account.Role != "Admin" && account.Role != "Owner" {
+		log.Infof("User %s tried to change AllowedIPs for vpn %s (%v)", account.Email, id, data.Current.AllowedIPs)
+		c.JSON(http.StatusForbidden, gin.H{"error": "You cannot change AllowedIPs"})
+		return
 	}
 
 	result, err := core.UpdateVPN(id, &data, false)
@@ -257,6 +274,24 @@ func updateVPN(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, result)
+}
+
+func CompareArrays(a []string, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for _, x := range a {
+		found := false
+		for _, y := range b {
+			if x == y {
+				found = true
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
 }
 
 // DeleteVPN deletes a VPN
