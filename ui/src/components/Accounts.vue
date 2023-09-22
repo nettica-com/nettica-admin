@@ -153,6 +153,10 @@
                                                 title="Regenerate API Key (immediate change)">
                                                 mdi-refresh
                                             </v-icon>
+                                            <v-icon class="pr-1 pl-1" @click="copy(item.apiKey)"
+                                                title="Copy API Key to clipboard">
+                                                mdi-content-copy
+                                            </v-icon>
                                         </v-row>
                                     </template>
                                 </v-data-table>
@@ -642,6 +646,11 @@ mounted() {
                 this.readAllAccounts(this.authuser.email)
                 this.errorAccount("API key regenerated")
             }
+        },
+
+        copy(text) {
+            navigator.clipboard.writeText(text)
+            this.errorAccount("API key copied to clipboard")
         },
 
         forceFileDownload(user) {

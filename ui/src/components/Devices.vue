@@ -926,13 +926,7 @@ export default {
             var url = "curl \"http://localhost:53280/config/?id=" + device.id + "&apiKey=" + device.apiKey + "&server=https://my.nettica.com\""
 
             // copy to clipboard
-            var dummy = document.createElement("textarea");
-            document.body.appendChild(dummy);
-            dummy.value = url;
-            dummy.select();
-            document.execCommand("copy");
-            document.body.removeChild(dummy);
-
+            navigator.clipboard.writeText(url)
             this.errorDevice('Copied to clipboard');
 
         },
