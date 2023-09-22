@@ -123,7 +123,7 @@
                                     <tr>
                                         <td colspan="2">
                                             <v-switch v-model="selected.net.policies.onlyEndpoints" color="success" inset
-                                                label="Clients cannot see other clients" />
+                                                label="Clients can only see Endpoints" />
                                         </td>
                                     </tr>
                                 </table>
@@ -386,7 +386,7 @@
                                 <v-switch v-model="net.policies.userEndpoints" color="success" inset
                                     label="Users can create Endpoints" />
                                 <v-switch v-model="net.policies.onlyEndpoints" color="success" inset
-                                    label="Clients cannot see other clients" />
+                                    label="Clients can only see Endpoints" />
                                 <v-switch v-model="net.default.upnp" color="success" inset
                                     label="Enable UPnP where possible" />
                                 <v-switch v-model="net.default.enableDns" color="success" inset
