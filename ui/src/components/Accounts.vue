@@ -351,12 +351,16 @@ mounted() {
                         if (netName == "") {
                             netName = "All Networks"
                         }
+                        var isReadOnly = true;
+                        if (this.accounts[i].id == this.accounts[i].parent) {
+                            isReadOnly = false;
+                        }
                         this.items[j].children[child] = {
                             id: "c-" + this.accounts[i].id,
                             idx: this.accounts[i].id,
                             name: name,
                             netName: netName,
-                            isReadOnly: true,
+                            isReadOnly: isReadOnly,
                             member: this.accounts[i],
                             status: this.accounts[i].status,
                             role: this.accounts[i].role,
