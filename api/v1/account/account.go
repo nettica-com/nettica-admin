@@ -288,6 +288,14 @@ func updateAccount(c *gin.Context) {
 		return
 	}
 
+	// The account owner may want to test something as a user,
+	// and then set itself back to being the owner.
+	if account.Id == account.Parent {
+		account.Role = "Owner"
+	}
+
+	// check if the account is authorized to update this account
+
 	if account.Role == "Admin" || account.Role == "Owner" {
 		update = &data
 	} else if account.Id == id {
