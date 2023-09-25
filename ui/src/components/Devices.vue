@@ -531,6 +531,7 @@ export default {
                 { text: "Linux", value: "Linux", },
                 { text: "MacOS", value: "MacOS", },
                 { text: "Apple iOS", value: "iOS", },
+                { text: "Raspberry Pi", value: "raspberry"},
                 { text: "Android", value: "Android", },
                 { text: "Native WireGuard", value: "Native", },
             ],
