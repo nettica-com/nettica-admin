@@ -46,6 +46,21 @@ func CreateVPN(vpn *model.VPN) (*model.VPN, error) {
 			vpn.AccountID = net.AccountID
 			vpn.Current.AllowedIPs = current.AllowedIPs
 			vpn.Current.Dns = net.Default.Dns
+			if current.EnableDns {
+				vpn.Current.EnableDns = current.EnableDns
+			}
+			if current.UPnP {
+				vpn.Current.UPnP = current.UPnP
+			}
+			if current.SyncEndpoint && current.Endpoint != "" {
+				vpn.Current.SyncEndpoint = current.SyncEndpoint
+			}
+			if current.HasRDP {
+				vpn.Current.HasRDP = current.HasRDP
+			}
+			if current.HasSSH {
+				vpn.Current.HasSSH = current.HasSSH
+			}
 		}
 	}
 
