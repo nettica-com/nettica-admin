@@ -61,7 +61,7 @@ func createVPN(c *gin.Context) {
 		return
 	}
 
-	account, _, err := core.AuthFromContext(c, network.AccountID)
+	account, _, err := core.AuthFromContext(c, network.Id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
