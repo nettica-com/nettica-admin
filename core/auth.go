@@ -146,14 +146,8 @@ func AuthFromContext(c *gin.Context, id string) (*model.Account, interface{}, er
 
 	if strings.HasPrefix(id, "account-") {
 
-		ac, err := ReadAccount(id)
-		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Not Found"})
-			return nil, nil, err
-		}
-
 		for _, a := range accounts {
-			if a.Id == ac.Id {
+			if a.Parent == id {
 				account = a
 				break
 			}
@@ -164,7 +158,7 @@ func AuthFromContext(c *gin.Context, id string) (*model.Account, interface{}, er
 			return nil, nil, errors.New("account is suspended")
 		}
 
-		return account, ac, nil
+		return account, nil, nil
 	}
 
 	if strings.HasPrefix(id, "net-") {
