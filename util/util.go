@@ -126,6 +126,19 @@ func IsValidCidr(cidr string) bool {
 	return err == nil
 }
 
+// IsInCidr check if cidr is in subnet (also a cidr, eg, 10.0.0.1/32 is in 10.0.0.0/24
+func IsInCidr(cidr string, subnet string) bool {
+	_, ipnet, err := net.ParseCIDR(subnet)
+	if err != nil {
+		return false
+	}
+	ip, _, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return false
+	}
+	return ipnet.Contains(ip)
+}
+
 // GetIpFromCidr get ip from cidr
 func GetIpFromCidr(cidr string) (string, error) {
 	ip, _, err := net.ParseCIDR(cidr)
@@ -158,6 +171,25 @@ func BroadcastAddr(n *net.IPNet) net.IP {
 		broadcast[i] = n.IP[i] | ^n.Mask[i]
 	}
 	return broadcast
+}
+
+// Compares two arrays for equivalence
+func CompareArrays(a []string, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for _, x := range a {
+		found := false
+		for _, y := range b {
+			if x == y {
+				found = true
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
 }
 
 // GenerateRandomBytes returns securely generated random bytes.

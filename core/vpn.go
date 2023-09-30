@@ -223,7 +223,7 @@ func UpdateVPN(Id string, vpn *model.VPN, flag bool) (*model.VPN, error) {
 			ips = append(ips, ip)
 		}
 		vpn.Current.Address = ips
-		vpn.Current.AllowedIPs = ips
+		vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, ips...)
 	}
 
 	if vpn.Current.EnableDns {
@@ -283,11 +283,13 @@ func UpdateVPN(Id string, vpn *model.VPN, flag bool) (*model.VPN, error) {
 		return nil, err
 	}
 
-	v, err = mongo.Deserialize(Id, "id", "vpns", reflect.TypeOf(model.VPN{}))
-	if err != nil {
-		return nil, err
-	}
-	vpn = v.(*model.VPN)
+	/*
+		v, err = mongo.Deserialize(Id, "id", "vpns", reflect.TypeOf(model.VPN{}))
+		if err != nil {
+			return nil, err
+		}
+		vpn = v.(*model.VPN)
+	*/
 
 	// data modified, dump new config
 	return vpn, nil

@@ -98,6 +98,7 @@
                                         </v-chip>
                                     </template>
                                 </v-combobox>
+                                <v-text-field v-model="selected.net.accountid" label="Account ID" readonly />
                                 <v-text-field v-model="selected.net.id" label="Network ID" readonly />
                                 <v-text-field v-model="selected.net.default.presharedKey" label="Preshared Key" autocomplete="off"
                                                         :append-icon="showPreshared ? 'mdi-eye' : 'mdi-eye-off'"
@@ -114,6 +115,12 @@
                                 ]" label="Listen port" required />
                                 <v-divider></v-divider>
                                 <table>
+                                    <tr>
+                                        <td colspan="2">
+                                            <v-switch v-model="selected.net.forceUpdate" color="success" inset
+                                                :label="selected.net.forceUpdate ? 'Force updates immediately' : 'Applies to new devices only'" />
+                                        </td>
+                                    </tr>
                                     <tr>
                                         <td colspan="2">
                                             <v-switch v-model="selected.net.policies.userEndpoints" color="success" inset

@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	core "github.com/nettica-com/nettica-admin/core"
 	model "github.com/nettica-com/nettica-admin/model"
+	"github.com/nettica-com/nettica-admin/util"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -177,6 +178,24 @@ func updateNet(c *gin.Context) {
 		return
 	}
 
+	updateMTU := false
+	updateAddress := false
+	updateAllowed := false
+	if data.ForceUpdate {
+		log.Infof("updateNet: force update for %s %s", data.NetName, id)
+		if data.Default.Mtu != net.Default.Mtu {
+			log.Infof("updateNet: updateMTU for %s %d", data.NetName, data.Default.Mtu)
+			updateMTU = true
+		}
+		if !util.CompareArrays(data.Default.Address, net.Default.Address) {
+			log.Infof("updateNet: updateAddress for %s %v", data.NetName, data.Default.Address)
+			updateAddress = true
+		}
+		if !util.CompareArrays(data.Default.AllowedIPs, net.Default.AllowedIPs) {
+			log.Infof("updateNet: updateAllowed for %s %v", data.NetName, data.Default.AllowedIPs)
+			updateAllowed = true
+		}
+	}
 	// Clear the device cache for policy changes
 	vpns, err := core.ReadVPN2("netid", net.Id)
 	if err != nil {
@@ -188,6 +207,42 @@ func updateNet(c *gin.Context) {
 	}
 
 	for _, v := range vpns {
+		changed := false
+		if updateMTU && (v.Current.Mtu != data.Default.Mtu || v.Default.Mtu != data.Default.Mtu) {
+			log.Infof("updateNet: updateMTU for %s %d", v.Id, data.Default.Mtu)
+			v.Default.Mtu = data.Default.Mtu
+			v.Current.Mtu = data.Default.Mtu
+			changed = true
+		}
+		if updateAddress && !util.CompareArrays(v.Default.Address, data.Default.Address) {
+			log.Infof("updateNet: updateAddress for %s %v", v.Id, data.Default.Address)
+			v.Default.Address = data.Default.Address
+			v.Current.Address = make([]string, 0)
+			changed = true
+		}
+		if updateAllowed && !util.CompareArrays(v.Default.AllowedIPs, data.Default.AllowedIPs) {
+			log.Infof("updateNet: updateAllowed for %s %v", v.Id, data.Default.AllowedIPs)
+			allowedIPs := make([]string, 0)
+			for _, subnet := range v.Default.AllowedIPs {
+				for _, cidr := range v.Current.AllowedIPs {
+					if !util.IsInCidr(cidr, subnet) {
+						allowedIPs = append(allowedIPs, cidr)
+					} else if cidr == subnet {
+						allowedIPs = append(allowedIPs, data.Default.AllowedIPs...)
+					}
+				}
+			}
+			v.Current.AllowedIPs = allowedIPs
+			v.Default.AllowedIPs = data.Default.AllowedIPs
+			changed = true
+		}
+		if changed {
+			_, err := core.UpdateVPN(v.Id, v, true)
+			if err != nil {
+				log.Errorf("forceUpdate: failed to update vpn %s %v", v.Id, err)
+			}
+		}
+
 		// flush the cache for this vpn
 		core.FlushCache(v.DeviceID)
 	}
