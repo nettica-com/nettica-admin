@@ -341,6 +341,17 @@ func statusDevice(c *gin.Context) {
 
 	if device.ApiKey == apikey {
 		authorized = true
+		if !device.Authenticated {
+			device.Authenticated = true
+			_, err = core.UpdateDevice(device.Id, device, true)
+			if err != nil {
+				log.Error(err)
+			}
+		}
+	}
+
+	if !authorized && !device.Authenticated {
+		authorized = true
 	}
 
 	if !authorized {

@@ -88,7 +88,7 @@
                                         <v-select return-object v-model="selected.platform" :items="platforms.items"
                                             item-text="text" item-value="value" label="Platform of this device" single
                                             persistent-hint :readonly="!inEdit" />
-
+                                        <v-text-field v-model="device.instanceid" label="AWS or Azure Instance ID" :readonly="!inEdit"/>
                                         <v-switch v-model="selected.device.enable" color="success" inset
                                             :label="selected.device.enable ? 'Enabled' : 'Disabled'" :readonly="!inEdit" />
                                         <v-select return-object v-model="selected.device.accountid" :items="acntList.items"
@@ -390,7 +390,7 @@
                                         <v-select return-object v-model="platforms.selected" :items="platforms.items"
                                             item-text="text" item-value="value" label="Platform of this device" single
                                             persistent-hint />
-
+                                        <v-text-field v-model="device.instanceid" label="AWS or Azure Instance ID" />
                                         <v-switch v-model="device.enable" color="success" inset
                                             :label="device.enable ? 'Enable device after creation' : 'Disable device after creation'" />
                                     </v-form>
