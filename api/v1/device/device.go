@@ -341,8 +341,8 @@ func statusDevice(c *gin.Context) {
 
 	if device.ApiKey == apikey {
 		authorized = true
-		if !device.Authenticated {
-			device.Authenticated = true
+		if !device.Registered {
+			device.Registered = true
 			_, err = core.UpdateDevice(device.Id, device, true)
 			if err != nil {
 				log.Error(err)
@@ -350,7 +350,7 @@ func statusDevice(c *gin.Context) {
 		}
 	}
 
-	if !authorized && !device.Authenticated {
+	if !authorized && !device.Registered {
 		authorized = true
 	}
 
@@ -359,7 +359,7 @@ func statusDevice(c *gin.Context) {
 		return
 	}
 
-	m, _ := core.GetCache(deviceId)
+	m, _ := core.GetCache(device.Id)
 	if m != nil {
 		e := m.(string)
 		if e == etag {
@@ -377,7 +377,7 @@ func statusDevice(c *gin.Context) {
 		}
 	}
 
-	nets, err := core.ReadVPN2("deviceid", deviceId)
+	nets, err := core.ReadVPN2("deviceid", device.Id)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
@@ -389,7 +389,7 @@ func statusDevice(c *gin.Context) {
 	var msg model.Message
 	hconfig := make([]model.VPNConfig, len(nets))
 
-	msg.Id = deviceId
+	msg.Id = device.Id
 	msg.Device = device
 	msg.Config = hconfig
 
@@ -439,13 +439,13 @@ func statusDevice(c *gin.Context) {
 				if client.Role == "Ingress" {
 					hasIngress = true
 					ingress = client
-					if client.DeviceID == deviceId {
+					if client.DeviceID == device.Id {
 						isIngress = true
 					}
 				}
 				if client.Role == "Egress" {
 					egress = client
-					if client.DeviceID == deviceId {
+					if client.DeviceID == device.Id {
 						isEgress = true
 					}
 				}
@@ -496,7 +496,7 @@ func statusDevice(c *gin.Context) {
 
 			// If this config isn't explicitly for this device, remove the private key
 			// from the results
-			if client.DeviceID != deviceId {
+			if client.DeviceID != device.Id {
 				client.Current.PrivateKey = ""
 			} else {
 				// This is the current client
@@ -569,5 +569,5 @@ func statusDevice(c *gin.Context) {
 		c.JSON(http.StatusOK, msg)
 	}
 
-	core.SetCache(deviceId, md5)
+	core.SetCache(device.Id, md5)
 }

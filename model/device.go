@@ -32,7 +32,7 @@ type Device struct {
 	SourceAddress string     `json:"sourceAddress"             bson:"sourceAddress"`
 	Debug         bool       `json:"debug"                     bson:"debug"`
 	Quiet         bool       `json:"quiet"                     bson:"quiet"`
-	Authenticated bool       `json:"authenticated"             bson:"authenticated"`
+	Registered    bool       `json:"registered"                bson:"registered"`
 	Version       string     `json:"version"                   bson:"version"`
 	InstanceID    string     `json:"instanceid"                bson:"instanceid"`
 	CreatedBy     string     `json:"createdBy"                 bson:"createdBy"`

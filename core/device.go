@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"reflect"
+	"strings"
 	"time"
 
 	model "github.com/nettica-com/nettica-admin/model"
@@ -72,7 +73,16 @@ func CreateDevice(device *model.Device) (*model.Device, error) {
 func ReadDevice(id string) (*model.Device, error) {
 	v, err := mongo.Deserialize(id, "id", "devices", reflect.TypeOf(model.Device{}))
 	if err != nil {
-		return nil, err
+		id = strings.TrimPrefix(id, "device-id-")
+
+		if id == "" || strings.HasPrefix(id, "device-") {
+			return nil, err
+		}
+
+		v, err = mongo.Deserialize(id, "instanceid", "devices", reflect.TypeOf(model.Device{}))
+		if err != nil {
+			return nil, err
+		}
 	}
 	device := v.(*model.Device)
 
@@ -171,6 +181,7 @@ func UpdateDevice(Id string, device *model.Device, fUpdated bool) (*model.Device
 	}
 	current.Debug = device.Debug
 	current.Quiet = device.Quiet
+	current.Registered = device.Registered
 	current.LastSeen = device.LastSeen
 
 	err = mongo.Serialize(device.Id, "id", "devices", current)
