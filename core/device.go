@@ -39,10 +39,6 @@ func CreateDevice(device *model.Device) (*model.Device, error) {
 		device.Server = os.Getenv("SERVER")
 	}
 
-	if device.Version == "" {
-		device.Version = "2.0"
-	}
-
 	// check if device is valid
 	errs := device.IsValid()
 	if len(errs) != 0 {
@@ -182,6 +178,7 @@ func UpdateDevice(Id string, device *model.Device, fUpdated bool) (*model.Device
 	current.Debug = device.Debug
 	current.Quiet = device.Quiet
 	current.Registered = device.Registered
+	current.InstanceID = device.InstanceID
 	current.LastSeen = device.LastSeen
 
 	err = mongo.Serialize(device.Id, "id", "devices", current)

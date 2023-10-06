@@ -314,7 +314,7 @@ func statusDevice(c *gin.Context) {
 
 	deviceId := c.Param("id")
 
-	if deviceId == "" {
+	if deviceId == "" || deviceId == "device-id-" {
 		log.Error("deviceid cannot be empty")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "deviceid cannot be empty"})
 		return
