@@ -177,7 +177,16 @@ func UpdateDevice(Id string, device *model.Device, fUpdated bool) (*model.Device
 	}
 	current.Debug = device.Debug
 	current.Quiet = device.Quiet
+
+	// stupidity is not a right
+	changed := false
+	if current.Registered != device.Registered {
+		changed = true
+	}
 	current.Registered = device.Registered
+	if current.InstanceID != device.InstanceID && !changed {
+		current.Registered = false
+	}
 	current.InstanceID = device.InstanceID
 	current.LastSeen = device.LastSeen
 

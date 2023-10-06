@@ -88,7 +88,6 @@
                                         <v-select return-object v-model="selected.platform" :items="platforms.items"
                                             item-text="text" item-value="value" label="Platform of this device" single
                                             persistent-hint :readonly="!inEdit" />
-                                        <v-text-field v-model="device.instanceid" label="AWS or Azure Instance ID" :readonly="!inEdit"/>
                                         <v-switch v-model="selected.device.enable" color="success" inset
                                             :label="selected.device.enable ? 'Enabled' : 'Disabled'" :readonly="!inEdit" />
                                         <v-select return-object v-model="selected.device.accountid" :items="acntList.items"
@@ -100,6 +99,7 @@
                                             :append-icon="showApiKey ? 'mdi-eye' : 'mdi-eye-off'"
                                             :type="showApiKey ? 'text' : 'password'"
                                             @click:append="showApiKey = !showApiKey" />
+                                        <v-text-field v-model="selected.device.instanceid" label="AWS or Azure Instance ID" :readonly="!inEdit" />  
                                         <div :hidden="!inEdit">
                                             <v-text-field v-model="selected.device.name" label="Device friendly name"
                                                 :rules="[v => !!v || 'device name is required',]" required />
@@ -658,6 +658,10 @@ export default {
             this.items = []
             var k = 0
             for (let i = 0; i < this.devices.length; i++) {
+                if (this.devices[i].instanceid == null) {
+                    this.devices[i].instanceid = ""
+                    this.updateDevice(this.devices[i])
+                }
 
                 this.items[i] = {
                     id: this.devices[i].id,
@@ -933,7 +937,7 @@ export default {
         },
 
         async updateDevice(device) {
-
+            console.log("updateDevice = ", device)
             this.noEdit = true;
             this.device = device;
 
