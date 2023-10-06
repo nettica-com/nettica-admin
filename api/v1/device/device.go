@@ -350,7 +350,7 @@ func statusDevice(c *gin.Context) {
 		}
 	}
 
-	if !authorized && !device.Registered {
+	if !authorized && !device.Registered && device.InstanceID != "" {
 		authorized = true
 	}
 
