@@ -27,7 +27,7 @@
         <v-card>
             <v-row>
                 <v-col cols="6">
-                    <v-treeview ref="tree" v-if="showTree" :items="items" :search="search" :active.sync="active"
+                    <v-treeview ref="tree" v-if="showTree" :items="items" :search="search" :filter="filter" :active.sync="active"
                         :open.sync="open" activatable open-all hoverable>
                         <template v-slot:prepend="{ item }">
                             <span v-if="item.symbol" class="material-symbols-outlined">{{ item.symbol }}</span>
@@ -311,6 +311,23 @@ mounted() {
             this.readAllAccounts(this.authuser.email)
             this.readAllNetworks()
             this.buildTree()
+        },
+
+        filter(item) {
+            if (item.name.toLowerCase().indexOf(this.search.toLowerCase()) > -1) {
+                return true;
+            }
+            if (item.isMember && item.netName.toLowerCase().indexOf(this.search.toLowerCase()) > -1) {
+                return true;
+            }
+            if (item.isMember && item.member.email.toLowerCase().indexOf(this.search.toLowerCase()) > -1) {
+                return true;
+            }
+            if (item.isAccount && item.account.email.toLowerCase().indexOf(this.search.toLowerCase()) > -1) {
+                return true;
+            }
+
+            return false;
         },
 
         buildTree() {
