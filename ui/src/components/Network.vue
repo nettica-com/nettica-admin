@@ -28,7 +28,7 @@
             <v-divider></v-divider>
             <v-row style="padding-top: 12px;">
                 <v-col cols="6">
-                    <v-treeview v-if="showTree" :items="items" :search="search" :active.sync="active" :open.sync="open"
+                    <v-treeview v-if="showTree" :items="items" :search="search" :filter="filter" :active.sync="active" :open.sync="open"
                         activatable hoverable @update:active="loadNetwork">
                         <template v-slot:prepend="{ item }">
                             <span v-if="item.symbol" class="material-symbols-outlined">{{ item.symbol }}</span>
@@ -583,7 +583,35 @@ export default {
             this.readAllVPNs()
             this.readAllNetworks()
         },
+        filter(item) {
 
+            if (this.search == "") {
+                return true
+            }
+
+            if (item.name.toLowerCase().includes(this.search.toLowerCase())) {
+                return true
+            }
+            if (item.isNet && item.net.tags != null) {
+                for (let i = 0; i < item.net.tags.length; i++) {
+                    if (item.net.tags[i].toLowerCase().includes(this.search.toLowerCase())) {
+                        return true
+                    }
+                }
+            }
+            if (!item.isNet && item.vpn.name.toLowerCase().includes(this.search.toLowerCase())) {
+                return true
+            }
+            if (!item.isNet && item.vpn.current.address.length > 0) {
+                for (let i = 0; i < item.vpn.current.address.length; i++) {
+                    if (item.vpn.current.address[i].toLowerCase().includes(this.search.toLowerCase())) {
+                        return true
+                    }
+                }
+            }
+
+            return false;
+        },
         buildTree() {
             // build the treeview using the networks
             this.items = []

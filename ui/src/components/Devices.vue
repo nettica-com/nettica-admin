@@ -26,7 +26,7 @@
                     </v-card-title>
                     <v-row>
                         <v-col cols="6">
-                            <v-treeview v-if="showTree" :items="items" :search="search" :active.sync="active"
+                            <v-treeview v-if="showTree" :items="items" :search="search" :filter="filter" :active.sync="active"
                                 :open.sync="open" activatable hoverable>
                                 <template v-slot:prepend="{ item }">
                                     <span v-if="item.symbol && item.status == 'Online'" class="material-symbols-outlined" style="color:green;">{{ item.symbol }}</span>
@@ -652,16 +652,37 @@ export default {
             await this.readAllDevices()
             console.log("buildTree = ", this.buildTree())
         },
+        filter(item) {
+            if (this.search == "") {
+                return true
+            }
+
+            if (item.name.toLowerCase().includes(this.search.toLowerCase())) {
+                return true
+            }
+            if (item.isDevice && item.device.tags != null) {
+                for (let i = 0; i < item.device.tags.length; i++) {
+                    if (item.device.tags[i].toLowerCase().includes(this.search.toLowerCase())) {
+                        return true
+                    }
+                }
+            }
+            if (!item.isDevice && item.vpn.current.address.length > 0) {
+                for (let i = 0; i < item.vpn.current.address.length; i++) {
+                    if (item.vpn.current.address[i].toLowerCase().includes(this.search.toLowerCase())) {
+                        return true
+                    }
+                }
+            }
+
+            return false;
+        },
 
         buildTree() {
             // build the treeview using the devices and vpns
             this.items = []
             var k = 0
             for (let i = 0; i < this.devices.length; i++) {
-                if (this.devices[i].instanceid == null) {
-                    this.devices[i].instanceid = ""
-                    this.updateDevice(this.devices[i])
-                }
 
                 this.items[i] = {
                     id: this.devices[i].id,
