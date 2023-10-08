@@ -182,7 +182,10 @@ func CreateService(service *model.Service) (*model.Service, error) {
 	}
 
 	vpn.Current.PersistentKeepalive = 23
-	vpn.Current.SyncEndpoint = true
+
+	if service.ServiceType != "Ingress" {
+		vpn.Current.SyncEndpoint = true
+	}
 
 	public_subnets := []string{"0.0.0.0/5", "8.0.0.0/7", "11.0.0.0/8", "12.0.0.0/6", "16.0.0.0/4", "32.0.0.0/3", "64.0.0.0/3",
 		"96.0.0.0/4", "112.0.0.0/5", "120.0.0.0/6", "124.0.0.0/7", "126.0.0.0/8", "128.0.0.0/3", "160.0.0.0/5", "168.0.0.0/6",
@@ -209,7 +212,7 @@ func CreateService(service *model.Service) (*model.Service, error) {
 	case "Egress":
 		vpn.Role = "Egress"
 		vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Current.Address...)
-		vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, public_subnets...)
+		vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, "0.0.0.0/0")
 
 	}
 

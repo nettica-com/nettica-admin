@@ -502,7 +502,7 @@ func statusDevice(c *gin.Context) {
 				// This is the current client
 				device2 := *device
 				isClient = true
-				if client.Current.SyncEndpoint {
+				if client.Current.SyncEndpoint && client.Role != "Ingress" {
 					// If this client has syncEndpoint on see if the ip has changed
 					update := false
 					if client.Current.Endpoint == "" {
