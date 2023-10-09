@@ -242,11 +242,11 @@
                                                         <tr>
                                                             <td>
                                                                 <v-switch v-model="selected.vpn.current.syncEndpoint" color="success" inset
-                                                                    label="Sync endpoint using server" />
+                                                                    label="Sync Endpoint" />
                                                             </td>
                                                             <td>
                                                                 <v-switch v-model="selected.vpn.current.hasSSH" color="success" inset
-                                                                    label="Has SSH" />
+                                                                    label="SSH" />
                                                             </td>
                                                         </tr>
                                                         <tr>
@@ -256,7 +256,7 @@
                                                             </td>
                                                             <td>
                                                                 <v-switch v-model="selected.vpn.current.hasRDP" color="success" inset
-                                                                    label="Has Remote Desktop" />
+                                                                    label="Remote Desktop" />
                                                             </td>
                                                         </tr>
                                                         <tr>
@@ -422,9 +422,9 @@
                                     <v-form ref="form" v-model="valid">
                                         <v-text-field v-model="vpn.name" label="DNS name for this device"
                                             :rules="[v => !!v || 'DNS name is required',]" required />
-                                        <v-select return-object v-model="netList.selected" :items="netList.items"
+                                        <v-select return-object v-model="netList.selected" :items="netList.items" v-on:change="updateDefaults"
                                             item-text="text" item-value="value" label="Join this network"
-                                            :rules="[v => !!v || 'Net is required',]" single persistent-hint required />
+                                            :rules="[v => !!v || 'Network is required',]" single persistent-hint required />
                                         <v-text-field v-model="vpn.current.endpoint" label="Public endpoint for clients" />
                                         <v-text-field v-model="vpn.current.listenPort" type="number" label="Listen port" />
 
@@ -439,6 +439,34 @@
                                         </v-combobox>
                                         <v-switch v-model="vpn.enable" color="success" inset
                                             :label="vpn.enable ? 'Enable VPN after creation' : 'Disable VPN after creation'" />
+                                        <table width="100%">
+                                            <tr>
+                                                <td>
+                                                    <v-switch v-model="vpn.current.syncEndpoint" color="success" inset
+                                                        label="Sync Endpoint" />
+                                                </td>
+                                                <td>
+                                                    <v-switch v-model="vpn.current.hasSSH" color="success" inset
+                                                        label="SSH" />
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <v-switch v-model="vpn.current.upnp" color="success" inset
+                                                        label="Enable UPnP" />
+                                                </td>
+                                                <td>
+                                                    <v-switch v-model="vpn.current.hasRDP" color="success" inset
+                                                        label="Remote Desktop" />
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2">
+                                                    <v-switch v-model="vpn.current.enableDns" color="success" inset
+                                                        label="Enable Nettica DNS" />
+                                                </td>
+                                            </tr>
+                                        </table>                                            
                                     </v-form>
                                 </v-col>
                             </v-row>
@@ -813,11 +841,30 @@ export default {
                 this.netList.items[i] = { "text": this.nets[i].netName, "value": this.nets[i].id }
                 if (this.netList.items[i].text == this.device.netName) {
                     selected = i
+                    break
                 }
             }
 
             this.netList.selected = this.netList.items[selected];
             this.dialogAddVPN = true;
+        },
+
+        updateDefaults(net) {
+            console.log("updateDefaults", net)
+            var selected = 0;
+            for (let i = 0; i < this.nets.length; i++) {
+                if (this.nets[i].id == net.value) {
+                    selected = i
+                    break
+                }
+            }
+            this.vpn.current.syncEndpoint = this.nets[selected].default.syncEndpoint
+            this.vpn.current.hasSSH = this.nets[selected].default.hasSSH
+            this.vpn.current.hasRDP = this.nets[selected].default.hasRDP
+            this.vpn.current.upnp = this.nets[selected].default.upnp
+            this.vpn.current.enableDns = this.nets[selected].default.enableDns
+            console.log("updateDefaults = ", this.vpn, this.nets[selected])
+
         },
 
         async createVPN(vpn) {
