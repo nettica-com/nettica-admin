@@ -1,107 +1,116 @@
 <template>
     <v-container style="padding-top:0px">
         <v-row><v-col cols="12">
-        <div>
-            <v-btn class="mb-3 mt-0" @click="Refresh()">
-                <v-icon dark>mdi-refresh</v-icon>
-                Refresh
-            </v-btn>
-        </div>
-        <v-card>
-            <v-card-title>
-                Accounts
-                <v-spacer></v-spacer>
-                <v-text-field v-model="search" append-icon="mdi-magnify" label="Search" single-line
-                    hide-details></v-text-field>
-                <v-spacer></v-spacer>
-                <v-btn color="success" @click="startInvite">
-                    Invite
-                    <v-icon right dark>mdi-account-group</v-icon>
-                </v-btn>&nbsp;
-                <v-btn color="primary" @click="dialogAPI = true">
-                    API
-                    <v-icon right dark>mdi-key</v-icon>
-                </v-btn>
-            </v-card-title>
-        </v-card>
-        <v-card>
-            <v-row>
-                <v-col cols="6">
-                    <v-treeview ref="tree" v-if="showTree" :items="items" :search="search" :filter="filter" :active.sync="active"
-                        :open.sync="open" activatable open-all hoverable>
-                        <template v-slot:prepend="{ item }">
-                            <span v-if="item.symbol" class="material-symbols-outlined">{{ item.symbol }}</span>
-                            <v-icon v-else>
-                                {{ item.icon }}
-                            </v-icon>
-                        </template>
-                    </v-treeview>
-                </v-col>
-                <v-divider vertical></v-divider>
-                <v-col cols="6" class="text-center">
-                    <div v-if="!selected" class="text-h6 grey--text text--lighten-1 font-weight-light"
-                        style="align-self: center;">
-                    </div>
-                    <v-card v-else-if="selected.isMember" :key="selected.id" class="px-3 mx-auto" style="align-self: center;" flat>
-                        <v-card-text width="550">
-                            <v-avatar v-if="selected.member.picture != ''" size="50">
-                                <img :src="selected.member.picture" class="mx-auto d-block" width="50" height="50" />
-                            </v-avatar>
-                            <v-icon v-else size="50" >mdi-account</v-icon>
+                <div>
+                    <v-btn class="mb-3 mt-0" @click="Refresh()">
+                        <v-icon dark>mdi-refresh</v-icon>
+                        Refresh
+                    </v-btn>
+                </div>
+                <v-card>
+                    <v-card-title>
+                        Accounts
+                        <v-spacer></v-spacer>
+                        <v-text-field v-model="search" append-icon="mdi-magnify" label="Search" single-line
+                            hide-details></v-text-field>
+                        <v-spacer></v-spacer>
+                        <v-btn color="success" @click="startInvite">
+                            Invite
+                            <v-icon right dark>mdi-account-group</v-icon>
+                        </v-btn>&nbsp;
+                        <v-btn color="primary" @click="dialogAPI = true">
+                            API
+                            <v-icon right dark>mdi-key</v-icon>
+                        </v-btn>
+                    </v-card-title>
+                </v-card>
+                <v-card>
+                    <v-row>
+                        <v-col cols="6">
+                            <v-treeview ref="tree" v-if="showTree" :items="items" :search="search" :filter="filter"
+                                :active.sync="active" :open.sync="open" activatable open-all hoverable>
+                                <template v-slot:prepend="{ item }">
+                                    <span v-if="item.symbol" class="material-symbols-outlined">{{ item.symbol }}</span>
+                                    <v-icon v-else>
+                                        {{ item.icon }}
+                                    </v-icon>
+                                </template>
+                            </v-treeview>
+                        </v-col>
+                        <v-divider vertical></v-divider>
+                        <v-col cols="6" class="text-center">
+                            <div v-if="!selected" class="text-h6 grey--text text--lighten-1 font-weight-light"
+                                style="align-self: center;">
+                            </div>
+                            <v-card v-else-if="selected.isMember" :key="selected.id" class="px-3 mx-auto"
+                                style="align-self: center;" flat>
+                                <v-form autocomplete="off">
+                                    <v-card-text width="550">
+                                        <v-avatar v-if="selected.member.picture != ''" size="50">
+                                            <img :src="selected.member.picture" class="mx-auto d-block" width="50"
+                                                height="50" />
+                                        </v-avatar>
+                                        <v-icon v-else size="50">mdi-account</v-icon>
 
-                            <h3 class="text-h5 mb-2">
-                                {{ selected.name }}
-                            </h3>
-                            <h5 class="text-h6 mb-2">
-                                {{ selected.role }}
-                            </h5>
-                        </v-card-text>
-                        <v-divider></v-divider>
+                                        <h3 class="text-h5 mb-2">
+                                            {{ selected.name }}
+                                        </h3>
+                                        <h5 class="text-h6 mb-2">
+                                            {{ selected.role }}
+                                        </h5>
+                                    </v-card-text>
+                                    <v-divider></v-divider>
 
-                        <v-row class="px-3" width="600">
-                            <v-col flex>
-                                <v-form ref="form" v-model="valid">
-                                    <v-text-field v-model="selected.member.parent" label="Account ID" readonly />
-                                    <v-text-field v-model="selected.member.accountName" label="Account Name"
-                                        :rules="[v => !!v || 'Account name is required',]" required />
-                                    <v-text-field v-model="selected.member.name" label="Name"
-                                        :rules="[v => !!v || 'Name is required',]" required />
-                                    <v-text-field v-model="selected.member.email" label="Email Address"
-                                        :rules="[v => !!v || 'Email address is required',]" required >
-                                        <template v-slot:append>
-                                                    <v-btn icon @click="resendEmail(selected.member)" >
-                                                        <v-icon dark>mdi-refresh</v-icon>
-                                                        <v-icon dark>mdi-email-outline</v-icon>
-                                                    </v-btn>
-                                        </template>
-                                    </v-text-field>
-                                    <v-text-field v-model="selected.member.picture" label="Picture" />
-                                    <v-select  :items="networks" v-model="selected.netName" label="To this net" 
-                                        :readonly="selected.isReadOnly" ></v-select>
-                                    <v-select :items="roles" v-model="selected.role" label="Role" :readonly="selected.isReadOnly"></v-select>
-                                    <v-select :items="statuses" v-model="selected.status" label="Status"></v-select>
-                                    <p class="text-caption">Created by {{ selected.member.createdBy }} at {{ selected.member.created | formatDate }}<br/>
-                                                            Last update by {{ selected.member.updatedBy }} at {{ selected.member.updated | formatDate }}</p>
+                                    <v-row class="px-3" width="600">
+                                        <v-col flex>
+                                            <v-form ref="form" v-model="valid">
+                                                <v-text-field v-model="selected.member.parent" label="Account ID"
+                                                    readonly />
+                                                <v-text-field v-model="selected.member.accountName" label="Account Name"
+                                                    :rules="[v => !!v || 'Account name is required',]" required />
+                                                <v-text-field v-model="selected.member.name" label="Name"
+                                                    :rules="[v => !!v || 'Name is required',]" required />
+                                                <v-text-field v-model="selected.member.email" label="Email Address"
+                                                    :rules="[v => !!v || 'Email address is required',]" required>
+                                                    <template v-slot:append>
+                                                        <v-btn icon @click="resendEmail(selected.member)">
+                                                            <v-icon dark>mdi-refresh</v-icon>
+                                                            <v-icon dark>mdi-email-outline</v-icon>
+                                                        </v-btn>
+                                                    </template>
+                                                </v-text-field>
+                                                <v-text-field v-model="selected.member.picture" label="Picture" />
+                                                <v-select :items="networks" v-model="selected.netName" label="To this net"
+                                                    :readonly="selected.isReadOnly"></v-select>
+                                                <v-select :items="roles" v-model="selected.role" label="Role"
+                                                    :readonly="selected.isReadOnly"></v-select>
+                                                <v-select :items="statuses" v-model="selected.status"
+                                                    label="Status"></v-select>
+                                                <p class="text-caption">Created by {{ selected.member.createdBy }} at {{
+                                                    selected.member.created | formatDate }}<br />
+                                                    Last update by {{ selected.member.updatedBy }} at {{
+                                                        selected.member.updated | formatDate }}</p>
 
+                                            </v-form>
+                                        </v-col>
+                                    </v-row>
+                                    <v-card-actions>
+                                        <v-btn color="success" @click="updateMember(selected)">
+                                            Save
+                                            <v-icon right dark>mdi-check-outline</v-icon>
+                                        </v-btn>
+                                        <v-spacer></v-spacer>
+                                        <v-btn color="error" @click="remove(selected.member)">
+                                            Delete
+                                            <v-icon right dark>mdi-delete-outline</v-icon>
+                                        </v-btn>
+                                    </v-card-actions>
                                 </v-form>
-                            </v-col>
-                        </v-row>
-                        <v-card-actions>
-                            <v-btn color="success" @click="updateMember(selected)">
-                                Save
-                                <v-icon right dark>mdi-check-outline</v-icon>
-                            </v-btn>
-                            <v-spacer></v-spacer>
-                            <v-btn color="error" @click="remove(selected.member)">
-                                Delete
-                                <v-icon right dark>mdi-delete-outline</v-icon>
-                            </v-btn>
-                        </v-card-actions>
-                    </v-card>
-                </v-col>
-            </v-row>
-        </v-card>
-        </v-col></v-row>
+                            </v-card>
+                        </v-col>
+                    </v-row>
+                </v-card>
+            </v-col></v-row>
         <v-dialog v-if="account" v-model="dialogCreate" max-width="550">
             <v-card>
                 <v-card-title class="headline">Invite new member</v-card-title>
@@ -110,8 +119,8 @@
                         <v-col cols="12">
                             <v-form ref="form" v-model="valid">
                                 <v-select return-object v-model="acntList.selected" :items="acntList.items" item-text="text"
-                                    item-value="value" label="To this account" :rules="[v => !!v || 'Account is required',]" single
-                                    persistent-hint required />
+                                    item-value="value" label="To this account" :rules="[v => !!v || 'Account is required',]"
+                                    single persistent-hint required />
                                 <v-select return-object v-model="netList.selected" :items="netList.items" item-text="text"
                                     item-value="value" label="To this net" :rules="[v => !!v || 'Net is required',]" single
                                     persistent-hint required />
@@ -145,8 +154,7 @@
                     <v-row>
                         <v-col cols="12">
                             <v-form ref="form" v-model="valid">
-                                <v-data-table :headers="kheaders" :items="accounts" :items-per-page="5"
-                                    class="elevation-1">
+                                <v-data-table :headers="kheaders" :items="accounts" :items-per-page="5" class="elevation-1">
                                     <template v-slot:item.action="{ item }">
                                         <v-row>
                                             <v-icon class="pr-1 pl-1" @click="regenerateKey(item)"
@@ -217,11 +225,11 @@ export default {
         selected() {
 
             let findValue = (arr, val) => {
-                for(let obj of arr){
+                for (let obj of arr) {
                     if (obj.id === val) {
                         return obj;
                     }
-                    if(obj.children){
+                    if (obj.children) {
                         let result = findValue(obj.children, val);
                         if (result) {
                             return result;
@@ -249,7 +257,7 @@ export default {
         }),
     },
 
-mounted() {
+    mounted() {
         this.readAllNetworks()
         this.readAllAccounts(this.authuser.email)
 
@@ -293,11 +301,11 @@ mounted() {
         }),
 
         findValue(arr, val) {
-            for(let obj of arr){
+            for (let obj of arr) {
                 if (obj.id === val) {
                     return obj;
                 }
-                if(obj.children){
+                if (obj.children) {
                     let result = findValue(obj.children, val);
                     if (result) {
                         return result;
@@ -361,7 +369,7 @@ mounted() {
             // create a child node for each account
             let child = 0;
             for (let i = 0; i < this.accounts.length; i++) {
-                for (let j = 0; j< this.items.length; j++) {
+                for (let j = 0; j < this.items.length; j++) {
                     if (this.accounts[i].parent == this.items[j].idx) {
                         // append the account to the children of the parent
                         var name = this.accounts[i].name
@@ -424,10 +432,10 @@ mounted() {
                         if (netName == "") {
                             netName = "All Networks"
                         }
-                        var netList =  {
-                                selected: { "text": "", "value": "" },
-                                items: []
-                            }
+                        var netList = {
+                            selected: { "text": "", "value": "" },
+                            items: []
+                        }
 
                         netList.items[0] = { "text": netName, "value": members[j].netId }
                         netList.selected = { "text": netName, "value": members[j].netId }
@@ -452,22 +460,6 @@ mounted() {
             }
 
             this.items.sort((a, b) => {
-            const nameA = a.name.toUpperCase(); // ignore upper and lowercase
-            const nameB = b.name.toUpperCase(); // ignore upper and lowercase
-            if (nameA < nameB) {
-                return -1;
-            }
-            if (nameA > nameB) {
-                return 1;
-            }
-
-            // names must be equal
-            return 0;
-            });
-
-            // now sort the children of each parent
-            for (let i = 0; i < this.items.length; i++) {
-                this.items[i].children.sort((a, b) => {
                 const nameA = a.name.toUpperCase(); // ignore upper and lowercase
                 const nameB = b.name.toUpperCase(); // ignore upper and lowercase
                 if (nameA < nameB) {
@@ -479,6 +471,22 @@ mounted() {
 
                 // names must be equal
                 return 0;
+            });
+
+            // now sort the children of each parent
+            for (let i = 0; i < this.items.length; i++) {
+                this.items[i].children.sort((a, b) => {
+                    const nameA = a.name.toUpperCase(); // ignore upper and lowercase
+                    const nameB = b.name.toUpperCase(); // ignore upper and lowercase
+                    if (nameA < nameB) {
+                        return -1;
+                    }
+                    if (nameA > nameB) {
+                        return 1;
+                    }
+
+                    // names must be equal
+                    return 0;
                 });
             }
 
@@ -522,7 +530,7 @@ mounted() {
                     }
                     x++;
                 }
-            }   
+            }
 
             this.acntList.selected = this.acntList.items[selected];
 
@@ -558,7 +566,7 @@ mounted() {
 
             console.log("result = ", result)
             // sleep one second
-            
+
             await new Promise(r => setTimeout(r, 1000));
 
             console.log("create_result = ", this.create_result)
@@ -618,20 +626,20 @@ mounted() {
 
             this.dialogMember = false;
 
-            console.log( "updateMember: ", item)
-                    
+            console.log("updateMember: ", item)
+
             item.member.netName = item.netName;
 
             if (item.member.netName == "All Networks") {
                 item.member.netName = "";
-                item.member.netId = ""; 
+                item.member.netId = "";
             }
 
             item.member.role = item.role;
             item.member.status = item.status;
 
-            console.log( "nets = ", this.nets)
-            console.log( "netList = ", this.netList)
+            console.log("nets = ", this.nets)
+            console.log("netList = ", this.netList)
 
             for (let i = 0; i < this.nets.length; i++) {
                 if (this.nets[i].netName == item.member.netName) {
@@ -644,9 +652,9 @@ mounted() {
             if (item.member.netName != "") {
                 name = name + " (" + item.member.netName + ")"
             }
-            item.name = name           
+            item.name = name
 
-            console.log( "updateAccount: ", item.member)
+            console.log("updateAccount: ", item.member)
             this.updateAccount(item.member)
             this.readAllAccounts(this.authuser.email)
 
