@@ -52,6 +52,7 @@
 
                             </div>
                             <v-card v-else-if="selected.isDevice" :key="selected.id" class="px-3 mx-auto" flat>
+                                <v-form autocomplete="off">
                                 <v-card-text width="600">
                                     <v-icon v-if="selected.device.type=='Service'" size="50">mdi-cloud</v-icon>
                                     <v-icon v-else size="50">mdi-devices</v-icon>
@@ -90,7 +91,7 @@
                                             persistent-hint :readonly="!inEdit" />
                                         <v-switch v-model="selected.device.enable" color="success" inset
                                             :label="selected.device.enable ? 'Enabled' : 'Disabled'" :readonly="!inEdit" />
-                                        <v-select return-object v-model="selected.device.accountid" :items="acntList.items"
+                                        <v-select return-object v-model="selected.accountid" :items="acntList.items"
                                             item-text="text" item-value="value" label="Account ID" single
                                             persistent-hint :readonly="!inEdit" />
                                         <v-text-field v-model="selected.device.id" label="Device ID" readonly />
@@ -109,7 +110,7 @@
                                     </v-col>
                                 </v-row>
                                 <v-card-actions v-if="inEdit">
-                                    <v-btn color="success" @click="updateDevice(selected.device)">
+                                    <v-btn color="success" @click="updateDevice(selected)">
                                         Submit
                                         <v-icon right dark>mdi-check-outline</v-icon>
                                     </v-btn>
@@ -142,8 +143,10 @@
                                         </v-row>
                                     </v-container>
                                 </v-card-actions>
+                                </v-form>
                             </v-card>
                             <v-card v-else-if="!selected.isDevice">
+                                <v-form autocomplete="off">
                                 <v-card-text width="600" class="px-3">
                                     <v-icon class="material-symbols-outlined" size="50">hub</v-icon>
                                     <h3 class="text-h5 mb-2">
@@ -306,7 +309,7 @@
                                         </v-container>
                                     </v-card-actions>
                                 </v-card>
-
+                                </v-form>
                             </v-card>
                         </v-col>
                     </v-row>
@@ -689,7 +692,8 @@ export default {
                     name: this.devices[i].name,
                     device: this.devices[i],
                     status: this.devices[i].status,
-                    platform: this.devices[i].platform,
+                    platform: { "text": this.devices[i].platform, "value": this.devices[i].platform },
+                    accountid: { "text": this.devices[i].accountid, "value": this.devices[i].accountid },
                     icon: "mdi-devices",
                     symbol: "devices",
                     isDevice: true,
@@ -957,24 +961,25 @@ export default {
 
         },
 
-        async updateDevice(device) {
-            console.log("updateDevice = ", device)
+        async updateDevice(item) {
+            console.log("updateDevice = ", item)
             this.noEdit = true;
-            this.device = device;
+            this.device = item.device;
 
-            device.platform = this.selected.platform.value
-            console.log("platform = ", device.platform)
+            this.device.platform = item.platform.value
+            console.log("platform = ", this.device.platform)
 
             // set the account id
-            device.accountid = device.accountid.value
-            console.log("accountid = ", device.accountid)
+            this.device.accountid = item.accountid.value
+            console.log("accountid = ", this.device.accountid)
 
             // all good, submit
             this.dialogUpdate = false;
             this.dialogServiceHost = false;
             this.inEdit = false;
 
-            await this.updatedevice(device)
+            await this.updatedevice(this.device)
+            // sleep for one second
             await new Promise(r => setTimeout(r, 1000));
             this.Refresh()
         },

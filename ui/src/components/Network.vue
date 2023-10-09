@@ -49,6 +49,7 @@
 
                     </div>
                     <v-card v-else-if="selected.isNet" :key="selected.id" class="px-3 mx-auto" flat>
+                        <v-form autocomplete="off">
                         <v-card-text width="550">
                             <v-icon size="50" class="material-symbols-outlined">hub</v-icon>
                             <h3 class="text-h5 mb-2">
@@ -188,8 +189,10 @@
                                 </v-row>
                             </v-container>
                         </v-card-actions>
+                        </v-form>
                     </v-card>
                     <v-card v-else-if="!selected.isNet">
+                        <v-form autocomplete="off" >
                         <v-card-text width="600" class="px-3">
                             <v-icon size="50" class="material-symbols-outlined">network_node</v-icon>
                             <h3 class="text-h5 mb-2">
@@ -312,8 +315,6 @@
                                 </v-expansion-panel-content>
                             </v-expansion-panel>
                         </v-expansion-panels>
-
-
                         <v-card>
                             <v-card-actions v-if="inEdit">
                                 <v-btn color="success" @click="updateVPN(selected.vpn)">
@@ -350,7 +351,7 @@
                                 </v-container>
                             </v-card-actions>
                         </v-card>
-
+                        </v-form>
                     </v-card>
                 </v-col>
             </v-row>
