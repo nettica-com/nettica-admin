@@ -23,3 +23,11 @@ type StatusResponse struct {
 	Status  int    `json:"status" bson:"status"`
 	Message string `json:"message" bson:"message"`
 }
+
+// AgentNotification structure
+// type: dns, info, error
+// text: message
+type AgentNotification struct {
+	Type string `json:"type" bson:"type"`
+	Text string `json:"text" bson:"text"`
+}
