@@ -99,6 +99,8 @@
                                         </v-chip>
                                     </template>
                                 </v-combobox>
+                                <v-text-field type="number" v-model="selected.net.default.mtu"
+                                    label="MTU" hint="Leave at 0 for auto, 1350 for IPv6 or if problems occur" />
                                 <v-text-field v-model="selected.net.accountid" label="Account ID" readonly />
                                 <v-text-field v-model="selected.net.id" label="Network ID" readonly />
                                 <v-text-field v-model="selected.net.default.presharedKey" label="Preshared Key" autocomplete="off"
@@ -106,8 +108,6 @@
                                                         :type="showPreshared ? 'text' : 'password'"
                                                         @click:append="showPreshared = !showPreshared" />
 
-                                <v-text-field type="number" v-model="selected.net.default.mtu"
-                                    label="Define default global MTU" hint="Leave at 0 and let us take care of MTU" />
                                 <v-text-field type="number" v-model="selected.net.default.persistentKeepalive"
                                     label="Persistent keepalive"
                                     hint="To disable, set to 0.  Recommended value 29 (seconds)" />
@@ -227,6 +227,8 @@
                                     label="Public endpoint for clients" />
                                 <v-text-field :readonly="!inEdit" v-model="selected.vpn.current.listenPort" type="number"
                                     label="Listen port" />
+                                <v-text-field type="number" v-model="selected.vpn.current.mtu"
+                                    label="MTU" hint="Leave at 0 for auto, 1350 for IPv6 or problems occur" />
                                 <v-switch v-model="selected.vpn.enable" color="success" inset
                                     :label="selected.vpn.enable ? 'Enabled' : 'Disabled'" :readonly="!inEdit" />
                                 <p class="text-caption">Created by {{ selected.vpn.createdBy }} at {{ selected.vpn.created |
@@ -270,8 +272,6 @@
                                                 autocomplete="off" :append-icon="showPreshared ? 'mdi-eye' : 'mdi-eye-off'"
                                                 :type="showPreshared ? 'text' : 'password'"
                                                 @click:append="showPreshared = !showPreshared" />
-                                            <v-text-field type="number" v-model="selected.vpn.current.mtu"
-                                                label="Define global MTU" hint="Leave at 0 and let us take care of MTU" />
                                             <v-text-field type="number" v-model="selected.vpn.current.persistentKeepalive"
                                                 label="Persistent keepalive"
                                                 hint="To disable, set to 0.  Recommended value 29 (seconds)" />
