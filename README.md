@@ -13,7 +13,7 @@ A control plane for [WireGuard](https://wireguard.com).
 * nginx
 * NodeJS / Vue 2
 
-![Screenshot](nettica-architecture.png)
+![Screenshot](nettica-architecture.jpg)
 
 ## Features
 
