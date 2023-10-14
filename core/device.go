@@ -245,6 +245,11 @@ func ReadDevices() ([]*model.Device, error) {
 	return mongo.ReadAllDevices("", "")
 }
 
+// ReadDevicesForAccount
+func ReadDevicesForAccount(accountid string) ([]*model.Device, error) {
+	return mongo.ReadAllDevices("accountid", accountid)
+}
+
 // ReadDevices all devices
 // This code needs a severe rewrite
 func ReadDevicesForUser(email string) ([]*model.Device, error) {

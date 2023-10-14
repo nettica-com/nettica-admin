@@ -10,6 +10,7 @@ import (
 	"github.com/nettica-com/nettica-admin/core"
 	model "github.com/nettica-com/nettica-admin/model"
 	mongodb "github.com/nettica-com/nettica-admin/mongo"
+	"github.com/nettica-com/nettica-admin/util"
 	"github.com/patrickmn/go-cache"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
@@ -188,6 +189,31 @@ func (o *Oauth2idc) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 				log.Error(err)
 			}
 
+		}
+		if core.EnforceLimits() {
+			_, err := core.ReadLimits(accounts[0].Id)
+			if err != nil {
+				limits_id, err := util.GenerateRandomString(8)
+				if err != nil {
+					log.Error(err)
+				}
+				limits_id = "limits-" + limits_id
+
+				limits := &model.Limits{
+					Id:        limits_id,
+					AccountID: accounts[0].Id,
+					Devices:   5,
+					Networks:  1,
+					Members:   2,
+					Relays:    0,
+					Tolerance: 1.0,
+					UpdatedBy: user.Email,
+					CreatedBy: user.Email,
+					Updated:   time.Now(),
+					Created:   time.Now(),
+				}
+				mongodb.Serialize(limits_id, "id", "limits", limits)
+			}
 		}
 	}
 	for i := 0; i < len(accounts); i++ {

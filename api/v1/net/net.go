@@ -69,7 +69,32 @@ func createNet(c *gin.Context) {
 	data.UpdatedBy = account.Email
 
 	if data.AccountID == "" {
-		data.AccountID = account.Id
+		data.AccountID = account.Parent
+	}
+
+	if core.EnforceLimits() {
+		// check if the account has reached the limits
+		nets, err := core.ReadNetworksForAccount(data.AccountID)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("failed to read networks")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		limits, err := core.ReadLimits(data.AccountID)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("failed to read limits")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		if limits.NetworksLimitReached(len(nets)) {
+			log.Infof("createNet: %s has reached the networks limit", account.Email)
+			c.JSON(http.StatusForbidden, gin.H{"error": "Network limit reached"})
+			return
+		}
 	}
 
 	client, err := core.CreateNet(&data)

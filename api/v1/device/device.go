@@ -72,6 +72,30 @@ func createDevice(c *gin.Context) {
 		data.AccountID = account.Parent
 	}
 
+	if core.EnforceLimits() {
+		limit, err := core.ReadLimits(data.AccountID)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("failed to read limits")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		devices, err := core.ReadDevicesForAccount(data.AccountID)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("failed to read devices")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		if limit.DevicesLimitReached(len(devices)) {
+			log.Infof("createDevice: %s has reached the device limit", account.Email)
+			c.JSON(http.StatusForbidden, gin.H{"error": "Device limit reached"})
+			return
+		}
+	}
+
 	client, err := core.CreateDevice(&data)
 	if err != nil {
 		log.WithFields(log.Fields{

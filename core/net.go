@@ -148,6 +148,10 @@ func DeleteNet(id string) error {
 	return nil
 }
 
+func ReadNetworksForAccount(accountId string) ([]*model.Network, error) {
+	return mongo.ReadAllNetworks("accountid", accountId)
+}
+
 // ReadNetworks all clients
 func ReadNetworks(email string) ([]*model.Network, error) {
 

@@ -127,6 +127,32 @@ func createAccount(c *gin.Context) {
 		return
 	}
 
+	if core.EnforceLimits() {
+		// check if the account has reached the limits
+		members, err := core.ReadAllAccounts(id)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("failed to read accounts")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		limits, err := core.ReadLimits(id)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("failed to read limits")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		if limits.MembersLimitReached(len(members)) {
+			log.Infof("createAccount: %s has reached the members limit", acnt.Email)
+			c.JSON(http.StatusForbidden, gin.H{"error": "User limit reached"})
+			return
+		}
+	}
+
 	account.CreatedBy = acnt.Email
 	account.UpdatedBy = acnt.Email
 

@@ -123,18 +123,24 @@ func Deserialize(id string, parm string, col string, t reflect.Type) (interface{
 	}
 
 	switch t.String() {
+
+	case "model.Device":
+		var c *model.Device
+		err = collection.FindOne(ctx, filter).Decode(&c)
+		return c, err
+
 	case "model.Account":
 		var c *model.Account
 		err = collection.FindOne(ctx, filter).Decode(&c)
 		return c, err
 
-	case "model.VPN":
-		var c *model.VPN
+	case "model.Limits":
+		var c *model.Limits
 		err = collection.FindOne(ctx, filter).Decode(&c)
 		return c, err
 
-	case "model.Device":
-		var c *model.Device
+	case "model.VPN":
+		var c *model.VPN
 		err = collection.FindOne(ctx, filter).Decode(&c)
 		return c, err
 
