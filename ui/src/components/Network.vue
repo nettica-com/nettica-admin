@@ -363,7 +363,7 @@
                     <v-row>
                         <v-col cols="12">
                             <v-form ref="form" v-model="valid">
-                                <v-text-field v-model="net.netName" label="Network friendly name"
+                                <v-text-field v-model="net.netName" label="Network name"
                                     :rules="[v => !!v || 'Network name is required',]" required />
                                 <v-text-field v-model="net.description" label="Description" />
                                 <v-select return-object v-model="acntList.selected" :items="acntList.items" item-text="text"
