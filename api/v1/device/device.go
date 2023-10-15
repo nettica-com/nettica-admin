@@ -508,6 +508,9 @@ func statusDevice(c *gin.Context) {
 				if ip == "0.0.0.0/0" {
 					allowed = append(allowed[:x], allowed[x+1:]...)
 				}
+				if ip == "::/0" {
+					allowed = append(allowed[:x], allowed[x+1:]...)
+				}
 			}
 			msg.Config[i].VPNs = make([]model.VPN, 2)
 			msg.Config[i].VPNs[0] = *ingress
