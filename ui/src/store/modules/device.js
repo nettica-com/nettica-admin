@@ -18,7 +18,6 @@ const getters = {
     let item = state.deviceQrcodes.find(item => item.id === id)
     // initial load fails, must wait promise and stuff...
     return item ? item.qrcode : "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg=="
-    //    return "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
   },
   getdeviceConfig: (state) => (id) => {
     let item = state.deviceConfigs.find(item => item.id === id)
@@ -42,7 +41,7 @@ const actions = {
           var last = new Date(device.lastSeen)
           var diff = Math.abs(Date.now() - last)
           console.log("Host: " + device.name + " lastSeen: " + device.lastSeen + " ms: " + diff)
-          if (diff > 30000) {
+          if (diff > 60000) {
             device.status = "Offline"
             if (device.platform == "Windows" || device.platform == "Native" || device.platform == "iOS" || device.platform == "Android" || device.platform == "MacOS") {
               device.status = "Native"
@@ -52,9 +51,6 @@ const actions = {
           }
         }
         commit('devices', resp)
-
-        //        dispatch('readQrcodes')
-        //        dispatch('readConfigs')
       })
       .catch(error => {
         if (error.response) {
