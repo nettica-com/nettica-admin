@@ -8,17 +8,21 @@ import (
 // Limits structure defines the limits for the account
 
 type Limits struct {
-	Id        string    `json:"id"                        bson:"id"`
-	AccountID string    `json:"accountid"                 bson:"accountid"`
-	Devices   int       `json:"devices"                   bson:"devices"`
-	Networks  int       `json:"networks"                  bson:"networks"`
-	Members   int       `json:"members"                   bson:"members"`
-	Relays    int       `json:"relays"                    bson:"relays"`
-	Tolerance float64   `json:"tolerance"                 bson:"tolerance"`
-	CreatedBy string    `json:"createdBy"                 bson:"createdBy"`
-	UpdatedBy string    `json:"updatedBy"                 bson:"updatedBy"`
-	Created   time.Time `json:"created"                   bson:"created"`
-	Updated   time.Time `json:"updated"                   bson:"updated"`
+	Id          string    `json:"id"                        bson:"id"`
+	AccountID   string    `json:"accountid"                 bson:"accountid"`
+	Devices     int       `json:"devices"                   bson:"devices"`
+	MaxDevices  int       `json:"maxdevices"                bson:"maxdevices"`
+	Networks    int       `json:"networks"                  bson:"networks"`
+	MaxNetworks int       `json:"maxnetworks"               bson:"maxnetworks"`
+	Members     int       `json:"members"                   bson:"members"`
+	MaxMembers  int       `json:"maxmembers"                bson:"maxmembers"`
+	Relays      int       `json:"relays"                    bson:"relays"`
+	MaxRelays   int       `json:"maxrelays"                 bson:"maxrelays"`
+	Tolerance   float64   `json:"tolerance"                 bson:"tolerance"`
+	CreatedBy   string    `json:"createdBy"                 bson:"createdBy"`
+	UpdatedBy   string    `json:"updatedBy"                 bson:"updatedBy"`
+	Created     time.Time `json:"created"                   bson:"created"`
+	Updated     time.Time `json:"updated"                   bson:"updated"`
 }
 
 // IsValid check if model is valid
@@ -42,11 +46,11 @@ func (a Limits) IsValid() []error {
 }
 
 func (l Limits) DevicesLimitReached(count int) bool {
-	if l.Devices < 0 {
+	if l.MaxDevices < 0 {
 		return false
 	}
 
-	if count >= int(float64(l.Devices)*l.Tolerance) {
+	if count >= int(float64(l.MaxDevices)*l.Tolerance) {
 		return true
 	}
 
@@ -54,11 +58,11 @@ func (l Limits) DevicesLimitReached(count int) bool {
 }
 
 func (l Limits) NetworksLimitReached(count int) bool {
-	if l.Networks < 0 {
+	if l.MaxNetworks < 0 {
 		return false
 	}
 
-	if count >= int(float64(l.Networks)*l.Tolerance) {
+	if count >= int(float64(l.MaxNetworks)*l.Tolerance) {
 		return true
 	}
 
@@ -66,11 +70,11 @@ func (l Limits) NetworksLimitReached(count int) bool {
 }
 
 func (l Limits) MembersLimitReached(count int) bool {
-	if l.Members < 0 {
+	if l.MaxMembers < 0 {
 		return false
 	}
 
-	if count >= int(float64(l.Members)*l.Tolerance) {
+	if count >= int(float64(l.MaxMembers)*l.Tolerance) {
 		return true
 	}
 
@@ -78,11 +82,11 @@ func (l Limits) MembersLimitReached(count int) bool {
 }
 
 func (l Limits) RelaysLimitReached(count int) bool {
-	if l.Relays < 0 {
+	if l.MaxRelays < 0 {
 		return false
 	}
 
-	if count >= int(float64(l.Relays)*l.Tolerance) {
+	if count >= int(float64(l.MaxRelays)*l.Tolerance) {
 		return true
 	}
 

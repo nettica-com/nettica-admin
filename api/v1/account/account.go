@@ -22,6 +22,7 @@ func ApplyRoutes(r *gin.RouterGroup) {
 		g.GET("/:id/invite", emailAccount)
 		g.GET("/:id", readAllAccounts)
 		g.GET("/:id/users", readUsers)
+		g.GET("/:id/limits", getLimits)
 		g.PATCH("/:id", updateAccount)
 		g.DELETE("/:id", deleteAccount)
 	}
@@ -389,4 +390,79 @@ func deleteAccount(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "OK"})
+}
+
+// GetLimits gets the limits for an account
+// @Summary Get the limits for an account
+// @Description Get the limits for an account
+// @Tags accounts
+// @Security apiKey
+// @Success 200 {object} model.Limits
+// @Failure 400 {object} error
+// @Router /accounts/{id}/limits [get]
+// @Param id path string true "Account ID"
+func getLimits(c *gin.Context) {
+	id := c.Param("id")
+
+	account, _, err := core.AuthFromContext(c, id)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to read account from context")
+		return
+	}
+
+	if account.Role == "User" || account.Role == "Guest" {
+		if account.Id != id {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to read this account"})
+			return
+		}
+	}
+
+	limits, err := core.ReadLimits(id)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to read limits")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	accounts, err := core.ReadAllAccounts(id)
+	if err != nil {
+		log.Error(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	limits.Members = len(accounts)
+
+	devices, err := core.ReadDevicesForAccount(id)
+	if err != nil {
+		log.Error(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	limits.Devices = len(devices)
+
+	networks, err := core.ReadNetworksForAccount(id)
+	if err != nil {
+		log.Error(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	limits.Networks = len(networks)
+
+	services, err := core.ReadServicesForAccount(id)
+	if err != nil {
+		log.Error(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	limits.Relays = len(services)
+
+	c.JSON(http.StatusOK, limits)
 }

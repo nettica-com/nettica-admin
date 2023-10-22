@@ -244,48 +244,50 @@ func createSubscription(c *gin.Context) {
 			return
 		}
 
-		limits, err := core.ReadLimits(account.Id)
-		if err != nil {
-			log.Error(err)
-			limits_id, err := util.GenerateRandomString(8)
+		if core.EnforceLimits() {
+
+			limits, err := core.ReadLimits(account.Id)
 			if err != nil {
 				log.Error(err)
-			}
-			limits_id = "limits-" + limits_id
+				limits_id, err := util.GenerateRandomString(8)
+				if err != nil {
+					log.Error(err)
+				}
+				limits_id = "limits-" + limits_id
 
-			limits = &model.Limits{
-				Id:        limits_id,
-				AccountID: account.Id,
-				Devices:   0,
-				Networks:  0,
-				Members:   0,
-				Relays:    0,
-				Tolerance: 1.0,
-				CreatedBy: email,
-				UpdatedBy: email,
-				Created:   time.Now(),
-				Updated:   time.Now(),
+				limits = &model.Limits{
+					Id:          limits_id,
+					AccountID:   account.Id,
+					MaxDevices:  0,
+					MaxNetworks: 0,
+					MaxMembers:  0,
+					MaxRelays:   0,
+					Tolerance:   1.0,
+					CreatedBy:   email,
+					UpdatedBy:   email,
+					Created:     time.Now(),
+					Updated:     time.Now(),
+				}
 			}
+
+			limits.MaxDevices += devices
+			limits.MaxNetworks += networks
+			limits.MaxMembers += members
+			limits.MaxRelays += relays
+
+			errs := limits.IsValid()
+			if len(errs) != 0 {
+				for _, err := range errs {
+					log.WithFields(log.Fields{
+						"err": err,
+					}).Error("limits validation error")
+				}
+				return
+			}
+
+			// save limits to mongodb
+			mongo.Serialize(limits.Id, "id", "limits", limits)
 		}
-
-		limits.Devices += devices
-		limits.Networks += networks
-		limits.Members += members
-		limits.Relays += relays
-
-		errs := limits.IsValid()
-		if len(errs) != 0 {
-			for _, err := range errs {
-				log.WithFields(log.Fields{
-					"err": err,
-				}).Error("limits validation error")
-			}
-			return
-		}
-
-		// save limits to mongodb
-		mongo.Serialize(limits.Id, "id", "limits", limits)
-
 		// construct a subscription object
 		subscription := model.Subscription{
 			Id:          id,
@@ -300,7 +302,7 @@ func createSubscription(c *gin.Context) {
 			Status:      status,
 		}
 
-		errs = subscription.IsValid()
+		errs := subscription.IsValid()
 		if len(errs) != 0 {
 			for _, err := range errs {
 				log.WithFields(log.Fields{

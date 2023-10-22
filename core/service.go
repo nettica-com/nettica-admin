@@ -351,6 +351,11 @@ func DeleteService(id string) error {
 	return nil
 }
 
+func ReadServicesForAccount(accountId string) ([]*model.Service, error) {
+	services, err := mongo.ReadServices("accountid", accountId)
+	return services, err
+}
+
 // ReadServices all clients
 func ReadServices(email string) ([]*model.Service, error) {
 

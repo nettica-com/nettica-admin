@@ -200,17 +200,17 @@ func (o *Oauth2idc) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 				limits_id = "limits-" + limits_id
 
 				limits := &model.Limits{
-					Id:        limits_id,
-					AccountID: accounts[0].Id,
-					Devices:   5,
-					Networks:  1,
-					Members:   2,
-					Relays:    0,
-					Tolerance: 1.0,
-					UpdatedBy: user.Email,
-					CreatedBy: user.Email,
-					Updated:   time.Now(),
-					Created:   time.Now(),
+					Id:          limits_id,
+					AccountID:   accounts[0].Id,
+					MaxDevices:  5,
+					MaxNetworks: 1,
+					MaxMembers:  2,
+					MaxRelays:   0,
+					Tolerance:   1.0,
+					UpdatedBy:   user.Email,
+					CreatedBy:   user.Email,
+					Updated:     time.Now(),
+					Created:     time.Now(),
 				}
 				mongodb.Serialize(limits_id, "id", "limits", limits)
 			}

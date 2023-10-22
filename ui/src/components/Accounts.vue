@@ -42,6 +42,45 @@
                             <div v-if="!selected" class="text-h6 grey--text text--lighten-1 font-weight-light"
                                 style="align-self: center;">
                             </div>
+                            <v-card v-else-if="selected.hasLimits" :key="selected.pid" class="px-3 mx-auto"
+                                style="align-self: center;" flat>
+                                <v-card-text width="550">
+                                    <v-icon right dark size="50">mdi-account-group</v-icon>
+                                    <h3 class="text-h5 mb-2">
+                                        {{ selected.account.accountName }}
+                                    </h3>
+                                    <h5 class="text-h6 mb-2">
+                                        {{ selected.account.parent }}
+                                    </h5>
+                                </v-card-text>
+                                <v-divider></v-divider>
+
+                                <table width="100%" style="text-align: left;" >
+                                    <th>Limit</th>
+                                    <th>Current</th>
+                                    <th>Max</th>
+                                    <tr>
+                                        <td>Members</td>
+                                        <td>{{ selected.limits.members }}</td>
+                                        <td>{{ selected.limits.maxmembers }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Devices</td>
+                                        <td>{{ selected.limits.devices }}</td>
+                                        <td>{{ selected.limits.maxdevices }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Networks</td>
+                                        <td>{{ selected.limits.networks }}</td>
+                                        <td>{{ selected.limits.maxnetworks }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Relays</td>
+                                        <td>{{ selected.limits.relays }}</td>
+                                        <td>{{ selected.limits.maxrelays }}</td>
+                                    </tr>
+                                </table>
+                            </v-card>
                             <v-card v-else-if="selected.isMember" :key="selected.id" class="px-3 mx-auto"
                                 style="align-self: center;" flat>
                                 <v-form autocomplete="off">
@@ -252,8 +291,10 @@ export default {
             create_result: 'account/account',
             accounts: 'account/accounts',
             members: 'account/members',
+            limits: 'account/limits',
             nets: 'net/nets',
             getMembers: 'account/getMembers',
+            getLimits: 'account/getLimits',
         }),
     },
 
@@ -268,10 +309,18 @@ export default {
         accounts(newAccounts, oldAccounts) {
             for (let i = 0; i < newAccounts.length; i++) {
                 this.readMembers(newAccounts[i].parent);
+                if (newAccounts[i].role == "Owner" || newAccounts[i].role == "Admin") {
+                    console.log("readLimits: ", newAccounts[i].parent)
+                    this.readLimits(newAccounts[i].parent);
+                }
             }
             this.buildTree()
         },
         members(newMembers, oldMembers) {
+            this.buildTree()
+        },
+        limits(newLimits, oldLimits) {
+            console.log("Limits:", this.limits)
             this.buildTree()
         },
         nets(newNets, oldNets) {
@@ -290,6 +339,7 @@ export default {
             readAllAccounts: 'readAll',
             readUsers: 'readUsers',
             readMembers: 'readMembers',
+            readLimits: 'readLimits',
             createAccount: 'create',
             updateAccount: 'update',
             delete: 'delete',
@@ -352,14 +402,24 @@ export default {
                     }
                 }
                 if (found == false) {
+                    let hasLimits = false;
+                    let limits = this.getLimits(this.accounts[i].parent)
+
+                    if (limits != null && limits != undefined) {
+                        hasLimits = true;
+                    }
+
                     this.items[x] = {
                         id: "p-" + this.accounts[i].parent,
+                        pid: "p-" + this.accounts[i].parent,
                         idx: this.accounts[i].parent,
                         name: this.accounts[i].accountName,
                         account: this.accounts[i],
                         status: this.accounts[i].status,
                         icon: "mdi-account-group",
                         isAccount: true,
+                        hasLimits: hasLimits,
+                        limits: limits,
                         children: []
                     }
                     x++;

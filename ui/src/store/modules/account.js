@@ -6,6 +6,7 @@ const state = {
   accounts: [],
   users: [],
   members: [],
+  limits: [],
 }
 
 const getters = {
@@ -24,10 +25,17 @@ const getters = {
   members(state) {
     return state.members;
   },
+  limits(state) {
+    return state.limits;
+  },
   getMembers: (state) => (id) => {
     let item = state.members.find(item => item.id === id)
     return item ? item.members : null
-  }
+  },
+  getLimits: (state) => (id) => {
+    let item = state.limits.find(item => item.id === id)
+    return item ? item.limits : null
+  },
 
 }
 
@@ -63,6 +71,19 @@ const actions = {
       .then(resp => {
         console.log( "readMembers: ", resp)
         commit('members', {  id: id, members: resp })
+      })
+      .catch(error => {
+        if (error.response) {
+          commit('error', error.response.data.error)
+        }
+      })
+  },
+
+  readLimits({ commit, dispatch }, id) {
+    ApiService.get(`/accounts/${id}/limits`)
+      .then(resp => {
+        console.log( "readLimits: ", resp)
+        commit('limits', { id: id, limits: resp })
       })
       .catch(error => {
         if (error.response) {
@@ -148,6 +169,16 @@ const mutations = {
       members: members
     })
   },
+  limits(state, { id , limits }) {
+    let index = state.limits.findIndex(x => x.id === id);
+    if (index !== -1) {
+      state.limits.splice(index, 1);
+    }
+    state.limits.push({
+      id: id,
+      limits: limits
+    })
+  },
   create(state, account) {
     state.accounts.push(account)
   },
@@ -213,6 +244,15 @@ const mutations = {
     }
     if (!found) {
       state.error = "delete account (member) failed, not in list"
+    }
+  },
+  update(state, limit) {
+    let index = state.limits.findIndex(x => x.id === limit.id);
+    if (index !== -1) {
+      state.limits.splice(index, 1);
+      state.limits.push(limit);
+    } else {
+      state.error = "update account (limit) failed, not in list"
     }
   },
 }

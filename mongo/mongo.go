@@ -451,6 +451,50 @@ func ReadAllNetworks(param string, id string) ([]*model.Network, error) {
 
 }
 
+// ReadAllServices from MongoDB
+func ReadServices(param string, id string) ([]*model.Service, error) {
+	services := make([]*model.Service, 0)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+
+		return nil, err
+	}
+
+	filter := bson.D{}
+	if id != "" {
+		findstr := fmt.Sprintf("{\"%s\":\"%s\"}", param, id)
+		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
+		if err != nil {
+			return nil, err
+		}
+
+	}
+
+	collection := client.Database("nettica").Collection("services")
+	cursor, err := collection.Find(ctx, filter)
+
+	if err == nil {
+
+		defer cursor.Close(ctx)
+		for cursor.Next(ctx) {
+			var service *model.Service
+			err = cursor.Decode(&service)
+			if err == nil {
+				services = append(services, service)
+			}
+		}
+
+	}
+
+	return services, nil
+
+}
+
 // ReadAllUsers from MongoDB
 func ReadAllUsers() []*model.User {
 	users := make([]*model.User, 0)
