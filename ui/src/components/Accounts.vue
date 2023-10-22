@@ -75,9 +75,9 @@
                                         <td>{{ selected.limits.maxnetworks }}</td>
                                     </tr>
                                     <tr>
-                                        <td>Relays</td>
-                                        <td>{{ selected.limits.relays }}</td>
-                                        <td>{{ selected.limits.maxrelays }}</td>
+                                        <td>Services</td>
+                                        <td>{{ selected.limits.services }}</td>
+                                        <td>{{ selected.limits.maxservices }}</td>
                                     </tr>
                                 </table>
                             </v-card>
