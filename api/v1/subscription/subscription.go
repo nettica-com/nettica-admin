@@ -261,7 +261,7 @@ func createSubscription(c *gin.Context) {
 					MaxDevices:  0,
 					MaxNetworks: 0,
 					MaxMembers:  0,
-					MaxRelays:   0,
+					MaxServices: 0,
 					Tolerance:   1.0,
 					CreatedBy:   email,
 					UpdatedBy:   email,
@@ -273,7 +273,7 @@ func createSubscription(c *gin.Context) {
 			limits.MaxDevices += devices
 			limits.MaxNetworks += networks
 			limits.MaxMembers += members
-			limits.MaxRelays += relays
+			limits.MaxServices += relays
 
 			errs := limits.IsValid()
 			if len(errs) != 0 {

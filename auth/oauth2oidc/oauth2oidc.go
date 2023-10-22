@@ -205,7 +205,7 @@ func (o *Oauth2idc) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 					MaxDevices:  5,
 					MaxNetworks: 1,
 					MaxMembers:  2,
-					MaxRelays:   0,
+					MaxServices: 0,
 					Tolerance:   1.0,
 					UpdatedBy:   user.Email,
 					CreatedBy:   user.Email,

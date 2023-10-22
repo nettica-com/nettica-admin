@@ -16,8 +16,8 @@ type Limits struct {
 	MaxNetworks int       `json:"maxnetworks"               bson:"maxnetworks"`
 	Members     int       `json:"members"                   bson:"members"`
 	MaxMembers  int       `json:"maxmembers"                bson:"maxmembers"`
-	Relays      int       `json:"relays"                    bson:"relays"`
-	MaxRelays   int       `json:"maxrelays"                 bson:"maxrelays"`
+	Services    int       `json:"services"                  bson:"services"`
+	MaxServices int       `json:"maxservices"               bson:"maxservices"`
 	Tolerance   float64   `json:"tolerance"                 bson:"tolerance"`
 	CreatedBy   string    `json:"createdBy"                 bson:"createdBy"`
 	UpdatedBy   string    `json:"updatedBy"                 bson:"updatedBy"`
@@ -82,11 +82,11 @@ func (l Limits) MembersLimitReached(count int) bool {
 }
 
 func (l Limits) RelaysLimitReached(count int) bool {
-	if l.MaxRelays < 0 {
+	if l.MaxServices < 0 {
 		return false
 	}
 
-	if count >= int(float64(l.MaxRelays)*l.Tolerance) {
+	if count >= int(float64(l.MaxServices)*l.Tolerance) {
 		return true
 	}
 

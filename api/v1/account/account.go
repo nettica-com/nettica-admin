@@ -462,7 +462,7 @@ func getLimits(c *gin.Context) {
 		return
 	}
 
-	limits.Relays = len(services)
+	limits.Services = len(services)
 
 	c.JSON(http.StatusOK, limits)
 }
