@@ -867,23 +867,23 @@ export default {
 
             // check allowed IPs
             if (this.vpn.current.allowedIPs.length < 1) {
-                this.errordevice('Please provide at least one valid CIDR address for device allowed IPs');
+                this.errorNet('Please provide at least one valid CIDR address for device allowed IPs');
                 return
             }
             for (let i = 0; i < this.vpn.current.allowedIPs.length; i++) {
                 if (this.$isCidr(this.vpn.current.allowedIPs[i]) === 0) {
-                    this.errordevice('Invalid CIDR detected, please correct before submitting');
+                    this.errorNet('Invalid CIDR detected, please correct before submitting');
                     return
                 }
             }
             // check address
             if (this.vpn.current.address.length < 1) {
-                this.errordevice('Please provide at least one valid CIDR address for device');
+                this.errorNet('Please provide at least one valid CIDR address for device');
                 return;
             }
             for (let i = 0; i < this.vpn.current.address.length; i++) {
                 if (this.$isCidr(this.vpn.current.address[i]) === 0) {
-                    this.errordevice('Invalid CIDR detected, please correct before submitting');
+                    this.errorNet('Invalid CIDR detected, please correct before submitting');
                     return
                 }
             }
@@ -908,7 +908,7 @@ export default {
             let config = this.getvpnconfig(vpn.id)
             if (!config) {
                 console.log("failed to get config")
-                this.errordevice('Failed to download device config');
+                this.errorNet('Failed to download device config');
                 return
             }
             console.log('config', config)
