@@ -15,7 +15,7 @@
   }],
   "scope": "/",
   "id": "com.nettica.admin",
-  "start_url": "/index.html",
+  "start_url": "/",
   "display": "standalone",
   "orientation": "landscape",
   "theme_color": "#336699",
