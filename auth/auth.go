@@ -8,6 +8,7 @@ import (
 	"github.com/nettica-com/nettica-admin/auth/fake"
 	"github.com/nettica-com/nettica-admin/auth/github"
 	"github.com/nettica-com/nettica-admin/auth/microsoft"
+	"github.com/nettica-com/nettica-admin/auth/microsoft2"
 	"github.com/nettica-com/nettica-admin/auth/oauth2oidc"
 	model "github.com/nettica-com/nettica-admin/model"
 	log "github.com/sirupsen/logrus"
@@ -30,6 +31,10 @@ func GetAuthProvider() (model.Authentication, error) {
 	case "microsoft":
 		log.Warn("Oauth is set to Microsoft")
 		oauth2Client = &microsoft.Oauth2Msft{}
+
+	case "microsoft2":
+		log.Warn("Oauth is set to Microsoft2")
+		oauth2Client = &microsoft2.Oauth2Microsoft{}
 
 	case "basic":
 		log.Warn("Oauth is set to basic.  Authenication against the shadow file")

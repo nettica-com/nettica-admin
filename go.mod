@@ -3,6 +3,7 @@ module github.com/nettica-com/nettica-admin
 go 1.14
 
 require (
+	github.com/AzureAD/microsoft-authentication-library-for-go v1.2.0
 	github.com/PuerkitoBio/rehttp v1.2.0 // indirect
 	github.com/amoghe/go-crypt v0.0.0-20220222110647-20eada5f5964
 	github.com/bytedance/sonic v1.10.1 // indirect

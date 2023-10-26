@@ -1,7 +1,7 @@
 <template>
     <div>
         <v-app-bar app clipped-left class="hidden-xs-only">
-            <a href="https://nettica.com"><img class="mr-3" src="/logo.png" height="50" /></a>
+            <a href="https://nettica.com"><img class="mr-3" src="/logo.png" height="50" width="50" /></a>
             <v-toolbar-title to="/">
                 {{ title }}</v-toolbar-title>
 
@@ -29,7 +29,7 @@
                 <template v-slot:activator="{ on }">
                     <v-btn icon v-on="on">
                         <v-avatar size="36">
-                            <img :src="picture" />
+                            <img :src="/public/account-circle.svg" height="36" width="36" />
                         </v-avatar>
                     </v-btn>
                 </template>
@@ -39,7 +39,7 @@
                             <div class="overline mb-4">connected as</div>
                             <v-list-item-title class="headline mb-1">{{ name }}
                                 <v-avatar size="64">
-                                    <img alt="name" :src="picture" />
+                                    <img alt="name" :src="/public/account-circle.svg" height="64" width="64" />
                                 </v-avatar>
                             </v-list-item-title>
                             <v-list-item-subtitle>Email: {{ email }}</v-list-item-subtitle>
@@ -57,7 +57,7 @@
             </v-menu>
         </v-app-bar>
         <v-app-bar app clipped-left class="hidden-sm-and-up">
-            <a href="https://nettica.com"><img class="mr-3" src="/logo.png" height="50" /></a>
+            <a href="https://nettica.com"><img class="mr-3" src="/logo.png" height="50" width="50" /></a>
             <v-toolbar-title to="/">
                 {{ title }}</v-toolbar-title>
 
