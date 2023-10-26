@@ -1,8 +1,8 @@
 {
   "lang": "en",
   "dir": "ltr",
-  "name": "Super Racer 3000",
-  "short_name": "Racer3K",
+  "name": "Nettica Admin",
+  "short_name": "nettica",
   "icons": [{
     "src": "/nettica-logo-512.png",
     "purpose": "any maskable",
