@@ -29,7 +29,7 @@
                 <template v-slot:activator="{ on }">
                     <v-btn icon v-on="on">
                         <v-avatar size="36">
-                            <img :src="/public/account-circle.svg" height="36" width="36" />
+                            <img :src="picture" height="36" width="36" />
                         </v-avatar>
                     </v-btn>
                 </template>
@@ -39,7 +39,7 @@
                             <div class="overline mb-4">connected as</div>
                             <v-list-item-title class="headline mb-1">{{ name }}
                                 <v-avatar size="64">
-                                    <img alt="name" :src="/public/account-circle.svg" height="64" width="64" />
+                                    <img alt="name" :src="picture" height="64" width="64" />
                                 </v-avatar>
                             </v-list-item-title>
                             <v-list-item-subtitle>Email: {{ email }}</v-list-item-subtitle>
