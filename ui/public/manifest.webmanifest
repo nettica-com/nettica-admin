@@ -1,0 +1,24 @@
+{
+  "lang": "en",
+  "dir": "ltr",
+  "name": "Super Racer 3000",
+  "short_name": "Racer3K",
+  "icons": [{
+    "src": "/nettica-logo-512.png",
+    "purpose": "any maskable",
+    "type": "image/png",
+    "sizes": "512x512"
+  }, {
+    "src": "/nettica-logo-192.png",
+    "type": "image/png",
+    "sizes": "192x192"
+  }],
+  "scope": "/",
+  "id": "com.nettica.admin",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "orientation": "landscape",
+  "theme_color": "#336699",
+  "background_color": "#121212",
+  "prefer_related_applications": false
+}
