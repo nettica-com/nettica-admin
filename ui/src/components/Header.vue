@@ -98,7 +98,7 @@ import env from "../../env"
 export default {
     name: 'Header',
     data: () => ({
-        title: env.title,
+        title: document.location.host,
         showMenu: false,
         showServices: env.showServicesTab,
         name: "",
