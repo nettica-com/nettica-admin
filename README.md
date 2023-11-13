@@ -139,7 +139,7 @@ OAUTH2_PROVIDER_NAME=microsoft
 Create a systemd service for the API:
 
 ```
-cat  /lib/systemd/system/nettica-admin.service
+cat  /lib/systemd/system/nettica-api.service
 [Unit]
 Description=Nettica API
 ConditionPathExists=/usr/share/nettica-admin/cmd/nettica-api
