@@ -143,9 +143,15 @@ OAUTH2_TENET=...
 #OAUTH2_TENET=...
 
 
+
+
 # valid settings: oauth2oidc, microsoft, microsoft2, basic, fake
 # For google use microsoft as the provider
 OAUTH2_PROVIDER_NAME=microsoft
+
+# Basic auth requires no other parameters but OAUTH_PROVIDER_NAME
+#OAUTH2_PROVIDER_NAME=basic
+
 ```
 
 Create a systemd service for the API:
