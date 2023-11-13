@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	core "github.com/nettica-com/nettica-admin/core"
 	model "github.com/nettica-com/nettica-admin/model"
-	util "github.com/nettica-com/nettica-admin/util"
 	log "github.com/sirupsen/logrus"
 	"github.com/skip2/go-qrcode"
 )
@@ -48,9 +47,6 @@ func createVPN(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
-
-	a := util.GetCleanAuthToken(c)
-	log.Infof("%v", a)
 
 	network, err := core.ReadNet(data.NetId)
 	if err != nil {

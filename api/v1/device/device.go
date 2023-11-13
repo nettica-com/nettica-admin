@@ -11,7 +11,6 @@ import (
 	"github.com/gin-gonic/gin"
 	core "github.com/nettica-com/nettica-admin/core"
 	model "github.com/nettica-com/nettica-admin/model"
-	util "github.com/nettica-com/nettica-admin/util"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -53,9 +52,6 @@ func createDevice(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
-
-	a := util.GetCleanAuthToken(c)
-	log.Infof("%v", a)
 
 	account, _, err := core.AuthFromContext(c, "")
 	if err != nil {

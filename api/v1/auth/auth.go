@@ -184,10 +184,7 @@ func user(c *gin.Context) {
 		return
 	}
 
-	log.WithFields(log.Fields{
-		"exists":                 exists,
-		util.AuthTokenHeaderName: util.GetCleanAuthToken(c),
-	}).Error("oauth2 AccessToken is not recognized")
+	log.Error("oauth2 AccessToken is not recognized")
 
 	c.AbortWithStatus(http.StatusUnauthorized)
 }
