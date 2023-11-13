@@ -132,6 +132,17 @@ OAUTH2_CLIENT_SECRET=
 OAUTH2_REDIRECT_URL=https://netticavpn.com
 OAUTH2_TENET=...
 
+# OAuth2 provider using Microsoft's MSAL library.  Allows for full range of Microsoft authentication
+#OAUTH2_PROVIDER_NAME=microsoft2
+#OAUTH2_PROVIDER=https://login.microsoftonline.com/.../v2.0        # For single enterprise-only authentication
+#OAUTH2_PROVIDER=https://login.microsoftonline.com/common/v2.0    # For multiple enterprise and social authentication
+#OAUTH2_CLIENT_ID=
+#OAUTH2_CLIENT_ID_WINDOWS=
+#OAUTH2_CLIENT_SECRET=
+#OAUTH2_REDIRECT_URL=https://netticavpn.com
+#OAUTH2_TENET=...
+
+
 # set provider name to fake to disable auth, also the default
 OAUTH2_PROVIDER_NAME=microsoft
 ```
