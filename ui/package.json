@@ -8,7 +8,7 @@
     "debug": "vue-cli-service debug"
   },
   "dependencies": {
-    "axios": "^0.27.2",
+    "axios": "^1.6.0",
     "is-cidr": "^3.1.1",
     "moment": "^2.29.4",
     "vue": "^2.7.14",
@@ -22,6 +22,7 @@
   "devDependencies": {
     "@vue/cli-plugin-router": "^5.0.8",
     "@vue/cli-service": "^5.0.8",
+    "postcss": ">=8.4.31",
     "sass": "~1.32.6",
     "sass-loader": "^8.0.0",
     "vue-cli-plugin-vuetify": "^2.0.5",
