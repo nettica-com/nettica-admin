@@ -143,7 +143,8 @@ OAUTH2_TENET=...
 #OAUTH2_TENET=...
 
 
-# set provider name to fake to disable auth, also the default
+# valid settings: oauth2oidc, microsoft, microsoft2, basic, fake
+# For google use microsoft as the provider
 OAUTH2_PROVIDER_NAME=microsoft
 ```
 
