@@ -177,8 +177,8 @@ go build
 Enable the service:
 
 ```
-sudo systemctl enable nettica-admin
-sudo systemctl start nettica-admin
+sudo systemctl enable nettica-api
+sudo systemctl start nettica-api
 ```
 
 Install NodeJS using NVM
