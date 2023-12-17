@@ -106,7 +106,7 @@ func UpdateDevice(Id string, device *model.Device, fUpdated bool) (*model.Device
 	if !fUpdated {
 		device.Updated = time.Now().UTC()
 	}
-	if device.AccountID == "" {
+	if !strings.HasPrefix(device.AccountID, "account-") {
 		device.AccountID = current.AccountID
 	}
 

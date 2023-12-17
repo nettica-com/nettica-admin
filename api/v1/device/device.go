@@ -64,7 +64,7 @@ func createDevice(c *gin.Context) {
 	data.CreatedBy = account.Email
 	data.UpdatedBy = account.Email
 
-	if data.AccountID == "" {
+	if !strings.HasPrefix(data.AccountID, "account-") {
 		data.AccountID = account.Parent
 	}
 
