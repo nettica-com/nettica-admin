@@ -40,7 +40,12 @@
                                 </template>
                                 <template v-slot:append="{ item }">
                                     <v-btn v-if="item.isDevice" icon @click="startAddVPN(item.device)">
-                                        <v-icon color="#336699">mdi-plus-circle</v-icon>
+                                        <v-tooltip bottom>
+                                            <template v-slot:activator="{ on }">
+                                                <v-icon v-on="on" color="#336699">mdi-plus-circle</v-icon>
+                                            </template>
+                                            <span>Add VPN</span>
+                                        </v-tooltip>
                                     </v-btn>
                                 </template>
                             </v-treeview>
