@@ -589,6 +589,7 @@ func statusDevice(c *gin.Context) {
 		c.AbortWithStatus(http.StatusNotModified)
 	} else {
 		c.Header("ETag", md5)
+		log.Infof("Etag for %s is %s", device.Id, md5)
 		c.JSON(http.StatusOK, msg)
 	}
 
