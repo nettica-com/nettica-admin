@@ -504,10 +504,13 @@ func statusDevice(c *gin.Context) {
 				if ip == "0.0.0.0/0" {
 					allowed = append(allowed[:x], allowed[x+1:]...)
 				}
+			}
+			for x, ip := range allowed {
 				if ip == "::/0" {
 					allowed = append(allowed[:x], allowed[x+1:]...)
 				}
 			}
+
 			msg.Config[i].VPNs = make([]model.VPN, 2)
 			msg.Config[i].VPNs[0] = *ingress
 			msg.Config[i].VPNs[0].Current.AllowedIPs = allowed
