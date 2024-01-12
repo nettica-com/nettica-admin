@@ -165,17 +165,22 @@ func logout(c *gin.Context) {
 	if c.Request.URL.Query().Get("user") != "" {
 		oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
 		// delete all tokens for this user
-		for _, token := range cacheDb.Items() {
-			user, err := oauth2Client.UserInfo(token.Object.(*oauth2.Token))
-			if err != nil {
-				log.WithFields(log.Fields{
-					"err": err,
-				}).Error("failed to get user from oauth2 AccessToken")
-				c.AbortWithStatus(http.StatusBadRequest)
-				return
-			}
-			if user.Email == c.Request.URL.Query().Get("user") {
-				cacheDb.Delete(token.Object.(*oauth2.Token).AccessToken)
+		items := cacheDb.Items()
+		for _, token := range items {
+			// check to see if the item is a string or a token
+			if _, ok := token.Object.(*oauth2.Token); ok {
+
+				user, err := oauth2Client.UserInfo(token.Object.(*oauth2.Token))
+				if err != nil {
+					log.WithFields(log.Fields{
+						"err": err,
+					}).Error("failed to get user from oauth2 AccessToken")
+					c.AbortWithStatus(http.StatusBadRequest)
+					return
+				}
+				if user.Email == c.Request.URL.Query().Get("user") {
+					cacheDb.Delete(token.Object.(*oauth2.Token).AccessToken)
+				}
 			}
 		}
 		c.JSON(http.StatusOK, gin.H{})
