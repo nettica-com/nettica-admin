@@ -734,8 +734,11 @@ export default {
         },
 
         copy(text) {
-            navigator.clipboard.writeText(text)
-            this.errorAccount("API key copied to clipboard")
+            navigator.clipboard
+                .writeText(text)
+                .then(() => {
+                    this.errorAccount("API key copied to clipboard")
+                })
         },
 
         forceFileDownload(user) {

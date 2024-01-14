@@ -1008,8 +1008,11 @@ export default {
 
             // copy url to clipboard 
 
-            navigator.clipboard.writeText(url)
-            this.errorDevice('Copied to clipboard');
+            navigator.clipboard
+                .writeText(url)
+                .then(() => {
+                    this.errorDevice('Copied to clipboard');
+                })
 
         },
 
