@@ -1004,9 +1004,10 @@ export default {
         },
 
         copyDeviceConfig(device) {
-            var url = "curl \"http://localhost:53280/config/?id=" + device.id + "&apiKey=" + device.apiKey + "&server=https://my.nettica.com\""
+            var url = "curl \"http://localhost:53280/config/?id=" + device.id + "&apiKey=" + device.apiKey + "&server" + device.server + "\""
 
-            // copy to clipboard
+            // copy url to clipboard 
+
             navigator.clipboard.writeText(url)
             this.errorDevice('Copied to clipboard');
 
