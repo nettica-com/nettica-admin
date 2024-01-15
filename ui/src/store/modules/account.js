@@ -87,7 +87,8 @@ const actions = {
       })
       .catch(error => {
         if (error.response) {
-          commit('error', error.response.data.error)
+          // don't report this error, it's expected if there are no limits
+          // commit('error', error.response.data.error)
         }
       })
   },

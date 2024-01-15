@@ -190,30 +190,30 @@ func (o *Oauth2idc) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 			}
 
 		}
-		if core.EnforceLimits() {
-			_, err := core.ReadLimits(accounts[0].Id)
-			if err != nil {
-				limits_id, err := util.GenerateRandomString(8)
-				if err != nil {
-					log.Error(err)
-				}
-				limits_id = "limits-" + limits_id
 
-				limits := &model.Limits{
-					Id:          limits_id,
-					AccountID:   accounts[0].Id,
-					MaxDevices:  5,
-					MaxNetworks: 1,
-					MaxMembers:  2,
-					MaxServices: 0,
-					Tolerance:   1.0,
-					UpdatedBy:   user.Email,
-					CreatedBy:   user.Email,
-					Updated:     time.Now(),
-					Created:     time.Now(),
-				}
-				mongodb.Serialize(limits_id, "id", "limits", limits)
+		// Set limits regardless of whether they are being enforced
+		_, err := core.ReadLimits(accounts[0].Id)
+		if err != nil {
+			limits_id, err := util.GenerateRandomString(8)
+			if err != nil {
+				log.Error(err)
 			}
+			limits_id = "limits-" + limits_id
+
+			limits := &model.Limits{
+				Id:          limits_id,
+				AccountID:   accounts[0].Id,
+				MaxDevices:  5,
+				MaxNetworks: 1,
+				MaxMembers:  2,
+				MaxServices: 0,
+				Tolerance:   1.0,
+				UpdatedBy:   user.Email,
+				CreatedBy:   user.Email,
+				Updated:     time.Now(),
+				Created:     time.Now(),
+			}
+			mongodb.Serialize(limits_id, "id", "limits", limits)
 		}
 	}
 	for i := 0; i < len(accounts); i++ {
