@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"regexp"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -23,6 +24,7 @@ func GetCleanAuthToken(c *gin.Context) string {
 	token := c.Request.Header.Get(AuthTokenHeaderName)
 	if len(token) > 0 && token[:7] == "Bearer " {
 		token = token[7:]
+		token = strings.Trim(token, "\"")
 	}
 	return token
 }

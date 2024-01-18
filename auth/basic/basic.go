@@ -35,7 +35,15 @@ func (o *Oauth2Basic) Logout() error {
 
 // CodeUrl get url to redirect client for auth
 func (o *Oauth2Basic) CodeUrl(state string) string {
-	return "/login"
+
+	server := os.Getenv("SERVER")
+	return server + "/login"
+}
+
+func (o *Oauth2Basic) CodeUrl2(state string) string {
+	url := o.CodeUrl(state)
+	url += "?redirect_uri=com.nettica.agent://callback/agent"
+	return url
 }
 
 // Exchange exchange code for Oauth2 token
@@ -86,6 +94,11 @@ func (o *Oauth2Basic) Exchange(code string) (*oauth2.Token, error) {
 	token = token.WithExtra(m)
 
 	return token, nil
+}
+
+func (o *Oauth2Basic) Exchange2(code string) (*oauth2.Token, error) {
+	token, err := o.Exchange(code)
+	return token, err
 }
 
 // UserInfo get token user

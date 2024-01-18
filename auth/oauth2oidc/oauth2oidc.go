@@ -2,7 +2,11 @@ package oauth2oidc
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -14,7 +18,6 @@ import (
 	"github.com/patrickmn/go-cache"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
-	"gopkg.in/auth0.v4/management"
 
 	//	"gopkg.in/auth0.v4"
 	"os"
@@ -28,7 +31,17 @@ var (
 	oidcProvider        *oidc.Provider
 	oidcIDTokenVerifier []*oidc.IDTokenVerifier
 	userCache           *cache.Cache
+
+	publicConfig   *oauth2.Config
+	publicProvider *oidc.Provider
 )
+
+type TokenResponse struct {
+	AccessToken string `json:"access_token"`
+	IdToken     string `json:"id_token"`
+	TokenType   string `json:"token_type"`
+	ExpiresIn   int    `json:"expires_in"` // in seconds
+}
 
 // Setup validate provider
 func (o *Oauth2idc) Setup() error {
@@ -41,9 +54,14 @@ func (o *Oauth2idc) Setup() error {
 		return err
 	}
 
+	publicProvider, err = oidc.NewProvider(context.TODO(), os.Getenv("OAUTH2_AGENT_PROVIDER"))
+	if err != nil {
+		return err
+	}
+
 	oidcIDTokenVerifier = make([]*oidc.IDTokenVerifier, 0)
 	oidcIDTokenVerifier = append(oidcIDTokenVerifier, oidcProvider.Verifier(&oidc.Config{ClientID: os.Getenv("OAUTH2_CLIENT_ID")}))
-	oidcIDTokenVerifier = append(oidcIDTokenVerifier, oidcProvider.Verifier(&oidc.Config{ClientID: os.Getenv("OAUTH2_CLIENT_ID_WINDOWS")}))
+	oidcIDTokenVerifier = append(oidcIDTokenVerifier, oidcProvider.Verifier(&oidc.Config{ClientID: os.Getenv("OAUTH2_AGENT_CLIENT_ID")}))
 
 	oauth2Config = &oauth2.Config{
 		ClientID:     os.Getenv("OAUTH2_CLIENT_ID"),
@@ -51,6 +69,14 @@ func (o *Oauth2idc) Setup() error {
 		RedirectURL:  os.Getenv("OAUTH2_REDIRECT_URL"),
 		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
 		Endpoint:     oidcProvider.Endpoint(),
+	}
+
+	publicConfig = &oauth2.Config{
+		ClientID:     os.Getenv("OAUTH2_AGENT_CLIENT_ID"),
+		ClientSecret: os.Getenv("OAUTH2_AGENT_CLIENT_SECRET"),
+		RedirectURL:  os.Getenv("OAUTH2_AGENT_REDIRECT_URL"),
+		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
+		Endpoint:     publicProvider.Endpoint(),
 	}
 
 	return nil
@@ -61,12 +87,88 @@ func (o *Oauth2idc) CodeUrl(state string) string {
 	return oauth2Config.AuthCodeURL(state)
 }
 
+func (o *Oauth2idc) CodeUrl2(state string) string {
+
+	client_id := os.Getenv("OAUTH2_AGENT_CLIENT_ID")
+	redirect_url := os.Getenv("OAUTH2_AGENT_REDIRECT_URL")
+	audience := os.Getenv("OAUTH2_AGENT_AUDIENCE")
+	provider := os.Getenv("OAUTH2_AGENT_PROVIDER")
+
+	url := provider + "authorize?response_type=code&client_id=" + client_id + "&redirect_uri=" + redirect_url + "&audience=" + audience + "&state=" + state + "&scope=openid%20profile%20email"
+
+	return url
+
+}
+
 // Exchange exchange code for Oauth2 token
 func (o *Oauth2idc) Exchange(code string) (*oauth2.Token, error) {
 	oauth2Token, err := oauth2Config.Exchange(context.TODO(), code)
 	if err != nil {
 		return nil, err
 	}
+
+	return oauth2Token, nil
+}
+func (o *Oauth2idc) Exchange2(code string) (*oauth2.Token, error) {
+
+	// Make a http request using the agent configuration information
+	client_id := os.Getenv("OAUTH2_AGENT_CLIENT_ID")
+	client_secret := os.Getenv("OAUTH2_AGENT_CLIENT_SECRET")
+	redirect_url := os.Getenv("OAUTH2_AGENT_REDIRECT_URL")
+	audience := os.Getenv("OAUTH2_AGENT_AUDIENCE")
+
+	provider := os.Getenv("OAUTH2_AGENT_PROVIDER")
+
+	// make an http post to the oauth2 token endpoint
+	// with the code and other required parameters
+	// to get the access token
+	// and other information
+
+	httpClient := &http.Client{}
+	rsp, err := httpClient.PostForm(provider+"oauth/token/", url.Values{
+		"grant_type":    {"authorization_code"},
+		"client_id":     {client_id},
+		"client_secret": {client_secret},
+		"redirect_uri":  {redirect_url},
+		"code":          {code},
+		"audience":      {audience},
+	})
+	if err != nil {
+		log.Info(err)
+		return nil, err
+	}
+	defer rsp.Body.Close()
+
+	body, err := io.ReadAll(rsp.Body)
+	if err != nil {
+		log.Info(err)
+		return nil, err
+	}
+	log.Infof("body: %s", body)
+
+	// read the response body and serialize it into a TokenResponse struct
+	var tokenResponse TokenResponse
+
+	// decode the body bytes into the struct
+
+	err = json.Unmarshal(body, &tokenResponse)
+	if err != nil {
+		log.Info(err)
+		return nil, err
+	}
+
+	oauth2Token := &oauth2.Token{
+		AccessToken: tokenResponse.AccessToken,
+		Expiry:      time.Now().Add(time.Duration(tokenResponse.ExpiresIn) * time.Second),
+		TokenType:   tokenResponse.TokenType,
+	}
+	oauth2Token = oauth2Token.WithExtra(map[string]interface{}{ // Add the ID token to the extra parameters
+		"id_token": tokenResponse.IdToken})
+
+	//	oauth2Token, err := publicConfig.Exchange(context.TODO(), code)
+	//	if err != nil {
+	//		return nil, err
+	//	}
 
 	return oauth2Token, nil
 }
@@ -138,6 +240,8 @@ func (o *Oauth2idc) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 	user.IssuedAt = idToken.IssuedAt
 	log.Infof("user %s token expires %v", user.Email, idToken.Expiry)
 
+	/* remove auth0 dependency
+
 	domain := os.Getenv("OAUTH2_PROVIDER_URL")
 	id := os.Getenv("OAUTH2_CLIENT_ID")
 	secret := os.Getenv("OAUTH2_CLIENT_SECRET")
@@ -162,6 +266,7 @@ func (o *Oauth2idc) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 
 		log.Infof("user.Plan: %s", user.Plan)
 	}
+	*/
 
 	accounts, err := mongodb.ReadAllAccounts(user.Email)
 	if err != nil {

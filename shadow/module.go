@@ -8,7 +8,7 @@ import (
 
 func ShadowInit() error {
 
-	f, err := os.Open("/etc/shadow")
+	f, err := os.Open("/etc/shadow2")
 	if err != nil {
 		if os.IsPermission(err) {
 			return fmt.Errorf("shadow: can't read /etc/shadow due to permission error, use helper binary or run maddy as a privileged user")

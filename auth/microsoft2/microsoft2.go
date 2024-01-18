@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/confidential"
+	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/public"
 	"github.com/coreos/go-oidc"
 	"github.com/nettica-com/nettica-admin/core"
 	model "github.com/nettica-com/nettica-admin/model"
@@ -26,6 +27,7 @@ var (
 	oauth2Config *oauth2.Config
 	userCache    *cache.Cache
 	clientApp    confidential.Client
+	publicApp    public.Client
 )
 
 // Setup validate provider
@@ -43,6 +45,11 @@ func (o *Oauth2Microsoft) Setup() error {
 
 	// Create a confidential client using a client ID and secret
 	clientApp, err = confidential.New(os.Getenv("OAUTH2_PROVIDER"), os.Getenv("OAUTH2_CLIENT_ID"), cred)
+	if err != nil {
+		return err
+	}
+
+	publicApp, err = public.New(os.Getenv("OAUTH2_CLIENT_ID"))
 	if err != nil {
 		return err
 	}
@@ -72,7 +79,27 @@ func (o *Oauth2Microsoft) CodeUrl(state string) string {
 	if err != nil {
 		log.Error(err)
 	}
-	return authUrl + "&state=" + state
+
+	authUrl = authUrl + "&state=" + state
+	log.Infof("authUrl: %s", authUrl)
+
+	return authUrl
+}
+
+func (o *Oauth2Microsoft) CodeUrl2(state string) string {
+
+	client_id := os.Getenv("OAUTH2_AGENT_CLIENT_ID")
+	redirect_uri := os.Getenv("OAUTH2_AGENT_REDIRECT_URL")
+
+	authUrl, err := publicApp.AuthCodeURL(context.Background(), client_id, redirect_uri, oauth2Config.Scopes)
+	if err != nil {
+		log.Error(err)
+	}
+
+	authUrl = authUrl + "&state=" + state
+	log.Infof("authUrl: %s", authUrl)
+
+	return authUrl
 }
 
 // Exchange exchange code for Oauth2 token
@@ -83,6 +110,28 @@ func (o *Oauth2Microsoft) Exchange(code string) (*oauth2.Token, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// create an oauth2.Token from the AuthResult and including the IDToken
+	//oauth2Token := oauth2.Token{
+
+	oauth2Token := &oauth2.Token{
+		AccessToken: authResult.AccessToken,
+		Expiry:      authResult.ExpiresOn,
+	}
+	oauth2Token = oauth2Token.WithExtra(map[string]interface{}{ // Add the ID token to the extra parameters
+		"id_token":    authResult.IDToken,
+		"auth_result": authResult})
+
+	return oauth2Token, nil
+}
+
+func (o *Oauth2Microsoft) Exchange2(code string) (*oauth2.Token, error) {
+	authResult, err := publicApp.AcquireTokenByAuthCode(context.Background(), code, "com.nettica.agent://callback/agent", oauth2Config.Scopes)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Infof("authResult: %v", authResult)
 
 	// create an oauth2.Token from the AuthResult and including the IDToken
 	//oauth2Token := oauth2.Token{

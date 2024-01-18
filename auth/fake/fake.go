@@ -21,6 +21,10 @@ func (o *Fake) CodeUrl(state string) string {
 	return "_magic_string_fake_auth_no_redirect_"
 }
 
+func (o *Fake) CodeUrl2(state string) string {
+	return o.CodeUrl(state)
+}
+
 // Exchange exchange code for Oauth2 token
 func (o *Fake) Exchange(code string) (*oauth2.Token, error) {
 	rand, err := util.GenerateRandomString(32)
@@ -34,6 +38,10 @@ func (o *Fake) Exchange(code string) (*oauth2.Token, error) {
 		RefreshToken: "",
 		Expiry:       time.Time{},
 	}, nil
+}
+func (o *Fake) Exchange2(code string) (*oauth2.Token, error) {
+	token, err := o.Exchange(code)
+	return token, err
 }
 
 // UserInfo get token user

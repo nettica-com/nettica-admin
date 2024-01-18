@@ -39,6 +39,10 @@ func (o *Github) CodeUrl(state string) string {
 	return oauth2Config.AuthCodeURL(state)
 }
 
+func (o *Github) CodeUrl2(state string) string {
+	return o.CodeUrl(state)
+}
+
 // Exchange exchange code for Oauth2 token
 func (o *Github) Exchange(code string) (*oauth2.Token, error) {
 	oauth2Token, err := oauth2Config.Exchange(context.TODO(), code)
@@ -47,6 +51,11 @@ func (o *Github) Exchange(code string) (*oauth2.Token, error) {
 	}
 
 	return oauth2Token, nil
+}
+
+func (o *Github) Exchange2(code string) (*oauth2.Token, error) {
+	token, err := o.Exchange(code)
+	return token, err
 }
 
 // UserInfo get token user

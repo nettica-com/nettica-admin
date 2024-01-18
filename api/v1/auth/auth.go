@@ -2,9 +2,11 @@ package auth
 
 import (
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 	model "github.com/nettica-com/nettica-admin/model"
 	util "github.com/nettica-com/nettica-admin/util"
 	"github.com/patrickmn/go-cache"
@@ -19,6 +21,7 @@ func ApplyRoutes(r *gin.RouterGroup) {
 		g.GET("/oauth2_url", oauth2URL)
 		g.POST("/oauth2_exchange", oauth2Exchange)
 		g.POST("/token", token)
+		g.POST("/validate", validate)
 		g.GET("/user", user)
 		g.GET("/logout", logout)
 	}
@@ -29,32 +32,64 @@ func ApplyRoutes(r *gin.RouterGroup) {
  */
 func oauth2URL(c *gin.Context) {
 	cacheDb := c.MustGet("cache").(*cache.Cache)
-
-	state, err := util.GenerateRandomString(32)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"err": err,
-		}).Error("failed to generate state random string")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	}
-
-	clientId, err := util.GenerateRandomString(32)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"err": err,
-		}).Error("failed to generate state random string")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	}
-	// save clientId and state so we can retrieve for verification
-	cacheDb.Set(clientId, state, 5*time.Minute)
-
 	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
+
+	var err error
+	var state, clientId, codeUrl, audience, redirect_uri string
+	if c.Request.URL.Query().Get("redirect_uri") == "com.nettica.agent://callback/agent" {
+		clientId, err = util.GenerateRandomString(32)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("failed to generate state random string")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		state, err = util.GenerateRandomString(32)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("failed to generate state random string")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		codeUrl = oauth2Client.CodeUrl2(state)
+		audience = os.Getenv("OAUTH2_AGENT_AUDIENCE")
+		redirect_uri = os.Getenv("OAUTH2_AGENT_REDIRECT_URL")
+
+		cacheDb.Set(clientId, state, 5*time.Minute)
+	} else {
+
+		state, err = util.GenerateRandomString(32)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("failed to generate state random string")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		clientId, err = util.GenerateRandomString(32)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("failed to generate state random string")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		// save clientId and state so we can retrieve for verification
+		cacheDb.Set(clientId, state, 5*time.Minute)
+		codeUrl = oauth2Client.CodeUrl(state)
+	}
 
 	data := &model.Auth{
 		Oauth2:   true,
 		ClientId: clientId,
 		State:    state,
-		CodeUrl:  oauth2Client.CodeUrl(state),
+		CodeUrl:  codeUrl,
+		Audience: audience,
+		Redirect: redirect_uri,
 	}
 
 	c.JSON(http.StatusOK, data)
@@ -91,7 +126,15 @@ func oauth2Exchange(c *gin.Context) {
 	}
 	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
 
-	oauth2Token, err := oauth2Client.Exchange(loginVals.Code)
+	var oauth2Token *oauth2.Token
+	var err error
+
+	if loginVals.Redirect != "com.nettica.agent://callback/agent" {
+		oauth2Token, err = oauth2Client.Exchange(loginVals.Code)
+	} else {
+		oauth2Token, err = oauth2Client.Exchange2(loginVals.Code)
+	}
+
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
@@ -125,37 +168,122 @@ func token(c *gin.Context) {
 	}).Info("loginVals")
 
 	cacheDb := c.MustGet("cache").(*cache.Cache)
-	//	savedState, exists := cacheDb.Get(loginVals.ClientId)
+	savedState, exists := cacheDb.Get(loginVals.Code)
 
-	//	if !exists || savedState != loginVals.State {
-	//		log.WithFields(log.Fields{
-	//			"state":      loginVals.State,
-	//			"savedState": savedState,
-	//		}).Error("saved state and client provided state mismatch")
-	//		c.AbortWithStatus(http.StatusBadRequest)
-	//		return
-	//	}
-	//oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
+	if !exists || savedState != loginVals.State {
+		log.WithFields(log.Fields{
+			"state":      loginVals.State,
+			"savedState": savedState,
+		}).Error("saved state and client provided state mismatch")
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
 
-	//	oauth2Token, err := oauth2Client.Exchange(loginVals.Code)
-	//	if err != nil {
-	//		log.WithFields(log.Fields{
-	//			"err": err,
-	//		}).Error("failed to exchange code for token")
-	//		c.AbortWithStatus(http.StatusBadRequest)
-	//		return
-	//	}
+	var oauth2Token *oauth2.Token
+	var err error
 
-	//	cacheDb.Delete(loginVals.ClientId)
-	var token oauth2.Token
-	token.AccessToken = loginVals.Code
-	var token_map = make(map[string]interface{}, 1)
-	token_map["id_token"] = loginVals.Code
-	token2 := token.WithExtra(token_map)
+	if loginVals.Redirect != "com.nettica.agent://callback/agent" {
+		oauth2Token, err = oauth2Client.Exchange(loginVals.Code)
+	} else {
+		oauth2Token, err = oauth2Client.Exchange2(loginVals.Code)
+	}
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to exchange code for token")
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
 
-	cacheDb.Set(loginVals.Code, token2, cache.DefaultExpiration)
+	cacheDb.Set(oauth2Token.AccessToken, oauth2Token, 4*time.Hour)
 
-	c.JSON(http.StatusOK, loginVals.Code)
+	c.JSON(http.StatusOK, oauth2Token.AccessToken)
+	/*
+	   //	cacheDb.Delete(loginVals.ClientId)
+	   var token oauth2.Token
+	   token.AccessToken = loginVals.Code
+	   var token_map = make(map[string]interface{}, 1)
+	   token_map["id_token"] = loginVals.Code
+	   token2 := token.WithExtra(token_map)
+
+	   cacheDb.Set(loginVals.Code, token2, cache.DefaultExpiration)
+
+	   c.JSON(http.StatusOK, loginVals.Code)
+	*/
+}
+
+func validate(c *gin.Context) {
+	var t model.OAuth2Token
+	if err := c.ShouldBindJSON(&t); err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("could not validate tokens")
+		c.AbortWithStatus(http.StatusUnprocessableEntity)
+		return
+	}
+	cacheDb := c.MustGet("cache").(*cache.Cache)
+	oauth2Token, exists := cacheDb.Get(util.GetCleanAuthToken(c))
+
+	if exists && oauth2Token.(*oauth2.Token).AccessToken == util.GetCleanAuthToken(c) {
+		c.JSON(http.StatusOK, gin.H{})
+		return
+	}
+
+	// validate the JWT with our private key
+
+	// verify the jwt signature
+
+	token := t.AccessToken
+
+	// parse the token
+	parsedToken, err := jwt.ParseWithClaims(token, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return os.Getenv("OAUTH2_CLIENT_SECRET"), nil
+	})
+
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to parse jwt token")
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	// validate the claims
+	if claims, ok := parsedToken.Claims.(*CustomClaims); ok && parsedToken.Valid {
+		log.WithFields(log.Fields{
+			"claims": claims,
+		}).Info("claims")
+
+		// create a new oauth2.Token from the claims
+		oauth2Token := &oauth2.Token{
+			AccessToken:  token,
+			TokenType:    "Bearer",
+			RefreshToken: "",
+			Expiry:       time.Now().Add(4 * time.Hour),
+		}
+
+		oauth2Token = oauth2Token.WithExtra(map[string]interface{}{ // Add the ID token to the extra parameters
+			"id_token": token})
+
+		cacheDb.Set(oauth2Token.AccessToken, oauth2Token, 4*time.Hour)
+
+		c.JSON(http.StatusOK, gin.H{})
+		return
+	}
+
+	// otherwise we have an invalid token
+
+	log.Error("oauth2 AccessToken is not recognized")
+
+	c.AbortWithStatus(http.StatusUnauthorized)
+}
+
+// A custom struct to hold the jwt claims
+type CustomClaims struct {
+	Email string `json:"email"`
+
+	jwt.StandardClaims
 }
 
 func logout(c *gin.Context) {
