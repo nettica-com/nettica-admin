@@ -317,13 +317,23 @@ func logout(c *gin.Context) {
 
 	cacheDb.Delete(c.Request.Header.Get(util.AuthTokenHeaderName))
 
-	logoutUrl := os.Getenv("OAUTH2_LOGOUT_URL")
+	var logoutUrl string
+
+	if c.Request.URL.Query().Get("redirect_uri") != "" {
+		logoutUrl = os.Getenv("OAUTH2_AGENT_LOGOUT_URL")
+		if logoutUrl != "" {
+			c.Redirect(http.StatusTemporaryRedirect, logoutUrl)
+			return
+		}
+	}
+
+	logoutUrl = os.Getenv("OAUTH2_LOGOUT_URL")
 	if logoutUrl != "" {
 		c.Redirect(http.StatusTemporaryRedirect, logoutUrl)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{})
+	c.Redirect(http.StatusTemporaryRedirect, "/")
 }
 
 func user(c *gin.Context) {
