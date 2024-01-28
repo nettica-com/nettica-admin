@@ -16,7 +16,7 @@ var (
 
 // Read reads system shadow passwords database and returns all entires in it.
 func Read() ([]Entry, error) {
-	f, err := os.Open("/etc/shadow2")
+	f, err := os.Open("/etc/shadow")
 	if err != nil {
 		return nil, err
 	}
