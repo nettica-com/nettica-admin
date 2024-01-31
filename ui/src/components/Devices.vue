@@ -96,6 +96,8 @@
                                             persistent-hint :readonly="!inEdit" />
                                         <v-switch v-model="selected.device.enable" color="success" inset
                                             :label="selected.device.enable ? 'Enabled' : 'Disabled'" :readonly="!inEdit" />
+                                        <v-text-field v-model="selected.device.checkInterval" type="number"
+                                            label="Check interval" hint="In seconds" :readonly="!inEdit" />
                                         <v-select return-object v-model="selected.accountid" :items="acntList.items"
                                             item-text="text" item-value="value" label="Account ID" single
                                             persistent-hint :readonly="!inEdit" />
@@ -1027,6 +1029,9 @@ export default {
             // set the account id
             this.device.accountid = item.accountid.value
             console.log("accountid = ", this.device.accountid)
+
+            // fixup the checkInterval
+            this.device.checkInterval = parseInt(this.device.checkInterval, 10);
 
             // all good, submit
             this.dialogUpdate = false;
