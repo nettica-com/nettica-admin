@@ -142,11 +142,16 @@ OAUTH2_TENET=... (guid)
 OAUTH2_LOGOUT_URL=https://login.microsoftonline.com/{tenet guid}/oauth2/v2.0/logout
 
 # Example Nettica Agent config for Microsoft MSAL
+# When creating the App Registration in Azure Microsoft Entra ID, use "Add a Platform"
+# to your Web App Registration you already created above, and choose "Mobile and Desktop Application",
+# then add com.nettica.agent://callback/agent to the Redirect URLs
+
 OAUTH2_AGENT_PROVIDER=https://login.microsoftonline.com/common/v2.0
 OAUTH2_AGENT_CLIENT_ID=Application ID (guid - same as above)
 OAUTH2_AGENT_CLIENT_SECRET=... (same as above)
 OAUTH2_AGENT_REDIRECT_URL=com.nettica.agent://callback/agent
 OAUTH2_AGENT_LOGOUT_URL=https://login.microsoftonline.com/{tenet guid}/oauth2/v2.0/logout
+
 
 
 
