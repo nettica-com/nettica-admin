@@ -17,8 +17,8 @@ A control plane for [WireGuard](https://wireguard.com).
 
 ## Features
 
- * Self-hosted and web based management of wireguard networks
- * Net define the configuration of the hosts in the network
+ * Self-hosted and web-based management of WireGuard networks
+ * Networks define the configuration of the hosts in the network
  * Invite people to network with email
  * Authenticate them with OAuth2
  * Generation of configuration files on demand
@@ -74,7 +74,7 @@ server {
 
 
 
-        server_name netticavpn.com;
+    server_name netticavpn.com;
     listen 80;
     return 404; # managed by Certbot
 
@@ -96,20 +96,13 @@ GIN_MODE=release
 SMTP_HOST=smtp.sendgrid.net
 SMTP_PORT=587
 SMTP_USERNAME=apikey
-SMTP_PASSWORD=
+SMTP_PASSWORD=...
 SMTP_FROM=Nettica <info@netticavpn.com>
 
 # MONGO settings
 MONGODB_CONNECTION_STRING=mongodb://127.0.0.1:27017
 
-# example with google
-#OAUTH2_PROVIDER_NAME=google
-#OAUTH2_PROVIDER=
-#OAUTH2_CLIENT_ID=
-#OAUTH2_CLIENT_SECRET=
-#OAUTH2_REDIRECT_URL=
-
-# example with github
+# example with GitHub
 #OAUTH2_PROVIDER_NAME=github
 #OAUTH2_PROVIDER=https://github.com
 #OAUTH2_CLIENT_ID=
@@ -119,38 +112,50 @@ MONGODB_CONNECTION_STRING=mongodb://127.0.0.1:27017
 #OAUTH2_PROVIDER_NAME=oauth2oidc
 #OAUTH2_PROVIDER=https://auth.netticavpn.com/
 #OAUTH2_PROVIDER_URL=nettica.us.auth0.com
-#OAUTH2_CLIENT_ID=
-#OAUTH2_CLIENT_ID_WINDOWS=
-#OAUTH2_CLIENT_SECRET=
-#OAUTH2_REDIRECT_URL=https://dev.netticavpn.com
+#OAUTH2_CLIENT_ID=...
+#OAUTH2_CLIENT_SECRET=...
+#OAUTH2_REDIRECT_URL=https://vpn.netticavpn.com
 
-OAUTH2_PROVIDER_NAME=microsoft
-OAUTH2_PROVIDER=https://login.microsoftonline.com/.../v2.0
-OAUTH2_CLIENT_ID=
-OAUTH2_CLIENT_ID_WINDOWS=
-OAUTH2_CLIENT_SECRET=
-OAUTH2_REDIRECT_URL=https://netticavpn.com
-OAUTH2_TENET=...
+# Example settings for oauth2oidc-based Nettica Agent 
+#OAUTH2_AGENT_PROVIDER=https://auth.nettica....
+#OAUTH2_AGENT_PROVIDER_URL=
+#OAUTH2_AGENT_CLIENT_ID=NativeAppClientId...
+#OAUTH2_AGENT_CLIENT_SECRET=...
+#OAUTH2_AGENT_AUDIENCE=guid or URL...
+#OAUTH2_AGENT_REDIRECT_URL=com.nettica.agent://callback/agent
+#OAUTH2_AGENT_LOGOUT_URL=https://auth.nettica..../v2/logout?client_id=NativeAppClientId...&returnTo=com.nettica.agent://callback/agent
 
-# OAuth2 provider using Microsoft's MSAL library.  Allows for full range of Microsoft authentication
-#OAUTH2_PROVIDER_NAME=microsoft2
-#OAUTH2_PROVIDER=https://login.microsoftonline.com/.../v2.0        # For single enterprise-only authentication
-#OAUTH2_PROVIDER=https://login.microsoftonline.com/common/v2.0    # For multiple enterprise and social authentication
+#OAUTH2_PROVIDER_NAME=microsoft
+#OAUTH2_PROVIDER=https://login.microsoftonline.com/.../v2.0
 #OAUTH2_CLIENT_ID=
-#OAUTH2_CLIENT_ID_WINDOWS=
 #OAUTH2_CLIENT_SECRET=
 #OAUTH2_REDIRECT_URL=https://netticavpn.com
 #OAUTH2_TENET=...
 
+# OAuth2 provider using Microsoft's MSAL library.  Allows for a full range of Microsoft authentication
+OAUTH2_PROVIDER_NAME=microsoft2
+OAUTH2_PROVIDER=https://login.microsoftonline.com/common/v2.0
+OAUTH2_CLIENT_ID=ApplicationID (guid)
+OAUTH2_CLIENT_SECRET=...
+OAUTH2_REDIRECT_URL=https://vpn.netticavpn.com
+OAUTH2_TENET=... (guid)
+OAUTH2_LOGOUT_URL=https://login.microsoftonline.com/{tenet guid}/oauth2/v2.0/logout
+
+# Example Nettica Agent config for Microsoft MSAL
+OAUTH2_AGENT_PROVIDER=https://login.microsoftonline.com/common/v2.0
+OAUTH2_AGENT_CLIENT_ID=Application ID (guid - same as above)
+OAUTH2_AGENT_CLIENT_SECRET=... (same as above)
+OAUTH2_AGENT_REDIRECT_URL=com.nettica.agent://callback/agent
+OAUTH2_AGENT_LOGOUT_URL=https://login.microsoftonline.com/{tenet guid}/oauth2/v2.0/logout
 
 
 
 # valid settings: oauth2oidc, microsoft, microsoft2, basic, fake
-# For google use microsoft as the provider
-OAUTH2_PROVIDER_NAME=microsoft
+# For google use microsoft provider
+#OAUTH2_PROVIDER_NAME=microsoft2
 
 # Basic auth requires no other parameters but OAUTH_PROVIDER_NAME
-#OAUTH2_PROVIDER_NAME=basic
+OAUTH2_PROVIDER_NAME=basic
 
 ```
 
