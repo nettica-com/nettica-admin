@@ -33,6 +33,7 @@ type Device struct {
 	Debug         bool       `json:"debug"                     bson:"debug"`
 	Quiet         bool       `json:"quiet"                     bson:"quiet"`
 	Registered    bool       `json:"registered"                bson:"registered"`
+	UpdateKeys    bool       `json:"updateKeys"                bson:"updateKeys"`
 	Version       string     `json:"version"                   bson:"version"`
 	InstanceID    string     `json:"instanceid"                bson:"instanceid"`
 	CreatedBy     string     `json:"createdBy"                 bson:"createdBy"`
