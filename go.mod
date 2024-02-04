@@ -4,7 +4,6 @@ go 1.14
 
 require (
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.2.0
-	github.com/PuerkitoBio/rehttp v1.2.0 // indirect
 	github.com/amoghe/go-crypt v0.0.0-20220222110647-20eada5f5964
 	github.com/bytedance/sonic v1.10.1 // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible
@@ -40,7 +39,6 @@ require (
 	golang.zx2c4.com/wireguard/wgctrl v0.0.0-20230429144221-925a1e7659e6
 	google.golang.org/appengine v1.6.8 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
-	gopkg.in/auth0.v4 v4.7.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 )
