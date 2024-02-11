@@ -7,6 +7,7 @@ import (
 	"github.com/nettica-com/nettica-admin/auth/basic"
 	"github.com/nettica-com/nettica-admin/auth/fake"
 	"github.com/nettica-com/nettica-admin/auth/github"
+	"github.com/nettica-com/nettica-admin/auth/google"
 	"github.com/nettica-com/nettica-admin/auth/microsoft"
 	"github.com/nettica-com/nettica-admin/auth/microsoft2"
 	"github.com/nettica-com/nettica-admin/auth/oauth2oidc"
@@ -45,7 +46,9 @@ func GetAuthProvider() (model.Authentication, error) {
 		oauth2Client = &github.Github{}
 
 	case "google":
-		return nil, fmt.Errorf("auth provider name %s not yet implemented", os.Getenv("OAUTH2_PROVIDER_NAME"))
+		log.Warn("Oauth is set to Google")
+		oauth2Client = &google.OAuth2Google{}
+
 	default:
 		return nil, fmt.Errorf("auth provider name %s unknown", os.Getenv("OAUTH2_PROVIDER_NAME"))
 	}
