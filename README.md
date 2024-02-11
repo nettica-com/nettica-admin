@@ -13,7 +13,7 @@ A control plane for [WireGuard](https://wireguard.com).
 * nginx
 * NodeJS / Vue 2
 
-![Screenshot](nettica-architecture.jpg)
+![Screenshot](nettica-architecture.webp)
 
 ## Features
 
@@ -85,8 +85,10 @@ server {
 Example `.env` file:
 
 ```
+SERVER=https://nettica.example.com
+
 # IP address to listen to
-SERVER=0.0.0.0
+LISTEN_ADDR=0.0.0.0
 # port to bind
 PORT=8080
 # Gin framework release mode
@@ -97,67 +99,41 @@ SMTP_HOST=smtp.sendgrid.net
 SMTP_PORT=587
 SMTP_USERNAME=apikey
 SMTP_PASSWORD=...
-SMTP_FROM=Nettica <info@netticavpn.com>
+SMTP_FROM=Nettica <info@nettica.example.com>
 
 # MONGO settings
 MONGODB_CONNECTION_STRING=mongodb://127.0.0.1:27017
 
-# example with GitHub
-#OAUTH2_PROVIDER_NAME=github
-#OAUTH2_PROVIDER=https://github.com
-#OAUTH2_CLIENT_ID=
-#OAUTH2_CLIENT_SECRET=
-#OAUTH2_REDIRECT_URL=
-
-#OAUTH2_PROVIDER_NAME=oauth2oidc
-#OAUTH2_PROVIDER=https://auth.netticavpn.com/
-#OAUTH2_PROVIDER_URL=nettica.us.auth0.com
+# Google Workspaces example
+#OAUTH2_PROVIDER_NAME=google
+#OAUTH2_PROVIDER=https://accounts.google.com
+#OAUTH2_PROVIDER_URL=accounts.google.com
 #OAUTH2_CLIENT_ID=...
 #OAUTH2_CLIENT_SECRET=...
-#OAUTH2_REDIRECT_URL=https://vpn.netticavpn.com
-
-# Example settings for oauth2oidc-based Nettica Agent 
-#OAUTH2_AGENT_PROVIDER=https://auth.nettica....
-#OAUTH2_AGENT_PROVIDER_URL=
-#OAUTH2_AGENT_CLIENT_ID=NativeAppClientId...
-#OAUTH2_AGENT_CLIENT_SECRET=...
-#OAUTH2_AGENT_AUDIENCE=guid or URL...
+#OAUTH2_REDIRECT_URL=https://nettica.example.com
+#OAUTH2_LOGOUT_URL=https://www.google.com/accounts/Logout
+#OAUTH2_AGENT_PROVIDER=https://accounts.google.com
+#OAUTH2_AGENT_CLIENT_ID=same....
+#OAUTH2_AGENT_CLIENT_SECRET=same...
 #OAUTH2_AGENT_REDIRECT_URL=com.nettica.agent://callback/agent
-#OAUTH2_AGENT_LOGOUT_URL=https://auth.nettica..../v2/logout?client_id=NativeAppClientId...&returnTo=com.nettica.agent://callback/agent
+#OAUTH2_AGENT_LOGOUT_URL=https://www.google.com/accounts/Logout
 
-#OAUTH2_PROVIDER_NAME=microsoft
-#OAUTH2_PROVIDER=https://login.microsoftonline.com/.../v2.0
-#OAUTH2_CLIENT_ID=
-#OAUTH2_CLIENT_SECRET=
-#OAUTH2_REDIRECT_URL=https://netticavpn.com
-#OAUTH2_TENET=...
-
-# OAuth2 provider using Microsoft's MSAL library.  Allows for a full range of Microsoft authentication
-OAUTH2_PROVIDER_NAME=microsoft2
-OAUTH2_PROVIDER=https://login.microsoftonline.com/common/v2.0
-OAUTH2_CLIENT_ID=ApplicationID (guid)
-OAUTH2_CLIENT_SECRET=...
-OAUTH2_REDIRECT_URL=https://vpn.netticavpn.com
-OAUTH2_TENET=... (guid)
-OAUTH2_LOGOUT_URL=https://login.microsoftonline.com/{tenet guid}/oauth2/v2.0/logout
-
-# Example Nettica Agent config for Microsoft MSAL
-# When creating the App Registration in Azure Microsoft Entra ID, use "Add a Platform"
-# to your Web App Registration you already created above, and choose "Mobile and Desktop Application",
-# then add com.nettica.agent://callback/agent to the Redirect URLs
-
-OAUTH2_AGENT_PROVIDER=https://login.microsoftonline.com/common/v2.0
-OAUTH2_AGENT_CLIENT_ID=Application ID (guid - same as above)
-OAUTH2_AGENT_CLIENT_SECRET=... (same as above)
-OAUTH2_AGENT_REDIRECT_URL=com.nettica.agent://callback/agent
-OAUTH2_AGENT_LOGOUT_URL=https://login.microsoftonline.com/{tenet guid}/oauth2/v2.0/logout
-
-
-
-
-# valid settings: oauth2oidc, microsoft, microsoft2, basic, fake
-# For google use microsoft provider
+# Micrsoft Entra ID example
 #OAUTH2_PROVIDER_NAME=microsoft2
+#OAUTH2_PROVIDER=https://login.microsoftonline.com/common/v2.0
+#OAUTH2_CLIENT_ID=...
+#OAUTH2_CLIENT_SECRET=...
+#OAUTH2_REDIRECT_URL=https://nettica.example.com
+#OAUTH2_TENET=...
+#OAUTH2_LOGOUT_URL=https://login.microsoftonline.com/{tenet}/oauth2/v2.0/logout
+#OAUTH2_AGENT_PROVIDER=https://login.microsoftonline.com/common/v2.0
+#OAUTH2_AGENT_CLIENT_ID=...
+#OAUTH2_AGENT_CLIENT_SECRET=...
+#OAUTH2_AGENT_REDIRECT_URL=com.nettica.agent://callback/agent
+#OAUTH2_AGENT_LOGOUT_URL=https://login.microsoftonline.com/{tenet}/oauth2/v2.0/logout
+
+
+# valid settings: oauth2oidc, google, microsoft2, basic, fake
 
 # Basic auth requires no other parameters but OAUTH_PROVIDER_NAME
 OAUTH2_PROVIDER_NAME=basic
