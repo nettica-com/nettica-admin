@@ -70,7 +70,12 @@ func main() {
 	}
 
 	// creates a gin router with default middleware: logger and recovery (crash-free) middleware
-	app := gin.Default()
+	app := gin.New()
+	app.Use(gin.LoggerWithConfig(gin.LoggerConfig{
+		SkipPaths: []string{"/api/v1.0/device/*"},
+	}))
+	app.Use(gin.Recovery())
+
 	docs.SwaggerInfo.BasePath = "/api/v1.0"
 	docs.SwaggerInfo.Host = os.Getenv("SERVER")[8:]
 	docs.SwaggerInfo.Schemes = []string{"https"}
