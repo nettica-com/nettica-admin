@@ -151,8 +151,8 @@
           code: auth,
           state: 'basic_auth' } )
 
-        if (this.$route.query.redirect_uri != undefined) {
-          let response = this.$route.query.redirect_uri + "?code=" + auth + "&state=basic_auth"
+        if (this.$route.query.redirect_uri == "com.nettica.agent://callback/agent") {
+          let response = "com.nettica.agent://callback/agent" + "?code=" + auth + "&state=basic_auth"
           console.log("redirecting to %s", response)
           window.location.replace(response)
         }
