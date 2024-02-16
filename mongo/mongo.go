@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"sort"
 	"sync"
 	"time"
 
@@ -307,6 +308,9 @@ func ReadDevicesAndVPNsForAccount(accountid string) ([]*model.Device, error) {
 			var device *model.Device
 			err = cursor.Decode(&device)
 			if err == nil {
+				sort.Slice(device.VPNs, func(i, j int) bool {
+					return device.VPNs[i].Name < device.VPNs[j].Name
+				})
 				devices = append(devices, device)
 			}
 		}
@@ -360,6 +364,11 @@ func ReadVPNsforNetwork(netid string) ([]*model.VPN, error) {
 
 	}
 
+	// Alphabetize the results
+	sort.Slice(vpns, func(i, j int) bool {
+		return vpns[i].Name < vpns[j].Name
+	})
+
 	return vpns, err
 
 }
@@ -403,6 +412,11 @@ func ReadAllVPNs(param string, id string) ([]*model.VPN, error) {
 		}
 
 	}
+
+	// Alphabetize the results
+	sort.Slice(vpns, func(i, j int) bool {
+		return vpns[i].Name < vpns[j].Name
+	})
 
 	return vpns, err
 
@@ -771,6 +785,11 @@ func ReadAllServers() ([]*model.Server, error) {
 			}
 		}
 	}
+
+	// Alphabetize the results
+	sort.Slice(servers, func(i, j int) bool {
+		return servers[i].Description < servers[j].Description
+	})
 	return servers, err
 }
 
