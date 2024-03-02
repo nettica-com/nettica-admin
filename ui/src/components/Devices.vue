@@ -1006,7 +1006,7 @@ export default {
         },
 
         copyDeviceConfig(device) {
-            var url = "curl \"http://localhost:53280/config/?id=" + device.id + "&apiKey=" + device.apiKey + "&server" + device.server + "\""
+            var url = "curl \"http://localhost:53280/config/?id=" + device.id + "&apiKey=" + device.apiKey + "&server=" + device.server + "\""
 
             // copy url to clipboard 
 
