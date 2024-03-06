@@ -819,6 +819,7 @@ export default {
         create(device) {
             this.device.platform = this.platforms.selected.value
             this.device.accountid = this.acntList.selected.value
+            device.name = device.name.trim()
 
             this.dialogCreate = false;
             this.createdevice(device)
