@@ -22,7 +22,7 @@ A control plane for [WireGuard](https://wireguard.com).
  * Invite people to network with email
  * Authenticate them with OAuth2
  * Generation of configuration files on demand
- * User authentication (Oauth2 OIDC)
+ * User authentication (OAuth2 OIDC)
  * Fully configure all aspects of your VPN
  * Manage hosts remotely
  * Simple
