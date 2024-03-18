@@ -276,6 +276,9 @@ func (o *Oauth2idc) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 		if len(accounts) == 0 {
 			var account model.Account
 			account.Name = "Me"
+			if user.Name != user.Email {
+				account.Name = user.Name
+			}
 			account.AccountName = "Company"
 			account.Email = user.Email
 			account.Role = "Owner"

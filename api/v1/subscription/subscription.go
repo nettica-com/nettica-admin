@@ -142,6 +142,8 @@ func createSubscription(c *gin.Context) {
 		email := data["email"].(string)
 		log.Info(email)
 
+		customer_name := data["first_name"].(string) + " " + data["last_name"].(string)
+
 		// generate a random subscription id
 		id, err := util.RandomString(8)
 		if err != nil {
@@ -209,7 +211,7 @@ func createSubscription(c *gin.Context) {
 			//  If there's no error and no account, create one.
 			if len(accounts) == 0 {
 				var account model.Account
-				account.Name = "Me"
+				account.Name = customer_name
 				account.AccountName = "Company"
 				account.Email = email
 				account.Role = "Owner"
