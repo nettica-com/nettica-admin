@@ -884,6 +884,7 @@ export default {
                 }
                 this.vpn.current.endpoint = this.vpn.current.endpoint + ":" + this.vpn.current.listenPort.toString()
             }
+            this.vpn.name = this.vpn.name.trim()
             this.vpn.netName = this.netList.selected.text
             this.vpn.netid = this.netList.selected.value
             this.dialogAddVPN = false;
