@@ -162,10 +162,10 @@ func createSubscription(c *gin.Context) {
 			credits = 0
 			name = "Starter"
 			description = "The Starter subscription"
-			devices = 5
-			networks = 1
-			members = 2
-			relays = 0
+			devices = core.GetDefaultMaxDevices()
+			networks = core.GetDefaultMaxNetworks()
+			members = core.GetDefaultMaxMembers()
+			relays = core.GetDefaultMaxServices()
 
 		case "Relay-1":
 			fallthrough
@@ -244,50 +244,48 @@ func createSubscription(c *gin.Context) {
 			return
 		}
 
-		if core.EnforceLimits() {
-
-			limits, err := core.ReadLimits(account.Id)
+		limits, err := core.ReadLimits(account.Id)
+		if err != nil {
+			log.Error(err)
+			limits_id, err := util.GenerateRandomString(8)
 			if err != nil {
 				log.Error(err)
-				limits_id, err := util.GenerateRandomString(8)
-				if err != nil {
-					log.Error(err)
-				}
-				limits_id = "limits-" + limits_id
-
-				limits = &model.Limits{
-					Id:          limits_id,
-					AccountID:   account.Id,
-					MaxDevices:  0,
-					MaxNetworks: 0,
-					MaxMembers:  0,
-					MaxServices: 0,
-					Tolerance:   1.0,
-					CreatedBy:   email,
-					UpdatedBy:   email,
-					Created:     time.Now(),
-					Updated:     time.Now(),
-				}
 			}
+			limits_id = "limits-" + limits_id
 
-			limits.MaxDevices += devices
-			limits.MaxNetworks += networks
-			limits.MaxMembers += members
-			limits.MaxServices += relays
-
-			errs := limits.IsValid()
-			if len(errs) != 0 {
-				for _, err := range errs {
-					log.WithFields(log.Fields{
-						"err": err,
-					}).Error("limits validation error")
-				}
-				return
+			limits = &model.Limits{
+				Id:          limits_id,
+				AccountID:   account.Id,
+				MaxDevices:  0,
+				MaxNetworks: 0,
+				MaxMembers:  0,
+				MaxServices: 0,
+				Tolerance:   core.GetDefaultTolerance(),
+				CreatedBy:   email,
+				UpdatedBy:   email,
+				Created:     time.Now(),
+				Updated:     time.Now(),
 			}
-
-			// save limits to mongodb
-			mongo.Serialize(limits.Id, "id", "limits", limits)
 		}
+
+		limits.MaxDevices += devices
+		limits.MaxNetworks += networks
+		limits.MaxMembers += members
+		limits.MaxServices += relays
+
+		errs := limits.IsValid()
+		if len(errs) != 0 {
+			for _, err := range errs {
+				log.WithFields(log.Fields{
+					"err": err,
+				}).Error("limits validation error")
+			}
+			return
+		}
+
+		// save limits to mongodb
+		mongo.Serialize(limits.Id, "id", "limits", limits)
+
 		// construct a subscription object
 		subscription := model.Subscription{
 			Id:          id,
@@ -302,7 +300,7 @@ func createSubscription(c *gin.Context) {
 			Status:      status,
 		}
 
-		errs := subscription.IsValid()
+		errs = subscription.IsValid()
 		if len(errs) != 0 {
 			for _, err := range errs {
 				log.WithFields(log.Fields{
