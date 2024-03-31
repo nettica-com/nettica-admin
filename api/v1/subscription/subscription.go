@@ -141,7 +141,7 @@ func createHelioSubscription(c *gin.Context) {
 		log.Errorf("unknown transaction status %s", transStatus)
 	}
 
-	endedAt := sub["endedAt"].(string)
+	endedAt := transact["endedAt"].(string)
 	log.Info(endedAt)
 
 	// convert the endedAt string of unixtime to a time.Time object
