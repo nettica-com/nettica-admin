@@ -143,19 +143,19 @@ func createHelioSubscription(c *gin.Context) {
 
 	endedAt := transact["endedAt"].(string)
 	log.Info(endedAt)
-
 	// convert the endedAt string of unixtime to a time.Time object
 	endedAtUnix, err := time.Parse(time.RFC3339, endedAt)
+	if err != nil {
+		log.Error(err)
+	}
+
+	start := transact["startedAt"].(map[string]interface{})
+	id := start["transactionSignature"].(string)
+	log.Info(id)
 
 	go func() {
 
 		customer_name := "Me"
-
-		// generate a random subscription id
-		id, err := util.RandomString(8)
-		if err != nil {
-			log.Error(err)
-		}
 
 		credits := 0
 		name := ""
