@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/amoghe/go-crypt"
+	"github.com/nettica-com/go-crypt"
 )
 
 const secsInDay = 86400
