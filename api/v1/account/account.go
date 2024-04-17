@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	core "github.com/nettica-com/nettica-admin/core"
@@ -128,6 +129,12 @@ func createAccount(c *gin.Context) {
 		return
 	}
 
+	if acnt.Parent != account.Parent {
+		log.Infof("createAccount: %s is not authorized to create an account for %s", acnt.Email, account.Parent)
+		c.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to create an account for that parent account"})
+		return
+	}
+
 	if core.EnforceLimits() {
 		// check if the account has reached the limits
 		members, err := core.ReadAllAccounts(id)
@@ -153,6 +160,8 @@ func createAccount(c *gin.Context) {
 			return
 		}
 	}
+
+	account.Email = strings.ToLower(account.Email)
 
 	account.CreatedBy = acnt.Email
 	account.UpdatedBy = acnt.Email
@@ -332,7 +341,7 @@ func updateAccount(c *gin.Context) {
 		}
 		update.Name = data.Name
 		update.Picture = data.Picture
-		update.Email = data.Email
+		update.Email = strings.ToLower(data.Email)
 		update.ApiKey = data.ApiKey
 	} else {
 		c.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to update this account"})
