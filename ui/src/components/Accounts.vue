@@ -603,6 +603,8 @@ export default {
         },
 
         async create(toAddress, net) {
+            console.log("create: ", toAddress, net)
+            console.log("acntList: ", this.acntList)
             this.account.email = toAddress;
             this.account.netId = net.value;
             this.account.netName = net.text;
@@ -615,8 +617,8 @@ export default {
             this.account.status = "Pending"
 
             for (let i = 0; i < this.accounts.length; i++) {
-                if (this.accounts[i].id == this.accounts[i].parent) {
-                    this.account.parent = this.accounts[i].id;
+                if (this.acntList.selected.value == this.accounts[i].parent) {
+                    this.account.parent = this.accounts[i].parent;
                     this.account.accountName = this.accounts[i].accountName;
                     break;
                 }

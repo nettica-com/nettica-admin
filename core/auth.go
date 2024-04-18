@@ -153,7 +153,7 @@ func AuthFromContext(c *gin.Context, id string) (*model.Account, interface{}, er
 		}
 
 		for _, a := range accounts {
-			if a.Id == ac.Parent {
+			if a.Parent == ac.Parent {
 				account = a
 				break
 			}
