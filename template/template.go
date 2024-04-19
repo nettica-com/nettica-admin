@@ -292,6 +292,8 @@ func DumpEmail(vpn *model.VPN, qrcodePngName string) ([]byte, error) {
 // DumpEmail invites a user to join the network
 func DumpUserEmail(accountId string) ([]byte, error) {
 	file := "invite.html"
+	server := os.Getenv("SERVER")
+
 	bytes, err := os.ReadFile(file)
 	if err != nil {
 		return nil, err
@@ -304,8 +306,10 @@ func DumpUserEmail(accountId string) ([]byte, error) {
 
 	return dump(t, struct {
 		AccountID string
+		Server    string
 	}{
 		AccountID: accountId,
+		Server:    server,
 	})
 }
 
