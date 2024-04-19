@@ -133,7 +133,7 @@ export default {
         }),
         mylogout() {
             this.logout();
-            window.location.href = env.logoutUrl;
+            window.location.href = "/api/v1.0/auth/logout";
         },
         myShowMenu() {
             this.showMenu = !this.showMenu;
