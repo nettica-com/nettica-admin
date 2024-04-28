@@ -484,7 +484,7 @@ export default {
 
         removeSubscription(item) {
             this.inDelete = true;
-            if (confirm(`Do you really want to delete ${item.name} ?`)) {
+            if (confirm(`Do you really want to delete ${item.name} (not recommended)? This is an irreversible action.`)) {
                 this.deleteSubscription(item)
             }
         },
