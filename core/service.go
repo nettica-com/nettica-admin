@@ -183,7 +183,7 @@ func CreateService(service *model.Service) (*model.Service, error) {
 
 	vpn.Current.PersistentKeepalive = 23
 
-	if service.ServiceType != "Ingress" {
+	if service.ServiceType != "Ingress" && service.ServiceType != "Egress" {
 		vpn.Current.SyncEndpoint = true
 	}
 
