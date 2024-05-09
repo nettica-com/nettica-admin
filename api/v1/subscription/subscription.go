@@ -132,11 +132,11 @@ func createHelioSubscription(c *gin.Context) {
 
 	switch transStatus {
 	case "STARTED":
-		status = "Active"
+		status = "active"
 	case "STOPPED":
-		status = "Expired"
+		status = "expired"
 	case "CANCELLED":
-		status = "Cancelled"
+		status = "cancelled"
 	default:
 		log.Errorf("unknown transaction status %s", transStatus)
 	}
