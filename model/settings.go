@@ -22,6 +22,7 @@ type Settings struct {
 	SubnetRouting       bool     `json:"subnetRouting"             bson:"subnetRouting"`
 	UPnP                bool     `json:"upnp"                      bson:"upnp"`
 	SyncEndpoint        bool     `json:"syncEndpoint"              bson:"syncEndpoint"`
+	FailSafe            bool     `json:"failsafe"                  bson:"failsafe"`
 	EnableDns           bool     `json:"enableDns"                 bson:"enableDns"`
 	HasSSH              bool     `json:"hasSSH"                    bson:"hasSSH"`
 	HasRDP              bool     `json:"hasRDP"                    bson:"hasRDP"`

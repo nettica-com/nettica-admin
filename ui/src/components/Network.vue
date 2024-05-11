@@ -114,7 +114,7 @@
                                 <v-text-field v-model="selected.net.default.listenPort" type="number" :rules="[
                                     v => !!v || 'Listen port is required',
                                 ]" label="Listen port" required />
-                                <v-divider></v-divider>
+                                <span style="font-size: small;">Network Policy</span><v-divider></v-divider>
                                 <table>
                                     <tr>
                                         <td colspan="2">
@@ -135,7 +135,7 @@
                                         </td>
                                     </tr>
                                 </table>
-                                <v-divider></v-divider>
+                                <span style="font-size: small;">Client Defaults</span><v-divider></v-divider>
                                 <table width="100%">
                                     <tr>
                                         <td>
@@ -158,7 +158,11 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td colspan="2">
+                                        <td>
+                                            <v-switch v-model="selected.net.default.failsafe" color="success" inset
+                                                label="FailSafe" />
+                                        </td>
+                                        <td>
                                             <v-switch v-model="selected.net.default.enableDns" color="success" inset
                                                 label="Enable Nettica DNS" />
                                         </td>

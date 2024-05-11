@@ -258,7 +258,7 @@
                                                         <tr>
                                                             <td>
                                                                 <v-switch v-model="selected.vpn.current.upnp" color="success" inset
-                                                                    label="Enable UPnP" />
+                                                                    label="UPnP" />
                                                             </td>
                                                             <td>
                                                                 <v-switch v-model="selected.vpn.current.hasRDP" color="success" inset
@@ -266,9 +266,13 @@
                                                             </td>
                                                         </tr>
                                                         <tr>
-                                                            <td colspan="2">
+                                                            <td>
+                                                                <v-switch v-model="selected.net.current.failsafe" color="success" inset
+                                                                    label="FailSafe" />
+                                                            </td>
+                                                            <td>
                                                                 <v-switch v-model="selected.vpn.current.enableDns" color="success" inset
-                                                                    label="Enable Nettica DNS" />
+                                                                    label="Nettica DNS" />
                                                             </td>
                                                         </tr>
                                                     </table>
@@ -467,7 +471,11 @@
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td colspan="2">
+                                                <td>
+                                                    <v-switch v-model="selected.net.current.failsafe" color="success" inset
+                                                        label="FailSafe" />
+                                                </td>
+                                                <td>
                                                     <v-switch v-model="vpn.current.enableDns" color="success" inset
                                                         label="Enable Nettica DNS" />
                                                 </td>
@@ -869,6 +877,7 @@ export default {
             this.vpn.current.hasSSH = this.nets[selected].default.hasSSH
             this.vpn.current.hasRDP = this.nets[selected].default.hasRDP
             this.vpn.current.upnp = this.nets[selected].default.upnp
+            this.vpn.current.failsafe = this.nets[selected].default.failsafe
             this.vpn.current.enableDns = this.nets[selected].default.enableDns
             console.log("updateDefaults = ", this.vpn, this.nets[selected])
 
