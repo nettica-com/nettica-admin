@@ -409,7 +409,7 @@
                                         <v-switch v-model="device.enable" color="success" inset
                                             :label="device.enable ? 'Enable device after creation' : 'Disable device after creation'" />
                                         <v-switch v-model="use_ezcode" color="success" inset
-                                            :label="device.use_ezcode ? 'Use EZ-Code' : 'Do not use EZ-Code'" />
+                                            :label="use_ezcode ? 'Use EZ-Code' : 'Do not use EZ-Code'" />
 
                                     </v-form>
                                 </v-col>
