@@ -36,6 +36,7 @@ type Device struct {
 	UpdateKeys    bool       `json:"updateKeys"                bson:"updateKeys"`
 	Version       string     `json:"version"                   bson:"version"`
 	InstanceID    string     `json:"instanceid"                bson:"instanceid"`
+	EZCode        string     `json:"ezcode"                    bson:"ezcode"`
 	CreatedBy     string     `json:"createdBy"                 bson:"createdBy"`
 	UpdatedBy     string     `json:"updatedBy"                 bson:"updatedBy"`
 	Created       time.Time  `json:"created"                   bson:"created"`
