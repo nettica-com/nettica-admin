@@ -308,9 +308,13 @@
                                                     </td>
                                                 </tr>
                                                 <tr>
-                                                    <td colspan="2">
+                                                    <td>
+                                                        <v-switch v-model="selected.vpn.current.failsafe" color="success" inset
+                                                            label="FailSafe" />
+                                                    </td>
+                                                    <td>
                                                         <v-switch v-model="selected.vpn.current.enableDns" color="success" inset
-                                                            label="Enable Nettica DNS" />
+                                                            label="Nettica DNS" />
                                                     </td>
                                                 </tr>
                                             </table>
@@ -401,6 +405,8 @@
                                     label="Clients can only see Endpoints" />
                                 <v-switch v-model="net.default.upnp" color="success" inset
                                     label="Enable UPnP where possible" />
+                                <v-switch v-model="net.default.failsafe" color="success" inset
+                                    label="Enable FailSafe" />
                                 <v-switch v-model="net.default.enableDns" color="success" inset
                                     label="Enable Nettica DNS" />
                             </v-form>
@@ -742,6 +748,7 @@ export default {
                 address: [],
                 enableDns: false,
                 upnp: false,
+                failsafe: false,
             }
             this.net.policies = {
                 userEndpoints: false,
