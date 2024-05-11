@@ -69,15 +69,24 @@ func CreateDevice(device *model.Device) (*model.Device, error) {
 func ReadDevice(id string) (*model.Device, error) {
 	v, err := mongo.Deserialize(id, "id", "devices", reflect.TypeOf(model.Device{}))
 	if err != nil {
-		id = strings.TrimPrefix(id, "device-id-")
+		if strings.HasPrefix(id, "ez-") {
 
-		if id == "" || strings.HasPrefix(id, "device-") {
-			return nil, err
-		}
+			v, err = mongo.Deserialize(id, "ezcode", "devices", reflect.TypeOf(model.Device{}))
+			if err != nil {
+				return nil, err
+			}
+		} else {
 
-		v, err = mongo.Deserialize(id, "instanceid", "devices", reflect.TypeOf(model.Device{}))
-		if err != nil {
-			return nil, err
+			id = strings.TrimPrefix(id, "device-id-")
+
+			if id == "" || strings.HasPrefix(id, "device-") {
+				return nil, err
+			}
+
+			v, err = mongo.Deserialize(id, "instanceid", "devices", reflect.TypeOf(model.Device{}))
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 	device := v.(*model.Device)
@@ -184,10 +193,12 @@ func UpdateDevice(Id string, device *model.Device, fUpdated bool) (*model.Device
 		changed = true
 	}
 	current.Registered = device.Registered
-	if current.InstanceID != device.InstanceID && !changed {
+	if (current.InstanceID != device.InstanceID && !changed) ||
+		(current.EZCode != device.EZCode && !changed) {
 		current.Registered = false
 	}
 	current.InstanceID = device.InstanceID
+	current.EZCode = device.EZCode
 	current.LastSeen = device.LastSeen
 
 	err = mongo.Serialize(device.Id, "id", "devices", current)

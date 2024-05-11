@@ -80,6 +80,8 @@
 
                                 <v-row class="px-3" width="600">
                                     <v-col flex>
+                                        <v-text-field v-model="selected.device.ezcode" label="EZ-Code"
+                                            :readonly="true" />
                                         <v-text-field v-model="selected.device.description" label="Description" :readonly="!inEdit" />
                                         <v-combobox v-model="selected.device.tags" chips
                                             hint="Enter a tag, hit tab, hit enter." label="Tags" multiple dark
@@ -406,6 +408,9 @@
                                         <v-text-field v-model="device.instanceid" label="AWS or Azure Instance ID" />
                                         <v-switch v-model="device.enable" color="success" inset
                                             :label="device.enable ? 'Enable device after creation' : 'Disable device after creation'" />
+                                        <v-switch v-model="use_ezcode" color="success" inset
+                                            :label="device.use_ezcode ? 'Use EZ-Code' : 'Do not use EZ-Code'" />
+
                                     </v-form>
                                 </v-col>
                             </v-row>
@@ -552,6 +557,7 @@ export default {
         showPreshared: false,
         showApiKey: false,
         showTree: false,
+        use_ezcode: true,
         footerProps: { 'items-per-page-options': [25, 50, 100, -1] },
         dialogCreate: false,
         dialogAddVPN: false,
@@ -824,7 +830,24 @@ export default {
             this.dialogCreate = true;
         },
 
+        make_ezcode() {
+            const length = 4;
+            let result = 'ez-';
+            const characters = 'ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+            const charactersLength = characters.length;
+            let counter = 0;
+            while (counter < length) {
+                result += characters.charAt(Math.floor(Math.random() * charactersLength));
+                counter += 1;
+            }
+            return result;
+        },
+
         create(device) {
+
+            if (this.use_ezcode) {
+                device.ezcode = this.make_ezcode()
+            }
             this.device.platform = this.platforms.selected.value
             this.device.accountid = this.acntList.selected.value
             device.name = device.name.trim()
