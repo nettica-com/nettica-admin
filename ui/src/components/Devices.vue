@@ -477,7 +477,7 @@
                                             </tr>
                                             <tr>
                                                 <td>
-                                                    <v-switch v-model="selected.vpn.current.failsafe" color="success" inset
+                                                    <v-switch v-model="vpn.current.failsafe" color="success" inset
                                                         label="FailSafe" />
                                                 </td>
                                                 <td>
