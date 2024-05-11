@@ -847,6 +847,7 @@ export default {
 
             if (this.use_ezcode) {
                 device.ezcode = this.make_ezcode()
+                console.log("ezcode = ", device.ezcode)
             }
             this.device.platform = this.platforms.selected.value
             this.device.accountid = this.acntList.selected.value
