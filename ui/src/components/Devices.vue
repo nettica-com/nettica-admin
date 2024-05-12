@@ -456,6 +456,9 @@
                                             :rules="[ rules.ipport ]" />
                                         <v-switch v-model="vpn.enable" color="success" inset
                                             :label="vpn.enable ? 'Enable VPN after creation' : 'Disable VPN after creation'" />
+                                        <v-switch v-model="vpn.current.syncEndpoint" color="success" inset
+                                            :label="vpn.current.syncEndpoint ? 'Automatically sync endpoint using server' : 'Do not sync endpoint using server'"
+                                            :disabled="!(vpn.current.endpoint && vpn.current.endpoint.length > 0)" />
                                     </v-form>
                                 </v-col>
                             </v-row>
