@@ -80,8 +80,10 @@
 
                                 <v-row class="px-3" width="600">
                                     <v-col flex>
-                                        <v-text-field v-model="selected.device.ezcode" label="EZ-Code"
-                                            :readonly="true" />
+                                        <div :hidden="selected.device.registered">
+                                            <v-text-field v-model="selected.device.ezcode" label="EZ-Code"
+                                                :readonly="true" />
+                                        </div>
                                         <v-text-field v-model="selected.device.description" label="Description" :readonly="!inEdit" />
                                         <v-combobox v-model="selected.device.tags" chips
                                             hint="Enter a tag, hit tab, hit enter." label="Tags" multiple dark
@@ -188,8 +190,6 @@
                                         </v-combobox>
                                         <v-text-field :readonly="!inEdit" v-model="selected.vpn.current.endpoint"
                                             label="Public endpoint for clients" />
-                                        <v-text-field :readonly="!inEdit" v-model="selected.vpn.current.listenPort"
-                                            type="number" label="Listen port" />
                                         <v-text-field type="number" v-model="selected.vpn.current.mtu"
                                             label="MTU" hint="Leave at 0 for auto, 1350 for IPv6 or if problems occur" />
                                         <v-switch v-model="selected.vpn.enable" color="success" inset
@@ -388,20 +388,10 @@
                                 <v-col cols="12">
                                     <v-form ref="form" v-model="valid">
                                         <v-text-field v-model="device.name" label="Host friendly name"
-                                            :rules="[v => !!v || 'device name is required',]" required />
+                                            :rules="[rules.required, rules.host]" required />
                                         <v-select return-object v-model="acntList.selected" :items="acntList.items" item-text="text"
                                             item-value="value" label="For this account"
                                             :rules="[v => !!v || 'Account is required',]" single persistent-hint />
-
-                                        <v-combobox v-model="device.tags" chips hint="Enter a tag, hit tab, hit enter."
-                                            label="Tags" multiple dark>
-                                            <template v-slot:selection="{ attrs, item, select }">
-                                                <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                                    @click:close="device.tags.splice(device.tags.indexOf(item), 1)">
-                                                    <strong>{{ item }}</strong>&nbsp;
-                                                </v-chip>
-                                            </template>
-                                        </v-combobox>
                                         <v-select return-object v-model="platforms.selected" :items="platforms.items"
                                             item-text="text" item-value="value" label="Platform of this device" single
                                             persistent-hint />
@@ -428,6 +418,28 @@
                         </v-card-actions>
                     </v-card>
                 </v-dialog>
+                <v-dialog v-if="device && device.ezcode" v-model="dialogEZCode" max-width="550">
+                    <v-card>
+                        <v-card-title class="headline">EZ-Code</v-card-title>
+                        <v-card-text>
+                            <v-row>
+                                <v-col cols="12">
+                                    <v-form ref="form" v-model="valid">
+                                        <v-text-field v-model="device.name" label="Host friendly name" :readonly="true" />
+                                        <v-text-field v-model="device.ezcode" label="EZ-Code" :readonly="true" />
+                                    </v-form>
+                                </v-col>
+                            </v-row>
+                        </v-card-text>
+                        <v-card-actions>
+                            <v-spacer />
+                            <v-btn color="success" @click="dialogEZCode=false;">
+                                OK
+                                <v-icon right dark>mdi-check-outline</v-icon>
+                            </v-btn>
+                        </v-card-actions>
+                    </v-card>
+                </v-dialog>
                 <v-dialog v-if="vpn" v-model="dialogAddVPN" max-width="550">
                     <v-card>
                         <v-card-title class="headline">Add VPN</v-card-title>
@@ -435,57 +447,15 @@
                             <v-row>
                                 <v-col cols="12">
                                     <v-form ref="form" v-model="valid">
-                                        <v-text-field v-model="vpn.name" label="DNS name for this device"
-                                            :rules="[v => !!v || 'DNS name is required',]" required />
                                         <v-select return-object v-model="netList.selected" :items="netList.items" v-on:change="updateDefaults"
                                             item-text="text" item-value="value" label="Join this network"
                                             :rules="[v => !!v || 'Network is required',]" single persistent-hint required />
-                                        <v-text-field v-model="vpn.current.endpoint" label="Public endpoint for clients" />
-                                        <v-text-field v-model="vpn.current.listenPort" type="number" label="Listen port" />
-
-                                        <v-combobox v-model="vpn.tags" chips hint="Enter a tag, hit tab, hit enter."
-                                            label="Tags" multiple dark>
-                                            <template v-slot:selection="{ attrs, item, select, selected }">
-                                                <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                                    @click:close="vpn.tags.splice(vpn.tags.indexOf(item), 1)">
-                                                    <strong>{{ item }}</strong>&nbsp;
-                                                </v-chip>
-                                            </template>
-                                        </v-combobox>
+                                        <v-text-field v-model="vpn.name" label="DNS name for this device"
+                                            :rules="[rules.required, rules.host]" required />
+                                        <v-text-field v-model="vpn.current.endpoint" label="Public endpoint for clients"
+                                            :rules="[ rules.ipport ]" />
                                         <v-switch v-model="vpn.enable" color="success" inset
                                             :label="vpn.enable ? 'Enable VPN after creation' : 'Disable VPN after creation'" />
-                                        <table width="100%">
-                                            <tr>
-                                                <td>
-                                                    <v-switch v-model="vpn.current.syncEndpoint" color="success" inset
-                                                        label="Sync Endpoint" />
-                                                </td>
-                                                <td>
-                                                    <v-switch v-model="vpn.current.hasSSH" color="success" inset
-                                                        label="SSH" />
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>
-                                                    <v-switch v-model="vpn.current.upnp" color="success" inset
-                                                        label="Enable UPnP" />
-                                                </td>
-                                                <td>
-                                                    <v-switch v-model="vpn.current.hasRDP" color="success" inset
-                                                        label="Remote Desktop" />
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>
-                                                    <v-switch v-model="vpn.current.failsafe" color="success" inset
-                                                        label="FailSafe" />
-                                                </td>
-                                                <td>
-                                                    <v-switch v-model="vpn.current.enableDns" color="success" inset
-                                                        label="Enable Nettica DNS" />
-                                                </td>
-                                            </tr>
-                                        </table>                                            
                                     </v-form>
                                 </v-col>
                             </v-row>
@@ -562,6 +532,7 @@ export default {
         dialogCreate: false,
         dialogAddVPN: false,
         dialogServiceHost: false,
+        dialogEZCode: false,
         device: null,
         net: null,
         vpn: null,
@@ -572,6 +543,15 @@ export default {
         name: '',
         panel: 1,
         valid: false,
+        rules: {
+            required: value => !!value || 'Required.',
+            not_required: value => !value || (value && value.length == 0) || 'If present, must be valid IPv4 or IPv6 address and port',
+            email: v => /.+@.+\..+/.test(v) || 'E-mail must be valid',
+            host: v => /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/.test(v) || 'Only letters, numbers, dots and hyphens are allowed. Must start and end with a letter or number.',
+            ipv4port: v => (!v || v && v.length == 0 || /^((\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}\b)|^$)$/.test(v)) || 'IPv4 address and port required',
+            ipv6port: v => (!v || v && v.length == 0 || /^(\[([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\]:[0-9]{1,5}|^$)$/.test(v)) || 'IPv6 address and port required',
+            ipport: v => (!v || v && v.length == 0 || /^((\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}\b)|(\[([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\]:[0-9]{1,5})|^$)$/.test(v)) || 'If present, must be valid IPv4 or IPv6 address and port',
+        },
         netList: {},
         platList: {},
         publicSubnets: false,
@@ -843,18 +823,22 @@ export default {
             return result;
         },
 
-        create(device) {
+        async create(device) {
 
             if (this.use_ezcode) {
                 device.ezcode = this.make_ezcode()
                 console.log("ezcode = ", device.ezcode)
             }
+            this.device = device
             this.device.platform = this.platforms.selected.value
             this.device.accountid = this.acntList.selected.value
-            device.name = device.name.trim()
+            this.device.name = this.device.name.trim()
 
             this.dialogCreate = false;
-            this.createdevice(device)
+            await this.createdevice(this.device)
+            if (this.use_ezcode) {
+                this.dialogEZCode = true;
+            }
         },
 
         startAddVPN(device) {
@@ -897,6 +881,10 @@ export default {
                     break
                 }
             }
+
+            // Change the host name to be the device name + the network name
+            this.vpn.name = this.device.name + "." + this.nets[selected].netName
+
             this.vpn.current.syncEndpoint = this.nets[selected].default.syncEndpoint
             this.vpn.current.hasSSH = this.nets[selected].default.hasSSH
             this.vpn.current.hasRDP = this.nets[selected].default.hasRDP
@@ -909,15 +897,15 @@ export default {
 
         async createVPN(vpn) {
             this.vpn = vpn
-            this.vpn.current.listenPort = parseInt(this.vpn.current.listenPort, 10);
-            // append the port to the endpoint if it is not there
-            if (this.vpn.current.endpoint != null && this.vpn.current.endpoint != "" && this.vpn.current.endpoint.indexOf(":") == -1) {
-                if (this.vpn.current.listenPort == 0) {
-                    this.vpn.current.listenPort = 51820
-                }
-                this.vpn.current.endpoint = this.vpn.current.endpoint + ":" + this.vpn.current.listenPort.toString()
+            this.vpn.current.listenPort = 0
+
+            // get the listen port from the endpoint field if it is there
+            if (this.vpn.current.endpoint != null && this.vpn.current.endpoint != "" && this.vpn.current.endpoint.indexOf(":") != -1) {
+                let parts = this.vpn.current.endpoint.split(":")
+                this.vpn.current.listenPort = parseInt(parts[parts.length-1], 10)
             }
-            this.vpn.name = this.vpn.name.trim()
+
+            this.vpn.name = this.vpn.name
             this.vpn.netName = this.netList.selected.text
             this.vpn.netid = this.netList.selected.value
             this.dialogAddVPN = false;
@@ -930,13 +918,12 @@ export default {
 
         updateVPN(vpn) {
             this.vpn = vpn
-            this.vpn.current.listenPort = parseInt(this.vpn.current.listenPort, 10);
-            // append the port to the endpoint if it is not there
-            if (this.vpn.current.endpoint != null && this.vpn.current.endpoint != "" && this.vpn.current.endpoint.indexOf(":") == -1) {
-                if (this.vpn.current.listenPort == 0) {
-                    this.vpn.current.listenPort = 51820
-                }
-                this.vpn.current.endpoint = this.vpn.current.endpoint + ":" + this.vpn.current.listenPort.toString()
+            this.vpn.current.listenPort = 0
+
+            // get the listen port from the endpoint field if it is there
+            if (this.vpn.current.endpoint != null && this.vpn.current.endpoint != "" && this.vpn.current.endpoint.indexOf(":") != -1) {
+                let parts = this.vpn.current.endpoint.split(":")
+                this.vpn.current.listenPort = parseInt(parts[parts.length-1], 10)
             }
 
             this.vpn.current.persistentKeepalive = parseInt(this.vpn.current.persistentKeepalive, 10);
