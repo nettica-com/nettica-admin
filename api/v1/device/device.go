@@ -363,6 +363,7 @@ func statusDevice(c *gin.Context) {
 		authorized = true
 		if !device.Registered {
 			device.Registered = true
+			device.EZCode = ""
 			_, err = core.UpdateDevice(device.Id, device, true)
 			if err != nil {
 				log.Error(err)
