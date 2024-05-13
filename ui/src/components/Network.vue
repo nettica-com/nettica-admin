@@ -602,7 +602,7 @@ export default {
         options() {
             return {
                 force: 4000,
-                size: { w: 400, h: 300 },
+                size: { w: Math.min(window.innerWidth, 1000), h: 300 },
                 nodeSize: this.nodeSize,
                 nodeLabels: true,
                 linkLabels: true,
