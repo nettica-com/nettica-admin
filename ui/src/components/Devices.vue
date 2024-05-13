@@ -24,13 +24,13 @@
                             </v-col>
                         </v-row>
                     </v-card-title>
-                    <div v-if="showOnEmpty">
+                    <div v-if="empty">
                         <v-alert type="info" dismissible>
                             No devices found. <a style="color:white" @click="startCreate">Click here to add your first device.</a>
                         </v-alert>
                     </div>
 
-                    <v-row>
+                    <v-row v-if="!empty">
                         <v-col cols="6">
                             <v-treeview v-if="showTree" :items="items" :search="search" :filter="filter" :active.sync="active"
                                 :open.sync="open" activatable hoverable>
@@ -536,7 +536,7 @@ export default {
         showPreshared: false,
         showApiKey: false,
         showTree: false,
-        showOnEmpty: false,
+        empty: false,
         use_ezcode: true,
         footerProps: { 'items-per-page-options': [25, 50, 100, -1] },
         dialogCreate: false,
@@ -622,9 +622,9 @@ export default {
             console.log("buildTree = ", this.buildTree())
             this.showTree = true
             if (this.devices.length == 0) {
-                this.showOnEmpty = true
+                this.empty = true
             } else {
-                this.showOnEmpty = false
+                this.empty = false
             }
         },
 

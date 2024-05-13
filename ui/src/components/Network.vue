@@ -24,14 +24,14 @@
                     </v-col>
                 </v-row>
             </v-card-title>
-            <div v-if="showOnEmpty">
+            <div v-if="empty">
                 <v-alert type="info" dismissible>
                     No networks found. <a style="color:white" @click="createDefaultNetwork()">Click here to create your first network.</a>
                 </v-alert>
             </div>
-            <d3-network class="network" :net-nodes="nodes" :net-links="links" :options="options" />
+            <d3-network v-if="!empty" class="network" :net-nodes="nodes" :net-links="links" :options="options" />
             <v-divider></v-divider>
-            <v-row style="padding-top: 12px;">
+            <v-row v-if="!empty" style="padding-top: 12px;">
                 <v-col cols="6">
                     <v-treeview v-if="showTree" :items="items" :search="search" :filter="filter" :active.sync="active" :open.sync="open"
                         activatable hoverable @update:active="loadNetwork">
@@ -523,7 +523,7 @@ export default {
         showTree: false,
         showPrivate: false,
         showPreshared: false,
-        showOnEmpty: false,
+        empty: false,
         items: [],
         active: [],
         open: [],
@@ -625,9 +625,9 @@ export default {
             console.log("buildTree = ", this.buildTree())
             this.showTree = true
             if (this.nets.length == 0) {
-                this.showOnEmpty = true
+                this.empty = true
             } else {
-                this.showOnEmpty = false
+                this.empty = false
             }
         },
         vpns: function (val) {
