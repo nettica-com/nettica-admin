@@ -30,7 +30,7 @@
                 </v-alert>
             </div>
             <d3-network v-if="!friendly" class="network" :net-nodes="nodes" :net-links="links" :options="options" />
-            <v-divider></v-divider>
+            <v-divider v-if="!friendly"></v-divider>
             <v-row v-if="!friendly" style="padding-top: 12px;">
                 <v-col cols="6">
                     <v-treeview v-if="showTree" :items="items" :search="search" :filter="filter" :active.sync="active" :open.sync="open"
