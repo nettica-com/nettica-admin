@@ -97,7 +97,7 @@ const actions = {
     ApiService.post(`/accounts/`, account)
       .then(resp => {
         commit('account', resp)
-        commit('error', "Account created")
+        commit('error', `Account for ${account.email} created`)
       }) 
       .catch(error => {
         if (error.response) {
@@ -110,7 +110,7 @@ const actions = {
     ApiService.patch(`/accounts/${account.id}`, account)
       .then(resp => {
         commit('update', resp)
-        commit('error', "Account updated")
+        commit('error', `${account.email} updated`)
       })
       .catch(error => {
         if (error.response) {
@@ -123,7 +123,7 @@ const actions = {
     ApiService.delete(`/accounts/${account.id}`)
       .then(() => {
         commit('delete', account)
-        commit('error', "Account deleted")
+        commit('error', `${account.email} deleted`)
       })
       .catch(error => {
         if (error.response) {
@@ -135,7 +135,7 @@ const actions = {
   email({ commit }, account) {
     ApiService.get(`/accounts/${account.id}/invite`)
       .then(() => {
-        commit('error', "Email sent")
+        commit('error', `Email to ${account.email} sent`)
       })
       .catch(error => {
         if (error.response) {

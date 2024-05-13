@@ -41,7 +41,7 @@ const actions = {
       .then(resp => {
         //        dispatch('readNetConfig', resp)
         commit('create', resp)
-        commit('error', "Network created")
+        commit('error', `Network ${net.netName} created`)
       })
       .catch(error => {
         if (error.response) {
@@ -55,7 +55,7 @@ const actions = {
       .then(resp => {
         //        dispatch('readNetConfig', resp)
         commit('update', resp)
-        commit('error', "Network updated")
+        commit('error', `Network ${net.netName} updated`)
       })
       .catch(error => {
         if (error.response) {
@@ -68,7 +68,7 @@ const actions = {
     ApiService.delete(`/net/${net.id}`)
       .then(() => {
         commit('delete', net)
-        commit('error', "Network deleted")
+        commit('error', `Network ${net.netName} deleted`)
       })
       .catch(error => {
         if (error.response) {

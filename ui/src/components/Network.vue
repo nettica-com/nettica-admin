@@ -24,6 +24,11 @@
                     </v-col>
                 </v-row>
             </v-card-title>
+            <div v-if="showOnEmpty">
+                <v-alert type="info" dismissible>
+                    No networks found. <a style="color:white" @click="createDefaultNetwork()">Click here to create your first network.</a>
+                </v-alert>
+            </div>
             <d3-network class="network" :net-nodes="nodes" :net-links="links" :options="options" />
             <v-divider></v-divider>
             <v-row style="padding-top: 12px;">
@@ -125,13 +130,13 @@
                                     <tr>
                                         <td colspan="2">
                                             <v-switch v-model="selected.net.policies.userEndpoints" color="success" inset
-                                                label="Users can create Endpoints" />
+                                                :label="selected.net.policies.userEndpoints ? 'Only Admins can create Endpoints' : 'Users can create Endpoints'" />
                                         </td>
                                     </tr>
                                     <tr>
                                         <td colspan="2">
                                             <v-switch v-model="selected.net.policies.onlyEndpoints" color="success" inset
-                                                label="Clients can only see Endpoints" />
+                                                label="selected.net.policies.onlyEndpoints ? 'Clients can only see Endpoints' : 'Clients can see all devices'" />
                                         </td>
                                     </tr>
                                 </table>
@@ -471,6 +476,7 @@ export default {
         showTree: false,
         showPrivate: false,
         showPreshared: false,
+        showOnEmpty: false,
         items: [],
         active: [],
         open: [],
@@ -553,6 +559,11 @@ export default {
         nets: function (val) {
             console.log("buildTree = ", this.buildTree())
             this.showTree = true
+            if (this.nets.length == 0) {
+                this.showOnEmpty = true
+            } else {
+                this.showOnEmpty = false
+            }
         },
         vpns: function (val) {
             console.log("buildTree = ", this.buildTree())
@@ -787,6 +798,46 @@ export default {
             this.net.accountid = this.acntList.selected.value
             this.dialogCreate = false;
             this.createNet(net)
+        },
+
+        createDefaultNetwork() {
+            this.net = {
+                name: "Nettica",
+                description: this.user.email + "'s first network",
+                email: this.user.email,
+                enable: true,
+                netName: "Nettica",
+                id: "",
+                tags: [],
+                accountid: ""
+
+            }
+            this.net.default = {
+                allowedIPs: ["10.10.10.0/24"],
+                address: ["10.10.10.0/24"],
+                dns: ["8.8.8.8"],
+                enableDns: false,
+                upnp: true,
+                failsafe: true,
+            }
+            this.net.policies = {
+                userEndpoints: true,
+                onlyEndpoints: false,
+            }
+
+            for (let i = 0; i < this.accounts.length; i++) {
+                if (this.accounts[i].id == this.accounts[i].parent) {
+                    this.net.accountid = this.accounts[i].parent
+                    break
+                }
+            }
+            
+            if (this.net.accountid == "") {
+                this.errorNet('Cannot create a network for this account')
+                return
+            }
+
+            this.createNet(this.net)
         },
 
         remove(net) {

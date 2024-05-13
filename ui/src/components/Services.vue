@@ -198,8 +198,8 @@ export default {
         },
         svcList: {
             items: [
-                { text: "Relay Service  (allows all machines in net to communicate with each other)", value: "Relay" },
                 { text: "Tunnel Service (tunnel all traffic through the Service Host)", value: "Tunnel" },
+                { text: "Relay Service  (allows all machines in net to communicate with each other)", value: "Relay" },
             ]
         },
         headers: [

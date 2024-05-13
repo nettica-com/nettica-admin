@@ -63,7 +63,7 @@ const actions = {
     ApiService.post("/device", device)
       .then(resp => {
         commit('create', resp)
-        commit('error', "Device created")
+        commit('error', `Device ${device.name} created`)
       })
       .catch(error => {
         if (error.response) {
@@ -76,7 +76,7 @@ const actions = {
     ApiService.patch(`/device/${device.id}`, device)
       .then(resp => {
         commit('update', resp)
-        commit('error', "Device updated")
+        commit('error', `Device ${device.name} updated`)
       })
       .catch(error => {
         if (error.response) {
@@ -89,7 +89,7 @@ const actions = {
     ApiService.delete(`/device/${device.id}`)
       .then(() => {
         commit('delete', device)
-        commit('error', "Device deleted")
+        commit('error', `Device ${device.name} deleted`)
       })
       .catch(error => {
         if (error.response) {

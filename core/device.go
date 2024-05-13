@@ -303,6 +303,11 @@ func ReadDevicesForUser(email string) ([]*model.Device, error) {
 		}
 	}
 
+	//
+	// This needs to be reworked as it doesn't take into account
+	// the hidden status of the user
+	//
+
 	// now handle users and guests who can only see devices they created
 	vpns, err := mongo.ReadAllVPNs("createdBy", email)
 	if err != nil {
