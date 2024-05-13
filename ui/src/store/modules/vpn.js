@@ -51,7 +51,7 @@ const actions = {
     ApiService.post("/vpn", vpn)
       .then(resp => {
         commit('create', resp)
-        commit('error', "VPN created")
+        commit('error', `${vpn.name} created`)
       })
       .catch((error) => {
         if (error.response) {
@@ -64,7 +64,7 @@ const actions = {
     ApiService.patch(`/vpn/${vpn.id}`, vpn)
       .then(resp => {
         commit('update', resp)
-        commit('error', "VPN updated")
+        commit('error', `${vpn.name} updated`)
       })
       .catch((error) => {
         if (error.response) {
@@ -78,7 +78,7 @@ const actions = {
     ApiService.delete(`/vpn/${vpn.id}`)
       .then(() => {
         commit('delete', vpn)
-        commit('error', "VPN deleted")
+        commit('error', `${vpn.name} deleted`)
       })
       .catch(error => {
         if (error.response) {

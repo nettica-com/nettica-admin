@@ -44,7 +44,16 @@
                         <template v-slot:append="{ item }">
                             <v-spacer></v-spacer>
                             <span v-if="!item.isNet" class="hidden-xs-only" >{{  item.address }}</span>
+                            <v-btn v-if="item.isNet" icon @click="startAddDevice(item.net)">
+                                <v-tooltip bottom>
+                                    <template v-slot:activator="{ on }">
+                                        <v-icon v-on="on" color="#336699">mdi-plus-circle</v-icon>
+                                    </template>
+                                    <span>Add device to this network</span>
+                                </v-tooltip>
+                            </v-btn>
                         </template>
+
                     </v-treeview>
                 </v-col>
                 <v-divider vertical></v-divider>
@@ -377,7 +386,7 @@
                         <v-col cols="12">
                             <v-form ref="form" v-model="valid">
                                 <v-text-field v-model="net.netName" label="Network name"
-                                    :rules="[v => !!v || 'Network name is required',]" required />
+                                    :rules="[ rules.required, rules.host ]" required />
                                 <v-text-field v-model="net.description" label="Description" />
                                 <v-select return-object v-model="acntList.selected" :items="acntList.items" item-text="text"
                                     item-value="value" label="For this account"
@@ -431,6 +440,44 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
+        <v-dialog v-if="net" v-model="dialogAddDevice" max-width="550">
+            <v-card>
+                <v-card-title class="headline">Add Device</v-card-title>
+                <v-card-text>
+                    <v-row>
+                        <v-col cols="12">
+                            <v-form ref="form" v-model="valid">
+                                <v-text-field v-model="net.netName" label="To Network" readonly />
+                                <v-select return-object v-model="deviceList.selected" :items="deviceList.items" v-on:change="updateName"
+                                    item-text="text" item-value="value" label="Add this device"
+                                    :rules="[v => !!v || 'Device is required',]" single persistent-hint required />
+                                <v-text-field v-model="vpn.name" label="DNS name for this device"
+                                    :rules="[rules.required, rules.host]" required />
+                                <v-text-field v-model="vpn.current.endpoint" label="Public endpoint for clients"
+                                    :rules="[ rules.ipport ]" />
+                                <v-switch v-model="vpn.enable" color="success" inset
+                                    :label="vpn.enable ? 'Enable VPN after creation' : 'Disable VPN after creation'" />
+                                <v-switch v-model="vpn.current.syncEndpoint" color="success" inset
+                                    :label="vpn.current.syncEndpoint ? 'Automatically sync endpoint using server' : 'Do not sync endpoint using server'"
+                                    :disabled="!(vpn.current.endpoint && vpn.current.endpoint.length > 0)" />
+                            </v-form>
+                        </v-col>
+                    </v-row>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer />
+                    <v-btn :disabled="!valid" color="success" @click="addDevice(device)">
+                        Submit
+                        <v-icon right dark>mdi-check-outline</v-icon>
+                    </v-btn>
+                    <v-btn color="primary" @click="dialogAddDevice = false">
+                        Cancel
+                        <v-icon right dark>mdi-close-circle-outline</v-icon>
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+
     </v-container>
 </template>
 
@@ -480,13 +527,28 @@ export default {
         items: [],
         active: [],
         open: [],
+        deviceList: {},
         inEdit: false,
         dialogCreate: false,
+        dialogAddDevice: false,
         publicSubnets: false,
         noEdit: false,
         net: null,
+        vpn: {
+            name: "",
+            current: {
+                endpoint: "",
+            }
+        },
+        device: null,
         panel: 1,
         valid: false,
+        rules: {
+            required: value => !!value || 'Required.',
+            email: v => /.+@.+\..+/.test(v) || 'E-mail must be valid',
+            host: v => /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/.test(v) || 'Only letters, numbers, dots and hyphens are allowed. Must start and end with a letter or number.',
+            ipport: v => (!v || v && v.length == 0 || /^((\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}\b)|(\[([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\]:[0-9]{1,5})|^$)$/.test(v)) || 'If present, must be valid IPv4 or IPv6 address and port',
+        },
         search: '',
         nodes: [
         ],
@@ -532,6 +594,7 @@ export default {
             nets: 'net/nets',
             vpns: 'vpn/vpns',
             hosts: 'host/hosts',
+            devices: 'device/devices',
             accounts: 'account/accounts',
             getvpnconfig: "vpn/getVPNConfig",
 
@@ -553,6 +616,8 @@ export default {
         this.readAllAccounts(this.user.email)
         this.readAllNetworks()
         this.readAllVPNs()
+        this.readAllDevices()
+
     },
 
     watch: {
@@ -584,6 +649,7 @@ export default {
     methods: {
         ...mapActions('vpn', {
             readAllVPNs: 'readAll',
+            createvpn: "create",
             updatevpn: "update",
             deletevpn: "delete",
             readvpnconfig: "readConfig",
@@ -599,6 +665,13 @@ export default {
         ...mapActions('account', {
             readAllAccounts: 'readAll',
         }),
+        ...mapActions('device', {
+            readAllDevices: 'readAll',
+            createdevice: 'create',
+            updatedevice: 'update',
+            deletedevice: 'delete',
+        }),
+
 
         Refresh() {
             this.readAllAccounts(this.user.email)
@@ -752,7 +825,6 @@ export default {
                 id: "",
                 tags: [],
                 accountid: ""
-
             }
             this.net.default = {
                 allowedIPs: [],
@@ -846,6 +918,98 @@ export default {
                 this.deleteNet(net)
             }
         },
+
+        startAddDevice(net) {
+            this.net = net
+            this.vpn = {
+                name: "",
+                netid: this.net.id,
+                accountid: this.net.accountid,
+                email: this.user.email,
+                enable: true,
+                tags: [],
+                current: {
+                    syncEndpoint: false,                    
+                },
+            }
+
+            this.deviceList = {
+                selected: { "text": "", "value": "" },
+                items: []
+            }
+
+            // get all the devices, but only add the ones 
+            // that are not already in the network
+            for (let i = 0; i < this.devices.length; i++) {
+                let found = false
+                let v = this.devices[i].vpns
+                if (v == null) {
+                    this.deviceList.items.push({ "text": this.devices[i].name, "value": this.devices[i].id })
+                    continue
+                }
+                for (let j = 0; j < this.devices[i].vpns.length; j++) {
+                    if (this.devices[i].vpns[j].netid == this.net.id) {
+                        found = true
+                        break
+                    }
+                }
+                if (!found) {
+                    this.deviceList.items.push({ "text": this.devices[i].name, "value": this.devices[i].id })
+                }
+            }
+
+            // alphabetize the list
+            this.deviceList.items.sort((a, b) => {
+                const nameA = a.text.toUpperCase(); // ignore upper and lowercase
+                const nameB = b.text.toUpperCase(); // ignore upper and lowercase
+                if (nameA < nameB) {
+                    return -1;
+                }
+                if (nameA > nameB) {
+                    return 1;
+                }
+
+                // names must be equal
+                return 0;
+            });
+
+            this.dialogAddDevice = true;
+        },
+
+        updateName(item) {
+            console.log("updateName", item)
+            let device = this.devices.find(device => device.id === item.value)
+            this.device = device
+
+            // Change the host name to be the device name + the network name
+            this.vpn.name = this.device.name + "." + this.net.netName
+        },
+
+        async addDevice() {
+            this.vpn
+            this.vpn.current.listenPort = 0
+
+            // get the listen port from the endpoint field if it is there
+            if (this.vpn.current.endpoint != null && this.vpn.current.endpoint != "" && this.vpn.current.endpoint.indexOf(":") != -1) {
+                let parts = this.vpn.current.endpoint.split(":")
+                this.vpn.current.listenPort = parseInt(parts[parts.length-1], 10)
+            }
+
+            this.vpn.netName = this.net.netName
+            this.vpn.netid = this.net.id
+            this.vpn.accountid = this.net.accountid
+            this.vpn.deviceid = this.device.id
+            
+            this.dialogAddDevice = false;
+
+            console.log("this.vpn = ", this.vpn)
+            this.createvpn(this.vpn)
+            // wait a second
+            // await new Promise(r => setTimeout(r, 2000));
+            // await this.asyncRefresh()
+
+        },
+
 
         email(net) {
             if (!net.email) {

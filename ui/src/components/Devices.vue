@@ -50,7 +50,7 @@
                                             <template v-slot:activator="{ on }">
                                                 <v-icon v-on="on" color="#336699">mdi-plus-circle</v-icon>
                                             </template>
-                                            <span>Add VPN</span>
+                                            <span>Add network to this device</span>
                                         </v-tooltip>
                                     </v-btn>
                                 </template>
