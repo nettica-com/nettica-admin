@@ -66,9 +66,9 @@
                 <v-icon>mdi-menu</v-icon>
             </v-btn>
         </v-app-bar>
-        <div v-if="empty" style="width:100%; position:absolute; ">
+        <div v-if="friendly" style="width:100%; position:absolute;">
             <div style="height:64px; width:100%;"></div>
-            <v-alert type="info">
+            <v-alert type="info" color="#336699">
                 Welcome to the Admin!  Click on the menu above to add service, create networks, add devices, and invite others to your account.
             </v-alert>
         </div>
@@ -111,7 +111,7 @@ export default {
         email: "",
         issuer: "",
         issuedAt: "",
-        empty: false,
+        friendly: false,
 
     }),
 
@@ -132,11 +132,11 @@ export default {
             this.issuedAt = val.issuedAt;
         },
         '$route' (to, from) {
-            this.show = false;
+            console.log("route changed to " + this.$route.path);
             if (this.$route.path == "/") {
-                this.empty = true;
+                this.friendly = true;
             } else {
-                this.empty = false;
+                this.friendly = false;
             }
         }
     },
