@@ -145,7 +145,7 @@
                                     <tr>
                                         <td colspan="2">
                                             <v-switch v-model="selected.net.policies.onlyEndpoints" color="success" inset
-                                                label="selected.net.policies.onlyEndpoints ? 'Clients can only see Endpoints' : 'Clients can see all devices'" />
+                                                :label="selected.net.policies.onlyEndpoints ? 'Clients can only see Endpoints' : 'Clients can see all devices'" />
                                         </td>
                                     </tr>
                                 </table>
