@@ -1,5 +1,5 @@
 <template>
-  <v-main>
+  <v-main style="padding-top:74px;">
     <v-container>
       <v-card>
                 <v-card-title class="headline">Login</v-card-title>

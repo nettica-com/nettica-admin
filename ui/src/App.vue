@@ -3,8 +3,7 @@
     <v-layout>
     <Notification v-bind:notification="notification"/>
       <Header v-show="isAuthenticated" />
-
-        <v-main style="padding: 0px 0px 0px 0px;">
+        <v-main style="padding: 0px">
           <router-view />
         </v-main>
 

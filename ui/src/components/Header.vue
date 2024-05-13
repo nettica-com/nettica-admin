@@ -66,6 +66,12 @@
                 <v-icon>mdi-menu</v-icon>
             </v-btn>
         </v-app-bar>
+        <div v-if="empty" style="width:100%; position:absolute; ">
+            <div style="height:64px; width:100%;"></div>
+            <v-alert type="info">
+                Welcome to the Admin!  Click on the menu above to add service, create networks, add devices, and invite others to your account.
+            </v-alert>
+        </div>
         <v-navigation-drawer app clipped right v-model="showMenu" class="hidden-sm-and-up">
             <v-list nav dense>
                 <v-list-item prepend-icon="mdi-weather-cloudy" title="Services" value="services" to="/services"
@@ -87,7 +93,6 @@
                 </v-list-item>
             </v-list>
         </v-navigation-drawer>
-
     </div>
 </template>
 
@@ -106,6 +111,7 @@ export default {
         email: "",
         issuer: "",
         issuedAt: "",
+        empty: false,
 
     }),
 
@@ -124,6 +130,14 @@ export default {
             this.email = val.email;
             this.issuer = val.issuer;
             this.issuedAt = val.issuedAt;
+        },
+        '$route' (to, from) {
+            this.show = false;
+            if (this.$route.path == "/") {
+                this.empty = true;
+            } else {
+                this.empty = false;
+            }
         }
     },
 
