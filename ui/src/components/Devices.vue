@@ -222,12 +222,11 @@
                                                             </v-chip>
                                                         </template>
                                                     </v-combobox>
-                                                    <v-switch v-model="publicSubnets" color="success" inset
-                                                        label="Route all public traffic through tunnel" />
-
                                                     <v-text-field v-model="selected.vpn.id" label="VPN ID" readonly />
                                                     <v-text-field v-model="selected.vpn.netid" label="Network ID" readonly />
                                                     <v-text-field v-model="selected.vpn.deviceid" label="Device ID" disabled />
+                                                    <v-combobox v-model="selected.vpn.role" :items="['', 'Ingress', 'Egress']"
+                                                        label="Role" single dark />
                                                     <v-text-field v-model="selected.vpn.current.table" label="Table" />
                                                     <v-text-field v-model="selected.vpn.current.publicKey" label="Public key" />
                                                     <v-text-field v-model="selected.vpn.current.privateKey" label="Private key"

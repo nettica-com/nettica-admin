@@ -125,9 +125,6 @@
                                 <v-text-field type="number" v-model="selected.net.default.persistentKeepalive"
                                     label="Persistent keepalive"
                                     hint="To disable, set to 0.  Recommended value 29 (seconds)" />
-                                <v-text-field v-model="selected.net.default.listenPort" type="number" :rules="[
-                                    v => !!v || 'Listen port is required',
-                                ]" label="Listen port" required />
                                 <span style="font-size: small;">Network Policy</span><v-divider></v-divider>
                                 <table>
                                     <tr>
@@ -220,7 +217,8 @@
                         <v-divider></v-divider>
                         <v-row class="px-3" width="600">
                             <v-col flex>
-                                <v-text-field v-model="selected.vpn.name" label="DNS name" :readonly="!inEdit" />
+                                <v-text-field v-model="selected.vpn.name" label="DNS name" :readonly="!inEdit"
+                                 :rules="[rules.required, rules.host]" />
                                 <v-combobox :readonly="!inEdit" v-model="selected.vpn.current.address" chips
                                     hint="Write IPv4 or IPv6 CIDR and hit enter" label="Addresses" multiple dark>
                                     <template v-slot:selection="{ attrs, item, select }">
@@ -242,9 +240,7 @@
                                     </template>
                                 </v-combobox>
                                 <v-text-field :readonly="!inEdit" v-model="selected.vpn.current.endpoint"
-                                    label="Public endpoint for clients" />
-                                <v-text-field :readonly="!inEdit" v-model="selected.vpn.current.listenPort" type="number"
-                                    label="Listen port" />
+                                    label="Public endpoint for clients" :rules="[ rules.ipport ]" />
                                 <v-text-field type="number" v-model="selected.vpn.current.mtu"
                                     label="MTU" hint="Leave at 0 for auto, 1350 for IPv6 or problems occur" />
                                 <v-switch v-model="selected.vpn.enable" color="success" inset
@@ -272,13 +268,12 @@
                                                     </v-chip>
                                                 </template>
                                             </v-combobox>
-                                            <v-switch v-model="publicSubnets" color="success" inset
-                                                label="Route all public traffic through tunnel" />
-
                                             <v-text-field v-model="selected.vpn.accountid" label="Account ID" readonly />
                                             <v-text-field v-model="selected.vpn.id" label="VPN ID" readonly />
                                             <v-text-field v-model="selected.vpn.netid" label="Network ID" readonly />
                                             <v-text-field v-model="selected.vpn.deviceid" label="Device ID" readonly />
+                                            <v-combobox v-model="selected.vpn.role" :items="['', 'Ingress', 'Egress']"
+                                                label="Role" single dark />
                                             <v-text-field v-model="selected.vpn.current.table" label="Table" />
                                             <v-text-field v-model="selected.vpn.current.publicKey" label="Public key" />
                                             <v-text-field v-model="selected.vpn.current.privateKey" label="Private key"
@@ -987,7 +982,7 @@ export default {
 
         async addDevice() {
             this.vpn
-            this.vpn.current.listenPort = 0
+            this.vpn.current.listenPort = 0;
 
             // get the listen port from the endpoint field if it is there
             if (this.vpn.current.endpoint != null && this.vpn.current.endpoint != "" && this.vpn.current.endpoint.indexOf(":") != -1) {
@@ -1035,7 +1030,7 @@ export default {
         update(net) {
             this.net = net
 
-            this.net.default.listenPort = parseInt(this.net.default.listenPort, 10);
+            this.net.default.listenPort = 0;
             this.net.default.persistentKeepalive = parseInt(this.net.default.persistentKeepalive, 10);
             this.net.default.mtu = parseInt(this.net.default.mtu, 10);
             this.net.id = net.id
@@ -1071,13 +1066,11 @@ export default {
         },
         updateVPN(vpn) {
             this.vpn = vpn
-            this.vpn.current.listenPort = parseInt(this.vpn.current.listenPort, 10);
-            // append the port to the endpoint if it is not there
-            if (this.vpn.current.endpoint != null && this.vpn.current.endpoint != "" && this.vpn.current.endpoint.indexOf(":") == -1) {
-                if (this.vpn.current.listenPort == 0) {
-                    this.vpn.current.listenPort = 51820
-                }
-                this.vpn.current.endpoint = this.vpn.current.endpoint + ":" + this.vpn.current.listenPort.toString()
+            this.vpn.current.listenPort = 0;
+            // get the listen port from the endpoint field if it is there
+            if (this.vpn.current.endpoint != null && this.vpn.current.endpoint != "" && this.vpn.current.endpoint.indexOf(":") != -1) {
+                let parts = this.vpn.current.endpoint.split(":")
+                this.vpn.current.listenPort = parseInt(parts[parts.length-1], 10)
             }
 
             this.vpn.current.persistentKeepalive = parseInt(this.vpn.current.persistentKeepalive, 10);
