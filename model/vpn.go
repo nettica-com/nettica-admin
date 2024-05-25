@@ -18,6 +18,7 @@ type VPN struct {
 	NetName   string    `json:"netName"                   bson:"netName"`
 	Role      string    `json:"role"                      bson:"role"`
 	Type      string    `json:"type"                      bson:"type"`
+	Failover  int       `json:"failover"                  bson:"failover"`
 	Enable    bool      `json:"enable"                    bson:"enable"`
 	Tags      []string  `json:"tags"                      bson:"tags"`
 	CreatedBy string    `json:"createdBy"                 bson:"createdBy"`
