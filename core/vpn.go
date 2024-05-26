@@ -46,6 +46,9 @@ func CreateVPN(vpn *model.VPN) (*model.VPN, error) {
 			vpn.AccountID = net.AccountID
 			vpn.Current.AllowedIPs = current.AllowedIPs
 			vpn.Current.Dns = net.Default.Dns
+			if current.FailSafe {
+				vpn.Current.FailSafe = current.FailSafe
+			}
 			if current.EnableDns {
 				vpn.Current.EnableDns = current.EnableDns
 			}
@@ -109,7 +112,9 @@ func CreateVPN(vpn *model.VPN) (*model.VPN, error) {
 		if device.OS == "darwin" {
 			vpn.Current.Dns = append(vpn.Current.Dns, "127.0.0.1")
 		} else {
-			vpn.Current.Dns = append(vpn.Current.Dns, ipsDns[0])
+			dns := vpn.Current.Dns
+			vpn.Current.Dns = []string{ipsDns[0]}
+			vpn.Current.Dns = append(vpn.Current.Dns, dns...)
 		}
 	}
 
@@ -252,7 +257,9 @@ func UpdateVPN(Id string, vpn *model.VPN, flag bool) (*model.VPN, error) {
 			}
 		}
 		if !found {
-			vpn.Current.Dns = append(vpn.Current.Dns, address)
+			dns := vpn.Current.Dns
+			vpn.Current.Dns = []string{address}
+			vpn.Current.Dns = append(vpn.Current.Dns, dns...)
 		}
 	}
 
