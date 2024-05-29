@@ -112,9 +112,14 @@ func UpdateDevice(Id string, device *model.Device, fUpdated bool) (*model.Device
 		return nil, errors.New("records Id mismatch")
 	}
 
+	if current.Updated.After(device.Updated) {
+		log.Errorf("UpdateDevice: device %s has been updated by another user", device.Id)
+	}
+
 	if !fUpdated {
 		device.Updated = time.Now().UTC()
 	}
+
 	if !strings.HasPrefix(device.AccountID, "account-") {
 		device.AccountID = current.AccountID
 	}
