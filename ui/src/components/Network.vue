@@ -288,10 +288,14 @@
                                             <v-text-field type="number" v-model="selected.vpn.current.persistentKeepalive"
                                                 label="Persistent keepalive"
                                                 hint="To disable, set to 0.  Recommended value 29 (seconds)" />
+                                            <v-textarea v-model="selected.vpn.current.preUp" label="PreUp Script"
+                                                hint="Command to run before starting VPN" />
                                             <v-textarea v-model="selected.vpn.current.postUp" label="PostUp Script"
-                                                hint="Only applies to linux servers" />
+                                                hint="Command to run after starting VPN" />
+                                            <v-textarea v-model="selected.vpn.current.preDown" label="PreDown Script"
+                                                hint="Command to run before stopping VPN" />
                                             <v-textarea v-model="selected.vpn.current.postDown" label="PostDown Script"
-                                                hint="Only applies to linux servers" />
+                                                hint="Command to run after stopping VPN" />
                                             <v-switch v-model="selected.vpn.current.subnetRouting" color="success" inset
                                                 label="Enable subnet routing" />
                                             <v-divider></v-divider>
