@@ -16,27 +16,27 @@ type Device struct {
 	AccountID     string     `json:"accountid"                 bson:"accountid"`
 	Name          string     `json:"name"                      bson:"name"`
 	Description   string     `json:"description"               bson:"description"`
-	Type          string     `json:"type"                      bson:"type"`
+	Type          string     `json:"type,omitempty"            bson:"type,omitempty"`
 	Enable        bool       `json:"enable"                    bson:"enable"`
 	Tags          []string   `json:"tags"                      bson:"tags"`
 	Platform      string     `json:"platform"                  bson:"platform"`
 	OS            string     `json:"os"                        bson:"os"`
 	Architecture  string     `json:"arch"                      bson:"arch"`
-	ClientID      string     `json:"clientid"                  bson:"clientid"`
-	AuthDomain    string     `json:"authdomain"                bson:"authdomain"`
-	ApiID         string     `json:"apiid"                     bson:"apiid"`
-	AppData       string     `json:"appdata"                   bson:"appdata"`
+	ClientID      string     `json:"clientid,omitempty"        bson:"clientid,omitempty"`
+	AuthDomain    string     `json:"authdomain,omitempty"      bson:"authdomain,omitempty"`
+	ApiID         string     `json:"apiid,omitempty"           bson:"apiid,omitempty"`
+	AppData       string     `json:"appdata,omitempty"         bson:"appdata,omitempty"`
 	CheckInterval int64      `json:"checkInterval"             bson:"checkInterval"`
-	ServiceGroup  string     `json:"serviceGroup"              bson:"serviceGroup"`
-	ServiceApiKey string     `json:"serviceApiKey"             bson:"serviceApiKey"`
-	SourceAddress string     `json:"sourceAddress"             bson:"sourceAddress"`
-	Debug         bool       `json:"debug"                     bson:"debug"`
-	Quiet         bool       `json:"quiet"                     bson:"quiet"`
+	ServiceGroup  string     `json:"serviceGroup,omitempty"    bson:"serviceGroup,omitempty"`
+	ServiceApiKey string     `json:"serviceApiKey,omitempty"   bson:"serviceApiKey,omitempty"`
+	SourceAddress string     `json:"sourceAddress,omitempty"   bson:"sourceAddress,omitempty"`
+	Debug         bool       `json:"debug,omitempty"           bson:"debug,omitempty"`
+	Quiet         bool       `json:"quiet,omitempty"           bson:"quiet,omitempty"`
 	Registered    bool       `json:"registered"                bson:"registered"`
 	UpdateKeys    bool       `json:"updateKeys"                bson:"updateKeys"`
 	Version       string     `json:"version"                   bson:"version"`
-	InstanceID    string     `json:"instanceid"                bson:"instanceid"`
-	EZCode        string     `json:"ezcode"                    bson:"ezcode"`
+	InstanceID    string     `json:"instanceid,omitempty"      bson:"instanceid,omitempty"`
+	EZCode        string     `json:"ezcode,omitempty"          bson:"ezcode,omitempty"`
 	CreatedBy     string     `json:"createdBy"                 bson:"createdBy"`
 	UpdatedBy     string     `json:"updatedBy"                 bson:"updatedBy"`
 	Created       time.Time  `json:"created"                   bson:"created"`

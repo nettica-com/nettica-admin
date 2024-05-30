@@ -14,22 +14,22 @@ type Settings struct {
 	AllowedIPs          []string `json:"allowedIPs"                bson:"allowedIPs"`
 	Address             []string `json:"address"                   bson:"address"`
 	Dns                 []string `json:"dns"                       bson:"dns"`
-	Table               string   `json:"table"                     bson:"table"`
+	Table               string   `json:"table,omitempty"           bson:"table,omitempty"`
 	PersistentKeepalive int      `json:"persistentKeepalive"       bson:"persistentKeepalive"`
 	ListenPort          int      `json:"listenPort"                bson:"listenPort"`
 	Endpoint            string   `json:"endpoint"                  bson:"endpoint"`
 	Mtu                 int      `json:"mtu"                       bson:"mtu"`
-	SubnetRouting       bool     `json:"subnetRouting"             bson:"subnetRouting"`
-	UPnP                bool     `json:"upnp"                      bson:"upnp"`
-	SyncEndpoint        bool     `json:"syncEndpoint"              bson:"syncEndpoint"`
-	FailSafe            bool     `json:"failsafe"                  bson:"failsafe"`
-	EnableDns           bool     `json:"enableDns"                 bson:"enableDns"`
-	HasSSH              bool     `json:"hasSSH"                    bson:"hasSSH"`
-	HasRDP              bool     `json:"hasRDP"                    bson:"hasRDP"`
-	PreUp               string   `json:"preUp"                     bson:"preUp"`
-	PostUp              string   `json:"postUp"                    bson:"postUp"`
-	PreDown             string   `json:"preDown"                   bson:"preDown"`
-	PostDown            string   `json:"postDown"                  bson:"postDown"`
+	SubnetRouting       bool     `json:"subnetRouting,omitempty"   bson:"subnetRouting,omitempty"`
+	UPnP                bool     `json:"upnp,omitempty"            bson:"upnp,omitempty"`
+	SyncEndpoint        bool     `json:"syncEndpoint,omitempty"    bson:"syncEndpoint,omitempty"`
+	FailSafe            bool     `json:"failsafe,omitempty"        bson:"failsafe,omitempty"`
+	EnableDns           bool     `json:"enableDns,omitempty"       bson:"enableDns,omitempty"`
+	HasSSH              bool     `json:"hasSSH,omitempty"          bson:"hasSSH,omitempty"`
+	HasRDP              bool     `json:"hasRDP,omitempty"          bson:"hasRDP,omitempty"`
+	PreUp               string   `json:"preUp,omitempty"           bson:"preUp,omitempty"`
+	PostUp              string   `json:"postUp,omitempty"          bson:"postUp,omitempty"`
+	PreDown             string   `json:"preDown,omitempty"         bson:"preDown,omitempty"`
+	PostDown            string   `json:"postDown,omitempty"        bson:"postDown,omitempty"`
 }
 
 // IsValid check if model is valid

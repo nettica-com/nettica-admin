@@ -16,8 +16,8 @@ type VPN struct {
 	Name      string     `json:"name"                      bson:"name"`
 	NetId     string     `json:"netid"                     bson:"netid"`
 	NetName   string     `json:"netName"                   bson:"netName"`
-	Role      string     `json:"role"                      bson:"role"`
-	Type      string     `json:"type"                      bson:"type"`
+	Role      string     `json:"role,omitempty"            bson:"role,omitempty"`
+	Type      string     `json:"type,omitempty"            bson:"type,omitempty"`
 	Failover  int        `json:"failover"                  bson:"failover"`
 	FailCount int        `json:"failCount"                 bson:"failCount"`
 	Enable    bool       `json:"enable"                    bson:"enable"`
@@ -26,8 +26,8 @@ type VPN struct {
 	UpdatedBy string     `json:"updatedBy"                 bson:"updatedBy"`
 	Created   *time.Time `json:"created"                   bson:"created"`
 	Updated   *time.Time `json:"updated"                   bson:"updated"`
-	Current   *Settings  `json:"current"                   bson:"current"`
-	Default   *Settings  `json:"default"                   bson:"default"`
+	Current   *Settings  `json:"current,omitempty"         bson:"current,omitempty"`
+	Default   *Settings  `json:"default,omitempty"         bson:"default,omitempty"`
 	Devices   []*Device  `json:"devices,omitempty"         bson:"devices,omitempty"`
 }
 

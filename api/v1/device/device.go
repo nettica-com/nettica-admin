@@ -525,7 +525,14 @@ func statusDevice(c *gin.Context) {
 			// from the results
 			if client.DeviceID != device.Id {
 				client.Current.PrivateKey = ""
-				client.Default = &model.Settings{}
+				client.Default = nil // &model.Settings{}
+				client.Current.PreUp = ""
+				client.Current.PostUp = ""
+				client.Current.PreDown = ""
+				client.Current.PostDown = ""
+				if !client.Enable {
+					// client.Current = nil
+				}
 			} else {
 				// This is the current client
 				device2 := *device
