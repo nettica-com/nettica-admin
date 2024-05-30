@@ -107,7 +107,8 @@ func UpdateSubscription(Id string, subscription *model.Subscription) (*model.Sub
 		return nil, errors.New("failed to validate service")
 	}
 
-	subscription.LastUpdated = time.Now().UTC()
+	lu := time.Now().UTC()
+	subscription.LastUpdated = &lu
 
 	err = mongo.Serialize(subscription.Id, "id", "subscriptions", subscription)
 	if err != nil {
@@ -153,7 +154,13 @@ func ReadSubscriptions(email string) ([]*model.Subscription, error) {
 	}
 
 	sort.Slice(results, func(i, j int) bool {
-		return results[i].Issued.After(results[j].Issued)
+		if results[i] == nil {
+			return false
+		}
+		if results[j] == nil {
+			return true
+		}
+		return results[i].Issued.After(*results[j].Issued)
 	})
 
 	return results, err

@@ -296,15 +296,18 @@ func createHelioSubscription(c *gin.Context) {
 		mongo.Serialize(limits.Id, "id", "limits", limits)
 
 		// construct a subscription object
+		issued := time.Now()
+		lu := time.Now()
+		expires := endedAtUnix
 		subscription := model.Subscription{
 			Id:          id,
 			AccountID:   account.Id,
 			Email:       email,
 			Name:        name,
 			Description: description,
-			Issued:      time.Now(),
-			LastUpdated: time.Now(),
-			Expires:     endedAtUnix,
+			Issued:      &issued,
+			LastUpdated: &lu,
+			Expires:     &expires,
 			Credits:     credits,
 			Sku:         sku,
 			Status:      status,
@@ -453,6 +456,7 @@ func createSubscription(c *gin.Context) {
 		networks := 0
 		members := 0
 		relays := 0
+		expires := time.Now().AddDate(1, 0, 0)
 
 		// set the credits, name, and description based on the sku
 		switch sku {
@@ -585,14 +589,17 @@ func createSubscription(c *gin.Context) {
 		mongo.Serialize(limits.Id, "id", "limits", limits)
 
 		// construct a subscription object
+		issued := time.Now()
+		lu := time.Now()
 		subscription := model.Subscription{
 			Id:          id,
 			AccountID:   account.Id,
 			Email:       email,
 			Name:        name,
 			Description: description,
-			Issued:      time.Now(),
-			LastUpdated: time.Now(),
+			Issued:      &issued,
+			LastUpdated: &lu,
+			Expires:     &expires,
 			Credits:     credits,
 			Sku:         sku,
 			Status:      status,

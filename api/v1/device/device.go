@@ -525,6 +525,7 @@ func statusDevice(c *gin.Context) {
 			// from the results
 			if client.DeviceID != device.Id {
 				client.Current.PrivateKey = ""
+				client.Default = &model.Settings{}
 			} else {
 				// This is the current client
 				device2 := *device

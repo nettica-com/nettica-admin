@@ -43,8 +43,10 @@ func CreateNet(net *model.Network) (*model.Network, error) {
 		net.Default.AllowedIPs = ips
 	}
 
-	net.Created = time.Now().UTC()
-	net.Updated = net.Created
+	c := time.Now().UTC()
+	u := time.Now().UTC()
+	net.Created = &c
+	net.Updated = &u
 
 	if net.Default.PresharedKey == "" {
 		presharedKey, err := wgtypes.GenerateKey()
@@ -119,8 +121,8 @@ func UpdateNet(Id string, net *model.Network) (*model.Network, error) {
 		}
 		return nil, errors.New("failed to validate net")
 	}
-
-	net.Updated = time.Now().UTC()
+	u := time.Now().UTC()
+	net.Updated = &u
 
 	err = mongo.Serialize(net.Id, "id", "networks", net)
 	if err != nil {
@@ -190,7 +192,13 @@ func ReadNetworks(email string) ([]*model.Network, error) {
 	}
 
 	sort.Slice(results, func(i, j int) bool {
-		return results[i].Created.After(results[j].Created)
+		if results[i].Created == nil {
+			return false
+		}
+		if results[j].Created == nil {
+			return true
+		}
+		return results[i].Created.After(*results[j].Created)
 	})
 
 	return results, err

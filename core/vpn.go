@@ -125,7 +125,8 @@ func CreateVPN(vpn *model.VPN) (*model.VPN, error) {
 		vpn.Current.PostDown = fmt.Sprintf("iptables -D FORWARD -i %s -j ACCEPT; iptables -D FORWARD -o %s -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE", vpn.NetName, vpn.NetName)
 	}
 
-	vpn.Created = time.Now().UTC()
+	var c time.Time = time.Now().UTC()
+	vpn.Created = &c
 	vpn.Updated = vpn.Created
 
 	// check if vpn is valid
@@ -282,7 +283,8 @@ func UpdateVPN(Id string, vpn *model.VPN, flag bool) (*model.VPN, error) {
 	}
 
 	if !flag {
-		vpn.Updated = time.Now().UTC()
+		u := time.Now().UTC()
+		vpn.Updated = &u
 	}
 
 	err = mongo.Serialize(vpn.Id, "id", "vpns", vpn)

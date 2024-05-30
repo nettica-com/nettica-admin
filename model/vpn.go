@@ -10,25 +10,25 @@ import (
 
 // VPN structure
 type VPN struct {
-	Id        string    `json:"id"                        bson:"id"`
-	AccountID string    `json:"accountid"                 bson:"accountid"`
-	DeviceID  string    `json:"deviceid"                  bson:"deviceid"`
-	Name      string    `json:"name"                      bson:"name"`
-	NetId     string    `json:"netid"                     bson:"netid"`
-	NetName   string    `json:"netName"                   bson:"netName"`
-	Role      string    `json:"role"                      bson:"role"`
-	Type      string    `json:"type"                      bson:"type"`
-	Failover  int       `json:"failover"                  bson:"failover"`
-	FailCount int       `json:"failCount"                 bson:"failCount"`
-	Enable    bool      `json:"enable"                    bson:"enable"`
-	Tags      []string  `json:"tags"                      bson:"tags"`
-	CreatedBy string    `json:"createdBy"                 bson:"createdBy"`
-	UpdatedBy string    `json:"updatedBy"                 bson:"updatedBy"`
-	Created   time.Time `json:"created"                   bson:"created"`
-	Updated   time.Time `json:"updated"                   bson:"updated"`
-	Current   Settings  `json:"current"                   bson:"current"`
-	Default   Settings  `json:"default"                   bson:"default"`
-	Devices   []*Device `json:"devices,omitempty"         bson:"devices,omitempty"`
+	Id        string     `json:"id"                        bson:"id"`
+	AccountID string     `json:"accountid"                 bson:"accountid"`
+	DeviceID  string     `json:"deviceid"                  bson:"deviceid"`
+	Name      string     `json:"name"                      bson:"name"`
+	NetId     string     `json:"netid"                     bson:"netid"`
+	NetName   string     `json:"netName"                   bson:"netName"`
+	Role      string     `json:"role"                      bson:"role"`
+	Type      string     `json:"type"                      bson:"type"`
+	Failover  int        `json:"failover"                  bson:"failover"`
+	FailCount int        `json:"failCount"                 bson:"failCount"`
+	Enable    bool       `json:"enable"                    bson:"enable"`
+	Tags      []string   `json:"tags"                      bson:"tags"`
+	CreatedBy string     `json:"createdBy"                 bson:"createdBy"`
+	UpdatedBy string     `json:"updatedBy"                 bson:"updatedBy"`
+	Created   *time.Time `json:"created"                   bson:"created"`
+	Updated   *time.Time `json:"updated"                   bson:"updated"`
+	Current   *Settings  `json:"current"                   bson:"current"`
+	Default   *Settings  `json:"default"                   bson:"default"`
+	Devices   []*Device  `json:"devices,omitempty"         bson:"devices,omitempty"`
 }
 
 // IsValid check if model is valid

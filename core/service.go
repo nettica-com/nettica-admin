@@ -93,13 +93,15 @@ func CreateService(service *model.Service) (*model.Service, error) {
 		}
 
 		if !found {
+			var c time.Time = time.Now().UTC()
+			var u time.Time = time.Now().UTC()
 			// create a default net
 			net := model.Network{
 				AccountID:   service.AccountID,
 				NetName:     service.Net.NetName,
 				Description: service.Description,
-				Created:     time.Now().UTC(),
-				Updated:     time.Now().UTC(),
+				Created:     &c,
+				Updated:     &u,
 				CreatedBy:   service.CreatedBy,
 				UpdatedBy:   service.CreatedBy,
 			}
@@ -152,6 +154,9 @@ func CreateService(service *model.Service) (*model.Service, error) {
 	}
 
 	// create a default vpn using the net
+	var c time.Time = time.Now().UTC()
+	var u time.Time = time.Now().UTC()
+
 	vpn := model.VPN{
 		AccountID: service.AccountID,
 		Name:      strings.ToLower(service.ServiceType) + "." + service.Net.NetName,
@@ -162,8 +167,8 @@ func CreateService(service *model.Service) (*model.Service, error) {
 		Current:   service.VPN.Current,
 		Default:   service.Net.Default,
 		Type:      "Service",
-		Created:   time.Now().UTC(),
-		Updated:   time.Now().UTC(),
+		Created:   &c,
+		Updated:   &u,
 		CreatedBy: service.CreatedBy,
 		UpdatedBy: service.CreatedBy,
 	}
