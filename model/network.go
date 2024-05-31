@@ -18,6 +18,7 @@ type Network struct {
 	Created     *time.Time `json:"created"     bson:"created"`
 	Updated     *time.Time `json:"updated"     bson:"updated"`
 	ForceUpdate bool       `json:"forceUpdate" bson:"forceUpdate"`
+	Critical    bool       `json:"critical"    bson:"critical"`
 	Policies    Policies   `json:"policies"    bson:"policies"`
 	Default     *Settings  `json:"default"     bson:"default"`
 }
