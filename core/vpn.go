@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 
 	model "github.com/nettica-com/nettica-admin/model"
@@ -129,6 +130,12 @@ func CreateVPN(vpn *model.VPN) (*model.VPN, error) {
 	vpn.Created = &c
 	vpn.Updated = vpn.Created
 
+	// Sanitize the scripts
+	vpn.Current.PreUp = Sanitize(vpn.Current.PreUp)
+	vpn.Current.PostUp = Sanitize(vpn.Current.PostUp)
+	vpn.Current.PreDown = Sanitize(vpn.Current.PreDown)
+	vpn.Current.PostDown = Sanitize(vpn.Current.PostDown)
+
 	// check if vpn is valid
 	errs := vpn.IsValid()
 	if len(errs) != 0 {
@@ -153,6 +160,28 @@ func CreateVPN(vpn *model.VPN) (*model.VPN, error) {
 
 	// data modified, dump new config
 	return vpn, nil
+}
+
+func Sanitize(s string) string {
+
+	// remove path and shell special characters
+	s = strings.Replace(s, "/", "", -1)
+	s = strings.Replace(s, "\\", "", -1)
+	s = strings.Replace(s, ":", "", -1)
+	s = strings.Replace(s, "*", "", -1)
+	s = strings.Replace(s, "?", "", -1)
+	s = strings.Replace(s, "\"", "", -1)
+	s = strings.Replace(s, "<", "", -1)
+	s = strings.Replace(s, ">", "", -1)
+	s = strings.Replace(s, "|", "", -1)
+	s = strings.Replace(s, "&", "", -1)
+	s = strings.Replace(s, "%", "", -1)
+	s = strings.Replace(s, "$", "", -1)
+	s = strings.Replace(s, "#", "", -1)
+	s = strings.Replace(s, "@", "", -1)
+	s = strings.Replace(s, "!", "", -1)
+
+	return s
 }
 
 // GetAllReservedIps the list of all reserved IPs, client and server
@@ -270,6 +299,12 @@ func UpdateVPN(Id string, vpn *model.VPN, flag bool) (*model.VPN, error) {
 	if vpn.Current.SubnetRouting && len(vpn.Current.PostDown) == 0 {
 		vpn.Current.PostDown = fmt.Sprintf("iptables -D FORWARD -i %s -j ACCEPT; iptables -D FORWARD -o %s -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE", vpn.NetName, vpn.NetName)
 	}
+
+	// Sanitize the scripts
+	vpn.Current.PreUp = Sanitize(vpn.Current.PreUp)
+	vpn.Current.PostUp = Sanitize(vpn.Current.PostUp)
+	vpn.Current.PreDown = Sanitize(vpn.Current.PreDown)
+	vpn.Current.PostDown = Sanitize(vpn.Current.PostDown)
 
 	// check if vpn is valid
 	errs := vpn.IsValid()
