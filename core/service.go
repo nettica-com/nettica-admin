@@ -185,6 +185,11 @@ func CreateService(service *model.Service) (*model.Service, error) {
 	if vpn.Current.PostDown == "" {
 		vpn.Current.PostDown = fmt.Sprintf("iptables -D FORWARD -i %s -j ACCEPT; iptables -D FORWARD -o %s -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE", vpn.NetName, vpn.NetName)
 	}
+	// Sanitize the scripts
+	vpn.Current.PreUp = Sanitize(vpn.Current.PreUp)
+	vpn.Current.PostUp = Sanitize(vpn.Current.PostUp)
+	vpn.Current.PreDown = Sanitize(vpn.Current.PreDown)
+	vpn.Current.PostDown = Sanitize(vpn.Current.PostDown)
 
 	vpn.Current.PersistentKeepalive = 23
 
