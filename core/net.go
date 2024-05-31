@@ -142,7 +142,23 @@ func UpdateNet(Id string, net *model.Network) (*model.Network, error) {
 // DeleteNet from database
 func DeleteNet(id string) error {
 
-	err := mongo.Delete(id, "id", "networks")
+	// Delete all vpns associated with this network
+
+	vpns, err := mongo.ReadAllVPNs("netid", id)
+
+	if err != nil {
+		return err
+	}
+	for _, vpn := range vpns {
+		err = DeleteVPN(vpn.Id)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Delete the network
+
+	err = mongo.Delete(id, "id", "networks")
 	if err != nil {
 		return err
 	}

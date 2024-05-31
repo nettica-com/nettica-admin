@@ -192,6 +192,18 @@ func updateNet(c *gin.Context) {
 		return
 	}
 
+	if net.Critical && !data.Critical && account.Role != "Owner" {
+		log.Infof("updateNet: user %s cannot change critical status of network %s", account.Email, net.NetName)
+		c.JSON(http.StatusForbidden, gin.H{"error": "You cannot change the critical status of this network"})
+		return
+	}
+
+	if data.Critical && account.Role != "Owner" {
+		log.Infof("updateNet: user %s cannot change critical status of network %s", account.Email, net.NetName)
+		c.JSON(http.StatusForbidden, gin.H{"error": "You cannot change the critical status of this network"})
+		return
+	}
+
 	data.UpdatedBy = account.Email
 
 	result, err := core.UpdateNet(id, &data)
@@ -305,6 +317,18 @@ func deleteNet(c *gin.Context) {
 	if (account.Role != "Admin" && account.Role != "Owner") && account.Email != net.CreatedBy {
 		log.Infof("deleteNet: user %s is not an admin of %s", account.Email, account.Id)
 		c.JSON(http.StatusForbidden, gin.H{"error": "You cannot delete this network"})
+		return
+	}
+
+	if net.Critical && account.Role != "Owner" {
+		log.Infof("deleteNet: user %s cannot delete critical network %s", account.Email, net.NetName)
+		c.JSON(http.StatusForbidden, gin.H{"error": "This network cannot be deleted"})
+		return
+	}
+
+	if net.Critical {
+		log.Infof("deleteNet: user %s is deleting critical network %s", account.Email, net.NetName)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Sir, you must turn off critical status to delete this network"})
 		return
 	}
 

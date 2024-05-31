@@ -179,6 +179,15 @@
                                         </td>
                                     </tr>
                                 </table>
+                                <v-divider v-if="isOwner"></v-divider>
+                                <table width="100%"  v-if="isOwner">
+                                    <tr>
+                                        <td colspan="2">
+                                            <v-switch v-model="selected.net.critical" color="red" inset
+                                                :label="selected.net.critical ? 'This is a Critical Network' : 'This is a Normal Network'" />
+                                        </td>
+                                    </tr>
+                                </table>
                                 <v-divider></v-divider>
                                 <p class="text-caption">Created by {{ selected.net.createdBy }} at {{
                                     selected.net.created | formatDate }}<br />
@@ -527,6 +536,7 @@ export default {
         active: [],
         open: [],
         deviceList: {},
+        isOwner: false,
         inEdit: false,
         dialogCreate: false,
         dialogAddDevice: false,
@@ -639,6 +649,9 @@ export default {
                 items: []
             }
             for (let i = 0; i < this.accounts.length; i++) {
+                if (this.accounts[i].parent == this.accounts[i].id) {
+                    this.isOwner = true
+                }
                 this.acntList.items[i] = { "text": this.accounts[i].accountName + " - " + this.accounts[i].parent, "value": this.accounts[i].parent }
             }
         }
