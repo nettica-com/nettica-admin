@@ -616,6 +616,10 @@ export default {
             this.account.role = "User"
             this.account.status = "Pending"
 
+            if (!this.sendEmail) {
+                this.account.status = "Active"
+            }
+
             for (let i = 0; i < this.accounts.length; i++) {
                 if (this.acntList.selected.value == this.accounts[i].parent) {
                     this.account.parent = this.accounts[i].parent;
