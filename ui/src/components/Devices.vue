@@ -195,6 +195,16 @@
                                                 </v-chip>
                                             </template>
                                         </v-combobox>
+                                        <v-combobox v-if="selected.vpn.type=='Service'" v-model="selected.vpn.current.allowedIPs" chips
+                                                hint="Write IPv4 or IPv6 CIDR and hit enter" label="Allowed IPs" multiple
+                                                dark :readonly="!inEdit" >
+                                            <template v-slot:selection="{ attrs, item, select }">
+                                                <v-chip v-bind="attrs" :input-value="selected" close @click="select"
+                                                    @click:close="selected.vpn.current.allowedIPs.splice(selected.vpn.current.allowedIPs.indexOf(item), 1)">
+                                                    <strong>{{ item }}</strong>&nbsp;
+                                                </v-chip>
+                                            </template>
+                                        </v-combobox>
                                         <v-text-field :readonly="!inEdit" v-model="selected.vpn.current.endpoint"
                                             label="Public endpoint for clients" :rules="[ rules.ipport ]" />
                                         <v-text-field type="number" v-model="selected.vpn.current.mtu"
@@ -206,7 +216,7 @@
 
                                     </v-col>
                                 </v-row>
-                                <v-expansion-panels v-if="inEdit">
+                                <v-expansion-panels v-if="inEdit &&!(selected.vpn.type=='Service')">
                                     <v-expansion-panel>
                                         <v-expansion-panel-header dark>Advanced Configuration</v-expansion-panel-header>
                                         <v-expansion-panel-content>
