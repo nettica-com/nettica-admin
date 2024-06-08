@@ -1,6 +1,7 @@
 package net
 
 import (
+	"encoding/base64"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -204,6 +205,23 @@ func updateNet(c *gin.Context) {
 		return
 	}
 
+	if data.Default.PresharedKey != net.Default.PresharedKey && data.Default.PresharedKey != "" {
+		// Validate the new preshared key
+		key, err := base64.StdEncoding.DecodeString(data.Default.PresharedKey)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("failed to parse preshared key")
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid preshared key"})
+			return
+		}
+		if len(key) != 32 {
+			log.Errorf("updateNet: invalid preshared key length %d", len(key))
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid preshared key"})
+			return
+		}
+	}
+
 	data.UpdatedBy = account.Email
 
 	result, err := core.UpdateNet(id, &data)
@@ -218,6 +236,8 @@ func updateNet(c *gin.Context) {
 	updateMTU := false
 	updateAddress := false
 	updateAllowed := false
+	updateFailSafe := false
+	updatePresharedKey := false
 	if data.ForceUpdate {
 		log.Infof("updateNet: force update for %s %s", data.NetName, id)
 		if data.Default.Mtu != net.Default.Mtu {
@@ -231,6 +251,14 @@ func updateNet(c *gin.Context) {
 		if !util.CompareArrays(data.Default.AllowedIPs, net.Default.AllowedIPs) {
 			log.Infof("updateNet: updateAllowed for %s %v", data.NetName, data.Default.AllowedIPs)
 			updateAllowed = true
+		}
+		if data.Default.FailSafe != net.Default.FailSafe {
+			log.Infof("updateNet: updateFailSafe for %s %v", data.NetName, data.Default.FailSafe)
+			updateFailSafe = true
+		}
+		if data.Default.PresharedKey != net.Default.PresharedKey {
+			log.Infof("updateNet: updatePresharedKey for %s", data.NetName)
+			updatePresharedKey = true
 		}
 	}
 	// Clear the device cache for policy changes
@@ -273,6 +301,19 @@ func updateNet(c *gin.Context) {
 			v.Default.AllowedIPs = data.Default.AllowedIPs
 			changed = true
 		}
+		if updateFailSafe && v.Default.FailSafe != data.Default.FailSafe {
+			log.Infof("updateNet: updateFailSafe for %s %v", v.Id, data.Default.FailSafe)
+			v.Default.FailSafe = data.Default.FailSafe
+			v.Current.FailSafe = data.Default.FailSafe
+			changed = true
+		}
+		if updatePresharedKey && v.Default.PresharedKey != data.Default.PresharedKey {
+			log.Infof("updateNet: updatePresharedKey for %s", v.Id)
+			v.Default.PresharedKey = data.Default.PresharedKey
+			v.Current.PresharedKey = data.Default.PresharedKey
+			changed = true
+		}
+
 		if changed {
 			_, err := core.UpdateVPN(v.Id, v, true)
 			if err != nil {
