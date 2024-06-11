@@ -276,6 +276,41 @@ const docTemplate = `{
                 }
             }
         },
+        "/accounts/{id}/limits": {
+            "get": {
+                "security": [
+                    {
+                        "apiKey": []
+                    }
+                ],
+                "description": "Get the limits for an account",
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Get the limits for an account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Account ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Limits"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    }
+                }
+            }
+        },
         "/accounts/{id}/users": {
             "get": {
                 "security": [
@@ -1109,7 +1144,13 @@ const docTemplate = `{
                 "enable": {
                     "type": "boolean"
                 },
+                "ezcode": {
+                    "type": "string"
+                },
                 "id": {
+                    "type": "string"
+                },
+                "instanceid": {
                     "type": "string"
                 },
                 "lastSeen": {
@@ -1125,6 +1166,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "quiet": {
+                    "type": "boolean"
+                },
+                "registered": {
                     "type": "boolean"
                 },
                 "server": {
@@ -1148,6 +1192,9 @@ const docTemplate = `{
                 "type": {
                     "type": "string"
                 },
+                "updateKeys": {
+                    "type": "boolean"
+                },
                 "updated": {
                     "type": "string"
                 },
@@ -1162,6 +1209,56 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/model.VPN"
                     }
+                }
+            }
+        },
+        "model.Limits": {
+            "type": "object",
+            "properties": {
+                "accountid": {
+                    "type": "string"
+                },
+                "created": {
+                    "type": "string"
+                },
+                "createdBy": {
+                    "type": "string"
+                },
+                "devices": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "maxdevices": {
+                    "type": "integer"
+                },
+                "maxmembers": {
+                    "type": "integer"
+                },
+                "maxnetworks": {
+                    "type": "integer"
+                },
+                "maxservices": {
+                    "type": "integer"
+                },
+                "members": {
+                    "type": "integer"
+                },
+                "networks": {
+                    "type": "integer"
+                },
+                "services": {
+                    "type": "integer"
+                },
+                "tolerance": {
+                    "type": "number"
+                },
+                "updated": {
+                    "type": "string"
+                },
+                "updatedBy": {
+                    "type": "string"
                 }
             }
         },
@@ -1194,11 +1291,17 @@ const docTemplate = `{
                 "createdBy": {
                     "type": "string"
                 },
+                "critical": {
+                    "type": "boolean"
+                },
                 "default": {
                     "$ref": "#/definitions/model.Settings"
                 },
                 "description": {
                     "type": "string"
+                },
+                "forceUpdate": {
+                    "type": "boolean"
                 },
                 "id": {
                     "type": "string"
@@ -1260,6 +1363,9 @@ const docTemplate = `{
                 },
                 "endpoint": {
                     "type": "string"
+                },
+                "failsafe": {
+                    "type": "boolean"
                 },
                 "hasRDP": {
                     "type": "boolean"
@@ -1340,6 +1446,12 @@ const docTemplate = `{
                 },
                 "enable": {
                     "type": "boolean"
+                },
+                "failCount": {
+                    "type": "integer"
+                },
+                "failover": {
+                    "type": "integer"
                 },
                 "id": {
                     "type": "string"

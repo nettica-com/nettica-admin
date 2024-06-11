@@ -73,7 +73,11 @@ definitions:
         type: string
       enable:
         type: boolean
+      ezcode:
+        type: string
       id:
+        type: string
+      instanceid:
         type: string
       lastSeen:
         type: string
@@ -84,6 +88,8 @@ definitions:
       platform:
         type: string
       quiet:
+        type: boolean
+      registered:
         type: boolean
       server:
         type: string
@@ -99,6 +105,8 @@ definitions:
         type: array
       type:
         type: string
+      updateKeys:
+        type: boolean
       updated:
         type: string
       updatedBy:
@@ -109,6 +117,39 @@ definitions:
         items:
           $ref: '#/definitions/model.VPN'
         type: array
+    type: object
+  model.Limits:
+    properties:
+      accountid:
+        type: string
+      created:
+        type: string
+      createdBy:
+        type: string
+      devices:
+        type: integer
+      id:
+        type: string
+      maxdevices:
+        type: integer
+      maxmembers:
+        type: integer
+      maxnetworks:
+        type: integer
+      maxservices:
+        type: integer
+      members:
+        type: integer
+      networks:
+        type: integer
+      services:
+        type: integer
+      tolerance:
+        type: number
+      updated:
+        type: string
+      updatedBy:
+        type: string
     type: object
   model.Message:
     properties:
@@ -129,10 +170,14 @@ definitions:
         type: string
       createdBy:
         type: string
+      critical:
+        type: boolean
       default:
         $ref: '#/definitions/model.Settings'
       description:
         type: string
+      forceUpdate:
+        type: boolean
       id:
         type: string
       netName:
@@ -173,6 +218,8 @@ definitions:
         type: boolean
       endpoint:
         type: string
+      failsafe:
+        type: boolean
       hasRDP:
         type: boolean
       hasSSH:
@@ -226,6 +273,10 @@ definitions:
         type: array
       enable:
         type: boolean
+      failCount:
+        type: integer
+      failover:
+        type: integer
       id:
         type: string
       name:
@@ -425,6 +476,28 @@ paths:
       security:
       - apiKey: []
       summary: Email an account invitation
+      tags:
+      - accounts
+  /accounts/{id}/limits:
+    get:
+      description: Get the limits for an account
+      parameters:
+      - description: Account ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Limits'
+        "400":
+          description: Bad Request
+          schema: {}
+      security:
+      - apiKey: []
+      summary: Get the limits for an account
       tags:
       - accounts
   /accounts/{id}/users:
