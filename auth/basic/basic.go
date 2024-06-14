@@ -108,19 +108,12 @@ func (o *Oauth2Basic) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 		return nil, fmt.Errorf("no id_token field in oauth2 token")
 	}
 
-	verified := false
 	var idToken *oidc.IDToken
 	var err error
 
 	// decode the json string into an idToken
 	err = json.Unmarshal([]byte(rawIDToken), &idToken)
 	if err != nil {
-		return nil, err
-	}
-
-	verified = true
-
-	if !verified || err != nil {
 		return nil, err
 	}
 
