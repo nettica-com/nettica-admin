@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/nettica-com/nettica-admin/util"
@@ -39,17 +40,36 @@ func (a VPN) IsValid() []error {
 	if a.Name == "" {
 		errs = append(errs, fmt.Errorf("name is required"))
 	}
-	// check the name field is between 2 to 40 chars
-	if len(a.Name) < 2 || len(a.Name) > 40 {
-		errs = append(errs, fmt.Errorf("name field must be between 2-40 chars"))
+	// check the name field is between 1 to 253 chars
+	if len(a.Name) < 1 || len(a.Name) > 253 {
+		errs = append(errs, fmt.Errorf("name field must be between 1-253 chars"))
 	}
-	match, err := regexp.MatchString(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`, a.Name)
 
+	parts := strings.Split(a.Name, ".")
+	for i := 0; i < len(parts); i++ {
+		if len(parts[i]) < 1 || len(parts[i]) > 63 {
+			errs = append(errs, fmt.Errorf("each name field must be between 1-63 chars"))
+		}
+	}
+
+	match, err := regexp.MatchString(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`, a.Name)
 	if !match {
 		if err != nil {
 			errs = append(errs, err)
 		}
 		errs = append(errs, fmt.Errorf("name field can only contain ascii chars a-z,-,0-9"))
+	}
+
+	if len(a.NetName) < 2 || len(a.NetName) > 15 {
+		errs = append(errs, fmt.Errorf("netName field must be between 2-15 chars"))
+	}
+	match, err = regexp.MatchString(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`, a.NetName)
+
+	if !match {
+		if err != nil {
+			errs = append(errs, err)
+		}
+		errs = append(errs, fmt.Errorf("netName field can only contain ascii chars a-z,-,0-9"))
 	}
 
 	/*	// check if the allowedIPs empty

@@ -40,13 +40,12 @@ func (a Network) IsValid() []error {
 	if a.NetName == "" {
 		errs = append(errs, fmt.Errorf("netName is required"))
 	}
-	// check the name field is between 3 to 40 chars
-	if len(a.NetName) < 2 || len(a.NetName) > 12 {
-		errs = append(errs, fmt.Errorf("name field must be between 2-12 chars"))
+	// check the name field is between 2 to 15 chars
+	if len(a.NetName) < 2 || len(a.NetName) > 15 {
+		errs = append(errs, fmt.Errorf("name field must be between 2-15 chars"))
 	}
 
 	match, err := regexp.MatchString(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`, a.NetName)
-
 	if !match {
 		if err != nil {
 			errs = append(errs, err)

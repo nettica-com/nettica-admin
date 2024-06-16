@@ -235,6 +235,19 @@ func UpdateVPN(Id string, vpn *model.VPN, flag bool) (*model.VPN, error) {
 		return nil, errors.New("records Id mismatch")
 	}
 
+	if current.Type == "Service" {
+		if vpn.Type != "Service" {
+			return nil, errors.New("invalid change")
+		}
+
+		if current.Current.PreUp != vpn.Current.PreUp ||
+			current.Current.PostUp != vpn.Current.PostUp ||
+			current.Current.PreDown != vpn.Current.PreDown ||
+			current.Current.PostDown != vpn.Current.PostDown {
+			return nil, errors.New("invalid change")
+		}
+	}
+
 	if len(vpn.Current.Address) == 0 ||
 		(len(vpn.Default.Address) > 0 && len(current.Default.Address) > 0 &&
 			(vpn.Default.Address[0] != current.Default.Address[0])) {

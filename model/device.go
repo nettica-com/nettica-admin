@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -10,6 +11,7 @@ import (
 // swagger:model Device
 // Defines the device model
 type Device struct {
+	Version       string     `json:"version"                   bson:"version"`
 	Id            string     `json:"id"                        bson:"id"`
 	Server        string     `json:"server"                    bson:"server"`
 	ApiKey        string     `json:"apiKey"                    bson:"apiKey"`
@@ -34,7 +36,6 @@ type Device struct {
 	Quiet         bool       `json:"quiet,omitempty"           bson:"quiet,omitempty"`
 	Registered    bool       `json:"registered"                bson:"registered"`
 	UpdateKeys    bool       `json:"updateKeys"                bson:"updateKeys"`
-	Version       string     `json:"version"                   bson:"version"`
 	InstanceID    string     `json:"instanceid,omitempty"      bson:"instanceid,omitempty"`
 	EZCode        string     `json:"ezcode,omitempty"          bson:"ezcode,omitempty"`
 	CreatedBy     string     `json:"createdBy"                 bson:"createdBy"`
@@ -58,17 +59,22 @@ func (a Device) IsValid() []error {
 		errs = append(errs, fmt.Errorf("accountid is required"))
 	}
 
-	// check the name field is between 2 to 40 chars
-	if len(a.Name) < 2 || len(a.Name) > 40 {
+	// check the name field is between 1 to 253 chars
+	if len(a.Name) < 1 || len(a.Name) > 253 {
 		errs = append(errs, fmt.Errorf("name field must be between 2-40 chars"))
 	}
 	match, err := regexp.MatchString(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`, a.Name)
-
 	if !match {
 		if err != nil {
 			errs = append(errs, err)
 		}
 		errs = append(errs, fmt.Errorf("name field can only contain ascii chars a-z,-,0-9"))
+	}
+	parts := strings.Split(a.Name, ".")
+	for i := 0; i < len(parts); i++ {
+		if len(parts[i]) < 1 || len(parts[i]) > 63 {
+			errs = append(errs, fmt.Errorf("each name field must be between 1-63 chars"))
+		}
 	}
 
 	if a.Server == "" {
