@@ -82,6 +82,7 @@ func main() {
 	config := cors.DefaultConfig()
 	config.AllowAllOrigins = true
 	config.AddAllowHeaders("Authorization", util.AuthTokenHeaderName)
+	config.AddAllowHeaders("X-API-KEY")
 	app.Use(cors.New(config))
 
 	// protection middleware
