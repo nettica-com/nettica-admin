@@ -79,16 +79,27 @@ const actions = {
   },
 
   oauth2_exchange({ commit, dispatch }, data) {
-    data.clientId = TokenService.getClientId()
+    console.log("oauth2_exchange", data);
+
+    if (data.clientId === undefined) {
+      data.clientId = TokenService.getClientId()
+    }
 
     if (data.server) {
       TokenService.saveWildServer(data.server)
+      ApiService.setWildServer()
     }
 
     ApiService.post("/auth/oauth2_exchange", data)
       .then(resp => {
+        if (data.server) {
+          TokenService.saveWildToken(resp)
+          ApiService.setWildHeader()
+        } else {
+          TokenService.saveToken(resp)
+          commit('token', resp)
+        }
         commit('authStatus', 'success')
-        commit('token', resp)
         dispatch('user');
       })
       .catch(err => {
