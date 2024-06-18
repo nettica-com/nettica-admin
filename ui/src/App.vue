@@ -17,6 +17,7 @@
   import Header from "./components/Header";
   import MainMenu from "./components/Menu";
   import Footer from "./components/Footer";
+  import TokenService from "./services/token.service";
   import {mapActions, mapGetters} from "vuex";
 
   export default {
