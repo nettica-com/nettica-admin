@@ -66,7 +66,7 @@ export default {
 
     accept() {
       TokenService.destroyReferer();
-      var url = this.$route.query.referer + "/" + this.$route.query + "&server=" + window.location.origin;
+      var url = this.$route.query.referer + "/?" + this.$route.query.client_id + "&code=" + this.$route.query.code + "&state=" + this.$route.query.state + "&server=" + window.location.origin;
       window.location.replace(url);
     },
 
