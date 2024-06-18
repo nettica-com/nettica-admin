@@ -69,22 +69,35 @@
           server: this.$route.query.server
         })
       } else if (this.$route.query && this.$route.query.referer) {
-        var url = window.location.origin + "/consent/" + this.$route.query + "client_id=" + data.clientId
-        window.location.href = url
+        TokenService.saveReferer(this.$route.query.referer)
+//        var url = window.location.origin + "/consent/" + this.$route.query + "client_id=" + data.clientId
+//        window.location.href = url
       } else {
         if (this.requiresAuth || location.pathname == "/") {
           if (this.isAuthenticated == false) {
             if (this.$route.query.code && this.$route.query.state) {
-                try {
-                  this.oauth2_exchange({
-                    code: this.$route.query.code,
-                    state: this.$route.query.state
-                })
-              } catch (e) {
-                this.notification = {
-                  show: true,
-                  color: 'error',
-                  text: e.message,
+
+                var referer = TokenService.getReferer()
+                var client_id = TokenService.getClientId()
+                if (referer) {
+                  var url = "/consent?referer=" + referer + "&client_id=" + client_id + "&code=" + this.$route.query.code + "&state=" + this.$route.query.state;
+                  this.$router.push(url).catch(err => {
+                    if (err.name != "NavigationDuplicated") {
+                      throw err;
+                    }
+                  })
+                } else {
+                  try {
+                    this.oauth2_exchange({
+                      code: this.$route.query.code,
+                      state: this.$route.query.state
+                  })
+                } catch (e) {
+                  this.notification = {
+                    show: true,
+                    color: 'error',
+                    text: e.message,
+                  }
                 }
               }
             } else {

@@ -3,6 +3,19 @@ const CLIENT_ID_KEY = "client_id";
 const SERVER_KEY = "server";
 const WILD_TOKEN_KEY = "wild_token";
 const WILD_SERVER_KEY = "wild_server";
+const REFERER_KEY = "referer";
+
+export const getReferer = () => {
+  return window.localStorage.getItem(REFERER_KEY);
+};
+
+export const saveReferer = referer => {
+  window.localStorage.setItem(REFERER_KEY, referer);
+};
+
+export const destroyReferer = () => {
+  window.localStorage.removeItem(REFERER_KEY);
+};
 
 export const getToken = () => {
   return window.localStorage.getItem(TOKEN_KEY);
@@ -79,5 +92,8 @@ export default {
   destroyWildToken,
   getWildServer,
   saveWildServer,
-  destroyWildServer
+  destroyWildServer,
+  getReferer,
+  saveReferer,
+  destroyReferer
 };

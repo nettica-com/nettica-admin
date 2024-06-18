@@ -137,6 +137,10 @@ const mutations = {
     state.user = null;
     TokenService.destroyToken();
     TokenService.destroyClientId();
+    TokenService.destroyWildToken();
+    TokenService.destroyWildServer();
+    TokenService.destroyServer();
+    TokenService.destroyReferer();
   }
 };
 
