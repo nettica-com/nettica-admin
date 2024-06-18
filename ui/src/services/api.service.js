@@ -12,7 +12,7 @@ const ApiService = {
   },
 
   setServer() {
-    Vue.axios.defaults.baseURL = TokenService.getServer() + "/api/v1.0";
+    Vue.axios.defaults.baseURL = TokenService.getServer();
   },
 
   setWildServer() {

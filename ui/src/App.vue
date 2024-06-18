@@ -70,6 +70,12 @@
           clientId: this.$route.query.client_id,
           server: this.$route.query.server
         });
+
+        window.location.replace("/").catch(err => {
+          if (err.name != "NavigationDuplicated") {
+            throw err;
+          }
+        });
         return
       } else if (this.$route.query && this.$route.query.referer) {
         TokenService.saveReferer(this.$route.query.referer)

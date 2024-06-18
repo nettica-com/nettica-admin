@@ -42,8 +42,8 @@ const actions = {
 
   
   readAll({ commit, dispatch }) {
-    ApiService.setWildServer(TokenService.getWildServer())
-    ApiService.setWildHeader(TokenService.getWildToken())
+    ApiService.setWildServer()
+    ApiService.setWildHeader()
     ApiService.get("/net")
       .then(resp => {
         commit('nets', resp)
@@ -51,8 +51,13 @@ const actions = {
       .catch(error => {
         if (error.response) {
           commit('error', error.response.data.error)
+          ApiService.destroyWildToken()
+          ApiService.destroyWildServer()
         }
       })
+      ApiService.setServer()
+      ApiService.setHeader()
+
   },
 
   create({ commit, dispatch }, net) {

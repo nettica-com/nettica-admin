@@ -98,9 +98,9 @@ const actions = {
         } else {
           TokenService.saveToken(resp)
           commit('token', resp)
+          dispatch('user');
         }
         commit('authStatus', 'success')
-        dispatch('user');
       })
       .catch(err => {
         commit('authStatus', 'error')

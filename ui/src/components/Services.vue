@@ -20,6 +20,10 @@
                 <v-btn color="success" @click="startCreateMultihop">
                     Add Multihop
                     <v-icon right dark>mdi-weather-cloudy</v-icon>
+                </v-btn>&nbsp;
+                <v-btn color="red" @click="startCreateWilderness">
+                    In the Wild
+                    <v-icon right dark>mdi-weather-cloudy</v-icon>
                 </v-btn>
             </v-card-title>
         </v-card>
@@ -157,10 +161,55 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
+        <v-dialog v-if="subscriptions" v-model="dialogWilderness" max-width="550">
+            <v-card>
+                <v-card-title class="headline">In the Wild</v-card-title>
+                <v-card-text>
+                    <v-row>
+                        <v-col cols="12">
+                            <v-form ref="form" v-model="valid">
+                                <p v-if="!wild">This will create a new service host from Nettica on your Nettica VPN Server.  We will not
+                                store your ApiKey, but will store the device and VPN (and their API keys) for the service host
+                                embedded in your network.  Click Login to log in and accept the consent, then navigate back to
+                                services to create your service.</p>
+                                <v-text-field v-model="wildServer" label="Server Name" :readonly="wild" required></v-text-field>
+                                <v-btn v-if="!wild" color="error" @click="loginWild">
+                                    Login
+                                    <v-icon right dark>mdi-lock</v-icon>
+                                </v-btn>
+                                <div v-if="wild">
+                                    <v-select return-object v-model="svcList.selected" :items="svcList.items" item-text="text"
+                                        item-value="value" label="Choose type of Service"
+                                        :rules="[v => !!v || 'Service is required',]" single persistent-hint required />
+                                    <v-select return-object v-model="serverList.selected" :items="serverList.items"
+                                        item-text="text" item-value="value" label="Pick a region"
+                                        :rules="[v => !!v || 'Server is required',]" single persistent-hint required />
+                                    <v-select return-object v-model="wildList.selected" :items="wildList.items" item-text="text"
+                                        item-value="value" label="To this network" :rules="[v => !!v || 'Network is required',]"
+                                        single persistent-hint required />
+                                </div>
+                            </v-form>
+                        </v-col>
+                    </v-row>
+                </v-card-text>
+                <v-card-actions v-if="wild">
+                    <v-spacer />
+                    <v-btn :disabled="!valid" color="success" @click="createWild()">
+                        Submit
+                        <v-icon right dark>mdi-check-outline</v-icon>
+                    </v-btn>
+                    <v-btn color="primary" @click="dialogWilderness = false">
+                        Cancel
+                        <v-icon right dark>mdi-close-circle-outline</v-icon>
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
     </v-container>
 </template>
 <script>
 import { mapActions, mapGetters } from 'vuex'
+import TokenService from '../services/token.service';
 
 export default {
     name: 'Services',
@@ -170,6 +219,12 @@ export default {
         dialogCreateService: false,
         dialogCreateMultihop: false,
         dialogUpdate: false,
+        dialogWilderness: false,
+        showWilderness: false,
+        wildServer: "",
+        wildApiKey: "",
+        wildList: {},
+        wild: false,
         inDelete: false,
         credits: 0,
         used: 0,
@@ -229,6 +284,7 @@ export default {
             services: 'service/services',
             servers: 'server/servers',
             nets: 'net/nets',
+            wildnets: 'wildnet/nets',
         }),
     },
 
@@ -237,6 +293,14 @@ export default {
         this.readSubscriptions(this.authuser.email)
         this.readServices(this.authuser.email)
         this.readServers()
+
+        if (TokenService.getWildServer()) {
+            this.wildServer = TokenService.getWildServer()
+            this.wild = true
+            this.readWildNets()
+        } else {
+            this.wild = false
+        }
 
     },
 
@@ -261,6 +325,11 @@ export default {
 
         ...mapActions('net', {
             readAllNetworks: 'readAll',
+        }),
+
+        ...mapActions('wildnet', {
+            readWildNets: 'readAll',
+            setServer: 'wildServer',
         }),
 
         Refresh() {
@@ -481,6 +550,34 @@ export default {
             this.dialogCreateMultihop = false;
 
         },
+
+        startCreateWilderness() {
+            this.dialogWilderness = true;
+            this.wildList = {
+                selected: { "text": "", "value": "" },
+                items: []
+            }
+            for (let i = 0; i < this.wildnets.length; i++) {
+                this.wildList.items[i] = { "text": this.wildnets[i].netName, "value": this.wildnets[i].id }
+            }
+            this.wildList.selected = this.wildList.items[0];
+
+            this.serverList = {
+                selected: { "text": "", "value": "" },
+                items: []
+            }
+            for (let i = 0; i < this.servers.length; i++) {
+                this.serverList.items[i] = { "text": this.servers[i].description, "value": this.servers[i].name }
+            }
+        },
+
+        loginWild() {
+            this.dialogWilderness = false;
+
+            var url = this.wildServer + "/?referer=" + window.location.origin
+            window.open( url )
+        },
+
 
         removeSubscription(item) {
             this.inDelete = true;
