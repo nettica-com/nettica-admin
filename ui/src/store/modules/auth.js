@@ -94,7 +94,7 @@ const actions = {
       .then(resp => {
         if (data.server) {
           TokenService.saveWildToken(resp)
-          ApiService.setWildHeader()
+          ApiService.setServer()  // reset to server
         } else {
           TokenService.saveToken(resp)
           commit('token', resp)

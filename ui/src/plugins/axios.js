@@ -11,6 +11,7 @@ if (process.env.NODE_ENV === "development"){
 }
 
 Vue.axios.defaults.baseURL = baseUrl;
+TokenService.saveServer(baseUrl);
 
 Vue.axios.interceptors.response.use(function (response) {
   return response;
