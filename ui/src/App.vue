@@ -60,26 +60,35 @@
     },
 
     mounted() {
-      if (this.requiresAuth || location.pathname == "/") {
-        if (this.isAuthenticated == false) {
-          if (this.$route.query.code && this.$route.query.state) {
-              try {
-                this.oauth2_exchange({
-                  code: this.$route.query.code,
-                  state: this.$route.query.state
-              })
-            } catch (e) {
-              this.notification = {
-                show: true,
-                color: 'error',
-                text: e.message,
+      if (this.$route.query.server && this.$route.query.code && this.$route.query.state && this.$route.query.client_id) {
+        this.oauth2_exchange({
+          code: this.$route.query.code,
+          state: this.$route.query.state,
+          client_id: this.$route.query.client_id,
+          server: this.$route.query.server
+        })
+      } else {
+        if (this.requiresAuth || location.pathname == "/") {
+          if (this.isAuthenticated == false) {
+            if (this.$route.query.code && this.$route.query.state) {
+                try {
+                  this.oauth2_exchange({
+                    code: this.$route.query.code,
+                    state: this.$route.query.state
+                })
+              } catch (e) {
+                this.notification = {
+                  show: true,
+                  color: 'error',
+                  text: e.message,
+                }
               }
-            }
-          } else {
-            console.log("this.$route.path = %s", this.$route.path);
-            if (!location.pathname.startsWith("/join")) {
-              //alert("this.$route.path = " + this.$route.path + "location.pathname=" + location.pathname)
-              this.oauth2_url()
+            } else {
+              console.log("this.$route.path = %s", this.$route.path);
+              if (!location.pathname.startsWith("/join")) {
+                //alert("this.$route.path = " + this.$route.path + "location.pathname=" + location.pathname)
+                this.oauth2_url()
+              }
             }
           }
         }

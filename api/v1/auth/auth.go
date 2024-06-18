@@ -34,6 +34,8 @@ func oauth2URL(c *gin.Context) {
 	cacheDb := c.MustGet("cache").(*cache.Cache)
 	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
 
+	referer := c.Request.URL.Query().Get("referer")
+
 	var err error
 	var state, clientId, codeUrl, audience, redirect_uri string
 	if c.Request.URL.Query().Get("redirect_uri") == "com.nettica.agent://callback/agent" {
@@ -81,6 +83,9 @@ func oauth2URL(c *gin.Context) {
 		// save clientId and state so we can retrieve for verification
 		cacheDb.Set(clientId, state, 5*time.Minute)
 		codeUrl = oauth2Client.CodeUrl(state)
+		if referer != "" {
+			codeUrl = codeUrl + "&referer=" + referer
+		}
 	}
 
 	data := &model.Auth{

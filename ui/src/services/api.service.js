@@ -7,6 +7,18 @@ const ApiService = {
     Vue.axios.defaults.headers['Authorization'] = `Bearer ${TokenService.getToken()}`;
   },
 
+  setWildHeader() {
+    Vue.axios.defaults.headers['Authorization'] = `Bearer ${TokenService.getWildToken()}`;
+  },
+
+  setServer() {
+    Vue.axios.defaults.baseURL = TokenService.getServer() + "/api/v1.0";
+  },
+
+  setWildServer() {
+    Vue.axios.defaults.baseURL = TokenService.getWildServer() + "/api/v1.0";
+  },
+
   get(resource) {
     return Vue.axios.get(resource)
       .then(response => response.data)

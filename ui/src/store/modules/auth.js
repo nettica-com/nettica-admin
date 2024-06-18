@@ -80,6 +80,15 @@ const actions = {
 
   oauth2_exchange({ commit, dispatch }, data) {
     data.clientId = TokenService.getClientId()
+
+    if (data.server) {
+      ApiKeyService.saveServer(data.server)
+
+    } else if (this.$route.query.referer) {
+      var url = window.location.origin + "/consent/" + this.$route.query + "client_id=" + data.clientId
+      window.location.href = url
+    }
+
     ApiService.post("/auth/oauth2_exchange", data)
       .then(resp => {
         commit('authStatus', 'success')

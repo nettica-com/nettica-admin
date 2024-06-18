@@ -17,6 +17,16 @@ const routes = [
     }
   },
   {
+    path: '/consent*',
+    name: 'consent',
+    component: function () {
+      return import(/* webpackChunkName: "Consent" */ '../views/Consent.vue')
+    },
+    meta: {
+      requiresAuth: false
+    }
+  },
+  {
     path: '/devices',
     name: 'devices',
     component: function () {
