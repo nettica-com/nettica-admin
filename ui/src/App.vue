@@ -67,9 +67,10 @@
         this.oauth2_exchange({
           code: this.$route.query.code,
           state: this.$route.query.state,
-          client_id: this.$route.query.client_id,
+          clientId: this.$route.query.client_id,
           server: this.$route.query.server
-        })
+        });
+        return
       } else if (this.$route.query && this.$route.query.referer) {
         TokenService.saveReferer(this.$route.query.referer)
       } 
