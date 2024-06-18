@@ -63,6 +63,7 @@
     mounted() {
       if (this.$route && this.$route.query && this.$route.query.server &&
           this.$route.query.code && this.$route.query.state && this.$route.query.client_id) {
+        TokenService.saveWildServer(this.$route.query.server)
         this.oauth2_exchange({
           code: this.$route.query.code,
           state: this.$route.query.state,
@@ -71,42 +72,39 @@
         })
       } else if (this.$route.query && this.$route.query.referer) {
         TokenService.saveReferer(this.$route.query.referer)
-//        var url = window.location.origin + "/consent/" + this.$route.query + "client_id=" + data.clientId
-//        window.location.href = url
-      } else {
-        if (this.requiresAuth || location.pathname == "/") {
-          if (this.isAuthenticated == false) {
-            if (this.$route.query.code && this.$route.query.state) {
+      } 
+      if (this.requiresAuth || location.pathname == "/") {
+        if (this.isAuthenticated == false) {
+          if (this.$route.query.code && this.$route.query.state) {
 
-                var referer = TokenService.getReferer()
-                var client_id = TokenService.getClientId()
-                if (referer) {
-                  var url = "/consent?referer=" + referer + "&client_id=" + client_id + "&code=" + this.$route.query.code + "&state=" + this.$route.query.state;
-                  this.$router.push(url).catch(err => {
-                    if (err.name != "NavigationDuplicated") {
-                      throw err;
-                    }
-                  })
-                } else {
-                  try {
-                    this.oauth2_exchange({
-                      code: this.$route.query.code,
-                      state: this.$route.query.state
-                  })
-                } catch (e) {
-                  this.notification = {
-                    show: true,
-                    color: 'error',
-                    text: e.message,
+              var referer = TokenService.getReferer()
+              var client_id = TokenService.getClientId()
+              if (referer) {
+                var url = "/consent?referer=" + referer + "&client_id=" + client_id + "&code=" + this.$route.query.code + "&state=" + this.$route.query.state;
+                this.$router.push(url).catch(err => {
+                  if (err.name != "NavigationDuplicated") {
+                    throw err;
                   }
+                })
+              } else {
+                try {
+                  this.oauth2_exchange({
+                    code: this.$route.query.code,
+                    state: this.$route.query.state
+                })
+              } catch (e) {
+                this.notification = {
+                  show: true,
+                  color: 'error',
+                  text: e.message,
                 }
               }
-            } else {
-              console.log("this.$route.path = %s", this.$route.path);
-              if (!location.pathname.startsWith("/join")) {
-                //alert("this.$route.path = " + this.$route.path + "location.pathname=" + location.pathname)
-                this.oauth2_url()
-              }
+            }
+          } else {
+            console.log("this.$route.path = %s", this.$route.path);
+            if (!location.pathname.startsWith("/join")) {
+              //alert("this.$route.path = " + this.$route.path + "location.pathname=" + location.pathname)
+              this.oauth2_url()
             }
           }
         }

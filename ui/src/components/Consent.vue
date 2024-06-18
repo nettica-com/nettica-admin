@@ -25,14 +25,17 @@
         </v-col>
       </v-row>
       <v-card-actions>
+        <v-spacer></v-spacer>
         <v-btn color="success" v-on:click="accept">Accept</v-btn>
         <v-btn color="error" v-on:click="reject">Reject</v-btn>
+        <v-spacer></v-spacer>
       </v-card-actions>
     </v-card>
   </v-container>
 </template>
 <script>
 import { mapActions, mapGetters } from 'vuex'
+import TokenService from "../services/token.service";
 
 export default {
   name: 'Consent',
@@ -53,14 +56,6 @@ export default {
 
 
   mounted() {
-    this.id = this.$route.query.id
-    this.activate(this.$route.query.id)
-    this.notification = {
-      show: true,
-      text: this.$route.query.id + " joined",
-      color: "success",
-      timeout: 5000,
-    }
     //alert(this.$route.query.id + " joined")
   },
 
@@ -70,12 +65,15 @@ export default {
     }),
 
     accept() {
-      var url = this.$router.query.referer + "/" + this.$router.query + "&server=" + this.window.location.hostname
-      location.replace(url)
+      TokenService.destroyReferer();
+      var url = this.$route.query.referer + "/" + this.$route.query + "&server=" + window.location.origin;
+      window.location.replace(url);
     },
 
     reject() {
-      location.replace(this.$router.query.referer)
+      TokenService.destroyReferer();
+      TokenService.destroyWildServer();
+      window.location.replace(this.$route.query.referer)
     },
   },
 
