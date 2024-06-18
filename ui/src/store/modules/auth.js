@@ -82,11 +82,7 @@ const actions = {
     data.clientId = TokenService.getClientId()
 
     if (data.server) {
-      ApiKeyService.saveServer(data.server)
-
-    } else if (this.$route.query.referer) {
-      var url = window.location.origin + "/consent/" + this.$route.query + "client_id=" + data.clientId
-      window.location.href = url
+      TokenService.saveWildServer(data.server)
     }
 
     ApiService.post("/auth/oauth2_exchange", data)

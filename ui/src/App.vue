@@ -60,13 +60,17 @@
     },
 
     mounted() {
-      if (this.$route.query.server && this.$route.query.code && this.$route.query.state && this.$route.query.client_id) {
+      if (this.$route && this.$route.query && this.$route.query.server &&
+          this.$route.query.code && this.$route.query.state && this.$route.query.client_id) {
         this.oauth2_exchange({
           code: this.$route.query.code,
           state: this.$route.query.state,
           client_id: this.$route.query.client_id,
           server: this.$route.query.server
         })
+      } else if (this.$route.query && this.$route.query.referer) {
+        var url = window.location.origin + "/consent/" + this.$route.query + "client_id=" + data.clientId
+        window.location.href = url
       } else {
         if (this.requiresAuth || location.pathname == "/") {
           if (this.isAuthenticated == false) {
