@@ -194,7 +194,7 @@
                 </v-card-text>
                 <v-card-actions v-if="wild">
                     <v-spacer />
-                    <v-btn :disabled="!valid" color="success" @click="createWild()">
+                    <v-btn :disabled="!valid" color="success" @click="createWilderness">
                         Submit
                         <v-icon right dark>mdi-check-outline</v-icon>
                     </v-btn>
@@ -210,6 +210,7 @@
 <script>
 import { mapActions, mapGetters } from 'vuex'
 import TokenService from '../services/token.service';
+import ApiService from '../services/api.service';
 
 export default {
     name: 'Services',
@@ -285,10 +286,16 @@ export default {
             servers: 'server/servers',
             nets: 'net/nets',
             wildnets: 'wildnet/nets',
+            devices: 'device/devices',
+            vpns: 'vpn/vpns',
         }),
     },
 
     mounted() {
+
+        ApiService.setServer()
+        ApiService.setHeader()
+
         this.readAllNetworks()
         this.readSubscriptions(this.authuser.email)
         this.readServices(this.authuser.email)
@@ -313,11 +320,20 @@ export default {
         }),
 
         ...mapActions('service', {
+            errorService: 'error',
             readServices: 'read',
             createService: 'create',
             updateService: 'update',
             deleteService: 'delete',
         }),
+
+        ...mapActions('device', {
+            createDevice: 'create',
+        }),
+
+        ...mapActions("vpn", {
+            createVPN: 'create',
+        }), 
 
         ...mapActions('server', {
             readServers: 'read',
@@ -525,7 +541,7 @@ export default {
             this.egress.serviceGroup = this.egressServer.serviceGroup
             this.egress.apiKey = this.egressServer.serviceApiKey
             this.egress.net = {}
-            this.egress.net.netName = this.netList.selected.value;
+            this.egress.net.netName = this.netList.selected.text;
             this.egress.net.default = {}
             this.egress.net.default.dns = []
             this.egress.vpn = {}
@@ -576,6 +592,96 @@ export default {
 
             var url = this.wildServer + "/?referer=" + window.location.origin
             window.open( url )
+        },
+
+        async createWilderness() {
+            console.log("createWilderness");
+            var device = {
+
+            }
+            for (let i = 0; i < this.serverList.items.length; i++) {
+                if (this.serverList.items[i].value == this.serverList.selected.value) {
+                    this.server = this.servers[i];
+                }
+            }
+
+            var range = this.server.portMax - this.server.portMin + 1;
+            var port = this.server.portMin + Math.floor(Math.random() * range);
+
+            this.service = {}
+            this.service.defaultSubnet = this.server.defaultSubnet;
+            this.service.servicePort = port;
+            this.service.net = {}
+            this.service.net.netName = this.wildList.selected.text;
+            this.service.net.id = this.wildList.selected.value;  
+            this.service.net.default = {}
+            this.service.net.default.dns = []
+
+            var vpn = {
+                name: this.server.name + "." + this.wildList.selected.text,
+                netName: this.wildList.selected.text,
+                netId: this.wildList.selected.value,
+                type: "Service",
+                description: this.server.description,
+                // deviceid: this.devices[0].id,
+                current: {
+                    endpoint: this.server.ipAddress + ":" + port,
+                    listenPort: port,
+                    subnetRouting: true,
+                }
+            }
+
+            //this.service.device = this.devices[0];
+            //this.service.vpn = this.vpns[0];
+            this.service.description = this.server.description
+            this.service.name = this.server.name
+            this.service.serviceGroup = this.server.serviceGroup
+            this.service.serviceType = this.svcList.selected.value;
+            this.service.email = this.authuser.email;
+
+            device.name = this.svcList.selected.value.toLowerCase() + "." + this.server.name;
+
+            // switch to the wilderness
+            ApiService.setWildServer();
+            ApiService.setWildHeader();
+            ApiService.post("/device", device)
+                .then( d => {
+                //this.errorService(`Device created: ${d.name}`);
+                console.log("device created: ", d);
+                vpn.deviceid = d.id;
+
+                ApiService.setWildServer();
+                ApiService.setWildHeader();
+                ApiService.post("/vpn", vpn)
+                    .then( v => {
+                        console.log("vpn created: ", v);
+                        //this.errorService(`VPN created: ${v.name}`);
+
+                    this.service.device = d;   
+                    this.service.vpn = v;  
+
+                    ApiService.setServer();
+                    ApiService.setHeader();
+                    this.createService(this.service);
+                    this.Refresh();
+
+                    })
+                    .catch(error => {
+                        console.log("error: ", error)
+                    if (error.response) {
+                        this.errorService(error.response.data.error)
+                    }
+                    })
+            })
+            .catch(error => {
+                console.log("error: ", error)
+                if (error.response) {
+                this.errorService(error.response.data.error)
+                }
+            })
+
+
+            this.dialogWilderness = false;
         },
 
 

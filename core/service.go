@@ -1,8 +1,12 @@
 package core
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"io"
+	"net"
+	"net/http"
 	"os"
 	"reflect"
 	"sort"
@@ -117,9 +121,11 @@ func CreateService(service *model.Service) (*model.Service, error) {
 		}
 	} else {
 		// check if net exists
-		service.Net, err = ReadNet(service.Net.Id)
+		net, err := ReadNet(service.Net.Id)
 		if err != nil {
-			return nil, err
+			log.Infof("Failed to read net: %s - it may be remote", service.Net.Id)
+		} else {
+			service.Net = net
 		}
 		if service.Net == nil {
 			return nil, errors.New("net does not exist")
@@ -127,106 +133,106 @@ func CreateService(service *model.Service) (*model.Service, error) {
 		log.Infof("Using existing net: %s", service.Net.NetName)
 	}
 
-	if service.VPN == nil {
-		return nil, errors.New("vpn is nil")
-	}
-
 	// Create a device for the service container
+	if service.Device == nil {
 
-	service.Device = &model.Device{
-		AccountID:   service.AccountID,
-		Name:        strings.ToLower(service.ServiceType) + "." + service.Net.NetName,
-		Description: service.Description,
-		Enable:      true,
-		Server:      os.Getenv("SERVER"),
-		Type:        "Service",
-		Platform:    "Linux",
-		Created:     time.Now().UTC(),
-		Updated:     time.Now().UTC(),
-		CreatedBy:   service.CreatedBy,
-		UpdatedBy:   service.CreatedBy,
+		service.Device = &model.Device{
+			AccountID:   service.AccountID,
+			Name:        strings.ToLower(service.ServiceType) + "." + service.Net.NetName,
+			Description: service.Description,
+			Enable:      true,
+			Server:      os.Getenv("SERVER"),
+			Type:        "Service",
+			Platform:    "Linux",
+			Created:     time.Now().UTC(),
+			Updated:     time.Now().UTC(),
+			CreatedBy:   service.CreatedBy,
+			UpdatedBy:   service.CreatedBy,
+		}
+
+		// Create the device
+		service.Device, err = CreateDevice(service.Device)
+		if err != nil {
+			return nil, err
+		}
+	} // otherwise it was created remotely
+
+	if service.VPN == nil {
+
+		// create a default vpn using the net
+		var c time.Time = time.Now().UTC()
+		var u time.Time = time.Now().UTC()
+
+		vpn := model.VPN{
+			AccountID: service.AccountID,
+			Name:      strings.ToLower(service.ServiceType) + "." + service.Net.NetName,
+			Enable:    true,
+			NetId:     service.Net.Id,
+			NetName:   service.Net.NetName,
+			DeviceID:  service.Device.Id,
+			Current:   service.VPN.Current,
+			Default:   service.Net.Default,
+			Type:      "Service",
+			Created:   &c,
+			Updated:   &u,
+			CreatedBy: service.CreatedBy,
+			UpdatedBy: service.CreatedBy,
+		}
+
+		// Failsafe entry for DNS.  Service will break without proper DNS setup.  If nothing is set use google
+		if len(vpn.Current.Dns) == 0 {
+			vpn.Current.Dns = append(vpn.Current.Dns, "8.8.8.8")
+		}
+
+		// Configure the routing for the relay/egress vpn
+		if vpn.Current.PostUp == "" {
+			vpn.Current.PostUp = fmt.Sprintf("iptables -A FORWARD -i %s -j ACCEPT; iptables -A FORWARD -o %s -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE", vpn.NetName, vpn.NetName)
+		}
+		if vpn.Current.PostDown == "" {
+			vpn.Current.PostDown = fmt.Sprintf("iptables -D FORWARD -i %s -j ACCEPT; iptables -D FORWARD -o %s -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE", vpn.NetName, vpn.NetName)
+		}
+		// Sanitize the scripts
+		vpn.Current.PreUp = Sanitize(vpn.Current.PreUp)
+		vpn.Current.PostUp = Sanitize(vpn.Current.PostUp)
+		vpn.Current.PreDown = Sanitize(vpn.Current.PreDown)
+		vpn.Current.PostDown = Sanitize(vpn.Current.PostDown)
+
+		vpn.Current.PersistentKeepalive = 23
+
+		if service.ServiceType != "Ingress" && service.ServiceType != "Egress" {
+			vpn.Current.SyncEndpoint = true
+		}
+
+		switch service.ServiceType {
+		case "Relay":
+			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Current.Address...)
+			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Default.Address...)
+
+		case "Tunnel":
+			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Current.Address...)
+			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Default.Address...)
+			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, "0.0.0.0/0")
+			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, "::/0")
+
+		case "Ingress":
+			vpn.Role = "Ingress"
+			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Current.Address...)
+			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Default.Address...)
+			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, "0.0.0.0/0")
+			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, "::/0")
+
+		case "Egress":
+			vpn.Role = "Egress"
+			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Current.Address...)
+			vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, "0.0.0.0/0")
+
+		}
+
+		service.VPN, err = CreateVPN(&vpn)
+		if err != nil {
+			return nil, err
+		}
 	}
-
-	// Create the device
-	service.Device, err = CreateDevice(service.Device)
-	if err != nil {
-		return nil, err
-	}
-
-	// create a default vpn using the net
-	var c time.Time = time.Now().UTC()
-	var u time.Time = time.Now().UTC()
-
-	vpn := model.VPN{
-		AccountID: service.AccountID,
-		Name:      strings.ToLower(service.ServiceType) + "." + service.Net.NetName,
-		Enable:    true,
-		NetId:     service.Net.Id,
-		NetName:   service.Net.NetName,
-		DeviceID:  service.Device.Id,
-		Current:   service.VPN.Current,
-		Default:   service.Net.Default,
-		Type:      "Service",
-		Created:   &c,
-		Updated:   &u,
-		CreatedBy: service.CreatedBy,
-		UpdatedBy: service.CreatedBy,
-	}
-
-	// Failsafe entry for DNS.  Service will break without proper DNS setup.  If nothing is set use google
-	if len(vpn.Current.Dns) == 0 {
-		vpn.Current.Dns = append(vpn.Current.Dns, "8.8.8.8")
-	}
-
-	// Configure the routing for the relay/egress vpn
-	if vpn.Current.PostUp == "" {
-		vpn.Current.PostUp = fmt.Sprintf("iptables -A FORWARD -i %s -j ACCEPT; iptables -A FORWARD -o %s -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE", vpn.NetName, vpn.NetName)
-	}
-	if vpn.Current.PostDown == "" {
-		vpn.Current.PostDown = fmt.Sprintf("iptables -D FORWARD -i %s -j ACCEPT; iptables -D FORWARD -o %s -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE", vpn.NetName, vpn.NetName)
-	}
-	// Sanitize the scripts
-	vpn.Current.PreUp = Sanitize(vpn.Current.PreUp)
-	vpn.Current.PostUp = Sanitize(vpn.Current.PostUp)
-	vpn.Current.PreDown = Sanitize(vpn.Current.PreDown)
-	vpn.Current.PostDown = Sanitize(vpn.Current.PostDown)
-
-	vpn.Current.PersistentKeepalive = 23
-
-	if service.ServiceType != "Ingress" && service.ServiceType != "Egress" {
-		vpn.Current.SyncEndpoint = true
-	}
-
-	switch service.ServiceType {
-	case "Relay":
-		vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Current.Address...)
-		vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Default.Address...)
-
-	case "Tunnel":
-		vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Current.Address...)
-		vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Default.Address...)
-		vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, "0.0.0.0/0")
-		vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, "::/0")
-
-	case "Ingress":
-		vpn.Role = "Ingress"
-		vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Current.Address...)
-		vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Default.Address...)
-		vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, "0.0.0.0/0")
-		vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, "::/0")
-
-	case "Egress":
-		vpn.Role = "Egress"
-		vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, vpn.Current.Address...)
-		vpn.Current.AllowedIPs = append(vpn.Current.AllowedIPs, "0.0.0.0/0")
-
-	}
-
-	service.VPN, err = CreateVPN(&vpn)
-	if err != nil {
-		return nil, err
-	}
-
 	// check if service is valid
 	errs := service.IsValid()
 	if len(errs) != 0 {
@@ -321,14 +327,23 @@ func DeleteService(id string) error {
 	service := v.(*model.Service)
 
 	if service.VPN.Id != "" {
-		err = DeleteVPN(service.VPN.Id)
-		if err != nil {
-			log.Errorf("failed to delete vpn %s (%s)", service.VPN.Id, service.VPN.Name)
-			return err
+		if service.Server == "" {
+			err = DeleteVPN(service.VPN.Id)
+			if err != nil {
+				log.Errorf("failed to delete vpn %s (%s)", service.VPN.Id, service.VPN.Name)
+				return err
+			}
+		} else {
+			// make a device api call to the remote server to delete the vpn
+			err = RemoteDelete(vpnAPI, service.Server, service.Device.ApiKey, service.VPN.Id)
+			if err != nil {
+				log.Errorf("failed to delete remote vpn server %s  key %s vpn %s (%s)", service.Server, service.Device.ApiKey, service.VPN.Id, service.VPN.Name)
+			}
+
 		}
 	}
 
-	if service.Net.Id != "" {
+	if service.Server == "" && service.Net.Id != "" {
 		vpns, err := ReadVPN2("netid", service.Net.Id)
 		if err != nil {
 			log.Errorf("failed to delete net %s", service.Net.Id)
@@ -344,13 +359,19 @@ func DeleteService(id string) error {
 	}
 
 	if service.Device.Id != "" {
-		err = DeleteDevice(service.Device.Id)
-		if err != nil {
-			log.Errorf("failed to delete device %s (%s)", service.Device.Id, service.Device.Name)
-			return err
+		if service.Server == "" {
+			err = DeleteDevice(service.Device.Id)
+			if err != nil {
+				log.Errorf("failed to delete device %s (%s)", service.Device.Id, service.Device.Name)
+				return err
+			}
+		} else {
+			err = RemoteDelete(deviceAPI, service.Server, service.Device.ApiKey, service.Device.Id)
+			if err != nil {
+				log.Errorf("failed to delete remote device server %s  key %s device %s (%s)", service.Server, service.Device.ApiKey, service.Device.Id, service.Device.Name)
+			}
 		}
 	}
-
 	// Now delete the service
 
 	err = mongo.Delete(id, "id", "services")
@@ -359,6 +380,75 @@ func DeleteService(id string) error {
 	}
 
 	return nil
+}
+
+const (
+	deviceAPI = "%s/api/v1.0/device/%s"
+	vpnAPI    = "%s/api/v1.0/vpn/%s"
+)
+
+// RemoteDelete service
+func RemoteDelete(api string, server string, key string, id string) error {
+	// make a http DELETE request to the remote server
+	var client *http.Client
+
+	if strings.HasPrefix(server, "http:") {
+		client = &http.Client{
+			Timeout: time.Second * 10,
+		}
+	} else {
+		// Create a transport like http.DefaultTransport, but with the configured LocalAddr
+		transport := &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			Dial: (&net.Dialer{
+				Timeout:   5 * time.Second,
+				KeepAlive: 60 * time.Second,
+			}).Dial,
+			TLSHandshakeTimeout: 10 * time.Second,
+		}
+		client = &http.Client{
+			Transport: transport,
+		}
+
+	}
+
+	var reqURL string = fmt.Sprintf(api, server, id)
+	log.Infof("  DELETE %s", reqURL)
+	// Create a context with a 15 second timeout
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(15*time.Second))
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, "DELETE", reqURL, nil)
+	if err != nil {
+		return err
+	}
+	if req != nil {
+		req.Header.Set("X-API-KEY", key)
+		req.Header.Set("User-Agent", "nettica-admin/2.0")
+		req.Header.Set("Content-Type", "application/json")
+	}
+	resp, err := client.Do(req)
+	if err == nil {
+		if resp.StatusCode == 401 {
+			return fmt.Errorf("Unauthorized")
+		} else if resp.StatusCode != 200 {
+			log.Errorf("Response Error Code: %v", resp.StatusCode)
+			return fmt.Errorf("response error code: %v", resp.StatusCode)
+		} else {
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				log.Errorf("error reading body %v", err)
+			}
+			log.Debugf("%s", string(body))
+			resp.Body.Close()
+
+			return nil
+		}
+	} else {
+		log.Errorf("ERROR: %v, continuing", err)
+	}
+
+	return err
 }
 
 func ReadServicesForAccount(accountId string) ([]*model.Service, error) {

@@ -103,6 +103,13 @@ const actions = {
         commit('authStatus', 'success')
       })
       .catch(err => {
+        console.log("oauth2_exchange error", err);
+        if (data.server) {
+          TokenService.destroyWildToken()
+          TokenService.destroyWildServer()
+        } else {
+          TokenService.destroyToken()
+        }
         commit('authStatus', 'error')
         commit('error', err);
         commit('logout')

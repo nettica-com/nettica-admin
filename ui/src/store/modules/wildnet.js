@@ -49,10 +49,11 @@ const actions = {
         commit('nets', resp)
       })
       .catch(error => {
+        TokenService.destroyWildToken()
+        TokenService.destroyWildServer()
+
         if (error.response) {
           commit('error', error.response.data.error)
-          ApiService.destroyWildToken()
-          ApiService.destroyWildServer()
         }
       })
       ApiService.setServer()
