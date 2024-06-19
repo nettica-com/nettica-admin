@@ -619,6 +619,7 @@ export default {
 
             var vpn = {
                 name: this.server.name + "." + this.wildList.selected.text,
+                enable: true,
                 netName: this.wildList.selected.text,
                 netId: this.wildList.selected.value,
                 type: "Service",
@@ -640,6 +641,8 @@ export default {
             this.service.email = this.authuser.email;
 
             device.name = this.svcList.selected.value.toLowerCase() + "." + this.server.name;
+            device.description = `nettica.com ${this.svcList.selected.value.toLowerCase()} service in ${this.server.description}`;
+            device.enable = true;
 
             // switch to the wilderness
             ApiService.setWildServer();
