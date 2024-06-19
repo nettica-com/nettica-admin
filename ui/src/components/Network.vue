@@ -531,7 +531,8 @@ text {
 var D3Network = window['vue-d3-network']
 
 
-import { mapActions, mapGetters } from 'vuex'
+import { mapActions, mapGetters } from 'vuex';
+import ApiService from '../services/api.service';
 
 export default {
     name: 'Networks',
@@ -1148,23 +1149,21 @@ export default {
 
         async forceFileDownload(vpn) {
             console.log("vpn = ", vpn)
-            await this.readvpnconfig(vpn)
-            // sleep for one second
-            await new Promise(r => setTimeout(r, 1000));
-            let config = this.getvpnconfig(vpn.id)
-            if (!config) {
-                console.log("failed to get config")
-                this.errorNet('Failed to download device config');
-                return
-            }
-            console.log('config', config)
 
-            const url = window.URL.createObjectURL(new Blob([config]))
-            const link = document.createElement('a')
-            link.href = url
-            link.setAttribute('download', vpn.name.split(' ').join('-') + '-' + vpn.netName.split(' ').join('-') + '.zip') //or any other extension
-            document.body.appendChild(link)
-            link.click()
+            ApiService.getWithConfig(`/vpn/${vpn.id}/config?qrcode=false`, { responseType: 'arraybuffer' })
+                .then( config => {
+                    const url = window.URL.createObjectURL(new Blob([config]))
+                    const link = document.createElement('a')
+                    link.href = url
+                    link.setAttribute('download', vpn.name.split(' ').join('-') + '-' + vpn.netName.split(' ').join('-') + '.zip') //or any other extension
+                    document.body.appendChild(link)
+                    link.click()
+                })
+                .catch( error => {
+                    console.log("error = ", error)
+                    this.errorNet('Failed to download device config');
+                })
+
         },
 
     }

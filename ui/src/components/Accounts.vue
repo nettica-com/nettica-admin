@@ -223,6 +223,7 @@
 </template>
 <script>
 import { mapActions, mapGetters } from 'vuex'
+import ApiService from '@/services/api.service'
 
 export default {
     name: 'Accounts',
@@ -628,22 +629,20 @@ export default {
                 }
             }
 
-            var result = await this.createAccount(this.account)
-
-            console.log("result = ", result)
-            // sleep one second
-
-            await new Promise(r => setTimeout(r, 1000));
-
-            console.log("create_result = ", this.create_result)
-
-            if ((this.create_result) && (this.sendEmail)) {
-                this.emailUser(this.create_result)
-            }
+            ApiService.post('/accounts', this.account)
+                .then( a => {
+                    console.log("result = ", a)
+                    if (this.sendEmail) {
+                        this.emailUser(a)
+                    }
+                })
+                .catch(e => {
+                    console.log("error = ", e)
+                    this.errorAccount(e)
+                });
 
             this.dialogCreate = false;
             this.Refresh()
-
 
         },
 

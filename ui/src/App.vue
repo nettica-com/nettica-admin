@@ -64,15 +64,14 @@
       if (this.$route && this.$route.query && this.$route.query.server &&
           this.$route.query.code && this.$route.query.state && this.$route.query.client_id) {
         TokenService.saveWildServer(this.$route.query.server)
-        await this.oauth2_exchange({
+        this.oauth2_exchange({
           code: this.$route.query.code,
           state: this.$route.query.state,
           clientId: this.$route.query.client_id,
           server: this.$route.query.server
+        }).then(() => {
+            //window.location.replace("/");
         });
-
-        //  window.location.replace("/");
-        return
       } else if (this.$route.query && this.$route.query.referer) {
         TokenService.saveReferer(this.$route.query.referer)
       } 

@@ -639,6 +639,7 @@ export default {
             this.service.serviceGroup = this.server.serviceGroup
             this.service.serviceType = this.svcList.selected.value;
             this.service.email = this.authuser.email;
+            this.service.server = this.wildServer;
 
             device.name = this.svcList.selected.value.toLowerCase() + "." + this.server.name;
             device.description = `nettica.com ${this.svcList.selected.value.toLowerCase()} service in ${this.server.description}`;
@@ -649,7 +650,7 @@ export default {
             ApiService.setWildHeader();
             ApiService.post("/device", device)
                 .then( d => {
-                //this.errorService(`Device created: ${d.name}`);
+                this.errorService(`Device created: ${d.name}`);
                 console.log("device created: ", d);
                 vpn.deviceid = d.id;
 
@@ -658,32 +659,39 @@ export default {
                 ApiService.post("/vpn", vpn)
                     .then( v => {
                         console.log("vpn created: ", v);
-                        //this.errorService(`VPN created: ${v.name}`);
+                        this.errorService(`VPN created: ${v.name}`);
 
                     this.service.device = d;   
                     this.service.vpn = v;  
 
                     ApiService.setServer();
                     ApiService.setHeader();
-                    this.createService(this.service);
-                    this.Refresh();
-
+                    this.createService(this.service)
+                        .then( s => {
+                            console.log("service created: ", s);
+                            this.errorService(`Service created: ${s.name}`);
+                            this.Refresh();
+                        })
+                        .catch(error => {
+                            console.log("error: ", error)
+                            if (error.response) {
+                                this.errorService(error.response.data.error)
+                            }
+                        });
                     })
                     .catch(error => {
                         console.log("error: ", error)
-                    if (error.response) {
-                        this.errorService(error.response.data.error)
-                    }
-                    })
+                        if (error.response) {
+                            this.errorService(error.response.data.error)
+                        }
+                    });
             })
             .catch(error => {
                 console.log("error: ", error)
                 if (error.response) {
                 this.errorService(error.response.data.error)
                 }
-            })
-
-
+            });
             this.dialogWilderness = false;
         },
 
