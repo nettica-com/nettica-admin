@@ -298,6 +298,13 @@ func UpdateService(Id string, service *model.Service) (*model.Service, error) {
 		return nil, errors.New("failed to validate service")
 	}
 
+	if service.ApiKey == "" {
+		service.ApiKey = current.ApiKey
+	}
+	if service.Server == "" {
+		service.Server = current.Server
+	}
+
 	service.Updated = time.Now().UTC()
 
 	err = mongo.Serialize(service.Id, "id", "services", service)
