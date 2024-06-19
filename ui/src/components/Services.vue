@@ -311,6 +311,15 @@ export default {
 
     },
 
+    watch: {
+        subscriptions: function (val) {
+            console.log("subscriptions", val)
+        },
+        services: function (val) {
+            console.log("services", val)
+        },
+    },
+
 
     methods: {
         ...mapActions('subscription', {
@@ -666,7 +675,7 @@ export default {
 
                     ApiService.setServer();
                     ApiService.setHeader();
-                    this.createService(this.service)
+                    ApiService.post("/service", this.service)
                         .then( s => {
                             console.log("service created: ", s);
                             this.errorService(`Service created: ${s.name}`);
