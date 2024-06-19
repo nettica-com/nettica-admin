@@ -781,6 +781,7 @@ func ReadAllServers() ([]*model.Server, error) {
 			var server *model.Server
 			err = cursor.Decode(&server)
 			if err == nil {
+				server.ServiceApiKey = ""
 				servers = append(servers, server)
 			}
 		}
