@@ -37,8 +37,6 @@ func readServer(c *gin.Context) {
 
 func updateServer(c *gin.Context) {
 	var data model.Server
-	c.JSON(http.StatusNotImplemented, gin.H{"error": "not implemented"})
-	return
 
 	if err := c.ShouldBindJSON(&data); err != nil {
 		log.WithFields(log.Fields{
