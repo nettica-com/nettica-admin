@@ -107,6 +107,7 @@ const actions = {
         if (data.server) {
           TokenService.destroyWildToken()
           TokenService.destroyWildServer()
+          ApiService.setServer()  // reset to server
         } else {
           TokenService.destroyToken()
         }

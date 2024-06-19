@@ -18,6 +18,7 @@
   import MainMenu from "./components/Menu";
   import Footer from "./components/Footer";
   import TokenService from "./services/token.service";
+  import ApiService from "./services/api.service";
   import {mapActions, mapGetters} from "vuex";
 
   export default {
@@ -60,18 +61,21 @@
       this.$vuetify.theme.dark = true;
     },
 
-    async mounted() {
+
+
+    mounted() {
       if (this.$route && this.$route.query && this.$route.query.server &&
           this.$route.query.code && this.$route.query.state && this.$route.query.client_id) {
-        TokenService.saveWildServer(this.$route.query.server)
-        this.oauth2_exchange({
+        exchange({
           code: this.$route.query.code,
           state: this.$route.query.state,
           clientId: this.$route.query.client_id,
           server: this.$route.query.server
-        }).then(() => {
-            //window.location.replace("/");
+        }).catch(err => {
+          console.log("exchange error", err);
         });
+
+        return;
       } else if (this.$route.query && this.$route.query.referer) {
         TokenService.saveReferer(this.$route.query.referer)
       } 
@@ -223,4 +227,32 @@
       }
     }
   };
+
+  function exchange(x) {
+    return new Promise((resolve, reject) => {
+      // this oauth2_exchange is strictly for the wilderness
+      // this will not screw up the current server's login state
+      
+      TokenService.saveWildServer(x.server)
+      ApiService.setWildServer()
+      var token;
+      ApiService.post("/auth/oauth2_exchange", x)
+      .then(resp => {
+          console.log("wild exchange successful")
+          token = resp
+          TokenService.saveWildToken(token)
+          ApiService.setServer()  // reset to server
+          window.location.replace("/"); // <-- This is messy
+
+      })
+      .catch(err => {
+        console.log("wild exchange error", err);
+        TokenService.destroyWildToken()
+        TokenService.destroyWildServer()
+        reject(err);
+      });
+
+      resolve(token);
+    });
+  }
 </script>

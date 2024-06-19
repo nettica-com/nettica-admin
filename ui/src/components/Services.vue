@@ -297,9 +297,9 @@ export default {
         ApiService.setHeader()
 
         this.readAllNetworks()
+        this.readServers()
         this.readSubscriptions(this.authuser.email)
         this.readServices(this.authuser.email)
-        this.readServers()
 
         if (TokenService.getWildServer()) {
             this.wildServer = TokenService.getWildServer()

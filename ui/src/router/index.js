@@ -61,6 +61,9 @@ const routes = [
     name: 'services',
     component: function () {
       return import(/* webpackChunkName: "Services" */ '../views/Services.vue')
+    },
+    meta: {
+      requiresAuth: true
     }
   },
   { 
@@ -90,6 +93,7 @@ const router = new VueRouter({
 });
 
 router.beforeEach((to, from, next) => {
+  console.log("router = ", to.path, from.path);
   if(to.matched.some(record => record.meta.requiresAuth)) {
     store.commit("auth/requiresAuth", true)
     if (store.getters["auth/isAuthenticated"]) {
