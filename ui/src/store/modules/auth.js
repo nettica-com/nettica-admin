@@ -50,6 +50,9 @@ const actions = {
     }
     ApiService.get("/auth/oauth2_url")
       .then(resp => {
+	if (resp.clientId) {
+          TokenService.saveClientId(resp.clientId)
+        }
         if (resp.codeUrl === '/login') {
           console.log("server report oauth2 is disabled, basic auth")
           commit('authStatus', 'disabled')
@@ -85,15 +88,7 @@ const actions = {
         // with code and state in the query string
         console.log( "login", resp)
 
-	var url = "/?code="+resp.code+"&state="+resp.state
-
-	//if (typeof resp.redirect_uri != "undefined" && resp.redirect_uri != "") {
-	//	url = resp.redirect_uri + url;
-	//}
-
-	console.log("url = ", url )
-
-	resp.codeUrl = url;
+	resp.codeUrl = resp.redirect_uri;
 
 	commit('authRedirectUrl', resp );
         commit('authStatus', 'redirect');

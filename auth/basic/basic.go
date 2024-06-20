@@ -41,7 +41,7 @@ func (o *Oauth2Basic) CodeUrl(state string) string {
 
 func (o *Oauth2Basic) CodeUrl2(state string) string {
 	url := o.CodeUrl(state)
-	url += "&redirect_uri=com.nettica.agent://callback/agent"
+	// url += "&redirect_uri=com.nettica.agent://callback/agent"
 	return url
 }
 

@@ -101,6 +101,8 @@ func oauth2URL(c *gin.Context) {
 		Redirect: redirect_uri,
 	}
 
+	log.Infof( "model.Auth = %v", data );
+
 	c.JSON(http.StatusOK, data)
 }
 
@@ -302,11 +304,25 @@ func login(c *gin.Context) {
 		return
 	}
 
-	// save the code and userpass in the cache for
+	// save the code and basic auth in the cache for
 	// later retrieval in oauth2_exchange
 	cacheDb.Set(code, loginVals.Code, 10*time.Minute)
 
-	loginVals.Code = code;
+	redirect := "/?code=" + code + "&state=" + loginVals.State
+
+	if loginVals.Redirect != "" {
+		redirect = loginVals.Redirect + "?code=" + code + "&state=" + loginVals.State
+
+		// If it's the nettica agent application send a redirect
+		if loginVals.Redirect == "com.nettica.agent://callback/agent" {
+
+			c.Redirect(http.StatusPermanentRedirect, redirect)
+			return;
+		}
+	}
+
+	// otherwise send a JSON body with the result to the browser.  it will do the redirect.
+	loginVals.Redirect = redirect;
 
 	c.JSON( http.StatusOK, loginVals )
 }

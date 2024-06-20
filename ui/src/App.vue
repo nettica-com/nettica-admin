@@ -76,8 +76,10 @@
         });
 
         return;
-      } else if (this.$route.query && this.$route.query.referer) {
+      }
+      if (this.$route && this.$route.query && this.$route.query.referer) {
         TokenService.saveReferer(this.$route.query.referer)
+	console.log("saved referer ", this.$route.query.referer );
       } 
       if (this.requiresAuth || location.pathname == "/") {
         if (this.isAuthenticated == false) {

@@ -148,6 +148,9 @@
       login() {
 
 	var clientId = TokenService.getClientId()
+	if (this.$route.query.client_id) {
+            clientId = this.$route.query.client_id;
+        }
         // base64 encode the username and password
         let auth = btoa(this.username + ':' + this.password);
         this.basic_login( {
