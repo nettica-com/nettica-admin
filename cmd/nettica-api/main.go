@@ -97,6 +97,11 @@ func main() {
 	// serve static files
 	app.Use(static.Serve("/", static.LocalFile("./ui/dist", false)))
 
+	// make a catch-all route to serve the index.html
+	app.NoRoute(func(c *gin.Context) {
+		c.File("./ui/dist/index.html")
+	})
+
 	// setup Oauth2 client
 	oauth2Client, err := auth.GetAuthProvider()
 	if err != nil {
