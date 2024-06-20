@@ -243,6 +243,7 @@ export default {
         egress: null,
         panel: 1,
         valid: false,
+        refreshing: false,
         search: '',
         dnsList: {
             items: [
@@ -385,6 +386,25 @@ export default {
             this.readServers()
         },
 
+        Refreshing() {
+            this.refreshing = true
+            this.Refresh()
+
+            for (let i = 0; i < 5; i++) {
+                if (this.refreshing) {
+                    setTimeout(() => {
+                        console.log("Refreshing", i)
+                        this.Refresh()
+                    }, (i+1) * 2000)
+                if (i == 4) {
+                    this.refreshing = false
+                }   
+                } else {
+                    break
+                }
+            }
+        },
+
         startCreateService() {
             this.credits = 0;
             for (var i = 0; i < this.subscriptions.length; i++) {
@@ -517,6 +537,8 @@ export default {
 
             this.dialogCreateService = false;
 
+            this.Refreshing();
+
         },
 
         create_multihop() {
@@ -595,6 +617,8 @@ export default {
             this.createService(this.egress);
 
             this.dialogCreateMultihop = false;
+
+            this.Refreshing();
 
         },
 
@@ -710,7 +734,7 @@ export default {
                         .then( s => {
                             console.log("service created: ", s);
                             this.errorService(`Service created: ${s.name}`);
-                            this.Refresh();
+                            this.Refreshing();
                         })
                         .catch(error => {
                             console.log("error: ", error)
