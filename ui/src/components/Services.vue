@@ -605,9 +605,23 @@ export default {
 
         async createWilderness() {
             console.log("createWilderness");
-            var device = {
 
+            if (this.wildServer == "") {
+                errorService("Server name is required")
+                return
             }
+
+            if (!this.wildServer.toLowerCase().startsWith("http")) {
+                errorService("Server name should start with http or https")
+                return
+            }
+
+            if (this.wildServer.endsWith("/")) {
+                this.wildServer = this.wildServer.slice(0, -1)
+            }
+
+            var device = {}
+
             for (let i = 0; i < this.serverList.items.length; i++) {
                 if (this.serverList.items[i].value == this.serverList.selected.value) {
                     this.server = this.servers[i];
