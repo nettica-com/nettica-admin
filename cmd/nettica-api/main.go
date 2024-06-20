@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 	"time"
+        "net/http"
 
 	helmet "github.com/danielkov/gin-helmet"
 	"github.com/gin-contrib/cors"
@@ -97,10 +98,18 @@ func main() {
 	// serve static files
 	app.Use(static.Serve("/", static.LocalFile("./ui/dist", false)))
 
+	serveIndex := func(c *gin.Context) {
+	        c.Writer.WriteHeader(http.StatusOK)
+		log.Error("Show me the money")
+        	http.ServeFile(c.Writer, c.Request, "./ui/dist/index.html")
+		log.Error("***** Is this being called? *****")
+		c.AbortWithStatus(http.StatusOK)
+	}
 	// make a catch-all route to serve the index.html
-	app.NoRoute(func(c *gin.Context) {
-		c.File("./ui/dist/index.html")
-	})
+//	app.NoRoute(serveIndex)
+	app.GET("/login", serveIndex)
+	app.GET("/consent", serveIndex)
+	app.GET("/join", serveIndex)
 
 	// setup Oauth2 client
 	oauth2Client, err := auth.GetAuthProvider()

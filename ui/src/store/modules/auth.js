@@ -85,7 +85,19 @@ const actions = {
         // with code and state in the query string
         console.log( "login", resp)
 
-        commit('authStatus', 'redirect')
+	var url = "/?code="+resp.code+"&state="+resp.state
+
+	//if (typeof resp.redirect_uri != "undefined" && resp.redirect_uri != "") {
+	//	url = resp.redirect_uri + url;
+	//}
+
+	console.log("url = ", url )
+
+	resp.codeUrl = url;
+
+	commit('authRedirectUrl', resp );
+        commit('authStatus', 'redirect');
+
       })
       .catch(err => {
         commit('authStatus', 'error')

@@ -304,16 +304,14 @@ func login(c *gin.Context) {
 
 	// save the code and userpass in the cache for
 	// later retrieval in oauth2_exchange
-	cacheDb.Set(code, userpass, 10*time.Minute)
+	cacheDb.Set(code, loginVals.Code, 10*time.Minute)
 
-	redirect := "/?code=" + code + "&state=" + loginVals.State
+	loginVals.Code = code;
 
-	if loginVals.Redirect != "" {
-		redirect = loginVals.Redirect + "?code=" + code + "&state=" + loginVals.State
-	}
-
-	c.Redirect(http.StatusTemporaryRedirect, redirect)
+	c.JSON( http.StatusOK, loginVals )
 }
+
+
 func validate(c *gin.Context) {
 	var t model.OAuth2Token
 	if err := c.ShouldBindJSON(&t); err != nil {

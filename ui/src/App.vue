@@ -182,6 +182,7 @@
       authStatus(newValue, oldValue) {
         console.log(`Updating authStatus from ${oldValue} to ${newValue}`);
         if (newValue === 'redirect') {
+	  console.log('redirecting to ', this.authRedirectUrl );
           window.location.replace(this.authRedirectUrl)
         }
       },

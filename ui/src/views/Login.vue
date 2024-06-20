@@ -52,6 +52,7 @@
 
 <script>
   import {mapActions, mapGetters} from "vuex";
+  import TokenService from "../services/token.service";
 
   export default {
     name: 'Login',
@@ -146,18 +147,20 @@
 
       login() {
 
+	var clientId = TokenService.getClientId()
         // base64 encode the username and password
         let auth = btoa(this.username + ':' + this.password);
         this.basic_login( {
+          clientId: clientId,
           code: auth,
           state: this.$route.query.state,
           redirect_uri: this.$route.query.redirect_uri } )
 
-        if (this.$route.query.redirect_uri == "com.nettica.agent://callback/agent") {
-          let response = "com.nettica.agent://callback/agent" + "?code=" + auth + "&state=basic_auth"
-          console.log("redirecting to %s", response)
-          window.location.replace(response)
-        }
+        //if (this.$route.query.redirect_uri == "com.nettica.agent://callback/agent") {
+        //  let response = "com.nettica.agent://callback/agent" + "?code=" + auth + "&state=basic_auth"
+        //  console.log("redirecting to %s", response)
+        //  window.location.replace(response)
+        //}
 
       },
 
