@@ -318,6 +318,28 @@ export default {
         services: function (val) {
             console.log("services", val)
         },
+        wildnets: function (w) {
+            console.log("wildnets", w)
+            var wildList = {
+                selected: { "text": "", "value": "" },
+                items: []
+            }
+            for (let i = 0; i < w.length; i++) {
+                wildList.items[i] = { "text": w[i].netName, "value": w[i].id }
+            }
+            this.wildList = wildList
+        },
+        servers: function (val) {
+            console.log("servers", val)
+            var serverList = {
+                selected: { "text": "", "value": "" },
+                items: []
+            }
+            for (let i = 0; i < val.length; i++) {
+                serverList.items[i] = { "text": val[i].description, "value": val[i].name }
+            }
+            this.serverList = serverList
+        },
     },
 
 
@@ -577,48 +599,43 @@ export default {
         },
 
         startCreateWilderness() {
-            this.dialogWilderness = true;
-            this.wildList = {
-                selected: { "text": "", "value": "" },
-                items: []
-            }
-            for (let i = 0; i < this.wildnets.length; i++) {
-                this.wildList.items[i] = { "text": this.wildnets[i].netName, "value": this.wildnets[i].id }
-            }
-            this.wildList.selected = this.wildList.items[0];
 
-            this.serverList = {
-                selected: { "text": "", "value": "" },
-                items: []
+            var server = TokenService.getWildServer()
+            if (server && this.wild == false) {    
+                this.wildServer = server
+                this.wild = true
+                this.readWildNets()
             }
-            for (let i = 0; i < this.servers.length; i++) {
-                this.serverList.items[i] = { "text": this.servers[i].description, "value": this.servers[i].name }
-            }
+
+            this.dialogWilderness = true;
+
         },
 
         loginWild() {
-            this.dialogWilderness = false;
-
-            var url = this.wildServer + "/?referer=" + window.location.origin
-            window.open( url )
-        },
-
-        async createWilderness() {
-            console.log("createWilderness");
 
             if (this.wildServer == "") {
-                errorService("Server name is required")
+                this.errorService("Server name is required")
                 return
             }
 
             if (!this.wildServer.toLowerCase().startsWith("http")) {
-                errorService("Server name should start with http or https")
+                this.errorService("Server name should start with http or https")
                 return
             }
 
             if (this.wildServer.endsWith("/")) {
                 this.wildServer = this.wildServer.slice(0, -1)
             }
+
+
+            this.dialogWilderness = false;
+            
+            var url = this.wildServer + "/?referer=" + window.location.origin
+            window.open( url )
+        },
+
+        async createWilderness() {
+            console.log("createWilderness");
 
             var device = {}
 
