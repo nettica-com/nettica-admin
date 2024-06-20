@@ -83,10 +83,10 @@
     },
 
     mounted() {
-      this.basic_auth()
-      this.authStatus = 'basic'
-      this.authRedirectUrl = "/"
-      this.requiresAuth = false
+      //this.basic_auth()
+      //this.authStatus = 'basic'
+      //this.authRedirectUrl = "/"
+      //this.requiresAuth = false
 
 /*      if (this.isAuthenticated == false) {
         if (this.$route.query.code && this.$route.query.state) {
@@ -141,15 +141,17 @@
         oauth2_exchange: 'oauth2_exchange',
         oauth2_url: 'oauth2_url',
         basic_auth: 'basic_auth',
+        basic_login: 'login',
       }),
 
       login() {
 
         // base64 encode the username and password
         let auth = btoa(this.username + ':' + this.password);
-        this.oauth2_exchange( {
+        this.basic_login( {
           code: auth,
-          state: 'basic_auth' } )
+          state: this.$route.query.state,
+          redirect_uri: this.$route.query.redirect_uri } )
 
         if (this.$route.query.redirect_uri == "com.nettica.agent://callback/agent") {
           let response = "com.nettica.agent://callback/agent" + "?code=" + auth + "&state=basic_auth"

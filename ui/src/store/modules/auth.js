@@ -78,6 +78,22 @@ const actions = {
 
   },
 
+  login({ commit }, data) {
+    ApiService.post("/auth/login", data)
+      .then(resp => {
+        // The result of this call is a redirect
+        // with code and state in the query string
+        console.log( "login", resp)
+
+        commit('authStatus', 'redirect')
+      })
+      .catch(err => {
+        commit('authStatus', 'error')
+        commit('error', err);
+        commit('logout')
+      })
+  },
+
   oauth2_exchange({ commit, dispatch }, data) {
     console.log("oauth2_exchange", data);
 

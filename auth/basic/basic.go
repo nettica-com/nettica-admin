@@ -17,7 +17,6 @@ import (
 
 	"github.com/nettica-com/nettica-admin/core"
 	model "github.com/nettica-com/nettica-admin/model"
-	"github.com/nettica-com/nettica-admin/shadow"
 	util "github.com/nettica-com/nettica-admin/util"
 	"golang.org/x/oauth2"
 )
@@ -37,12 +36,12 @@ func (o *Oauth2Basic) Logout() error {
 func (o *Oauth2Basic) CodeUrl(state string) string {
 
 	server := os.Getenv("SERVER")
-	return server + "/login"
+	return server + "/login?state=" + state
 }
 
 func (o *Oauth2Basic) CodeUrl2(state string) string {
 	url := o.CodeUrl(state)
-	url += "?redirect_uri=com.nettica.agent://callback/agent"
+	url += "&redirect_uri=com.nettica.agent://callback/agent"
 	return url
 }
 
@@ -62,13 +61,6 @@ func (o *Oauth2Basic) Exchange(code string) (*oauth2.Token, error) {
 		return nil, errors.New("invalid username and password")
 	}
 	user := parts[0]
-	pass := parts[1]
-
-	// validate the username and password
-	err = shadow.ShadowAuthPlain(user, pass)
-	if err != nil {
-		return nil, err
-	}
 
 	rand, err := util.GenerateRandomString(32)
 	if err != nil {

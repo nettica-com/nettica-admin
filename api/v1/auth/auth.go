@@ -1,13 +1,16 @@
 package auth
 
 import (
+	"encoding/base64"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	model "github.com/nettica-com/nettica-admin/model"
+	"github.com/nettica-com/nettica-admin/shadow"
 	util "github.com/nettica-com/nettica-admin/util"
 	"github.com/patrickmn/go-cache"
 	log "github.com/sirupsen/logrus"
@@ -22,6 +25,7 @@ func ApplyRoutes(r *gin.RouterGroup) {
 		g.POST("/oauth2_exchange", oauth2Exchange)
 		g.POST("/token", token)
 		g.POST("/validate", validate)
+		g.POST("/login", login)
 		g.GET("/user", user)
 		g.GET("/logout", logout)
 	}
@@ -129,6 +133,12 @@ func oauth2Exchange(c *gin.Context) {
 			return
 		}
 	}
+
+	savedCode, exists := cacheDb.Get(loginVals.Code)
+	if exists {
+		loginVals.Code = savedCode.(string)
+	}
+
 	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
 
 	var oauth2Token *oauth2.Token
@@ -218,6 +228,92 @@ func token(c *gin.Context) {
 	*/
 }
 
+// login with basic auth, but do it the OAuth way
+func login(c *gin.Context) {
+	var loginVals model.Auth
+	var err error
+	if err = c.ShouldBind(&loginVals); err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("code and state fields are missing")
+		c.AbortWithStatus(http.StatusUnprocessableEntity)
+		return
+	}
+	log.WithFields(log.Fields{
+		"loginVals": loginVals,
+	}).Info("loginVals")
+
+	cacheDb := c.MustGet("cache").(*cache.Cache)
+	savedState, exists := cacheDb.Get(loginVals.ClientId)
+
+	if loginVals.State != "basic_auth" {
+		if !exists || savedState != loginVals.State {
+			log.WithFields(log.Fields{
+				"state":      loginVals.State,
+				"savedState": savedState,
+			}).Error("saved state and client provided state mismatch")
+			c.AbortWithStatus(http.StatusBadRequest)
+			return
+		}
+	}
+
+	// code contains the username and password base64 encoded
+	// base64 decode the string
+
+	var userpass []byte
+
+	userpass, err = base64.StdEncoding.DecodeString(loginVals.Code)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("not base64 encoded")
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	// split the username and password
+	parts := strings.SplitN(string(userpass), ":", 2)
+	if len(parts) != 2 {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("invalid username or password")
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+	user := parts[0]
+	pass := parts[1]
+
+	// validate the username and password
+	err = shadow.ShadowAuthPlain(user, pass)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("shadow: invalid username or password")
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	code, err := util.GenerateRandomString(32)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to generate random string")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	// save the code and userpass in the cache for
+	// later retrieval in oauth2_exchange
+	cacheDb.Set(code, userpass, 10*time.Minute)
+
+	redirect := "/?code=" + code + "&state=" + loginVals.State
+
+	if loginVals.Redirect != "" {
+		redirect = loginVals.Redirect + "?code=" + code + "&state=" + loginVals.State
+	}
+
+	c.Redirect(http.StatusTemporaryRedirect, redirect)
+}
 func validate(c *gin.Context) {
 	var t model.OAuth2Token
 	if err := c.ShouldBindJSON(&t); err != nil {
