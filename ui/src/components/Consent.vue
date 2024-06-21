@@ -73,7 +73,7 @@ export default {
     reject() {
       TokenService.destroyReferer();
       TokenService.destroyWildServer();
-      window.location.replace(this.$route.query.referer)
+      window.location.replace("/")
     },
   },
 
