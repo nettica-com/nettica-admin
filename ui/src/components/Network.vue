@@ -701,6 +701,24 @@ export default {
             this.readAllVPNs()
             this.readAllNetworks()
         },
+        Refreshing() {
+            this.refreshing = true
+            this.Refresh()
+
+            for (let i = 0; i < 5; i++) {
+                if (this.refreshing) {
+                    setTimeout(() => {
+                        console.log("Refreshing", i)
+                        this.Refresh()
+                    }, (i+1) * 2000)
+                if (i == 4) {
+                    this.refreshing = false
+                }   
+                } else {
+                    break
+                }
+            }
+        },
         filter(item) {
 
             if (this.search == "") {
@@ -1143,7 +1161,7 @@ export default {
             if (confirm(`Do you really want to delete ${vpn.name} from ${vpn.netName}?`)) {
                 await this.deletevpn(vpn)
                 // refresh the page
-                this.Refresh()
+                this.Refreshing()
             }
         },
 

@@ -2,13 +2,11 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import auth from "./modules/auth";
 import consent from "./modules/consent";
-import host from "./modules/host";
 import server from "./modules/server";
 import device from "./modules/device";
 import net from "./modules/net";
 import wildnet from "./modules/wildnet";
 import vpn from "./modules/vpn"
-import user from "./modules/users"
 import account from "./modules/account"
 import join from "./modules/join"
 import subscription from "./modules/subscription"
@@ -26,11 +24,9 @@ export default new Vuex.Store({
     auth,
     consent,
     device,
-    host,
     net,
     wildnet,
     vpn,
-    user,
     join,
     subscription,
     service,

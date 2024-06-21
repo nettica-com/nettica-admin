@@ -703,6 +703,26 @@ export default {
             console.log("buildTree = ", this.buildTree())
         },
 
+        Refreshing() {
+            this.refreshing = true
+            this.Refresh()
+
+            for (let i = 0; i < 5; i++) {
+                if (this.refreshing) {
+                    setTimeout(() => {
+                        console.log("Refreshing", i)
+                        this.Refresh()
+                    }, (i+1) * 2000)
+                if (i == 4) {
+                    this.refreshing = false
+                }   
+                } else {
+                    break
+                }
+            }
+        },
+
+
         async asyncRefresh() {
             await this.readAllAccounts(this.user.email)
             await this.readAllDevices()
@@ -987,6 +1007,7 @@ export default {
 
             this.inEdit = false;
             this.updatevpn(this.vpn)
+            this.Refreshing()
         },
 
 
@@ -998,9 +1019,9 @@ export default {
 
         async removeVPN(vpn) {
             if (confirm(`Do you really want to delete ${vpn.name} from ${vpn.netName}?`)) {
-                await this.deletevpn(vpn)
+                this.deletevpn(vpn)
                 // refresh the page
-                this.Refresh()
+                this.Refreshing()
             }
         },
 
@@ -1085,10 +1106,8 @@ export default {
             this.dialogServiceHost = false;
             this.inEdit = false;
 
-            await this.updatedevice(this.device)
-            // sleep for one second
-            await new Promise(r => setTimeout(r, 1000));
-            this.Refresh()
+            this.updatedevice(this.device)
+            this.Refreshing()
         },
 
         async forceFileDownload(vpn) {

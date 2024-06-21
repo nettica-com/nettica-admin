@@ -372,6 +372,25 @@ export default {
             this.buildTree()
         },
 
+        Refreshing() {
+            this.refreshing = true
+            this.Refresh()
+
+            for (let i = 0; i < 5; i++) {
+                if (this.refreshing) {
+                    setTimeout(() => {
+                        console.log("Refreshing", i)
+                        this.Refresh()
+                    }, (i+1) * 2000)
+                if (i == 4) {
+                    this.refreshing = false
+                }   
+                } else {
+                    break
+                }
+            }
+        },
+
         filter(item) {
             if (item.name.toLowerCase().indexOf(this.search.toLowerCase()) > -1) {
                 return true;
@@ -642,7 +661,7 @@ export default {
                 });
 
             this.dialogCreate = false;
-            this.Refresh()
+            this.Refreshing()
 
         },
 
@@ -685,6 +704,7 @@ export default {
 
             this.dialogUpdate = false;
             this.updateAccount(user)
+            this.Refreshing();
         },
 
         updateMember(item) {
@@ -721,7 +741,7 @@ export default {
 
             console.log("updateAccount: ", item.member)
             this.updateAccount(item.member)
-            this.readAllAccounts(this.authuser.email)
+            this.Refreshing();
 
 
         },
