@@ -14,28 +14,16 @@
 
 <script>
 import { mapActions, mapGetters } from "vuex";
+import { version } from "../../package.json";
 
 export default {
   name: 'Footer',
 
   data: () => ({
 
+    version: version,
+
   }),
 
-  computed: {
-    ...mapGetters({
-      version: 'server/version',
-    }),
-  },
-
-  mounted() {
-    this.versionServer()
-  },
-
-  methods: {
-    ...mapActions('server', {
-      versionServer: 'version',
-    }),
-  }
 }
 </script>

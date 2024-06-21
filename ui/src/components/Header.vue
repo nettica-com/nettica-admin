@@ -132,7 +132,7 @@ export default {
             this.issuedAt = val.issuedAt;
         },
         '$route' (to, from) {
-            console.log("route changed to " + this.$route.path);
+            console.log("route changed from " + from.path + " to " + to.path);
             if (this.$route.path == "/") {
                 this.friendly = true;
             } else {

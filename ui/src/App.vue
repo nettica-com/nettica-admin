@@ -46,7 +46,6 @@
         authRedirectUrl: 'auth/authRedirectUrl',
         requiresAuth: 'auth/requiresAuth',
         authError: 'auth/error',
-        clientError: 'host/error',
         vpnError: 'vpn/error',
         deviceError: 'device/error',
         netError: 'net/error',
@@ -122,11 +121,6 @@
 
     watch: {
       authError(newValue, oldValue) {
-        console.log(newValue)
-        this.notify(newValue);
-      },
-
-      clientError(newValue, oldValue) {
         console.log(newValue)
         this.notify(newValue);
       },

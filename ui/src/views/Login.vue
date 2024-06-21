@@ -71,7 +71,6 @@
         authStatus: 'auth/authStatus',
         authRedirectUrl: 'auth/authRedirectUrl',
         authError: 'auth/error',
-        clientError: 'host/error',
         netError: 'net/error',
         serverError: 'server/error',
         serviceError: 'service/error',
@@ -115,11 +114,6 @@
     },
 
     watch: {
-
-      clientError(newValue, oldValue) {
-        console.log(newValue)
-        this.notify('error', newValue);
-      },
 
       isAuthenticated(newValue, oldValue) {
         console.log(`login: Updating isAuthenticated from ${oldValue} to ${newValue}`);
