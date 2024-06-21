@@ -344,7 +344,7 @@ func DeleteService(id string) error {
 			// make a device api call to the remote server to delete the vpn
 			err = RemoteDelete(vpnAPI, service.Server, service.Device.ApiKey, service.VPN.Id)
 			if err != nil {
-				log.Errorf("failed to delete remote vpn server %s  key %s vpn %s (%s)", service.Server, service.Device.ApiKey, service.VPN.Id, service.VPN.Name)
+				log.Errorf("failed to delete remote vpn server %s vpn %s (%s)", service.Server, service.VPN.Id, service.VPN.Name)
 			}
 
 		}
@@ -375,7 +375,7 @@ func DeleteService(id string) error {
 		} else {
 			err = RemoteDelete(deviceAPI, service.Server, service.Device.ApiKey, service.Device.Id)
 			if err != nil {
-				log.Errorf("failed to delete remote device server %s  key %s device %s (%s)", service.Server, service.Device.ApiKey, service.Device.Id, service.Device.Name)
+				log.Errorf("failed to delete remote device server %s device %s (%s)", service.Server, service.Device.Id, service.Device.Name)
 			}
 		}
 	}
