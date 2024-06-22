@@ -14,14 +14,14 @@
 
 <script>
 import { mapActions, mapGetters } from "vuex";
-import { version } from "../../package.json";
+import mypackage from "../../package.json";
 
 export default {
   name: 'Footer',
 
   data: () => ({
 
-    version: version,
+    version: mypackage.version,
 
   }),
 

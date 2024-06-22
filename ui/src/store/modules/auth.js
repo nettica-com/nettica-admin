@@ -5,6 +5,10 @@ const state = {
   error: null,
   user: null,
   authStatus: '',
+  clientId: '',
+  State: '',
+  code: '',
+  referer: '',
   authRedirectUrl: '',
   requiresAuth: true,
 };
@@ -28,6 +32,18 @@ const getters = {
   authStatus(state) {
     return state.authStatus
   },
+  clientId(state) {
+    return state.clientId
+  },
+  State(state) {
+    return state.State
+  },
+  code(state) {
+    return state.code
+  },
+  referer(state) {
+    return state.referer
+  },
 };
 
 const actions = {
@@ -50,23 +66,20 @@ const actions = {
     }
     ApiService.get("/auth/oauth2_url")
       .then(resp => {
-	if (resp.clientId) {
-          TokenService.saveClientId(resp.clientId)
+  	    if (resp.clientId) {
+          commit('clientId', resp.clientId)
         }
         if (resp.codeUrl === '/login') {
           console.log("server report oauth2 is disabled, basic auth")
-          commit('authStatus', 'disabled')
-          TokenService.saveClientId(resp.clientId)
           commit('authStatus', 'redirect')
-          commit('authRedirectUrl', resp)
+          commit('authRedirectUrl', resp.codeUrl)
         } else if (resp.codeUrl === '_magic_string_fake_auth_no_redirect_') {
           console.log("server report oauth2 is disabled, fake exchange")
           commit('authStatus', 'disabled')
-          TokenService.saveClientId(resp.clientId)
           dispatch('oauth2_exchange', { code: "", state: resp.state })
         } else {
           commit('authStatus', 'redirect')
-          commit('authRedirectUrl', resp)
+          commit('authRedirectUrl', resp.codeUrl)
         }
       })
       .catch(err => {
@@ -86,11 +99,10 @@ const actions = {
       .then(resp => {
         // The result of this call is a redirect
         // with code and state in the query string
-        console.log( "login", resp)
-
-	resp.codeUrl = resp.redirect_uri;
-
-	commit('authRedirectUrl', resp );
+        console.log( "login", resp);
+        commit('code', resp.code);
+        commit('state', resp.state);
+      	commit('authRedirectUrl', resp.redirect_uri );
         commit('authStatus', 'redirect');
 
       })
@@ -151,6 +163,9 @@ const actions = {
         commit('logout')
       })
   },
+
+
+
 }
 
 const mutations = {
@@ -163,9 +178,8 @@ const mutations = {
   requiresAuth(state, requiresAuth) {
     state.requiresAuth = requiresAuth;
   },
-  authRedirectUrl(state, resp) {
-    state.authRedirectUrl = resp.codeUrl;
-    TokenService.saveClientId(resp.clientId);
+  authRedirectUrl(state, url) {
+    state.authRedirectUrl = url;
   },
   token(state, token) {
     TokenService.saveToken(token);
@@ -183,7 +197,24 @@ const mutations = {
     TokenService.destroyWildServer();
     TokenService.destroyServer();
     TokenService.destroyReferer();
-  }
+  },
+  clientId(state, clientId) {
+    state.clientId = clientId;
+    TokenService.saveClientId(clientId);
+  },
+  State(state, s) {
+    state.State = s;
+    TokenService.saveState(s);
+  },
+  code(state, code) {
+    state.code = code;
+    TokenService.saveCode(code);
+  },
+  referer(state, referer) {
+    state.referer = referer;
+    TokenService.saveReferer(referer);
+  },
+
 };
 
 export default {

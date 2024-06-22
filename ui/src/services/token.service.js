@@ -4,6 +4,9 @@ const SERVER_KEY = "server";
 const WILD_TOKEN_KEY = "wild_token";
 const WILD_SERVER_KEY = "wild_server";
 const REFERER_KEY = "referer";
+const STATE_KEY = "state";
+const CODE_KEY = "code";
+
 
 export const getReferer = () => {
   return window.localStorage.getItem(REFERER_KEY);
@@ -15,6 +18,30 @@ export const saveReferer = referer => {
 
 export const destroyReferer = () => {
   window.localStorage.removeItem(REFERER_KEY);
+};
+
+export const getState = () => {
+  return window.localStorage.getItem(STATE_KEY);
+};
+
+export const saveState = state => {
+  window.localStorage.setItem(STATE_KEY, state);
+};
+
+export const destroyState = () => {
+  window.localStorage.removeItem(STATE_KEY);
+};
+
+export const getCode = () => {
+  return window.localStorage.getItem(CODE_KEY);
+};
+
+export const saveCode = code => {
+  window.localStorage.setItem(CODE_KEY, code);
+};
+
+export const destroyCode = () => {
+  window.localStorage.removeItem(CODE_KEY);
 };
 
 export const getToken = () => {
@@ -96,5 +123,11 @@ export default {
   destroyWildServer,
   getReferer,
   saveReferer,
-  destroyReferer
+  destroyReferer,
+  getState,
+  saveState,
+  destroyState,
+  getCode,
+  saveCode,
+  destroyCode
 };

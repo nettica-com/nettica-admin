@@ -78,11 +78,14 @@
       }
       if (this.$route && this.$route.query && this.$route.query.referer) {
         TokenService.saveReferer(this.$route.query.referer)
-	console.log("saved referer ", this.$route.query.referer );
+	      console.log("saved referer ", this.$route.query.referer );
       } 
       if (this.requiresAuth || location.pathname == "/") {
         if (this.isAuthenticated == false) {
           if (this.$route.query.code && this.$route.query.state) {
+
+              TokenService.saveCode(this.$route.query.code)
+              TokenService.saveState(this.$route.query.state)
 
               var referer = TokenService.getReferer()
               var client_id = TokenService.getClientId()

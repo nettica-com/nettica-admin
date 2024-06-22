@@ -65,8 +65,15 @@ export default {
     }),
 
     accept() {
+      var referer = TokenService.getReferer();
       TokenService.destroyReferer();
-      var url = this.$route.query.referer + "/?client_id=" + this.$route.query.client_id + "&code=" + this.$route.query.code + "&state=" + this.$route.query.state + "&server=" + window.location.origin;
+      var code = TokenService.getCode();
+      TokenService.destroyCode();
+      var state = TokenService.getState();
+      TokenService.destroyState();
+      var client_id = TokenService.getClientId();
+      TokenService.destroyClientId();
+      var url = referer + "/?client_id=" + client_id + "&code=" + code + "&state=" + state + "&server=" + window.location.origin;
       window.location.replace(url);
     },
 
