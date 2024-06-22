@@ -89,17 +89,10 @@ func CreateVPN(vpn *model.VPN) (*model.VPN, error) {
 	}
 
 	ips := make([]string, 0)
-	ipsDns := make([]string, 0)
 	for _, network := range vpn.Default.Address {
-		ip, err := util.GetAvailableIp(network, reserverIps)
+		ip, err := util.GetAvailableCidr(network, reserverIps)
 		if err != nil {
 			return nil, err
-		}
-		ipsDns = append(ipsDns, ip)
-		if util.IsIPv6(ip) {
-			ip = ip + "/128"
-		} else {
-			ip = ip + "/32"
 		}
 		ips = append(ips, ip)
 	}
@@ -113,8 +106,13 @@ func CreateVPN(vpn *model.VPN) (*model.VPN, error) {
 		if device.OS == "darwin" {
 			vpn.Current.Dns = append(vpn.Current.Dns, "127.0.0.1")
 		} else {
+			ipDns, err := util.GetIpFromCidr(vpn.Current.Address[0])
+			if err != nil {
+				return nil, err
+			}
+			// prepend the first address to the dns list
 			dns := vpn.Current.Dns
-			vpn.Current.Dns = []string{ipsDns[0]}
+			vpn.Current.Dns = []string{ipDns}
 			vpn.Current.Dns = append(vpn.Current.Dns, dns...)
 		}
 	}
@@ -259,14 +257,9 @@ func UpdateVPN(Id string, vpn *model.VPN, flag bool) (*model.VPN, error) {
 		ips := make([]string, 0)
 
 		for _, network := range vpn.Default.Address {
-			ip, err := util.GetAvailableIp(network, reserverIps)
+			ip, err := util.GetAvailableCidr(network, reserverIps)
 			if err != nil {
 				return nil, err
-			}
-			if util.IsIPv6(ip) {
-				ip = ip + "/128"
-			} else {
-				ip = ip + "/32"
 			}
 			ips = append(ips, ip)
 		}

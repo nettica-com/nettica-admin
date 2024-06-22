@@ -80,14 +80,22 @@ func GetNetworkAddress(cidr string) (string, error) {
 
 }
 
-// GetAvailableIp search for an available ip in cidr against a list of reserved ips
-func GetAvailableIp(cidr string, reserved []string) (string, error) {
+// GetAvailableCidr search for an available ip in cidr against a list of reserved ips
+func GetAvailableCidr(cidr string, reserved []string) (string, error) {
+
+	parts := strings.Split(cidr, "/")
+	if len(parts) != 2 {
+		return "", errors.New("invalid cidr")
+	}
+
+	prefix := parts[1]
+
 	ip, ipnet, err := net.ParseCIDR(cidr)
 	if err != nil {
 		return "", err
 	}
 
-	// this two addresses are not usable
+	// these two addresses are not usable
 	broadcastAddr := BroadcastAddr(ipnet).String()
 	networkAddr := ipnet.IP.String()
 
@@ -101,7 +109,7 @@ func GetAvailableIp(cidr string, reserved []string) (string, error) {
 			}
 		}
 		if ok && address != networkAddr && address != broadcastAddr {
-			return address, nil
+			return address + "/" + prefix, nil
 		}
 	}
 
