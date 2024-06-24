@@ -603,6 +603,7 @@ export default {
                 }
                 for (let j = 0; j < this.items[i].children.length; j++) {
                     if (this.items[i].children[j].id == id) {
+                        console.log("vpn.current.address[0] = ", this.items[i].children[j].vpn.current.address[0])
                         return this.items[i].children[j]
                     }
                 }
@@ -682,6 +683,7 @@ export default {
             createdevice: 'create',
             updatedevice: 'update',
             deletedevice: 'delete',
+            updatedevice_vpn: 'update_vpn',
         }),
         ...mapActions('net', {
             readAllNetworks: 'readAll',
@@ -700,7 +702,6 @@ export default {
         Refresh() {
             this.readAllAccounts(this.user.email)
             this.readAllDevices()
-            console.log("buildTree = ", this.buildTree())
         },
 
         Refreshing() {
@@ -983,10 +984,6 @@ export default {
             }
 
             // check allowed IPs
-            if (this.vpn.current.allowedIPs.length < 1) {
-                this.errorDevice('Please provide at least one valid CIDR address for device allowed IPs');
-                return
-            }
             for (let i = 0; i < this.vpn.current.allowedIPs.length; i++) {
                 if (this.$isCidr(this.vpn.current.allowedIPs[i]) === 0) {
                     this.errorDevice('Invalid CIDR detected, please correct before submitting');
@@ -994,20 +991,17 @@ export default {
                 }
             }
             // check address
-            if (this.vpn.current.address.length < 1) {
-                this.errorDevice('Please provide at least one valid CIDR address for device');
-                return;
-            }
             for (let i = 0; i < this.vpn.current.address.length; i++) {
                 if (this.$isCidr(this.vpn.current.address[i]) === 0) {
                     this.errorDevice('Invalid CIDR detected, please correct before submitting');
                     return
                 }
             }
-
+            vpn = this.vpn
             this.inEdit = false;
             this.updatevpn(this.vpn)
-            this.Refreshing()
+    //        this.updatedevice_vpn(this.vpn)
+//            this.Refreshing()
         },
 
 

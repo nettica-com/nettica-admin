@@ -64,6 +64,8 @@ const actions = {
     ApiService.patch(`/vpn/${vpn.id}`, vpn)
       .then(resp => {
         commit('update', resp)
+        // send an update to the device that the vpn belongs to
+        dispatch('device/update_vpn', resp, { root: true })
         commit('error', `${vpn.name} updated`)
       })
       .catch((error) => {

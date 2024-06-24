@@ -85,6 +85,28 @@ const actions = {
       })
   },
 
+  update_vpn({ commit, dispatch }, vpn) {
+    console.log("update_vpn", vpn)
+    let device = state.devices.find(x => x.id === vpn.deviceid);
+    if (device !== null) {
+      if (device.vpns == null) {
+        device.vpns = []
+        device.vpns.push(vpn)
+      } else {
+        let vpnindex = device.vpns.findIndex(x => x.id === vpn.id);
+        if (vpnindex !== -1) {
+          device.vpns.splice(vpnindex, 1);
+          device.vpns.push(vpn);
+        }
+      }
+      commit('update', device)
+    } else {
+      commit('error', "update vpn failed, not in list")
+    }
+
+  },
+
+
   delete({ commit }, device) {
     ApiService.delete(`/device/${device.id}`)
       .then(() => {

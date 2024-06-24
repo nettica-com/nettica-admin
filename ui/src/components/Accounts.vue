@@ -369,7 +369,6 @@ export default {
         Refresh() {
             this.readAllAccounts(this.authuser.email)
             this.readAllNetworks()
-            this.buildTree()
         },
 
         Refreshing() {
@@ -704,7 +703,6 @@ export default {
 
             this.dialogUpdate = false;
             this.updateAccount(user)
-            this.Refreshing();
         },
 
         updateMember(item) {
@@ -741,7 +739,6 @@ export default {
 
             console.log("updateAccount: ", item.member)
             this.updateAccount(item.member)
-            this.Refreshing();
 
 
         },

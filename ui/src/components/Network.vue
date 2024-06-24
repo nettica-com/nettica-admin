@@ -650,6 +650,7 @@ export default {
                 this.friendly = false
             }
         },
+
         vpns: function (val) {
             console.log("buildTree = ", this.buildTree())
             this.showTree = true
@@ -1131,10 +1132,6 @@ export default {
             }
 
             // check allowed IPs
-            if (this.vpn.current.allowedIPs.length < 1) {
-                this.errorNet('Please provide at least one valid CIDR address for device allowed IPs');
-                return
-            }
             for (let i = 0; i < this.vpn.current.allowedIPs.length; i++) {
                 if (this.$isCidr(this.vpn.current.allowedIPs[i]) === 0) {
                     this.errorNet('Invalid CIDR detected, please correct before submitting');
@@ -1142,10 +1139,6 @@ export default {
                 }
             }
             // check address
-            if (this.vpn.current.address.length < 1) {
-                this.errorNet('Please provide at least one valid CIDR address for device');
-                return;
-            }
             for (let i = 0; i < this.vpn.current.address.length; i++) {
                 if (this.$isCidr(this.vpn.current.address[i]) === 0) {
                     this.errorNet('Invalid CIDR detected, please correct before submitting');

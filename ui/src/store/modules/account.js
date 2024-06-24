@@ -107,9 +107,11 @@ const actions = {
   },
 
   update({ commit, dispatch }, account) {
+    console.log("action update account: ", account)
     ApiService.patch(`/accounts/${account.id}`, account)
       .then(resp => {
-        commit('update', resp)
+        commit('update_member', resp)
+        commit('update_account', resp)
         commit('error', `${account.email} updated`)
       })
       .catch(error => {
@@ -186,13 +188,18 @@ const mutations = {
   create(state, user) {
     state.users.push(user)
   },
-  update(state, account) {
-    let index = state.accounts.findIndex(x => x.id === account.id);
-    if (index !== -1) {
-      state.accounts.splice(index, 1);
-      state.accounts.push(account);
+  update_account(state, account) {
+    console.log( "update_account: ", account)
+    if (account.id !== account.parent) {
+      console.log( "not a root account, skipping")
     } else {
-      state.error = "update account failed, not in list"
+      let index = state.accounts.findIndex(x => x.id === account.id);
+      if (index !== -1) {
+        state.accounts.splice(index, 1);
+        state.accounts.push(account);
+      } else {
+        state.error = "update account failed, not in list"
+      }
     }
   },
   delete(state, account) {
@@ -203,7 +210,8 @@ const mutations = {
       state.error = "delete account failed, not in list"
     }
   },
-  update(state, user) {
+  update_user(state, user) {
+    console.log( "update user: ", user)
     let index = state.users.findIndex(x => x.id === user.id);
     if (index !== -1) {
       state.users.splice(index, 1);
@@ -220,7 +228,8 @@ const mutations = {
       state.error = "delete user failed, not in list"
     }
   },
-  update(state, member) {
+  update_member(state, member) {
+    console.log( "update_member: ", member)
     var found = false;
     for (let i = 0; i < state.members.length; i++) {
       let index = state.members[i].members.findIndex(x => x.id === member.id);
