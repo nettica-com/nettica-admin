@@ -111,7 +111,9 @@ const actions = {
     ApiService.patch(`/accounts/${account.id}`, account)
       .then(resp => {
         commit('update_member', resp)
-        commit('update_account', resp)
+        if (resp.parent === resp.id) {
+          commit('update_account', resp)
+        }
         commit('error', `${account.email} updated`)
       })
       .catch(error => {
