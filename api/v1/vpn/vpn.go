@@ -128,7 +128,38 @@ func readVPN(c *gin.Context) {
 	}
 	vpn := v.(*model.VPN)
 
-	if account.Status == "Suspended" {
+	authorized := false
+
+	apikey := c.Request.Header.Get("X-API-KEY")
+
+	if apikey != "" && strings.HasPrefix(apikey, "device-api-") {
+
+		device, err := core.ReadDevice(vpn.DeviceID)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("failed to read client config")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		if device.ApiKey == apikey {
+			authorized = true
+		}
+
+		if !authorized {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			return
+		}
+
+	}
+
+	if !authorized && account == nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	if account != nil && account.Status == "Suspended" {
 		log.Errorf("readVPN: account %s is suspended", account.Email)
 		c.JSON(http.StatusForbidden, gin.H{"error": "Account is suspended"})
 		return
