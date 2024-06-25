@@ -114,10 +114,8 @@ func CreateVPN(vpn *model.VPN) (*model.VPN, error) {
 		if device.OS == "darwin" {
 			vpn.Current.Dns = append(vpn.Current.Dns, "127.0.0.1")
 		} else {
-			ipDns, err := util.GetIpFromCidr(vpn.Current.Address[0])
-			if err != nil {
-				return nil, err
-			}
+			parts := strings.Split(vpn.Current.Address[0], "/")
+			ipDns := parts[0]
 			// prepend the first address to the dns list
 			dns := vpn.Current.Dns
 			vpn.Current.Dns = []string{ipDns}
@@ -287,10 +285,8 @@ func UpdateVPN(Id string, vpn *model.VPN, flag bool) (*model.VPN, error) {
 		// if its not a mac its running on the vpn's ip address
 		if device.OS != "darwin" {
 			// Append the first address to the dns list
-			address, err = util.GetIpFromCidr(vpn.Current.Address[0])
-			if err != nil {
-				return nil, err
-			}
+			parts := strings.Split(vpn.Current.Address[0], "/")
+			address = parts[0]
 		}
 
 		found := false
