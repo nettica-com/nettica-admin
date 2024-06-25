@@ -1119,20 +1119,6 @@ export default {
 				"196.0.0.0/6", "200.0.0.0/5", "208.0.0.0/4", "::/1", "8000::/2", "c000::/3", "e000::/4", "f000::/5", "f800::/6", "fe00::/9", "fe80::/10", "ff00::/8")
             }
 
-            // check allowed IPs
-            /* for (let i = 0; i < this.vpn.current.allowedIPs.length; i++) {
-                if (this.$isCidr(this.vpn.current.allowedIPs[i]) === 0) {
-                    this.errorNet('Invalid CIDR detected, please correct before submitting');
-                    return
-                }
-            }
-            // check address
-            for (let i = 0; i < this.vpn.current.address.length; i++) {
-                if (this.$isCidr(this.vpn.current.address[i]) === 0) {
-                    this.errorNet('Invalid CIDR detected, please correct before submitting');
-                    return
-                }
-            }*/
 
             this.inEdit = false;
             this.updatevpn(this.vpn)

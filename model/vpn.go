@@ -5,8 +5,6 @@ import (
 	"regexp"
 	"strings"
 	"time"
-
-	"github.com/nettica-com/nettica-admin/util"
 )
 
 // VPN structure
@@ -86,12 +84,6 @@ func (a VPN) IsValid() []error {
 
 	if len(a.Current.Address) == 0 {
 		errs = append(errs, fmt.Errorf("address field is required"))
-	}
-	// check if the address are valid
-	for _, address := range a.Current.Address {
-		if !util.IsValidCidr(address) {
-			errs = append(errs, fmt.Errorf("address %s is invalid", address))
-		}
 	}
 
 	return errs
