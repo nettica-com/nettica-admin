@@ -984,19 +984,19 @@ export default {
             }
 
             // check allowed IPs
-            for (let i = 0; i < this.vpn.current.allowedIPs.length; i++) {
-                if (this.$isCidr(this.vpn.current.allowedIPs[i]) === 0) {
-                    this.errorDevice('Invalid CIDR detected, please correct before submitting');
-                    return
-                }
-            }
+            // for (let i = 0; i < this.vpn.current.allowedIPs.length; i++) {
+            //    if (this.$isCidr(this.vpn.current.allowedIPs[i]) === 0) {
+            //        this.errorDevice('Invalid CIDR detected, please correct before submitting');
+            //        return
+            //    }
+            // }
             // check address
-            for (let i = 0; i < this.vpn.current.address.length; i++) {
-                if (this.$isCidr(this.vpn.current.address[i]) === 0) {
-                    this.errorDevice('Invalid CIDR detected, please correct before submitting');
-                    return
-                }
-            }
+            //for (let i = 0; i < this.vpn.current.address.length; i++) {
+            //    if (this.$isCidr(this.vpn.current.address[i]) === 0) {
+            //        this.errorDevice('Invalid CIDR detected, please correct before submitting');
+            //        return
+            //    }
+            //}
             vpn = this.vpn
             this.inEdit = false;
             this.updatevpn(this.vpn)

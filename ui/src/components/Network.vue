@@ -903,12 +903,12 @@ export default {
                 this.errorNet('Please provide at least one valid CIDR address for net allowed IPs')
                 return;
             }
-            for (let i = 0; i < net.default.allowedIPs.length; i++) {
-                if (this.$isCidr(net.default.allowedIPs[i]) === 0) {
-                    this.errorNet('Invalid CIDR detected, please correct before submitting')
-                    return
-                }
-            }
+            //for (let i = 0; i < net.default.allowedIPs.length; i++) {
+            //    if (this.$isCidr(net.default.allowedIPs[i]) === 0) {
+            //        this.errorNet('Invalid CIDR detected, please correct before submitting')
+            //        return
+            //    }
+            //}
             this.net.accountid = this.acntList.selected.value
             this.dialogCreate = false;
             this.createNet(net)
@@ -1083,28 +1083,16 @@ export default {
             this.net.id = net.id
             this.net.netName = net.netName
 
-
-            // check allowed IPs
-            if (net.default.allowedIPs.length < 1) {
-                this.errorNet('Please provide at least one valid CIDR address for net allowed IPs');
-                return;
-            }
-            for (let i = 0; i < net.default.allowedIPs.length; i++) {
-                if (this.$isCidr(net.default.allowedIPs[i]) === 0) {
-                    this.errorNet('Invalid CIDR detected, please correct before submitting');
-                    return
-                }
-            }
-            // check address
-            if (net.default.address.length < 1) {
-                this.errorNet('Please provide at least one valid CIDR address for net');
-                return;
-            }
             for (let i = 0; i < net.default.address.length; i++) {
                 if (this.$isCidr(net.default.address[i]) === 0) {
                     this.errorNet('Invalid CIDR detected, please correct before submitting');
                     return
                 }
+            }
+
+            // check allowed IPs
+            if (net.default.allowedIPs.length < 1) {
+                this.net.default.allowedIPs = this.net.default.address;
             }
             // all good, submit
             this.dialogUpdate = false;
@@ -1132,7 +1120,7 @@ export default {
             }
 
             // check allowed IPs
-            for (let i = 0; i < this.vpn.current.allowedIPs.length; i++) {
+            /* for (let i = 0; i < this.vpn.current.allowedIPs.length; i++) {
                 if (this.$isCidr(this.vpn.current.allowedIPs[i]) === 0) {
                     this.errorNet('Invalid CIDR detected, please correct before submitting');
                     return
@@ -1144,7 +1132,7 @@ export default {
                     this.errorNet('Invalid CIDR detected, please correct before submitting');
                     return
                 }
-            }
+            }*/
 
             this.inEdit = false;
             this.updatevpn(this.vpn)
