@@ -26,46 +26,54 @@ func CreateVPN(vpn *model.VPN) (*model.VPN, error) {
 	vpn.Id = "vpn-" + vpn.Id
 
 	// read the nets and configure the default values
-	nets, err := ReadNetworks(vpn.CreatedBy)
+	net, err := ReadNet(vpn.NetId)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, net := range nets {
-		if net.NetName == vpn.NetName {
-			vpn.Default = net.Default
-			current := vpn.Current
-			vpn.Current = net.Default
-			vpn.Current.ListenPort = current.ListenPort
-			vpn.Current.Endpoint = current.Endpoint
-			vpn.Current.PrivateKey = current.PrivateKey
-			vpn.Current.PublicKey = current.PublicKey
-			vpn.Current.PostUp = current.PostUp
-			vpn.Current.PostDown = current.PostDown
-			vpn.Current.PersistentKeepalive = current.PersistentKeepalive
-			vpn.NetId = net.Id
-			vpn.AccountID = net.AccountID
-			vpn.Current.AllowedIPs = current.AllowedIPs
-			vpn.Current.Dns = net.Default.Dns
-			if current.FailSafe {
-				vpn.Current.FailSafe = current.FailSafe
-			}
-			if current.EnableDns {
-				vpn.Current.EnableDns = current.EnableDns
-			}
-			if current.UPnP {
-				vpn.Current.UPnP = current.UPnP
-			}
-			if current.SyncEndpoint && current.Endpoint != "" {
-				vpn.Current.SyncEndpoint = current.SyncEndpoint
-			}
-			if current.HasRDP {
-				vpn.Current.HasRDP = current.HasRDP
-			}
-			if current.HasSSH {
-				vpn.Current.HasSSH = current.HasSSH
-			}
-		}
+	if vpn.Default == nil {
+		vpn.Default = &model.Settings{}
+	}
+
+	if vpn.Current == nil {
+		vpn.Current = &model.Settings{}
+	}
+
+	if net.Default == nil {
+		return nil, errors.New("network default settings not found")
+	}
+
+	*vpn.Default = *net.Default
+	current := *vpn.Current
+	*vpn.Current = *net.Default
+	vpn.Current.ListenPort = current.ListenPort
+	vpn.Current.Endpoint = current.Endpoint
+	vpn.Current.PrivateKey = current.PrivateKey
+	vpn.Current.PublicKey = current.PublicKey
+	vpn.Current.PostUp = current.PostUp
+	vpn.Current.PostDown = current.PostDown
+	vpn.Current.PersistentKeepalive = current.PersistentKeepalive
+	vpn.NetId = net.Id
+	vpn.AccountID = net.AccountID
+	vpn.Current.AllowedIPs = current.AllowedIPs
+	vpn.Current.Dns = net.Default.Dns
+	if current.FailSafe {
+		vpn.Current.FailSafe = current.FailSafe
+	}
+	if current.EnableDns {
+		vpn.Current.EnableDns = current.EnableDns
+	}
+	if current.UPnP {
+		vpn.Current.UPnP = current.UPnP
+	}
+	if current.SyncEndpoint && current.Endpoint != "" {
+		vpn.Current.SyncEndpoint = current.SyncEndpoint
+	}
+	if current.HasRDP {
+		vpn.Current.HasRDP = current.HasRDP
+	}
+	if current.HasSSH {
+		vpn.Current.HasSSH = current.HasSSH
 	}
 
 	// if the vpn data already has a public key and empty private key,

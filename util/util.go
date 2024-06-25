@@ -74,7 +74,7 @@ func GetNetworkAddress(cidr string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	networkAddr := ipnet.IP.String()
+	networkAddr := ipnet.String()
 
 	return networkAddr, nil
 

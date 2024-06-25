@@ -30,11 +30,6 @@ func CreateNet(net *model.Network) (*model.Network, error) {
 		if err != nil {
 			return nil, err
 		}
-		if util.IsIPv6(ip) {
-			ip = ip + "/64"
-		} else {
-			ip = ip + "/24"
-		}
 		ips = append(ips, ip)
 	}
 
