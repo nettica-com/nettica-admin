@@ -195,25 +195,26 @@ func GetAllReservedNetIps(netId string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	reserverIps := make([]string, 0)
+	reservedIps := make([]string, 0)
 
 	for _, client := range clients {
 		if client.NetId == netId {
 			for _, cidr := range client.Current.Address {
 				ip, err := util.GetIpFromCidr(cidr)
 				if err != nil {
+					reservedIps = append(reservedIps, cidr)
 					log.WithFields(log.Fields{
 						"err":  err,
 						"cidr": cidr,
 					}).Error("failed to ip from cidr")
 				} else {
-					reserverIps = append(reserverIps, ip)
+					reservedIps = append(reservedIps, ip)
 				}
 			}
 		}
 	}
 
-	return reserverIps, nil
+	return reservedIps, nil
 }
 
 // ReadVPN vpn by id
