@@ -200,15 +200,20 @@ func GetAllReservedNetIps(netId string) ([]string, error) {
 	for _, client := range clients {
 		if client.NetId == netId {
 			for _, cidr := range client.Current.Address {
-				ip, err := util.GetIpFromCidr(cidr)
-				if err != nil {
+				parts := strings.Split(cidr, "/")
+				if len(parts) == 1 {
 					reservedIps = append(reservedIps, cidr)
-					log.WithFields(log.Fields{
-						"err":  err,
-						"cidr": cidr,
-					}).Error("failed to ip from cidr")
 				} else {
-					reservedIps = append(reservedIps, ip)
+					ip, err := util.GetIpFromCidr(cidr)
+					if err != nil {
+						reservedIps = append(reservedIps, cidr)
+						log.WithFields(log.Fields{
+							"err":  err,
+							"cidr": cidr,
+						}).Error("failed to ip from cidr")
+					} else {
+						reservedIps = append(reservedIps, ip)
+					}
 				}
 			}
 		}

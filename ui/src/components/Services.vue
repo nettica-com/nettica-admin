@@ -715,29 +715,40 @@ export default {
             // switch to the wilderness
             ApiService.setWildServer();
             ApiService.setWildHeader();
-            ApiService.post("/device", device)
-                .then( d => {
-                this.errorService(`Device created: ${d.name}`);
-                console.log("device created: ", d);
-                vpn.deviceid = d.id;
 
-                ApiService.setWildServer();
-                ApiService.setWildHeader();
-                ApiService.post("/vpn", vpn)
-                    .then( v => {
-                        console.log("vpn created: ", v);
-                        this.errorService(`VPN created: ${v.name}`);
+            ApiService.get("/net/" + this.wildList.selected.value)
+                .then( n => {
+                    console.log("net: ", n);
+                    service.net = n;
+                    
+                    ApiService.post("/device", device)
+                    .then( d => {
+                    this.errorService(`Device created: ${d.name}`);
+                    console.log("device created: ", d);
+                    vpn.deviceid = d.id;
 
-                    this.service.device = d;   
-                    this.service.vpn = v;  
+                    ApiService.post("/vpn", vpn)
+                        .then( v => {
+                            console.log("vpn created: ", v);
+                            this.errorService(`VPN created: ${v.name}`);
 
-                    ApiService.setServer();
-                    ApiService.setHeader();
-                    ApiService.post("/service", this.service)
-                        .then( s => {
-                            console.log("service created: ", s);
-                            this.errorService(`Service created: ${s.name}`);
-                            this.Refreshing();
+                        this.service.device = d;   
+                        this.service.vpn = v;  
+
+                        ApiService.setServer();
+                        ApiService.setHeader();
+                        ApiService.post("/service", this.service)
+                            .then( s => {
+                                console.log("service created: ", s);
+                                this.errorService(`Service created: ${s.name}`);
+                                this.Refreshing();
+                            })
+                            .catch(error => {
+                                console.log("error: ", error)
+                                if (error.response) {
+                                    this.errorService(error.response.data.error)
+                                }
+                            });
                         })
                         .catch(error => {
                             console.log("error: ", error)
@@ -745,20 +756,21 @@ export default {
                                 this.errorService(error.response.data.error)
                             }
                         });
-                    })
-                    .catch(error => {
-                        console.log("error: ", error)
-                        if (error.response) {
-                            this.errorService(error.response.data.error)
-                        }
-                    });
+                })
+                .catch(error => {
+                    console.log("error: ", error)
+                    if (error.response) {
+                    this.errorService(error.response.data.error)
+                    }
+                });
             })
             .catch(error => {
                 console.log("error: ", error)
                 if (error.response) {
-                this.errorService(error.response.data.error)
+                    this.errorService(error.response.data.error)
                 }
             });
+        
             this.dialogWilderness = false;
         },
 

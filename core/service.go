@@ -108,6 +108,7 @@ func CreateService(service *model.Service) (*model.Service, error) {
 				Updated:     &u,
 				CreatedBy:   service.CreatedBy,
 				UpdatedBy:   service.CreatedBy,
+				Default:     &model.Settings{},
 			}
 			net.Default.Address = []string{service.DefaultSubnet}
 			net.Default.Dns = service.Net.Default.Dns
@@ -157,7 +158,7 @@ func CreateService(service *model.Service) (*model.Service, error) {
 		}
 	} // otherwise it was created remotely
 
-	if service.VPN == nil {
+	if service.VPN == nil || service.VPN.Id == "" {
 
 		// create a default vpn using the net
 		var c time.Time = time.Now().UTC()
