@@ -952,7 +952,7 @@ export default {
 
             var selected = 0;
             for (let i = 0; i < this.nets.length; i++) {
-                this.netList.items[i+1] = { "text": this.nets[i].netName, "value": this.nets[i].id }
+                this.netList.items[i] = { "text": this.nets[i].netName, "value": this.nets[i].id }
                 if (this.netList.items[i].text == this.device.netName) {
                     selected = i
                     break
