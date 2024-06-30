@@ -408,6 +408,9 @@
                                         <v-select return-object v-model="acntList.selected" :items="acntList.items" item-text="text"
                                             item-value="value" label="For this account"
                                             :rules="[v => !!v || 'Account is required',]" single persistent-hint />
+                                        <v-select return-object v-model="addNet.selected" :items="addNet.items" v-on:change="updateDefaults"
+                                            item-text="text" item-value="value" label="Join this network (optional)"
+                                            single persistent-hint />
                                         <v-select return-object v-model="platforms.selected" :items="platforms.items"
                                             item-text="text" item-value="value" label="Platform of this device" single
                                             persistent-hint />
@@ -534,6 +537,7 @@
 </template>
 <script>
 import { mapActions, mapGetters } from 'vuex'
+import ApiService from '@/services/api.service'
 
 
 export default {
@@ -573,6 +577,7 @@ export default {
             ipport: v => (!v || v && v.length == 0 || /^(((\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}\b)|(\[([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\]:[0-9]{1,5})|^$)(,\s+((\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}\b)|(\[([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\]:[0-9]{1,5})|^$))*)$/.test(v)) || 'If present, must be valid IPv4 or IPv6 address and port',
         },
         netList: {},
+        addNet: {},
         platList: {},
         publicSubnets: false,
         platforms: {
@@ -625,6 +630,7 @@ export default {
     mounted() {
         this.readAllAccounts(this.user.email)
         this.readAllDevices()
+        this.readAllNetworks()
 
     },
 
@@ -838,6 +844,15 @@ export default {
 
             this.netList.selected = this.netList.items[selected];
 
+            this.addNet = {
+                selected: { "text": "", "value": "" },
+                items: [ { "text": "", "value": "" } ] 
+            }
+
+            for (let i = 0; i < this.nets.length; i++) {
+                this.addNet.items[i+1] = { "text": this.nets[i].netName, "value": this.nets[i] }
+            }
+
             this.acntList = {
                 selected: { "text": "", "value": "" },
                 items: []
@@ -881,10 +896,44 @@ export default {
             this.device.name = this.device.name.trim()
 
             this.dialogCreate = false;
-            await this.createdevice(this.device)
-            if (this.use_ezcode) {
-                this.dialogEZCode = true;
-            }
+
+            ApiService.post('/device', this.device)
+                .then( d => {
+                    console.log("create device response = ", d )
+                    if (this.use_ezcode) {
+                        this.dialogEZCode = true;
+                    }
+                    if (this.addNet.selected.value == "") {
+                        this.Refresh()
+                        this.errorDevice(`Device ${this.device.name} created`)
+                    } else {
+                        var vpn = {
+                            name: this.device.name + "." + this.addNet.selected.text,
+                            netName: this.addNet.selected.text,
+                            netid: this.addNet.selected.value.id,
+                            deviceid: d.id,
+                            email: this.user.email,
+                            enable: true,
+                            tags: [],
+                            current: this.addNet.selected.value.default,
+                        }
+                        ApiService.post('/vpn', vpn)
+                            .then( v => {
+                                console.log("create vpn response = ", v)
+                                this.errorDevice(`Device ${this.device.name} created and added to ${v.netName}`)
+                                this.Refresh()
+                            })
+                            .catch((error) => {
+                                console.log("create vpn error = ", error)
+                                this.errorDevice(error)
+                            })
+                    }
+                })
+                .catch((error) => {
+                    console.log("create device error = ", error)
+                    this.errorDevice(error)
+                })
+
         },
 
         startAddVPN(device) {
@@ -907,7 +956,7 @@ export default {
 
             var selected = 0;
             for (let i = 0; i < this.nets.length; i++) {
-                this.netList.items[i] = { "text": this.nets[i].netName, "value": this.nets[i].id }
+                this.netList.items[i+1] = { "text": this.nets[i].netName, "value": this.nets[i].id }
                 if (this.netList.items[i].text == this.device.netName) {
                     selected = i
                     break
@@ -915,6 +964,7 @@ export default {
             }
 
             this.netList.selected = this.netList.items[selected];
+            
             this.dialogAddVPN = true;
         },
 
