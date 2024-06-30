@@ -117,11 +117,12 @@
                                     label="MTU" hint="Leave at 0 for auto, 1350 for IPv6 or if problems occur" />
                                 <v-text-field v-model="selected.net.accountid" label="Account ID" readonly />
                                 <v-text-field v-model="selected.net.id" label="Network ID" readonly />
-                                <v-text-field v-model="selected.net.default.presharedKey" label="Preshared Key" autocomplete="off"
-                                                        :append-icon="showPreshared ? 'mdi-eye' : 'mdi-eye-off'"
-                                                        :type="showPreshared ? 'text' : 'password'"
-                                                        @click:append="showPreshared = !showPreshared" />
-
+                                <v-text-field label="Preshared Key" readonly>
+                                    <template v-slot:append>
+                                        <v-icon title="Copy to clipboard" @click="copy(selected.net.default.presharedKey)">mdi-content-copy</v-icon>
+                                        <v-icon title="Regenerate preshared key" @click="regenerate(selected.net)">mdi-refresh</v-icon>
+                                    </template>
+                                </v-text-field>
                                 <v-text-field type="number" v-model="selected.net.default.persistentKeepalive"
                                     label="Persistent keepalive"
                                     hint="To disable, set to 0.  Recommended value 29 (seconds)" />
@@ -681,6 +682,7 @@ export default {
             readAllNetworks: 'readAll',
             createNet: 'create',
             updateNet: 'update',
+            update_net: 'update_net',
             deleteNet: 'delete',
         }),
         ...mapActions('account', {
@@ -1136,6 +1138,35 @@ export default {
                 .then(() => {
                     this.errorNet("Copied to clipboard")
                 })
+        },
+
+        regenerate(net) {
+            if (confirm(`Do you really want to regenerate the preshared key for ${net.netName}? This will take effect immediately.`)) {
+
+                const characters = 'ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+                const charactersLength = characters.length;
+                let counter = 0;
+                let length = 32;
+                let key = "";
+                while (counter < length) {
+                    key += characters.charAt(Math.floor(Math.random() * charactersLength));
+                    counter += 1;
+                }
+
+                key = btoa(key)
+                net.default.presharedKey = key
+                net.forceUpdate = true
+
+                ApiService.patch(`/net/${net.id}`, net)
+                    .then((n) => {
+                        this.update_net(n)
+                        this.errorNet("Preshared key has been regenerated and distributed.  Clients may need to reconnect.")
+                        this.Refresh()
+                    })
+                    .catch(() => {
+                        this.errorNet('Failed to regenerate preshared key');
+                    })
+            }
         },
 
 

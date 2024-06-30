@@ -64,6 +64,10 @@ const actions = {
       })
   },
 
+  update_net( { commit }, net) {
+    commit('update', net)
+  },
+
   delete({ commit }, net) {
     ApiService.delete(`/net/${net.id}`)
       .then(() => {
