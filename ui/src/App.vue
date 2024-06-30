@@ -63,6 +63,15 @@
 
 
     mounted() {
+      if (this.$route && this.$route.query && this.$route.query.referer) {
+        let r = TokenService.getReferer()
+        if (r == null) {
+          TokenService.saveReferer(this.$route.query.referer)
+	  console.log("saved referer ", this.$route.query.referer );
+          TokenService.destroyToken() // force a token exchange
+	  this.isAuthenticated = false
+        }
+      } 
       if (this.$route && this.$route.query && this.$route.query.server &&
           this.$route.query.code && this.$route.query.state && this.$route.query.client_id) {
         exchange({
@@ -76,10 +85,6 @@
 
         return;
       }
-      if (this.$route && this.$route.query && this.$route.query.referer) {
-        TokenService.saveReferer(this.$route.query.referer)
-	      console.log("saved referer ", this.$route.query.referer );
-      } 
       if (this.requiresAuth || location.pathname == "/") {
         if (this.isAuthenticated == false) {
           if (this.$route.query.code && this.$route.query.state) {
