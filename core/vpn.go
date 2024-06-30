@@ -63,6 +63,9 @@ func CreateVPN(vpn *model.VPN) (*model.VPN, error) {
 	if current.EnableDns {
 		vpn.Current.EnableDns = current.EnableDns
 	}
+	if current.SubnetRouting {
+		vpn.Current.SubnetRouting = current.SubnetRouting
+	}
 	if current.UPnP {
 		vpn.Current.UPnP = current.UPnP
 	}
