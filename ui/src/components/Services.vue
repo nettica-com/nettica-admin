@@ -721,9 +721,14 @@ export default {
                     console.log("net: ", n);
                     this.service.net = n;
 
-                    vpn.current.allowedIPs = n.allowedIPs;
+                    vpn.current.allowedIPs = n.default.allowedIPs;
                     if (this.svcList.selected.value == "Tunnel") {
-                        vpn.current.allowedIPs.push("0.0.0.0/0")
+                        console.log("allowedIPs: ", vpn.current.allowedIPs)
+                        if (vpn.current.allowedIPs) {
+                            vpn.current.allowedIPs.push("0.0.0.0/0")
+                        } else {
+                            vpn.current.allowedIPs = ["0.0.0.0/0"]
+                        }
                     }
                     
                     ApiService.post("/device", device)
