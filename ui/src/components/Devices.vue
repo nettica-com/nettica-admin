@@ -113,10 +113,11 @@
                                             persistent-hint :readonly="!inEdit" />
                                         <v-text-field v-model="selected.device.id" label="Device ID" readonly />
                                         <v-text-field v-model="selected.device.server" label="Server" :readonly="!inEdit" />
-                                        <v-text-field v-model="selected.device.apiKey" label="API Key" readonly
-                                            :append-icon="showApiKey ? 'mdi-eye' : 'mdi-eye-off'"
-                                            :type="showApiKey ? 'text' : 'password'"
-                                            @click:append="showApiKey = !showApiKey" />
+                                        
+                                        <v-text-field v-if="!inEdit" label="API Key" readonly
+                                            append-icon="mdi-content-copy" @click:append="copy(selected.device.apiKey)">* * * *</v-text-field>
+                                        <v-text-field v-if="inEdit" v-model="selected.device.apiKey" label="API Key" />
+                                    
                                         <v-text-field v-model="selected.device.instanceid" label="AWS or Azure Instance ID" :readonly="!inEdit" />  
                                         <div :hidden="!inEdit">
                                             <v-text-field v-model="selected.device.name" label="Device friendly name"
@@ -240,17 +241,11 @@
                                                         label="Role" single dark />
                                                     <v-text-field v-model="selected.vpn.current.table" label="Table" />
                                                     <v-text-field v-model="selected.vpn.current.publicKey" label="Public key" />
-                                                    <v-text-field v-model="selected.vpn.current.privateKey" label="Private key"
-                                                        autocomplete="off"
-                                                        :append-icon="showPrivate ? 'mdi-eye' : 'mdi-eye-off'"
-                                                        :type="showPrivate ? 'text' : 'password'"
-                                                        hint="Clear this field to have the client manage its private key"
-                                                        @click:append="showPrivate = !showPrivate" />
-                                                    <v-text-field v-model="selected.vpn.current.presharedKey"
-                                                        label="Preshared Key" autocomplete="off"
-                                                        :append-icon="showPreshared ? 'mdi-eye' : 'mdi-eye-off'"
-                                                        :type="showPreshared ? 'text' : 'password'"
-                                                        @click:append="showPreshared = !showPreshared" />
+                                                    <v-text-field v-if="!editPrivate" label="Private key" readonly append-icon="mdi-square-edit-outline" @click:append="editPrivate = true" />
+                                                    <v-text-field v-if="editPrivate" v-model="selected.vpn.current.privateKey" label="Private key"
+                                                        hint="Clear this field to have the client manage its private key" />
+                                                    <v-text-field label="Preshared Key" readonly 
+                                                        append-icon="mdi-content-copy" @click:append="copy(selected.vpn.current.presharedKey)" />
                                                     <v-text-field type="number"
                                                         v-model="selected.vpn.current.persistentKeepalive"
                                                         label="Persistent keepalive"
@@ -551,6 +546,7 @@ export default {
         showApiKey: false,
         showTree: false,
         friendly: false,
+        editPrivate: false,
         use_ezcode: true,
         footerProps: { 'items-per-page-options': [25, 50, 100, -1] },
         dialogCreate: false,
@@ -1049,6 +1045,7 @@ export default {
             //}
             vpn = this.vpn
             this.inEdit = false;
+            this.editPrivate = false;
             this.updatevpn(this.vpn)
     //        this.updatedevice_vpn(this.vpn)
 //            this.Refreshing()
@@ -1128,7 +1125,7 @@ export default {
                 this.addNet.items[i+1] = { "text": this.nets[i].netName, "value": this.nets[i] }
             }
         },
-        
+
         copyDeviceConfig(device) {
             var url = "curl \"http://localhost:53280/config/?id=" + device.id + "&apiKey=" + device.apiKey + "&server=" + device.server + "\""
 
@@ -1165,6 +1162,15 @@ export default {
             this.updatedevice(this.device)
             this.Refreshing()
         },
+
+        copy(text) {
+            navigator.clipboard
+                .writeText(text)
+                .then(() => {
+                    this.errorDevice("Copied to clipboard")
+                })
+        },
+
 
         async forceFileDownload(vpn) {
             console.log(vpn)

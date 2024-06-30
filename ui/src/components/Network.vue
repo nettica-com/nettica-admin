@@ -295,15 +295,11 @@
                                                 label="Role" single dark />
                                             <v-text-field v-model="selected.vpn.current.table" label="Table" />
                                             <v-text-field v-model="selected.vpn.current.publicKey" label="Public key" />
-                                            <v-text-field v-model="selected.vpn.current.privateKey" label="Private key"
-                                                autocomplete="off" :append-icon="showPrivate ? 'mdi-eye' : 'mdi-eye-off'"
-                                                :type="showPrivate ? 'text' : 'password'"
-                                                hint="Clear this field to have the client manage its private key"
-                                                @click:append="showPrivate = !showPrivate" />
-                                            <v-text-field v-model="selected.vpn.current.presharedKey" label="Preshared Key"
-                                                autocomplete="off" :append-icon="showPreshared ? 'mdi-eye' : 'mdi-eye-off'"
-                                                :type="showPreshared ? 'text' : 'password'"
-                                                @click:append="showPreshared = !showPreshared" />
+                                            <v-text-field v-if="!editPrivate" label="Private key" readonly append-icon="mdi-square-edit-outline" @click:append="editPrivate = true" />
+                                            <v-text-field v-if="editPrivate" v-model="selected.vpn.current.privateKey" label="Private key"
+                                                hint="Clear this field to have the client manage its private key" />
+                                            <v-text-field label="Preshared Key" readonly 
+                                                append-icon="mdi-content-copy" @click:append="copy(selected.vpn.current.presharedKey)" />
                                             <v-text-field type="number" v-model="selected.vpn.current.persistentKeepalive"
                                                 label="Persistent keepalive"
                                                 hint="To disable, set to 0.  Recommended value 29 (seconds)" />
@@ -549,6 +545,7 @@ export default {
         deviceList: {},
         isOwner: false,
         inEdit: false,
+        editPrivate: false,
         dialogCreate: false,
         dialogAddDevice: false,
         publicSubnets: false,
@@ -1121,6 +1118,7 @@ export default {
 
 
             this.inEdit = false;
+            this.editPrivate = false;
             this.updatevpn(this.vpn)
         },
 
@@ -1131,6 +1129,15 @@ export default {
                 this.Refreshing()
             }
         },
+
+        copy(text) {
+            navigator.clipboard
+                .writeText(text)
+                .then(() => {
+                    this.errorNet("Copied to clipboard")
+                })
+        },
+
 
         async forceFileDownload(vpn) {
             console.log("vpn = ", vpn)
