@@ -719,7 +719,7 @@ export default {
             ApiService.get("/net/" + this.wildList.selected.value)
                 .then( n => {
                     console.log("net: ", n);
-                    service.net = n;
+                    this.service.net = n;
                     
                     ApiService.post("/device", device)
                     .then( d => {
