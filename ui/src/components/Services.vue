@@ -720,6 +720,11 @@ export default {
                 .then( n => {
                     console.log("net: ", n);
                     this.service.net = n;
+
+                    vpn.current.allowed = n.allowed;
+                    if (this.svcList.selected.value == "Tunnel") {
+                        vpn.current.allowed.push("0.0.0.0/0")
+                    }
                     
                     ApiService.post("/device", device)
                     .then( d => {
