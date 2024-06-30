@@ -405,12 +405,12 @@
                                     <v-form ref="form" v-model="valid">
                                         <v-text-field v-model="device.name" label="Host friendly name"
                                             :rules="[rules.required, rules.host]" required />
+                                        <v-select return-object v-model="addNet.selected" :items="addNet.items" v-on:change="onNetChange"
+                                            item-text="text" item-value="value" label="Join this network (optional)"
+                                            single persistent-hint />
                                         <v-select return-object v-model="acntList.selected" :items="acntList.items" item-text="text"
                                             item-value="value" label="For this account"
                                             :rules="[v => !!v || 'Account is required',]" single persistent-hint />
-                                        <v-select return-object v-model="addNet.selected" :items="addNet.items" v-on:change="updateDefaults"
-                                            item-text="text" item-value="value" label="Join this network (optional)"
-                                            single persistent-hint />
                                         <v-select return-object v-model="platforms.selected" :items="platforms.items"
                                             item-text="text" item-value="value" label="Platform of this device" single
                                             persistent-hint />
@@ -1117,6 +1117,18 @@ export default {
             this.updatedevice(device)
         },
 
+        onNetChange(net) {
+            console.log("onNetChange = ", net)
+            this.addNet = {
+                selected: { "text": net.text, "value": net.value },
+                items: [ { "text": net.text, "value": net.value } ] 
+            }
+
+            for (let i = 0; i < this.nets.length; i++) {
+                this.addNet.items[i+1] = { "text": this.nets[i].netName, "value": this.nets[i] }
+            }
+        },
+        
         copyDeviceConfig(device) {
             var url = "curl \"http://localhost:53280/config/?id=" + device.id + "&apiKey=" + device.apiKey + "&server=" + device.server + "\""
 
