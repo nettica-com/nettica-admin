@@ -247,10 +247,11 @@ export default {
         search: '',
         dnsList: {
             items: [
-                { text: "Google DNS", value: "8.8.8.8" },
-                { text: "Cloudflare DNS", value: "1.1.1.1" },
-                { text: "OpenDNS DNS", value: "208.67.222.222" },
-                { text: "Quad9 DNS", value: "9.9.9.9" },
+                { text: "Google DNS", value: [ "8.8.8.8", "8.8.4.4" ] },
+                { text: "Cloudflare DNS", value: [ "1.1.1.1", "1.0.0.1" ] },
+                { text: "OpenDNS DNS", value: [ "208.67.222.222", "208.67.220.222" ]},
+                { text: "OpenDNS Family Shield DNS", value: [ "208.67.222.123", "208.67.220.123" ]},
+                { text: "Quad9 DNS", value: [ "9.9.9.9" , "149.112.112.112" ] },
             ]
         },
         svcList: {
@@ -509,13 +510,15 @@ export default {
             this.service.net.netName = this.netList.selected.value;
             this.service.net.default = {}
             this.service.net.default.dns = []
-            this.service.net.default.dns[0] = this.dnsList.selected.value;
+            this.service.net.default.dns[0] = this.dnsList.selected.value[0];
+            this.service.net.default.dns[1] = this.dnsList.selected.value[1];
 
             this.service.vpn = {}
             this.service.vpn.netName = this.serverList.selected.value;
             this.service.vpn.current = {}
             this.service.vpn.current.dns = []
-            this.service.vpn.current.dns[0] = this.dnsList.selected.value;
+            this.service.vpn.current.dns[0] = this.dnsList.selected.value[0];
+            this.service.vpn.current.dns[1] = this.dnsList.selected.value[1];
             this.service.vpn.current.endpoint = this.server.ipAddress + ":" + port;
             this.service.vpn.current.listenPort = port;
 
