@@ -107,6 +107,10 @@
                     code: this.$route.query.code,
                     state: this.$route.query.state
                 })
+                TokenService.destroyReferer();
+                TokenService.destroyCode();
+                TokenService.destroyState();
+                TokenService.destroyClientId();
               } catch (e) {
                 this.notification = {
                   show: true,

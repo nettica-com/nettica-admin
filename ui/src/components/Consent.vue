@@ -79,7 +79,9 @@ export default {
 
     reject() {
       TokenService.destroyReferer();
-      TokenService.destroyWildServer();
+      TokenService.destroyCode();
+      TokenService.destroyState();
+      TokenService.destroyClientId();
       window.location.replace("/")
     },
   },
