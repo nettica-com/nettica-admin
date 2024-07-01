@@ -1096,6 +1096,7 @@ export default {
             // all good, submit
             this.dialogUpdate = false;
             this.updateNet(net)
+            this.Refresh()
 
         },
         updateVPN(vpn) {
