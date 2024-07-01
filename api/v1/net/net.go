@@ -235,6 +235,7 @@ func updateNet(c *gin.Context) {
 
 	updateMTU := false
 	updateAddress := false
+	updateDNS := false
 	updateAllowed := false
 	updateFailSafe := false
 	updatePresharedKey := false
@@ -247,6 +248,7 @@ func updateNet(c *gin.Context) {
 		if !util.CompareArrays(data.Default.Address, net.Default.Address) {
 			log.Infof("updateNet: updateAddress for %s %v", data.NetName, data.Default.Address)
 			updateAddress = true
+			updateDNS = true
 		}
 		if !util.CompareArrays(data.Default.AllowedIPs, net.Default.AllowedIPs) {
 			log.Infof("updateNet: updateAllowed for %s %v", data.NetName, data.Default.AllowedIPs)
@@ -277,6 +279,22 @@ func updateNet(c *gin.Context) {
 			log.Infof("updateNet: updateMTU for %s %d", v.Id, data.Default.Mtu)
 			v.Default.Mtu = data.Default.Mtu
 			v.Current.Mtu = data.Default.Mtu
+			changed = true
+		}
+		if updateDNS {
+			log.Infof("updateNet: updateDNS for %s %v", v.Id, data.Default.Address)
+			v.Default.Dns = data.Default.Dns
+			for x, dns := range v.Current.Dns {
+				if dns == v.Current.Address[0] {
+					v.Current.Dns = append(v.Current.Dns[:x], v.Current.Dns[x+1:]...)
+					break
+				}
+				ip, err := util.GetIpFromCidr(v.Current.Address[0])
+				if err == nil && dns == ip {
+					v.Current.Dns = append(v.Current.Dns[:x], v.Current.Dns[x+1:]...)
+					break
+				}
+			}
 			changed = true
 		}
 		if updateAddress && !util.CompareArrays(v.Default.Address, data.Default.Address) {
