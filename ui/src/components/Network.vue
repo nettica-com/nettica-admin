@@ -400,12 +400,22 @@
                     <v-row>
                         <v-col cols="12">
                             <v-form ref="form" v-model="valid">
-                                <v-text-field v-model="net.netName" label="Network name"
-                                    :rules="[ rules.required, rules.host ]" required />
-                                <v-text-field v-model="net.description" label="Description" />
+                                <v-text-field v-model="net.netName"
+                                    :rules="[ rules.required, rules.host ]" required>
+                                    <template #label>
+                                      <span class="red--text"><strong>* </strong></span>Network Name
+                                    </template>
+                                </v-text-field>
+                                <v-combobox v-model="net.default.address" :items="net.default.address"
+                                    :rules="[rules.required, rules.cidr]" multiple chips persistent-hint required >
+                                    <template #label>
+                                      <span class="red--text"><strong>* </strong></span>IP subnet for this network (ex. 10.10.10.0/24)
+                                    </template>
+                                </v-combobox>
                                 <v-select return-object v-model="acntList.selected" :items="acntList.items" item-text="text"
                                     item-value="value" label="For this account"
                                     :rules="[v => !!v || 'Account is required',]" single persistent-hint />
+                                <v-text-field v-model="net.description" label="Description" />
                                 <v-combobox v-model="net.tags" chips hint="Enter a tag, hit tab, hit enter." label="Tags"
                                     multiple dark>
                                     <template v-slot:selection="{ attrs, item, select, selected }">
@@ -415,9 +425,6 @@
                                         </v-chip>
                                     </template>
                                 </v-combobox>
-                                <v-combobox v-model="net.default.address" :items="net.default.address"
-                                    label="IP subnet for this network (ex. 10.10.10.0/24)"
-                                    :rules="[v => !!v || 'Subnet is required',]" multiple chips persistent-hint required />
                                 <v-combobox v-model="net.default.dns" chips
                                     hint="Enter the IP address of a global DNS resolver, hit tab, hit enter."
                                     label="DNS servers for this network" multiple dark>
@@ -562,6 +569,7 @@ export default {
         panel: 1,
         valid: false,
         rules: {
+            cidr: v =>  /((\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\b[0-9]{1,2}\b)|(\b(?:[A-Fa-f0-9]{1,4}:){7}[A-Fa-f0-9]{1,4}\b\/\b[0-9]{1,3}\b))(?: ((\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\b[0-9]{1,2}\b)|(\b(?:[A-Fa-f0-9]{1,4}:){7}[A-Fa-f0-9]{1,4}\b\/\b[0-9]{1,3}\b)))*/.test(v) || 'Enter a valid subnet',
             required: value => !!value || 'Required.',
             email: v => /.+@.+\..+/.test(v) || 'E-mail must be valid',
             host: v => /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/.test(v) || 'Only letters, numbers, dots and hyphens are allowed. Must start and end with a letter or number.',

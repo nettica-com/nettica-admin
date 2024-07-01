@@ -398,8 +398,12 @@
                             <v-row>
                                 <v-col cols="12">
                                     <v-form ref="form" v-model="valid">
-                                        <v-text-field v-model="device.name" label="Host friendly name"
-                                            :rules="[rules.required, rules.host]" required />
+                                        <v-text-field v-model="device.name" 
+                                            :rules="[rules.required, rules.host]" required >
+                                            <template #label>
+                                                <span class="red--text"><strong>* </strong></span>Host friendly name
+                                            </template>
+                                        </v-text-field>
                                         <v-select return-object v-model="addNet.selected" :items="addNet.items" v-on:change="onNetChange"
                                             item-text="text" item-value="value" label="Join this network (optional)"
                                             single persistent-hint />
