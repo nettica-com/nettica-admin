@@ -135,6 +135,15 @@ func IsInCidr(cidr string, subnet string) bool {
 	if err != nil {
 		return false
 	}
+	parts := strings.Split(cidr, "/")
+	if len(parts) == 1 {
+		ip := net.ParseIP(cidr)
+		if ip == nil {
+			return false
+		}
+		return ipnet.Contains(ip)
+	}
+
 	ip, _, err := net.ParseCIDR(cidr)
 	if err != nil {
 		return false
