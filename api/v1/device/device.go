@@ -410,6 +410,7 @@ func statusDevice(c *gin.Context) {
 	var msg model.Message
 	hconfig := make([]model.VPNConfig, len(nets))
 
+	msg.Version = "3.0"
 	msg.Id = device.Id
 	msg.Device = device
 	msg.Config = hconfig
@@ -524,15 +525,14 @@ func statusDevice(c *gin.Context) {
 			// If this config isn't explicitly for this device, remove the private key
 			// from the results
 			if client.DeviceID != device.Id {
+
 				client.Current.PrivateKey = ""
 				client.Default = nil // &model.Settings{}
 				client.Current.PreUp = ""
 				client.Current.PostUp = ""
 				client.Current.PreDown = ""
 				client.Current.PostDown = ""
-				if !client.Enable {
-					// client.Current = nil
-				}
+
 			} else {
 				// This is the current client
 				device2 := *device

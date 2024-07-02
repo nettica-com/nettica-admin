@@ -9,14 +9,16 @@ type VPNConfig struct {
 
 // Host structure
 type Message struct {
-	Id     string      `json:"id"       bson:"id"`
-	Device *Device     `json:"device"   bson:"device"`
-	Config []VPNConfig `json:"config"   bson:"config"`
+	Version string      `json:"version,omitempty"   bson:"version,omitempty"`
+	Id      string      `json:"id"                  bson:"id"`
+	Device  *Device     `json:"device"              bson:"device"`
+	Config  []VPNConfig `json:"config"              bson:"config"`
 }
 
 type ServiceMessage struct {
-	Id     string    `json:"id"       bson:"id"`
-	Config []Service `json:"config"   bson:"config"`
+	Version string    `json:"version,omitempty"     bson:"version,omitempty"`
+	Id      string    `json:"id"                    bson:"id"`
+	Config  []Service `json:"config"                bson:"config"`
 }
 
 type StatusResponse struct {

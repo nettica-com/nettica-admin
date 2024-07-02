@@ -68,6 +68,7 @@ func statusService(c *gin.Context) {
 	var msg model.ServiceMessage
 	sConfig := make([]model.Service, len(services))
 
+	msg.Version = "1.0"
 	msg.Id = serviceGroup
 
 	for i, s := range services {
