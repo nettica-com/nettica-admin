@@ -159,7 +159,6 @@ func UpdateDevice(Id string, device *model.Device, fUpdated bool) (*model.Device
 			current.UpdatedBy = "API"
 		}
 	}
-	current.ApiID = device.ApiID
 	current.Enable = device.Enable
 	current.Tags = device.Tags
 	current.Platform = device.Platform
@@ -174,9 +173,6 @@ func UpdateDevice(Id string, device *model.Device, fUpdated bool) (*model.Device
 	}
 	current.Architecture = device.Architecture
 	current.Version = device.Version
-	current.ClientID = device.ClientID
-	current.AuthDomain = device.AuthDomain
-	current.AppData = device.AppData
 	if device.CheckInterval != 0 {
 		current.CheckInterval = device.CheckInterval
 	}

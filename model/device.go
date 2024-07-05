@@ -24,10 +24,6 @@ type Device struct {
 	Platform      string     `json:"platform"                  bson:"platform"`
 	OS            string     `json:"os"                        bson:"os"`
 	Architecture  string     `json:"arch"                      bson:"arch"`
-	ClientID      string     `json:"clientid,omitempty"        bson:"clientid,omitempty"`
-	AuthDomain    string     `json:"authdomain,omitempty"      bson:"authdomain,omitempty"`
-	ApiID         string     `json:"apiid,omitempty"           bson:"apiid,omitempty"`
-	AppData       string     `json:"appdata,omitempty"         bson:"appdata,omitempty"`
 	CheckInterval int64      `json:"checkInterval"             bson:"checkInterval"`
 	ServiceGroup  string     `json:"serviceGroup,omitempty"    bson:"serviceGroup,omitempty"`
 	ServiceApiKey string     `json:"serviceApiKey,omitempty"   bson:"serviceApiKey,omitempty"`
