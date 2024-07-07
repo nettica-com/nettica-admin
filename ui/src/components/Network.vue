@@ -263,6 +263,8 @@
                                     label="Public endpoint for clients" :rules="[ rules.ipport ]" />
                                 <v-text-field type="number" v-model="selected.vpn.current.mtu"
                                     label="MTU" hint="Leave at 0 for auto, 1350 for IPv6 or problems occur" />
+                                <v-text-field type="number" v-model="selected.vpn.current.persistentKeepalive"
+                                    label="Persistent keepalive" hint="To disable, set to 0.  Recommended value 23 (seconds)" />
                                 <v-switch v-model="selected.vpn.enable" color="success" inset
                                     :label="selected.vpn.enable ? 'Enabled' : 'Disabled'" :readonly="!inEdit" />
                                 <p class="text-caption">Created by {{ selected.vpn.createdBy }} at {{ selected.vpn.created |
@@ -301,9 +303,6 @@
                                                 hint="Clear this field to have the client manage its private key" />
                                             <v-text-field label="Preshared Key" readonly 
                                                 append-icon="mdi-content-copy" @click:append="copy(selected.vpn.current.presharedKey)" />
-                                            <v-text-field type="number" v-model="selected.vpn.current.persistentKeepalive"
-                                                label="Persistent keepalive"
-                                                hint="To disable, set to 0.  Recommended value 29 (seconds)" />
                                             <v-textarea v-model="selected.vpn.current.preUp" label="PreUp Script"
                                                 hint="Command to run before starting VPN" />
                                             <v-textarea v-model="selected.vpn.current.postUp" label="PostUp Script"
