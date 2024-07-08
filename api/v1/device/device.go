@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -318,6 +319,16 @@ func readDevices(c *gin.Context) {
 	c.JSON(http.StatusOK, clients)
 }
 
+// getName returns the name of the server
+func getName() string {
+	name := os.Getenv("SERVER")
+
+	name = strings.TrimPrefix(name, "https://")
+	name = strings.TrimPrefix(name, "http://")
+
+	return name
+}
+
 // StatusDevice reads state for a device
 // @Summary Read state for a device
 // @Description Read state for a device
@@ -411,6 +422,7 @@ func statusDevice(c *gin.Context) {
 	hconfig := make([]model.VPNConfig, len(nets))
 
 	msg.Version = "3.0"
+	msg.Name = getName()
 	msg.Id = device.Id
 	msg.Device = device
 	msg.Config = hconfig
