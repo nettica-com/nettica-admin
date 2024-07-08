@@ -8,6 +8,7 @@ type VPNConfig struct {
 
 type Message struct {
 	Version string      `json:"version,omitempty"   bson:"version,omitempty"`
+	Name    string      `json:"name,omitempty"      bson:"name,omitempty"`
 	Id      string      `json:"id"                  bson:"id"`
 	Device  *Device     `json:"device"              bson:"device"`
 	Config  []VPNConfig `json:"config"              bson:"config"`
