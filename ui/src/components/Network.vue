@@ -240,7 +240,7 @@
                                 </v-combobox>
                                 <v-combobox :readonly="!inEdit" v-model="selected.vpn.current.dns" chips
                                     hint="Enter IP address(es) and hit enter or leave empty."
-                                    label="DNS servers for this device" multiple dark>
+                                    label="DNS servers for this network" multiple dark>
                                     <template v-slot:selection="{ attrs, item, select }">
 
                                         <v-chip v-bind="attrs" :input-value="selected" close @click="select"
