@@ -28,8 +28,7 @@ type Device struct {
 	ServiceGroup  string     `json:"serviceGroup,omitempty"    bson:"serviceGroup,omitempty"`
 	ServiceApiKey string     `json:"serviceApiKey,omitempty"   bson:"serviceApiKey,omitempty"`
 	SourceAddress string     `json:"sourceAddress,omitempty"   bson:"sourceAddress,omitempty"`
-	Debug         bool       `json:"debug,omitempty"           bson:"debug,omitempty"`
-	Quiet         bool       `json:"quiet,omitempty"           bson:"quiet,omitempty"`
+	Logging       string     `json:"logging"                   bson:"logging"`
 	Registered    bool       `json:"registered"                bson:"registered"`
 	UpdateKeys    bool       `json:"updateKeys"                bson:"updateKeys"`
 	InstanceID    string     `json:"instanceid,omitempty"      bson:"instanceid,omitempty"`

@@ -123,6 +123,8 @@
                                             <v-text-field v-model="selected.device.name" label="Device friendly name"
                                                 :rules="[v => !!v || 'device name is required',]" required />
                                         </div>
+                                        <v-select return-object v-model="selected.device.logging" items="logging.items"
+                                            item-text="text" item-value="value" label="Logging" single persistent-hint :readonly="!inEdit" />
                                         <p class="text-caption">Created by {{ selected.device.createdBy }} at {{ selected.device.created | formatDate }}<br/>
                                                             Last update by {{ selected.device.updatedBy }} at {{ selected.device.updated | formatDate }}</p>
                                     </v-col>
@@ -578,6 +580,15 @@ export default {
         netList: {},
         addNet: {},
         platList: {},
+        logging: { 
+            selected: { text: "None", value: "" },
+            items: [
+                { text: "None", value: "" },
+                { text: "Errors", value: "error" },
+                { text: "Info", value: "info" },
+                { text: "Debug", value: "debug" },
+            ],
+        },
         publicSubnets: false,
         platforms: {
             selected: { text: "", value: "" },
@@ -595,6 +606,9 @@ export default {
     }),
 
     computed: {
+        inverse(x) {
+            return !x
+        },
         selected() {
             if (!this.active.length) return undefined
 
@@ -778,6 +792,7 @@ export default {
                     isDevice: true,
                     children: []
                 }
+                this.items[i].device.logging = !this.items[i].device.quiet
  
                 if (this.devices[i].type == "Service") {
                     this.items[i].icon = "mdi-cloud"
@@ -826,6 +841,8 @@ export default {
                 enable: true,
                 tags: [],
                 current: {},
+                quiet: true,
+                debug: false,
             }
 
             this.netList = {
@@ -891,6 +908,7 @@ export default {
             }
             this.device = device
             this.device.platform = this.platforms.selected.value
+            this.device.logging = ""
             this.device.accountid = this.acntList.selected.value
             this.device.name = this.device.name.trim()
 
@@ -1097,6 +1115,13 @@ export default {
                 }
             }
 
+            for (let i = 0; i< this.logging.items.length; i++) {
+                if (this.logging.items[i].value == this.device.logging) {
+                    this.logging.selected = this.logging.items[i]
+                    break
+                }
+            }
+
             this.publicSubnets = false;
             this.dialogUpdate = true;
 
@@ -1146,6 +1171,9 @@ export default {
             console.log("updateDevice = ", item)
             this.noEdit = true;
             this.device = item.device;
+            this.device.logging = this.logging.selected.value
+
+            console.log( "device = ", this.device)
 
             this.device.platform = item.platform.value
             console.log("platform = ", this.device.platform)

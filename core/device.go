@@ -185,8 +185,6 @@ func UpdateDevice(Id string, device *model.Device, fUpdated bool) (*model.Device
 	if device.ServiceApiKey != "" {
 		current.ServiceApiKey = device.ServiceApiKey
 	}
-	current.Debug = device.Debug
-	current.Quiet = device.Quiet
 
 	// stupidity is not a right
 	changed := false
