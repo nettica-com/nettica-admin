@@ -1202,7 +1202,7 @@ export default {
             this.inEdit = false;
 
             this.updatedevice(this.device)
-            this.Refreshing()
+            //this.Refreshing()
         },
 
         copy(text) {
