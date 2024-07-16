@@ -176,6 +176,7 @@ const mutations = {
   update(state, device) {
     let index = state.devices.findIndex(x => x.id === device.id);
     if (index !== -1) {
+      device.vpns = state.devices[index].vpns
       state.devices.splice(index, 1);
       state.devices.push(device);
     } else {
