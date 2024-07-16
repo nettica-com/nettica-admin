@@ -123,7 +123,7 @@
                                             <v-text-field v-model="selected.device.name" label="Device friendly name"
                                                 :rules="[v => !!v || 'device name is required',]" required />
                                         </div>
-                                        <v-select return-object v-model="selected.device.logging" items="logging.items"
+                                        <v-select return-object v-model="selected.logging" :items="logging.items"
                                             item-text="text" item-value="value" label="Logging" single persistent-hint :readonly="!inEdit" />
                                         <p class="text-caption">Created by {{ selected.device.createdBy }} at {{ selected.device.created | formatDate }}<br/>
                                                             Last update by {{ selected.device.updatedBy }} at {{ selected.device.updated | formatDate }}</p>
@@ -779,6 +779,16 @@ export default {
             this.items = []
             var k = 0
             for (let i = 0; i < this.devices.length; i++) {
+                var text = "None"
+                if (this.devices[i].logging != null) {
+                    if (this.devices[i].logging == "error") {
+                        text = "Errors"
+                    } else if (this.devices[i].logging == "info") {
+                        text = "Info"
+                    } else if (this.devices[i].logging == "debug") {
+                        text = "Debug"
+                    }
+                }
 
                 this.items[i] = {
                     id: this.devices[i].id,
@@ -787,12 +797,12 @@ export default {
                     status: this.devices[i].status,
                     platform: { "text": this.devices[i].platform, "value": this.devices[i].platform },
                     accountid: { "text": this.devices[i].accountid, "value": this.devices[i].accountid },
+                    logging: { "text": text,"value": this.devices[i].logging },
                     icon: "mdi-devices",
                     symbol: "devices",
                     isDevice: true,
                     children: []
                 }
-                this.items[i].device.logging = !this.items[i].device.quiet
  
                 if (this.devices[i].type == "Service") {
                     this.items[i].icon = "mdi-cloud"
@@ -1171,9 +1181,10 @@ export default {
             console.log("updateDevice = ", item)
             this.noEdit = true;
             this.device = item.device;
-            this.device.logging = this.logging.selected.value
-
             console.log( "device = ", this.device)
+
+            this.device.logging = item.logging.value
+            console.log("logging = ", this.device.logging)
 
             this.device.platform = item.platform.value
             console.log("platform = ", this.device.platform)

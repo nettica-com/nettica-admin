@@ -160,6 +160,7 @@ func UpdateDevice(Id string, device *model.Device, fUpdated bool) (*model.Device
 		}
 	}
 	current.Enable = device.Enable
+	current.Logging = device.Logging
 	current.Tags = device.Tags
 	current.Platform = device.Platform
 	current.OS = device.OS
