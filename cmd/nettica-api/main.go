@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 	"time"
-        "net/http"
 
 	helmet "github.com/danielkov/gin-helmet"
 	"github.com/gin-contrib/cors"
@@ -99,14 +99,11 @@ func main() {
 	app.Use(static.Serve("/", static.LocalFile("./ui/dist", false)))
 
 	serveIndex := func(c *gin.Context) {
-	        c.Writer.WriteHeader(http.StatusOK)
-		log.Error("Show me the money")
-        	http.ServeFile(c.Writer, c.Request, "./ui/dist/index.html")
-		log.Error("***** Is this being called? *****")
+		c.Writer.WriteHeader(http.StatusOK)
+		http.ServeFile(c.Writer, c.Request, "./ui/dist/index.html")
 		c.AbortWithStatus(http.StatusOK)
 	}
-	// make a catch-all route to serve the index.html
-//	app.NoRoute(serveIndex)
+	// add this for when this app is serving the website instead of nginx
 	app.GET("/login", serveIndex)
 	app.GET("/consent", serveIndex)
 	app.GET("/join", serveIndex)
