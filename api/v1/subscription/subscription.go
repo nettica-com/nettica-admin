@@ -390,7 +390,9 @@ func createSubscription(c *gin.Context) {
 
 	// get the sku from the line_items
 	sku := sub["line_items"].([]interface{})[0].(map[string]interface{})["sku"].(string)
-	status := sub["status"].(string)
+	//status := sub["status"].(string)
+
+	status := "active"
 
 	customer := links["customer"].([]interface{})
 	log.Info(customer)
