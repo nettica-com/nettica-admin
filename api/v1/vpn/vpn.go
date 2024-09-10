@@ -72,7 +72,7 @@ func createVPN(c *gin.Context) {
 		data.AccountID = network.AccountID
 	}
 
-	if data.Current.Endpoint != "" && account.Role != "Admin" && account.Role != "Owner" {
+	if data.Current != nil && data.Current.Endpoint != "" && account.Role != "Admin" && account.Role != "Owner" {
 		// check the policy of the network to see if the endpoint is allowed
 		if !network.Policies.UserEndpoints {
 			log.Infof("User %s tried to set endpoint %s for network %s", account.Email, data.Current.Endpoint, data.NetId)

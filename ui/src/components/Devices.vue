@@ -942,6 +942,7 @@ export default {
                             deviceid: d.id,
                             accountid: this.addNet.selected.value.accountid,
                             enable: true,
+                            current: {},
                         }
                         ApiService.post('/vpn', vpn)
                             .then( v => {
