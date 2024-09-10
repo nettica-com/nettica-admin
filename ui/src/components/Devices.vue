@@ -919,6 +919,7 @@ export default {
             this.device = device
             this.device.platform = this.platforms.selected.value
             this.device.logging = ""
+            this.device.checkInterval = 10
             this.device.accountid = this.acntList.selected.value
             this.device.name = this.device.name.trim()
 
@@ -939,10 +940,8 @@ export default {
                             netName: this.addNet.selected.text,
                             netid: this.addNet.selected.value.id,
                             deviceid: d.id,
-                            email: this.user.email,
+                            accountid: this.addNet.selected.value.accountid,
                             enable: true,
-                            tags: [],
-                            current: this.addNet.selected.value.default,
                         }
                         ApiService.post('/vpn', vpn)
                             .then( v => {
