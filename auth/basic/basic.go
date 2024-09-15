@@ -13,7 +13,7 @@ import (
 	mongodb "github.com/nettica-com/nettica-admin/mongo"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/coreos/go-oidc"
+	"github.com/coreos/go-oidc/v3/oidc"
 
 	"github.com/nettica-com/nettica-admin/core"
 	model "github.com/nettica-com/nettica-admin/model"
