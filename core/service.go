@@ -180,10 +180,10 @@ func CreateService(service *model.Service) (*model.Service, error) {
 			UpdatedBy: service.CreatedBy,
 		}
 
-		// Failsafe entry for DNS.  Service will break without proper DNS setup.  If nothing is set use google
-		if len(vpn.Current.Dns) == 0 {
-			vpn.Current.Dns = append(vpn.Current.Dns, "8.8.8.8")
-		}
+		// Failsafe entry for DNS.  Service will break without proper DNS setup.  Use Cloudflare
+		vpn.Current.Dns = append(vpn.Current.Dns, "1.1.1.1")
+		// Duplicate eliminate DNS entries
+		vpn.Current.Dns = util.DuplicateEliminate(vpn.Current.Dns)
 
 		// Configure the routing for the relay/egress vpn
 		if vpn.Current.PostUp == "" {

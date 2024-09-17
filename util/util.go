@@ -29,6 +29,19 @@ func GetCleanAuthToken(c *gin.Context) string {
 	return token
 }
 
+func DuplicateEliminate(s []string) []string {
+
+	for i := 0; i < len(s); i++ {
+		for j := i + 1; j < len(s); j++ {
+			if s[i] == s[j] {
+				s = append(s[:j], s[j+1:]...)
+				j--
+			}
+		}
+	}
+	return s
+}
+
 // ReadFile file content
 func ReadFile(path string) (bytes []byte, err error) {
 	bytes, err = os.ReadFile(path)
