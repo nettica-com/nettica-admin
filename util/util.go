@@ -9,8 +9,11 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
+	"golang.org/x/oauth2"
 )
 
 var (
@@ -258,4 +261,50 @@ func RandomString(n int) (string, error) {
 	}
 
 	return string(ret), nil
+}
+
+// ValidateToken validates a token
+
+func ValidateToken(token string) (*oauth2.Token, error) {
+	// validate the JWT with our private key
+
+	// verify the jwt signature
+
+	// parse the token
+	claims := jwt.MapClaims{}
+	parsedToken, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
+		bytes, err := os.ReadFile(os.Getenv("OAUTH2_PUBLIC_KEY_PEM"))
+		if err != nil {
+			return nil, err
+		}
+		return jwt.ParseRSAPublicKeyFromPEM(bytes)
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// validate the claims
+	if parsedToken.Valid {
+
+		//if claims["email"] == nil || claims["email"] == "" {
+		//	return nil, errors.New("email is required")
+		//}
+
+		// create a new oauth2.Token from the claims
+		oauth2Token := &oauth2.Token{
+			AccessToken:  token,
+			TokenType:    "Bearer",
+			RefreshToken: "",
+			Expiry:       time.Now().Add(4 * time.Hour),
+		}
+
+		//oauth2Token = oauth2Token.WithExtra(map[string]interface{}{ // Add the ID token to the extra parameters
+		//	"id_token": token})
+
+		return oauth2Token, nil
+
+	}
+
+	return nil, errors.New("invalid token")
 }

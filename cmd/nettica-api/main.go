@@ -136,6 +136,37 @@ func main() {
 			c.Set("oauth2Token", oauth2Token)
 			c.Next()
 			return
+		} else if token != "" {
+			id_token := c.Request.Header.Get("X-OAUTH2-ID-TOKEN")
+			if id_token != "" {
+				new_token := &oauth2.Token{
+					AccessToken:  token,
+					TokenType:    "Bearer",
+					RefreshToken: "",
+					Expiry:       time.Now().Add(time.Hour * 24),
+				}
+				m := make(map[string]interface{})
+				m["id_token"] = id_token
+				new_token = new_token.WithExtra(m)
+
+				// check if token is valid
+				oauth2Token, err := util.ValidateToken(new_token.AccessToken)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"err":   err,
+						"token": oauth2Token,
+					}).Error("failed to get token info")
+					c.AbortWithStatus(http.StatusUnauthorized)
+					return
+				}
+
+				// cache token
+				cacheDb.Set(token, new_token, 4*time.Hour)
+
+				// will be accessible in auth endpoints
+				c.Set("oauth2Token", new_token)
+				c.Next()
+			}
 		}
 
 		// avoid 401 page for refresh after logout

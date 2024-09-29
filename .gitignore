@@ -1,6 +1,9 @@
 # go environment
 .env
 
+# pem files
+*.pem
+
 # Vendor
 vendor/*
 
