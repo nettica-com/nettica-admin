@@ -261,7 +261,7 @@ func UpdateVPN(Id string, vpn *model.VPN, flag bool) (*model.VPN, error) {
 		}
 	}
 
-	if len(vpn.Current.Address) == 0 ||
+	if len(vpn.Current.Address) == 0 &&
 		(len(vpn.Default.Address) > 0 && len(current.Default.Address) > 0 &&
 			(vpn.Default.Address[0] != current.Default.Address[0])) {
 		reserverIps, err := GetAllReservedNetIps(vpn.NetId)

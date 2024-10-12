@@ -457,8 +457,9 @@ func statusDevice(c *gin.Context) {
 		}
 
 		msg.Config[i] = model.VPNConfig{}
-		msg.Config[i].NetName = net.NetName
-		msg.Config[i].NetId = net.NetId
+		msg.Config[i].NetName = network.NetName
+		msg.Config[i].NetId = network.Id
+		msg.Config[i].Description = network.Description
 
 		hasIngress := false
 		ingress := &model.VPN{}

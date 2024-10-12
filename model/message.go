@@ -1,9 +1,10 @@
 package model
 
 type VPNConfig struct {
-	NetName string `json:"netName"  bson:"netName"`
-	NetId   string `json:"netid"    bson:"netid"`
-	VPNs    []VPN  `json:"vpns"     bson:"vpns"`
+	NetName     string `json:"netName"  bson:"netName"`
+	NetId       string `json:"netid"    bson:"netid"`
+	Description string `json:"description" bson:"description"`
+	VPNs        []VPN  `json:"vpns"     bson:"vpns"`
 }
 
 type Message struct {

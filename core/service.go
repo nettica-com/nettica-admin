@@ -199,9 +199,9 @@ func CreateService(service *model.Service) (*model.Service, error) {
 		vpn.Current.PostDown = Sanitize(vpn.Current.PostDown)
 
 		vpn.Current.PersistentKeepalive = 23
+		vpn.Current.FailSafe = true
 
 		if service.ServiceType != "Ingress" && service.ServiceType != "Egress" {
-			vpn.Current.SyncEndpoint = true
 		}
 
 		switch service.ServiceType {
