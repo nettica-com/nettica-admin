@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	core "github.com/nettica-com/nettica-admin/core"
 	model "github.com/nettica-com/nettica-admin/model"
+	"github.com/nettica-com/nettica-admin/push"
 	log "github.com/sirupsen/logrus"
 	"github.com/skip2/go-qrcode"
 )
@@ -102,6 +103,17 @@ func createVPN(c *gin.Context) {
 	for _, v := range vpns {
 		// flush the cache for this vpn
 		core.FlushCache(v.DeviceID)
+
+		// send push notification if appropriate
+		if push.PushDevices[v.DeviceID] != "" {
+			err := push.SendPushNotification(push.PushDevices[v.DeviceID], v.NetName+" updated", "The VPN configuration for "+v.NetName+" has been updated")
+			if err != nil {
+				log.WithFields(log.Fields{
+					"err": err,
+				}).Error("failed to send push notification")
+			}
+		}
+
 	}
 
 	c.JSON(http.StatusOK, vpn)
@@ -299,6 +311,17 @@ func updateVPN(c *gin.Context) {
 	for _, v := range vpns {
 		// flush the cache for this vpn
 		core.FlushCache(v.DeviceID)
+
+		// send push notification if appropriate
+		if push.PushDevices[v.DeviceID] != "" {
+			err := push.SendPushNotification(push.PushDevices[v.DeviceID], v.NetName+" updated", "The VPN configuration for "+v.NetName+" has been updated")
+			if err != nil {
+				log.WithFields(log.Fields{
+					"err": err,
+				}).Error("failed to send push notification")
+			}
+		}
+
 	}
 
 	c.JSON(http.StatusOK, result)
@@ -401,6 +424,17 @@ func deleteVPN(c *gin.Context) {
 		// flush the cache for this vpn
 
 		core.FlushCache(v.DeviceID)
+
+		// send push notification if appropriate
+		if push.PushDevices[v.DeviceID] != "" {
+			err := push.SendPushNotification(push.PushDevices[v.DeviceID], v.NetName+" updated", "The VPN configuration for "+v.NetName+" has been updated")
+			if err != nil {
+				log.WithFields(log.Fields{
+					"err": err,
+				}).Error("failed to send push notification")
+			}
+		}
+
 	}
 
 	c.JSON(http.StatusOK, gin.H{})

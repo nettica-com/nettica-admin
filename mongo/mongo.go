@@ -271,6 +271,47 @@ func ReadAllDevices(param string, id string) ([]*model.Device, error) {
 
 }
 
+// GetDevicesForPushNotifications from MongoDB
+func GetDevicesForPushNotifications() ([]*model.Device, error) {
+	devices := make([]*model.Device, 0)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+		return nil, err
+	}
+
+	collection := client.Database("nettica").Collection("devices")
+
+	filter := bson.D{}
+	findstr := "{\"push\": {\"$ne\": \"\"}}"
+	err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
+	if err != nil {
+		return nil, err
+	}
+
+	cursor, err := collection.Find(ctx, filter)
+
+	if err == nil {
+
+		defer cursor.Close(ctx)
+		for cursor.Next(ctx) {
+			var device *model.Device
+			err = cursor.Decode(&device)
+			if err == nil {
+				devices = append(devices, device)
+			}
+		}
+
+	}
+
+	return devices, err
+
+}
+
 // ReadDevicesAndVPNsForAccount
 func ReadDevicesAndVPNsForAccount(accountid string) ([]*model.Device, error) {
 

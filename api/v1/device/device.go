@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	core "github.com/nettica-com/nettica-admin/core"
 	model "github.com/nettica-com/nettica-admin/model"
+	"github.com/nettica-com/nettica-admin/push"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -234,6 +235,9 @@ func updateDevice(c *gin.Context) {
 	}
 
 	core.FlushCache(id)
+	if data.Push != "" {
+		push.SendPushNotification(device.Push, "Device Updated", "Device "+device.Name+" has been updated")
+	}
 	c.JSON(http.StatusOK, client)
 }
 

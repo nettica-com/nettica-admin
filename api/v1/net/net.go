@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	core "github.com/nettica-com/nettica-admin/core"
 	model "github.com/nettica-com/nettica-admin/model"
+	"github.com/nettica-com/nettica-admin/push"
 	"github.com/nettica-com/nettica-admin/util"
 	log "github.com/sirupsen/logrus"
 )
@@ -341,6 +342,16 @@ func updateNet(c *gin.Context) {
 
 		// flush the cache for this vpn
 		core.FlushCache(v.DeviceID)
+
+		// send push notification if appropriate
+		if push.PushDevices[v.DeviceID] != "" {
+			err := push.SendPushNotification(push.PushDevices[v.DeviceID], v.NetName+" updated", "The VPN configuration for "+v.NetName+" has been updated")
+			if err != nil {
+				log.WithFields(log.Fields{
+					"err": err,
+				}).Error("failed to send push notification")
+			}
+		}
 	}
 
 	c.JSON(http.StatusOK, result)

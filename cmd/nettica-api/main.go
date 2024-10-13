@@ -16,6 +16,7 @@ import (
 	auth "github.com/nettica-com/nettica-admin/auth"
 	docs "github.com/nettica-com/nettica-admin/cmd/nettica-api/docs"
 	"github.com/nettica-com/nettica-admin/mongo"
+	"github.com/nettica-com/nettica-admin/push"
 	util "github.com/nettica-com/nettica-admin/util"
 	version "github.com/nettica-com/nettica-admin/version"
 	"github.com/patrickmn/go-cache"
@@ -186,6 +187,12 @@ func main() {
 
 	// Initialize the database
 	err = mongo.Initialize()
+	if err != nil {
+		log.Error(err)
+	}
+
+	// Initialize push notifications
+	err = push.Initialize()
 	if err != nil {
 		log.Error(err)
 	}

@@ -1,5 +1,6 @@
 # go environment
 .env
+*.json
 
 # pem files
 *.pem
