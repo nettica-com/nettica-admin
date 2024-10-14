@@ -159,6 +159,8 @@ func UpdateDevice(Id string, device *model.Device, fUpdated bool) (*model.Device
 			current.UpdatedBy = "API"
 		}
 	}
+
+	current.Push = device.Push
 	current.Enable = device.Enable
 	current.Logging = device.Logging
 	current.Tags = device.Tags

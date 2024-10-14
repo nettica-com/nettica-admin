@@ -235,8 +235,23 @@ func updateDevice(c *gin.Context) {
 	}
 
 	core.FlushCache(id)
-	if data.Push != "" {
-		push.SendPushNotification(device.Push, "Device Updated", "Device "+device.Name+" has been updated")
+
+	if client.Push != "" {
+		// Add the push token to the list of push devices
+		if push.PushDevices[id] != client.Push {
+			push.PushDevices[id] = client.Push
+		}
+		err = push.SendPushNotification(data.Push, "Device Updated", "Device "+device.Name+" has been updated")
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("failed to send push notification")
+		}
+	} else {
+		// Remove the push token from the list of push devices
+		if push.PushDevices[id] != "" {
+			delete(push.PushDevices, id)
+		}
 	}
 	c.JSON(http.StatusOK, client)
 }
