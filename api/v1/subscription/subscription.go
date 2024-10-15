@@ -1,9 +1,11 @@
 package subscription
 
 import (
+	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -26,11 +28,280 @@ func ApplyRoutes(r *gin.RouterGroup) {
 
 		g.POST("/helio", createHelioSubscription)
 		g.POST("", createSubscription)
+		g.POST("/apple", createSubscriptionApple)
 		g.GET("/:id", readSubscription)
 		g.PATCH("/:id", updateSubscription)
 		g.DELETE("/:id", deleteSubscription)
 		g.GET("", readSubscriptions)
 	}
+}
+
+func createSubscriptionApple(c *gin.Context) {
+	var receipt model.PurchaseRceipt
+
+	err := json.NewDecoder(c.Request.Body).Decode(&receipt)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Validate the receipt with Apple
+	valid, err := validateReceiptApple(receipt.Receipt)
+	if err != nil || !valid {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Invalid receipt"})
+		return
+	}
+
+	customer_name := receipt.Name
+
+	credits := 0
+	name := ""
+	description := ""
+	devices := 0
+	networks := 0
+	members := 0
+	relays := 0
+	autoRenew := false
+	issued := time.Now()
+	expires := time.Now().AddDate(1, 0, 0)
+
+	// set the credits, name, and description based on the sku
+	switch receipt.ProductID {
+	case "24_hours":
+		credits = 1
+		name = "24 Hours"
+		description = "Service in any region for 24 hours"
+		devices = 5
+		networks = 1
+		members = 2
+		relays = 1
+		autoRenew = false
+		expires = time.Now().Add(24 * time.Hour)
+	case "1_month":
+		credits = 1
+		name = "1 Month"
+		description = "Service in any region for 1 month"
+		devices = 5
+		networks = 1
+		members = 2
+		relays = 1
+		autoRenew = false
+		expires = time.Now().AddDate(0, 1, 0)
+	case "1_week":
+		credits = 1
+		name = "1 Week"
+		description = "Service in any region for 1 week"
+		devices = 5
+		networks = 1
+		members = 2
+		relays = 1
+		autoRenew = false
+		expires = time.Now().AddDate(0, 0, 7)
+	case "basic_monthly":
+		fallthrough
+	case "basic_yearly":
+		credits = 1
+		name = "Basic Service"
+		description = "A single tunnel or relay in any region"
+		devices = 5
+		networks = 1
+		members = 2
+		relays = 1
+		autoRenew = true
+	case "premium_monthly":
+		fallthrough
+	case "premium_yearly":
+		credits = 5
+		name = "Premium"
+		description = "Up to 5 tunnels or relays in any region"
+		devices = 25
+		networks = 10
+		members = 5
+		relays = 5
+		autoRenew = true
+	case "professional_monthly":
+		fallthrough
+	case "professional_yearly":
+		credits = 10
+		name = "Professional"
+		description = "Up to 10 tunnels or relays in any region"
+		devices = 100
+		networks = 25
+		members = 25
+		relays = 10
+		autoRenew = true
+	default:
+		log.Errorf("unknown sku %s", receipt.ProductID)
+	}
+
+	// set the limits based on the sku
+	accounts, err := core.ReadAllAccounts(receipt.Email)
+	if err != nil {
+		log.Error(err)
+	} else {
+		//  If there's no error and no account, create one.
+		if len(accounts) == 0 {
+			var account model.Account
+			account.Name = customer_name
+			account.AccountName = "Company"
+			account.Email = receipt.Email
+			account.Role = "Owner"
+			account.Status = "Active"
+			account.CreatedBy = receipt.Email
+			account.UpdatedBy = receipt.Email
+			account.Picture = "/account-circle.svg"
+
+			a, err := core.CreateAccount(&account)
+			log.Infof("CREATE ACCOUNT = %v", a)
+			if err != nil {
+				log.Error(err)
+			}
+			accounts, err = core.ReadAllAccounts(receipt.Email)
+			if err != nil {
+				log.Error(err)
+			}
+
+		}
+	}
+
+	var account *model.Account
+	for i := 0; i < len(accounts); i++ {
+		if accounts[i].Id == accounts[i].Parent {
+			account = accounts[i]
+			break
+		}
+	}
+
+	if account == nil {
+		log.Errorf("account not found for email %s", receipt.Email)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Account not found"})
+		return
+	}
+
+	limits, err := core.ReadLimits(account.Id)
+	if err != nil {
+		log.Error(err)
+		limits_id, err := util.GenerateRandomString(8)
+		if err != nil {
+			log.Error(err)
+		}
+		limits_id = "limits-" + limits_id
+
+		limits = &model.Limits{
+			Id:          limits_id,
+			AccountID:   account.Id,
+			MaxDevices:  0,
+			MaxNetworks: 0,
+			MaxMembers:  0,
+			MaxServices: 0,
+			Tolerance:   core.GetDefaultTolerance(),
+			CreatedBy:   receipt.Email,
+			UpdatedBy:   receipt.Email,
+			Created:     time.Now(),
+			Updated:     time.Now(),
+		}
+	}
+
+	limits.MaxDevices += devices
+	limits.MaxNetworks += networks
+	limits.MaxMembers += members
+	limits.MaxServices += relays
+
+	errs := limits.IsValid()
+	if len(errs) != 0 {
+		for _, err := range errs {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("limits validation error")
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Limits validation error"})
+		return
+	}
+
+	// save limits to mongodb
+	mongo.Serialize(limits.Id, "id", "limits", limits)
+
+	// generate a random subscription id
+	id, err := util.RandomString(8)
+	if err != nil {
+		log.Error(err)
+	}
+	id = receipt.Source + "-" + id
+
+	// construct a subscription object
+	lu := time.Now()
+	subscription := model.Subscription{
+		Id:          id,
+		AccountID:   account.Id,
+		Email:       receipt.Email,
+		Name:        name,
+		Description: description,
+		Issued:      &issued,
+		LastUpdated: &lu,
+		Expires:     &expires,
+		Credits:     credits,
+		Sku:         receipt.ProductID,
+		Status:      "active",
+		AutoRenew:   autoRenew,
+		Receipt:     receipt.Receipt,
+	}
+
+	errs = subscription.IsValid()
+	if len(errs) != 0 {
+		for _, err := range errs {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("subscription validation error")
+		}
+		return
+	}
+
+	// save subscription to mongodb
+	mongo.Serialize(subscription.Id, "id", "subscriptions", subscription)
+
+	c.JSON(http.StatusOK, subscription)
+	return
+
+}
+
+func validateReceiptApple(receipt string) (bool, error) {
+	// Apple receipt validation URL
+	url := "https://buy.itunes.apple.com/verifyReceipt"
+
+	// Create the request payload
+	payload := map[string]string{
+		"receipt-data": receipt,
+		"password":     os.Getenv("APPLE_ITUNES_SHARED_SECRET"), // Replace with your app's shared secret
+	}
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return false, err
+	}
+
+	// Send the request to Apple
+	resp, err := http.Post(url, "application/json", bytes.NewBuffer(payloadBytes))
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return false, fmt.Errorf("invalid response from Apple: %s", resp.Status)
+	}
+
+	// Parse the response to check the receipt status
+	var result map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	if err != nil {
+		return false, err
+	}
+
+	// Check if the receipt is valid
+	if status, ok := result["status"].(float64); ok && status == 0 {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 func createHelioSubscription(c *gin.Context) {
