@@ -65,6 +65,22 @@ func createSubscriptionApple(c *gin.Context) {
 	issued := time.Now()
 	expires := time.Now().AddDate(1, 0, 0)
 
+	switch receipt.ProductID {
+	case "basic_monthly":
+		name = "Basic Service (monthly)"
+	case "basic_yearly":
+		name = "Basic Service (yearly)"
+	case "premium_monthly":
+		name = "Premium Service (monthly)"
+	case "premium_yearly":
+		name = "Premium Service (yearly)"
+	case "professional_monthly":
+		name = "Professional Service (monthly)"
+	case "professional_yearly":
+		name = "Professional Service (yearly)"
+	default:
+		log.Errorf("unknown sku %s", receipt.ProductID)
+	}
 	// set the credits, name, and description based on the sku
 	switch receipt.ProductID {
 	case "24_hours":
@@ -97,20 +113,14 @@ func createSubscriptionApple(c *gin.Context) {
 		relays = 1
 		autoRenew = false
 		expires = time.Now().AddDate(0, 0, 7)
-	case "basic_monthly":
-		fallthrough
-	case "basic_yearly":
-		credits = 1
-		name = "Basic Service"
+	case "basic_monthly", "basic_yearly":
 		description = "A single tunnel or relay in any region"
 		devices = 5
 		networks = 1
 		members = 2
 		relays = 1
 		autoRenew = true
-	case "premium_monthly":
-		fallthrough
-	case "premium_yearly":
+	case "premium_monthly", "premium_yearly":
 		credits = 5
 		name = "Premium"
 		description = "Up to 5 tunnels or relays in any region"
@@ -119,9 +129,7 @@ func createSubscriptionApple(c *gin.Context) {
 		members = 5
 		relays = 5
 		autoRenew = true
-	case "professional_monthly":
-		fallthrough
-	case "professional_yearly":
+	case "professional_monthly", "professional_yearly":
 		credits = 10
 		name = "Professional"
 		description = "Up to 10 tunnels or relays in any region"
