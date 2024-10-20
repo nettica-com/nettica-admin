@@ -9,6 +9,7 @@ import (
 
 	model "github.com/nettica-com/nettica-admin/model"
 	mongo "github.com/nettica-com/nettica-admin/mongo"
+	"github.com/nettica-com/nettica-admin/push"
 	util "github.com/nettica-com/nettica-admin/util"
 	log "github.com/sirupsen/logrus"
 )
@@ -160,7 +161,25 @@ func UpdateDevice(Id string, device *model.Device, fUpdated bool) (*model.Device
 		}
 	}
 
-	current.Push = device.Push
+	// current is the old value, device is the new value
+	if current.Push == "" {
+		// if the new value is not empty, add it to the push list
+		if device.Push != "" {
+			push.PushDevices[device.Id] = device.Push
+		}
+		current.Push = device.Push
+		// here we drop out of the if when both were empty
+
+	} else {
+		if device.Push != current.Push {
+			delete(push.PushDevices, current.Id)
+			if device.Push != "" {
+				push.PushDevices[device.Id] = device.Push
+			}
+		}
+		current.Push = device.Push
+	}
+
 	current.Enable = device.Enable
 	current.Logging = device.Logging
 	current.Tags = device.Tags

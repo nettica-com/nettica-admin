@@ -105,7 +105,7 @@ func createVPN(c *gin.Context) {
 		core.FlushCache(v.DeviceID)
 
 		// send push notification if appropriate
-		if push.PushDevices[v.DeviceID] != "" {
+		if push.PushDevices[v.DeviceID] != "" && v.Enable {
 			err := push.SendPushNotification(push.PushDevices[v.DeviceID], v.NetName+" updated", "The VPN configuration for "+v.NetName+" has been updated")
 			if err != nil {
 				log.WithFields(log.Fields{
@@ -313,7 +313,7 @@ func updateVPN(c *gin.Context) {
 		core.FlushCache(v.DeviceID)
 
 		// send push notification if appropriate
-		if push.PushDevices[v.DeviceID] != "" {
+		if push.PushDevices[v.DeviceID] != "" && v.Enable {
 			err := push.SendPushNotification(push.PushDevices[v.DeviceID], v.NetName+" updated", "The VPN configuration for "+v.NetName+" has been updated")
 			if err != nil {
 				log.WithFields(log.Fields{
@@ -426,7 +426,7 @@ func deleteVPN(c *gin.Context) {
 		core.FlushCache(v.DeviceID)
 
 		// send push notification if appropriate
-		if push.PushDevices[v.DeviceID] != "" {
+		if push.PushDevices[v.DeviceID] != "" && v.Enable {
 			err := push.SendPushNotification(push.PushDevices[v.DeviceID], v.NetName+" updated", "The VPN configuration for "+v.NetName+" has been updated")
 			if err != nil {
 				log.WithFields(log.Fields{

@@ -101,7 +101,7 @@ func oauth2URL(c *gin.Context) {
 		Redirect: redirect_uri,
 	}
 
-	log.Infof( "model.Auth = %v", data );
+	log.Infof("model.Auth = %v", data)
 
 	c.JSON(http.StatusOK, data)
 }
@@ -317,16 +317,15 @@ func login(c *gin.Context) {
 		if loginVals.Redirect == "com.nettica.agent://callback/agent" {
 
 			c.Redirect(http.StatusPermanentRedirect, redirect)
-			return;
+			return
 		}
 	}
 
 	// otherwise send a JSON body with the result to the browser.  it will do the redirect.
-	loginVals.Redirect = redirect;
+	loginVals.Redirect = redirect
 
-	c.JSON( http.StatusOK, loginVals )
+	c.JSON(http.StatusOK, loginVals)
 }
-
 
 func validate(c *gin.Context) {
 	var t model.OAuth2Token
@@ -453,9 +452,36 @@ func logout(c *gin.Context) {
 
 func user(c *gin.Context) {
 	cacheDb := c.MustGet("cache").(*cache.Cache)
-	oauth2Token, exists := cacheDb.Get(util.GetCleanAuthToken(c))
+	token := util.GetCleanAuthToken(c)
+	oauth2Token, exists := cacheDb.Get(token)
+	id_token := c.Request.Header.Get("X-OAUTH2-ID-TOKEN")
 
-	if exists && oauth2Token.(*oauth2.Token).AccessToken == util.GetCleanAuthToken(c) {
+	if id_token != "" {
+		new_token := &oauth2.Token{
+			AccessToken:  token,
+			TokenType:    "Bearer",
+			RefreshToken: "",
+			Expiry:       time.Now().Add(time.Hour * 24),
+		}
+		m := make(map[string]interface{})
+		m["id_token"] = id_token
+		new_token = new_token.WithExtra(m)
+
+		// check if token is valid
+		var err error
+		oauth2Token, err = util.ValidateToken(new_token.AccessToken)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err":   err,
+				"token": oauth2Token,
+			}).Error("failed to get token info")
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+		oauth2Token = new_token
+	}
+
+	if id_token != "" || (exists && oauth2Token.(*oauth2.Token).AccessToken == util.GetCleanAuthToken(c)) {
 		oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
 
 		user, err := oauth2Client.UserInfo(oauth2Token.(*oauth2.Token))
