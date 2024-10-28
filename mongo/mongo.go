@@ -714,7 +714,7 @@ func ReadAccountForUser(email string, accountid string) (*model.Account, error) 
 }
 
 // ReadAllSubscriptions from MongoDB
-func ReadAllSubscriptions(email string) ([]*model.Subscription, error) {
+func ReadAllSubscriptions(accountid string) ([]*model.Subscription, error) {
 	subscriptions := make([]*model.Subscription, 0)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -729,8 +729,8 @@ func ReadAllSubscriptions(email string) ([]*model.Subscription, error) {
 	collection := client.Database("nettica").Collection("subscriptions")
 
 	filter := bson.D{}
-	if email != "" {
-		findstr := fmt.Sprintf("{\"%s\":\"%s\"}", "email", email)
+	if accountid != "" {
+		findstr := fmt.Sprintf("{\"%s\":\"%s\"}", "accountid", accountid)
 		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
 		if err != nil {
 			return nil, err
@@ -758,7 +758,7 @@ func ReadAllSubscriptions(email string) ([]*model.Subscription, error) {
 }
 
 // ReadAllServices from MongoDB
-func ReadAllServices(email string) ([]*model.Service, error) {
+func ReadAllServices(accountid string) ([]*model.Service, error) {
 	services := make([]*model.Service, 0)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -773,8 +773,8 @@ func ReadAllServices(email string) ([]*model.Service, error) {
 	collection := client.Database("nettica").Collection("services")
 
 	filter := bson.D{}
-	if email != "" {
-		findstr := fmt.Sprintf("{\"%s\":\"%s\"}", "email", email)
+	if accountid != "" {
+		findstr := fmt.Sprintf("{\"%s\":\"%s\"}", "accountid", accountid)
 		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
 		if err != nil {
 			return nil, err

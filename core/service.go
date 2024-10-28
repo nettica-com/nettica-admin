@@ -473,8 +473,8 @@ func ReadServices(email string) ([]*model.Service, error) {
 	results := make([]*model.Service, 0)
 
 	for _, account := range accounts {
-		if account.Id == account.Parent && account.Status == "Active" {
-			services, err := mongo.ReadAllServices(email)
+		if account.Status == "Active" {
+			services, err := mongo.ReadAllServices(account.Parent)
 			if err == nil {
 				results = append(results, services...)
 			}

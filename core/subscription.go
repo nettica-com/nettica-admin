@@ -145,8 +145,8 @@ func ReadSubscriptions(email string) ([]*model.Subscription, error) {
 	results := make([]*model.Subscription, 0)
 
 	for _, account := range accounts {
-		if account.Id == account.Parent && account.Status == "Active" {
-			subscriptions, err := mongo.ReadAllSubscriptions(account.Email)
+		if account.Status == "Active" {
+			subscriptions, err := mongo.ReadAllSubscriptions(account.Parent)
 			if err == nil {
 				results = append(results, subscriptions...)
 			}
