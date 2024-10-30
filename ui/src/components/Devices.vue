@@ -44,6 +44,16 @@
                                         {{ item.icon }}
                                     </v-icon>
                                 </template>
+                                <template v-slot:label="{ item }">
+                                    <table>
+                                        <tr><td>
+                                            {{  item.name  }}
+                                        </td></tr>
+                                        <tr v-if="item.isDevice"><td class="gray" style="font-size: small;">
+                                            {{ item.description }}
+                                        </td></tr>
+                                    </table>
+                                </template>
                                 <template v-slot:append="{ item }">
                                     <v-btn v-if="item.isDevice" icon @click="startAddVPN(item.device)">
                                         <v-tooltip bottom>
@@ -535,7 +545,21 @@
             </v-col></v-row>
     </v-container>
 </template>
+
+<style>
+.v-treeview-node {
+  padding: 10px 0; /* Add padding to the top-level items */
+}
+.v-treeview-node--leaf {
+  padding: 0; /* Add padding to the leaf items */
+}
+.gray {
+    color: gray;
+}
+</style>
+
 <script>
+
 import { mapActions, mapGetters } from 'vuex'
 import ApiService from '@/services/api.service'
 
@@ -793,6 +817,7 @@ export default {
                 this.items[i] = {
                     id: this.devices[i].id,
                     name: this.devices[i].name,
+                    description: this.devices[i].description,
                     device: this.devices[i],
                     status: this.devices[i].status,
                     platform: { "text": this.devices[i].platform, "value": this.devices[i].platform },
@@ -816,7 +841,7 @@ export default {
                     k++
                     this.items[i].children[j] = {
                         id: this.devices[i].vpns[j].id,
-                        name: this.devices[i].vpns[j].netName,
+                        name: this.devices[i].vpns[j].netName, 
                         vpn: this.devices[i].vpns[j],
                         icon: "mdi-network-outline",
                         symbol: "network_node",

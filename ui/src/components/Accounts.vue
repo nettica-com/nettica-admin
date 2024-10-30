@@ -35,6 +35,16 @@
                                         {{ item.icon }}
                                     </v-icon>
                                 </template>
+                                <template v-slot:label="{ item }">
+                                    <table>
+                                        <tr><td>
+                                            {{  item.name  }}
+                                        </td></tr>
+                                        <tr v-if="item.isMember"><td class="gray" style="font-size: small;">
+                                            {{ item.email }}
+                                        </td></tr>
+                                    </table>
+                        </template>
                             </v-treeview>
                         </v-col>
                         <v-divider vertical></v-divider>
@@ -221,6 +231,17 @@
 
     </v-container>
 </template>
+<style>
+.v-treeview-node {
+  padding: 10px 0; /* Add padding to the top-level items */
+}
+.v-treeview-node--leaf {
+  padding: 0; /* Add padding to the leaf items */
+}
+.gray {
+    color: gray;
+}
+</style>
 <script>
 import { mapActions, mapGetters } from 'vuex'
 import ApiService from '@/services/api.service'
@@ -437,6 +458,7 @@ export default {
                         status: this.accounts[i].status,
                         icon: "mdi-account-group",
                         isAccount: true,
+                        isMember: false,
                         hasLimits: hasLimits,
                         limits: limits,
                         children: []
@@ -467,6 +489,7 @@ export default {
                             id: "c-" + this.accounts[i].id,
                             idx: this.accounts[i].id,
                             name: name,
+                            email: this.accounts[i].email,  
                             netName: netName,
                             isReadOnly: isReadOnly,
                             member: this.accounts[i],

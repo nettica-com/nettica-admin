@@ -41,6 +41,16 @@
                                 {{ item.icon }}
                             </v-icon>
                         </template>
+                        <template v-slot:label="{ item }">
+                                    <table>
+                                        <tr><td>
+                                            {{  item.name  }}
+                                        </td></tr>
+                                        <tr v-if="item.isNet"><td class="gray" style="font-size: small;">
+                                            {{ item.description }}
+                                        </td></tr>
+                                    </table>
+                        </template>
                         <template v-slot:append="{ item }">
                             <v-spacer></v-spacer>
                             <span v-if="!item.isNet" class="hidden-xs-only" >{{  item.address }}</span>
@@ -504,6 +514,16 @@
 
 <!-- <style src="vue-d3-network/dist/vue-d3-network.css"></style> -->
 <style>
+.v-treeview-node {
+  padding: 10px 0; /* Add padding to the top-level items */
+}
+.v-treeview-node--leaf {
+  padding: 0; /* Add padding to the leaf items */
+}
+.gray {
+    color: gray;
+}
+
 text {
     font-size: 12px;
     color: white;
@@ -763,6 +783,7 @@ export default {
                 this.items[i] = {
                     id: this.nets[i].id,
                     name: this.nets[i].netName,
+                    description: this.nets[i].description,
                     net: this.nets[i],
                     icon: "mdi-network-outline",
                     symbol: "hub",
@@ -1103,7 +1124,7 @@ export default {
             // all good, submit
             this.dialogUpdate = false;
             this.updateNet(net)
-            this.Refresh()
+            this.update_net(net)
 
         },
         updateVPN(vpn) {
