@@ -44,6 +44,7 @@ func createSubscriptionApple(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
+	log.Infof("apple: %s", receipt)
 
 	// Validate the receipt with Apple
 	valid, err := validateReceiptApple(receipt.Receipt)
@@ -83,7 +84,7 @@ func createSubscriptionApple(c *gin.Context) {
 	}
 	// set the credits, name, and description based on the sku
 	switch receipt.ProductID {
-	case "24_hours":
+	case "24_hours_flex":
 		credits = 1
 		name = "24 Hours"
 		description = "Service in any region for 24 hours"
@@ -93,26 +94,16 @@ func createSubscriptionApple(c *gin.Context) {
 		relays = 1
 		autoRenew = false
 		expires = time.Now().Add(24 * time.Hour)
-	case "1_month":
+	case "10_day_flex":
 		credits = 1
-		name = "1 Month"
-		description = "Service in any region for 1 month"
+		name = "10 Day Flex"
+		description = "Service in any region for 10 days"
 		devices = 5
 		networks = 1
 		members = 2
 		relays = 1
 		autoRenew = false
-		expires = time.Now().AddDate(0, 1, 0)
-	case "1_week":
-		credits = 1
-		name = "1 Week"
-		description = "Service in any region for 1 week"
-		devices = 5
-		networks = 1
-		members = 2
-		relays = 1
-		autoRenew = false
-		expires = time.Now().AddDate(0, 0, 7)
+		expires = time.Now().AddDate(0, 0, 10)
 	case "basic_monthly", "basic_yearly":
 		description = "A single tunnel or relay in any region"
 		devices = 5
@@ -274,7 +265,8 @@ func createSubscriptionApple(c *gin.Context) {
 
 func validateReceiptApple(receipt string) (bool, error) {
 	// Apple receipt validation URL
-	url := "https://buy.itunes.apple.com/verifyReceipt"
+	//	url := "https://buy.itunes.apple.com/verifyReceipt"
+	url := "https://sandbox.itunes.apple.com/verifyReceipt"
 
 	// Create the request payload
 	payload := map[string]string{
@@ -303,6 +295,8 @@ func validateReceiptApple(receipt string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
+	log.Infof("apple receipt: %v", result)
 
 	// Check if the receipt is valid
 	if status, ok := result["status"].(float64); ok && status == 0 {
