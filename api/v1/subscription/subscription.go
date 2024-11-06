@@ -528,7 +528,8 @@ func createSubscriptionApple(c *gin.Context) {
 func validateReceiptApple(receipt string) (bool, error) {
 	// Apple receipt validation URL
 	//	url := "https://buy.itunes.apple.com/verifyReceipt"
-	url := "https://sandbox.itunes.apple.com/verifyReceipt"
+	//url := "https://sandbox.itunes.apple.com/verifyReceipt"
+	url := os.Getenv("APPLE_ITUNES_RECEIPT_URL")
 
 	// Create the request payload
 	payload := map[string]string{
