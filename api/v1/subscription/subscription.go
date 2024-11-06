@@ -29,11 +29,272 @@ func ApplyRoutes(r *gin.RouterGroup) {
 		g.POST("/helio", createHelioSubscription)
 		g.POST("", createSubscription)
 		g.POST("/apple", createSubscriptionApple)
+		g.POST("/android", createSubscriptionAndroid)
 		g.GET("/:id", readSubscription)
 		g.PATCH("/:id", updateSubscription)
 		g.DELETE("/:id", deleteSubscription)
 		g.GET("", readSubscriptions)
 	}
+}
+
+func createSubscriptionAndroid(c *gin.Context) {
+	var receipt model.PurchaseRceipt
+
+	err := json.NewDecoder(c.Request.Body).Decode(&receipt)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+	log.Infof("android: %s", receipt)
+
+	// Validate the receipt with Google
+	valid, err := validateReceiptAndroid(receipt.Receipt)
+	if err != nil || !valid {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Invalid receipt"})
+		return
+	}
+
+	customer_name := receipt.Name
+
+	credits := 0
+	name := ""
+	description := ""
+	devices := 0
+	networks := 0
+	members := 0
+	relays := 0
+	autoRenew := false
+	issued := time.Now()
+	expires := time.Now().AddDate(1, 0, 0)
+
+	switch receipt.ProductID {
+	case "basic_monthly":
+		name = "Basic Service (monthly)"
+	case "basic_yearly":
+		name = "Basic Service (yearly)"
+	case "premium_monthly":
+		name = "Premium Service (monthly)"
+	case "premium_yearly":
+		name = "Premium Service (yearly)"
+	case "professional_monthly":
+		name = "Professional Service (monthly)"
+	case "professional_yearly":
+		name = "Professional Service (yearly)"
+	default:
+		log.Errorf("unknown sku %s", receipt.ProductID)
+	}
+	// set the credits, name, and description based on the sku
+	switch receipt.ProductID {
+	case "24_hours_flex":
+		credits = 1
+		name = "24 Hours"
+		description = "Service in any region for 24 hours"
+		devices = 5
+		networks = 1
+		members = 2
+		relays = 1
+		autoRenew = false
+		expires = time.Now().Add(24 * time.Hour)
+	case "10_day_flex":
+		credits = 1
+		name = "10 Day Flex"
+		description = "Service in any region for 10 days"
+		devices = 5
+		networks = 1
+		members = 2
+		relays = 1
+		autoRenew = false
+		expires = time.Now().AddDate(0, 0, 10)
+	case "basic_monthly", "basic_yearly":
+		credits = 1
+		description = "A single tunnel or relay in any region"
+		devices = 5
+		networks = 1
+		members = 2
+		relays = 1
+		autoRenew = true
+	case "premium_monthly", "premium_yearly":
+		credits = 5
+		name = "Premium"
+		description = "Up to 5 tunnels or relays in any region"
+		devices = 25
+		networks = 10
+		members = 5
+		relays = 5
+		autoRenew = true
+	case "professional_monthly", "professional_yearly":
+		credits = 10
+		name = "Professional"
+		description = "Up to 10 tunnels or relays in any region"
+		devices = 100
+		networks = 25
+		members = 25
+		relays = 10
+		autoRenew = true
+	default:
+		log.Errorf("unknown sku %s", receipt.ProductID)
+	}
+
+	// set the limits based on the sku
+	accounts, err := core.ReadAllAccounts(receipt.Email)
+	if err != nil {
+		log.Error(err)
+	} else {
+		//  If there's no error and no account, create one.
+		if len(accounts) == 0 {
+			var account model.Account
+			account.Name = customer_name
+			account.AccountName = "Company"
+			account.Email = receipt.Email
+			account.Role = "Owner"
+			account.Status = "Active"
+			account.CreatedBy = receipt.Email
+			account.UpdatedBy = receipt.Email
+			account.Picture = "/account-circle.svg"
+
+			a, err := core.CreateAccount(&account)
+			log.Infof("CREATE ACCOUNT = %v", a)
+			if err != nil {
+				log.Error(err)
+			}
+			accounts, err = core.ReadAllAccounts(receipt.Email)
+			if err != nil {
+				log.Error(err)
+			}
+
+		}
+	}
+
+	var account *model.Account
+	for i := 0; i < len(accounts); i++ {
+		if accounts[i].Id == accounts[i].Parent {
+			account = accounts[i]
+			break
+		}
+	}
+
+	if account == nil {
+		log.Errorf("account not found for email %s", receipt.Email)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Account not found"})
+		return
+	}
+
+	limits, err := core.ReadLimits(account.Id)
+	if err != nil {
+		log.Error(err)
+		limits_id, err := util.GenerateRandomString(8)
+		if err != nil {
+			log.Error(err)
+		}
+		limits_id = "limits-" + limits_id
+
+		limits = &model.Limits{
+			Id:          limits_id,
+			AccountID:   account.Id,
+			MaxDevices:  0,
+			MaxNetworks: 0,
+			MaxMembers:  0,
+			MaxServices: 0,
+			Tolerance:   core.GetDefaultTolerance(),
+			CreatedBy:   receipt.Email,
+			UpdatedBy:   receipt.Email,
+			Created:     time.Now(),
+			Updated:     time.Now(),
+		}
+	}
+
+	limits.MaxDevices += devices
+	limits.MaxNetworks += networks
+	limits.MaxMembers += members
+	limits.MaxServices += relays
+
+	errs := limits.IsValid()
+	if len(errs) != 0 {
+		for _, err := range errs {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("limits validation error")
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Limits validation error"})
+		return
+	}
+
+	// save limits to mongodb
+	mongo.Serialize(limits.Id, "id", "limits", limits)
+
+	// generate a random subscription id
+	id, err := util.RandomString(8)
+	if err != nil {
+		log.Error(err)
+	}
+	id = receipt.Source + "-" + id
+
+	// construct a subscription object
+	lu := time.Now()
+	subscription := model.Subscription{
+		Id:          id,
+		AccountID:   account.Id,
+		Email:       receipt.Email,
+		Name:        name,
+		Description: description,
+		Issued:      &issued,
+		LastUpdated: &lu,
+		Expires:     &expires,
+		Credits:     credits,
+		Sku:         receipt.ProductID,
+		Status:      "active",
+		AutoRenew:   autoRenew,
+		Receipt:     receipt.Receipt,
+	}
+
+	errs = subscription.IsValid()
+	if len(errs) != 0 {
+		for _, err := range errs {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("subscription validation error")
+		}
+		return
+	}
+
+	// save subscription to mongodb
+	mongo.Serialize(subscription.Id, "id", "subscriptions", subscription)
+
+	c.JSON(http.StatusOK, subscription)
+	return
+
+}
+
+func validateReceiptAndroid(receipt string) (bool, error) {
+	// Google Play receipt validation URL
+	url := "https://www.googleapis.com/androidpublisher/v3/applications/com.nettica.nettica/purchases/subscriptions/" + receipt + "?access_token=" + os.Getenv("GOOGLE_PLAY_ACCESS_TOKEN")
+
+	// Send the request to Google
+	resp, err := http.Get(url)
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return false, fmt.Errorf("invalid response from Google: %s", resp.Status)
+	}
+
+	// Parse the response to check the receipt status
+	var result map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	if err != nil {
+		return false, err
+	}
+
+	log.Infof("google receipt: %v", result)
+
+	// Check if the receipt is valid
+	if status, ok := result["status"].(float64); ok && status == 0 {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 func createSubscriptionApple(c *gin.Context) {
@@ -105,6 +366,7 @@ func createSubscriptionApple(c *gin.Context) {
 		autoRenew = false
 		expires = time.Now().AddDate(0, 0, 10)
 	case "basic_monthly", "basic_yearly":
+		credits = 1
 		description = "A single tunnel or relay in any region"
 		devices = 5
 		networks = 1
