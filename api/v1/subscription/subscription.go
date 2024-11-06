@@ -266,8 +266,36 @@ func createSubscriptionAndroid(c *gin.Context) {
 }
 
 func validateReceiptAndroid(receipt string) (bool, error) {
+
+	// Get the Google Play Developer API access token using our refresh toke
+
+	client_id := os.Getenv("GOOGLE_PLAY_CLIENT_ID")
+	client_secret := os.Getenv("GOOGLE_PLAY_CLIENT_SECRET")
+	refresh_token := os.Getenv("GOOGLE_PLAY_REFRESH_TOKEN")
+	access_url := os.Getenv("GOOGLE_PLAY_ACCESS_URL")
+
+	// Create the request payload
+	payload := "grant_type=refresh_token&client_id=" + client_id + "&client_secret=" + client_secret + "&refresh_token=" + refresh_token
+
+	rsp, err := http.Post(access_url, "application/x-www-form-urlencoded", strings.NewReader(payload))
+	if err != nil {
+		return false, err
+	}
+	defer rsp.Body.Close()
+
+	if rsp.StatusCode != http.StatusOK {
+		return false, fmt.Errorf("invalid response from Google: %s", rsp.Status)
+	}
+
+	body, err := io.ReadAll(rsp.Body)
+	if err != nil {
+		return false, err
+	}
+
+	access_token := string(body)
+
 	// Google Play receipt validation URL
-	url := "https://www.googleapis.com/androidpublisher/v3/applications/com.nettica.nettica/purchases/subscriptions/" + receipt + "?access_token=" + os.Getenv("GOOGLE_PLAY_ACCESS_TOKEN")
+	url := "https://www.googleapis.com/androidpublisher/v3/applications/com.nettica.nettica/purchases/subscriptions/" + receipt + "?access_token=" + access_token
 
 	// Send the request to Google
 	resp, err := http.Get(url)
