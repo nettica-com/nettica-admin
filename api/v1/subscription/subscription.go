@@ -48,10 +48,39 @@ func createSubscriptionAndroid(c *gin.Context) {
 	log.Infof("android: %s", receipt)
 
 	// Validate the receipt with Google
-	valid, err := validateReceiptAndroid(receipt.Receipt)
-	if err != nil || !valid {
+	result, err := validateReceiptAndroid(receipt)
+	if err != nil || result == nil {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Invalid receipt"})
 		return
+	}
+
+	lineItems := result["lineItems"].([]interface{})
+	zero := lineItems[0].(map[string]interface{})
+	offerDetails := zero["offerDetails"].(map[string]interface{})
+	plan := offerDetails["basePlanId"].(string)
+
+	if receipt.ProductID == "basic" && plan == "basic-monthly" {
+		receipt.ProductID = "basic_monthly"
+	}
+
+	if receipt.ProductID == "basic" && plan == "basic-yearly" {
+		receipt.ProductID = "basic_yearly"
+	}
+
+	if receipt.ProductID == "premium" && plan == "premium-monthly" {
+		receipt.ProductID = "premium_monthly"
+	}
+
+	if receipt.ProductID == "premium" && plan == "premium-yearly" {
+		receipt.ProductID = "premium_yearly"
+	}
+
+	if receipt.ProductID == "professional" && plan == "professional-monthly" {
+		receipt.ProductID = "professional_monthly"
+	}
+
+	if receipt.ProductID == "professional" && plan == "professional-yearly" {
+		receipt.ProductID = "professional_yearly"
 	}
 
 	customer_name := receipt.Name
@@ -265,7 +294,7 @@ func createSubscriptionAndroid(c *gin.Context) {
 
 }
 
-func validateReceiptAndroid(receipt string) (bool, error) {
+func validateReceiptAndroid(receipt model.PurchaseRceipt) (map[string]interface{}, error) {
 
 	// Get the Google Play Developer API access token using our refresh toke
 
@@ -279,50 +308,63 @@ func validateReceiptAndroid(receipt string) (bool, error) {
 
 	rsp, err := http.Post(access_url, "application/x-www-form-urlencoded", strings.NewReader(payload))
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 	defer rsp.Body.Close()
 
 	if rsp.StatusCode != http.StatusOK {
-		return false, fmt.Errorf("invalid response from Google: %s", rsp.Status)
+		return nil, fmt.Errorf("invalid response from Google: %s", rsp.Status)
 	}
 
-	body, err := io.ReadAll(rsp.Body)
+	// Parse the response to get the access token
+	var result2 map[string]interface{}
+	err = json.NewDecoder(rsp.Body).Decode(&result2)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
-	access_token := string(body)
+	access_token := result2["access_token"].(string)
 
 	// Google Play receipt validation URL
-	url := "https://www.googleapis.com/androidpublisher/v3/applications/com.nettica.nettica/purchases/subscriptions/" + receipt + "?access_token=" + access_token
+	url := "https://www.googleapis.com/androidpublisher/v3/applications/com.nettica.agent/purchases/subscriptionsv2/tokens/" +
+		receipt.Receipt + "?access_token=" + access_token
+
+	log.Infof("url: %s", url)
 
 	// Send the request to Google
 	resp, err := http.Get(url)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return false, fmt.Errorf("invalid response from Google: %s", resp.Status)
+		return nil, fmt.Errorf("invalid response from Google: %s", resp.Status)
 	}
 
 	// Parse the response to check the receipt status
 	var result map[string]interface{}
 	err = json.NewDecoder(resp.Body).Decode(&result)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
 	log.Infof("google receipt: %v", result)
 
 	// Check if the receipt is valid
-	if status, ok := result["status"].(float64); ok && status == 0 {
-		return true, nil
+	if status, ok := result["subscriptionState"].(string); ok && status == "SUBSCRIPTION_STATE_ACTIVE" {
+		url = fmt.Sprintf("https://www.googleapis.com/androidpublisher/v3/applications/com.nettica.agent/purchases/subscriptions/%s/tokens/%s:acknowledge?access_token=%s",
+			receipt.ProductID, receipt.Receipt, access_token)
+		rsp, err := http.Post(url, "application/json", nil)
+		if err != nil {
+			return nil, err
+		}
+		defer rsp.Body.Close()
+
+		return result, nil
 	}
 
-	return false, nil
+	return nil, nil
 }
 
 func createSubscriptionApple(c *gin.Context) {
