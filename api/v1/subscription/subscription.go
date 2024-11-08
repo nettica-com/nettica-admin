@@ -144,7 +144,6 @@ func createSubscriptionAndroid(c *gin.Context) {
 		autoRenew = true
 	case "premium_monthly", "premium_yearly":
 		credits = 5
-		name = "Premium"
 		description = "Up to 5 tunnels or relays in any region"
 		devices = 25
 		networks = 10
@@ -153,7 +152,6 @@ func createSubscriptionAndroid(c *gin.Context) {
 		autoRenew = true
 	case "professional_monthly", "professional_yearly":
 		credits = 10
-		name = "Professional"
 		description = "Up to 10 tunnels or relays in any region"
 		devices = 100
 		networks = 25
