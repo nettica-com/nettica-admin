@@ -1038,6 +1038,10 @@ func Initialize() error {
 	if err != nil {
 		log.Error(err)
 	}
+	_, err = client.Database("nettica").Collection("subscriptions").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"receipt": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
 
 	// services
 

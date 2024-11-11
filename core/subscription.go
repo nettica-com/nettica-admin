@@ -342,3 +342,14 @@ func RenewSubscription(id string) error {
 
 	return nil
 }
+func GetSubscriptionByReceipt(receipt string) (*model.Subscription, error) {
+
+	v, err := mongo.Deserialize(receipt, "receipt", "subscriptions", reflect.TypeOf(model.Subscription{}))
+	if err != nil {
+		return nil, err
+	}
+
+	subscription := v.(*model.Subscription)
+
+	return subscription, nil
+}
