@@ -165,3 +165,180 @@ func ReadSubscriptions(email string) ([]*model.Subscription, error) {
 
 	return results, err
 }
+
+// ExpireSubscription by id
+func ExpireSubscription(id string) error {
+
+	subscription, err := ReadSubscription(id)
+	if err != nil {
+		return err
+	}
+
+	if subscription.Status == "expired" {
+		return errors.New("subscription is expired")
+	}
+
+	if subscription.Expires.After(time.Now().UTC()) {
+		return errors.New("subscription has not expired")
+	}
+
+	if subscription.Status == "active" {
+		subscription.Status = "expired"
+		subscription.LastUpdated = subscription.Expires
+	} else {
+		last := time.Now().UTC()
+		subscription.LastUpdated = &last
+	}
+	_, err = UpdateSubscription(subscription.Id, subscription)
+	if err != nil {
+		log.Errorf("failed to update subscription: %v", err)
+	}
+
+	// get the total number of credits available
+	subscriptions, err := ReadSubscriptions(subscription.AccountID)
+	if err != nil {
+		return err
+	}
+
+	total_credits := 0
+	for _, s := range subscriptions {
+		if s.Status == "active" {
+			total_credits += s.Credits
+		}
+	}
+
+	// get all the active services running on this subscription
+	services, err := mongo.ReadAllServices(subscription.AccountID)
+	if err != nil {
+		return err
+	}
+
+	available := total_credits - subscription.Credits
+
+	if available >= 0 {
+		// nothing to expire, they still have other active subscriptions
+		return nil
+	}
+
+	// expire some or all services
+
+	// at this pont available is negative
+	// we expire services until we reach 0 or all services are expired
+	for _, service := range services {
+
+		// only disable active services
+		if service.Device.Enable {
+			service.Device.Enable = false
+
+			device, err := ReadDevice(service.Device.Id)
+			if err == nil {
+				device.Enable = false
+				_, err = UpdateDevice(device.Id, device, false)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"err": err,
+					}).Error("failed to update device")
+				}
+			}
+
+			available++
+
+			if available >= 0 {
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+func CancelSubscription(id string) error {
+
+	subscription, err := ReadSubscription(id)
+	if err != nil {
+		return err
+	}
+
+	if subscription.Status == "cancelled" {
+		return errors.New("subscription is already cancelled")
+	}
+
+	subscription.Status = "cancelled"
+	last := time.Now().UTC()
+	subscription.LastUpdated = &last
+	_, err = UpdateSubscription(subscription.Id, subscription)
+	if err != nil {
+		return err
+	}
+
+	err = ExpireSubscription(subscription.Id)
+
+	return err
+}
+
+// RenewSubscription by id
+func RenewSubscription(id string) error {
+
+	subscription, err := ReadSubscription(id)
+	if err != nil {
+		return err
+	}
+
+	if subscription.Status == "active" {
+		return nil
+	}
+
+	last := time.Now().UTC()
+	subscription.Status = "active"
+	subscription.LastUpdated = &last
+	_, err = UpdateSubscription(subscription.Id, subscription)
+	if err != nil {
+		return err
+	}
+
+	// reactivate some services
+	subscriptions, err := ReadSubscriptions(subscription.AccountID)
+	if err != nil {
+		return err
+	}
+
+	total_credits := 0
+	for _, s := range subscriptions {
+		if s.Status == "active" {
+			total_credits += s.Credits
+		}
+	}
+
+	// get all the active services running on this subscription
+	services, err := mongo.ReadAllServices(subscription.AccountID)
+	if err != nil {
+		return err
+	}
+
+	for _, service := range services {
+
+		// only enable inactive services
+		if !service.Device.Enable {
+			service.Device.Enable = true
+
+			device, err := ReadDevice(service.Device.Id)
+			if err == nil {
+				device.Enable = true
+				_, err = UpdateDevice(device.Id, device, false)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"err": err,
+					}).Error("failed to update device")
+				}
+			}
+
+			total_credits--
+
+			if total_credits <= 0 {
+				break
+			}
+		}
+	}
+
+	return nil
+}

@@ -4,6 +4,7 @@
 
 # pem files
 *.pem
+*.p8
 
 # Vendor
 vendor/*

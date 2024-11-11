@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,6 +14,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 	"github.com/nettica-com/nettica-admin/core"
 	model "github.com/nettica-com/nettica-admin/model"
 	"github.com/nettica-com/nettica-admin/mongo"
@@ -294,7 +296,7 @@ func createSubscriptionAndroid(c *gin.Context) {
 
 func validateReceiptAndroid(receipt model.PurchaseRceipt) (map[string]interface{}, error) {
 
-	// Get the Google Play Developer API access token using our refresh toke
+	// Get the Google Play Developer API access token using our refresh token
 
 	client_id := os.Getenv("GOOGLE_PLAY_CLIENT_ID")
 	client_secret := os.Getenv("GOOGLE_PLAY_CLIENT_SECRET")
@@ -376,8 +378,9 @@ func createSubscriptionApple(c *gin.Context) {
 	log.Infof("apple: %s", receipt)
 
 	// Validate the receipt with Apple
-	valid, err := validateReceiptApple(receipt.Receipt)
-	if err != nil || !valid {
+	result, err := validateReceiptApple2(receipt.Receipt)
+	if err != nil || result == nil {
+		log.Error(err)
 		c.JSON(http.StatusForbidden, gin.H{"error": "Invalid receipt"})
 		return
 	}
@@ -633,6 +636,102 @@ func validateReceiptApple(receipt string) (bool, error) {
 	}
 
 	return false, nil
+}
+
+// validateReceiptApple2 validates an Apple purchaseId
+func validateReceiptApple2(receipt string) (map[string]interface{}, error) {
+	// Apple receipt validation URL
+	//	url := "https://buy.itunes.apple.com/verifyReceipt"
+	//url := "https://sandbox.itunes.apple.com/verifyReceipt"
+	// url := "https://api.storekit.itunes.apple.com/inApps/v1/transactions/{transactionId}"
+	// url := "https://api.storekit-sandbox.itunes.apple.com/inApps/v1/transactions/{transactionId}"
+	url := os.Getenv("APPLE_ITUNES_RECEIPT_URL") + receipt
+	keyfile := os.Getenv("APPLE_ITUNES_IN_APP_PURCHASE_KEY")
+	keyid := os.Getenv("APPLE_ITUNES_IN_APP_PURCHASE_KEY_ID")
+	issuer := os.Getenv("APPLE_ITUNES_IN_APP_PURCHASE_KEY_ISSUER")
+
+	keybytes, err := os.ReadFile(keyfile)
+	if err != nil {
+		return nil, err
+	}
+
+	key, err := jwt.ParseECPrivateKeyFromPEM(keybytes)
+	if err != nil {
+		log.Error(err)
+	}
+
+	t := jwt.New(jwt.SigningMethodES256)
+	t.Header["kid"] = keyid
+	t.Header["alg"] = "ES256"
+	t.Header["typ"] = "JWT"
+	t.Claims = jwt.MapClaims{
+		"iss": issuer,
+		"iat": time.Now().Unix(),
+		"exp": time.Now().Add(time.Minute * 60).Unix(),
+		"aud": "appstoreconnect-v1",
+		"bid": "com.nettica.agent",
+	}
+	token, err := t.SignedString(key)
+	if err != nil {
+		return nil, err
+	}
+
+	// call the server with the JWT and url
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("invalid response from Apple: %s", resp.Status)
+	}
+
+	// enough of this bullshit!
+
+	bytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	response := string(bytes)
+
+	parts := strings.Split(response, ".")
+	if len(parts) != 3 {
+		return nil, fmt.Errorf("invalid response from Apple: %s", response)
+	}
+
+	// Decode the payload
+	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return nil, err
+	}
+
+	// decode the payload
+
+	// Parse the response to check the receipt status
+	var result map[string]interface{}
+	err = json.Unmarshal(payload, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Infof("apple receipt: %v", result)
+
+	// Check if the receipt is valid
+	if status, ok := result["status"].(float64); ok && status == 0 {
+		return result, nil
+	}
+
+	// TODO: change this to false when we're done testing
+	return result, nil
 }
 
 func createHelioSubscription(c *gin.Context) {
