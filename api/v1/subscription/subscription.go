@@ -31,6 +31,7 @@ func ApplyRoutes(r *gin.RouterGroup) {
 		g.POST("/helio", createHelioSubscription)
 		g.POST("", createSubscription)
 		g.POST("/apple", createSubscriptionApple)
+		g.POST("/apple/webhook", handleAppleWebhook)
 		g.POST("/android", createSubscriptionAndroid)
 		g.GET("/:id", readSubscription)
 		g.PATCH("/:id", updateSubscription)
@@ -367,6 +368,140 @@ func validateReceiptAndroid(receipt model.PurchaseRceipt) (map[string]interface{
 	return nil, nil
 }
 
+func handleAppleWebhook(c *gin.Context) {
+	bytes, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to read request body")
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+
+	body := string(bytes)
+	log.Info(body)
+
+	var msg map[string]interface{}
+
+	// unmarshal the body into a map
+	err = json.Unmarshal(bytes, &msg)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to unmarshal request body")
+		// c.AbortWithStatus(http.StatusUnprocessableEntity)
+		// return with no error so webhook doesn't get disabled
+		c.JSON(http.StatusOK, body)
+		return
+	}
+
+	signedPayload := msg["signedPayload"].(string)
+
+	parts := strings.Split(signedPayload, ".")
+	if len(parts) != 3 {
+		log.Errorf("invalid payload %s", signedPayload)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Invalid payload"})
+		return
+	}
+
+	// Decode the parts
+	headerBytes, err := base64.RawURLEncoding.DecodeString(parts[0])
+	if err != nil {
+		log.Error(err)
+	}
+	header := string(headerBytes)
+	log.Infof("header: %s", header)
+
+	payloadBytes, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		log.Error(err)
+	}
+	var payload map[string]interface{}
+	err = json.Unmarshal(payloadBytes, &payload)
+	log.Infof("payload: %v", payload)
+
+	signatureBytes, err := base64.RawURLEncoding.DecodeString(parts[2])
+	if err != nil {
+		log.Error(err)
+	}
+	signature := string(signatureBytes)
+	log.Infof("signature: %s", signature)
+
+	notificationType := payload["notificationType"].(string)
+	log.Infof("notificationType: %s", notificationType)
+
+	data := payload["data"].(map[string]interface{})
+	signedTransactionInfo := data["signedTransactionInfo"].(string)
+
+	parts = strings.Split(signedTransactionInfo, ".")
+	transactionBytes, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		log.Error(err)
+	}
+	var transaction map[string]interface{}
+	err = json.Unmarshal(transactionBytes, &transaction)
+	if err != nil {
+		log.Error(err)
+	}
+	log.Infof("transaction: %v", transaction)
+
+	originalTransactionId := transaction["originalTransactionId"].(string)
+	log.Infof("originalTransactionId: %s", originalTransactionId)
+
+	var expiresDate float64
+	expiresDate = float64(time.Now().UTC().AddDate(0, 0, 1).UnixMilli())
+	if transaction["expiresDate"] != nil {
+		expiresDate = transaction["expiresDate"].(float64)
+	}
+
+	var expires time.Time
+	expires = time.Unix(int64(expiresDate)/1000, 0)
+	log.Infof("expires: %s", expires)
+
+	transactionReason := transaction["transactionReason"].(string)
+	log.Infof("transactionReason: %s", transactionReason)
+
+	// let's update the subscription
+	if originalTransactionId != "" {
+		subscription, err := core.GetSubscriptionByReceipt(originalTransactionId)
+		if err != nil {
+			log.Error(err)
+			c.JSON(http.StatusNotFound, gin.H{"error": "Subscription not found"})
+			return
+		}
+		last := time.Now().UTC()
+		switch transactionReason {
+		case "PURCHASE":
+		case "RENEWAL":
+			subscription.Expires = &expires
+			subscription.LastUpdated = &last
+			if subscription.Status == "cancelled" || subscription.Status == "expired" {
+				subscription.Status = "active"
+				core.UpdateSubscription(subscription.Id, subscription)
+				core.RenewSubscription(subscription.Id)
+				log.Infof("subscription renewed: %s until %s", subscription.Id, expires)
+			}
+
+		case "CANCEL":
+			subscription.Status = "cancelled"
+			subscription.LastUpdated = &last
+			core.UpdateSubscription(subscription.Id, subscription)
+			log.Infof("subscription cancelled: %s", subscription.Id)
+
+		case "DID_NOT_RENEW":
+			subscription.Status = "expired"
+			subscription.LastUpdated = &last
+			core.UpdateSubscription(subscription.Id, subscription)
+			core.ExpireSubscription(subscription.Id)
+			log.Infof("subscription expired: %s at %s", subscription.Id, expires)
+		}
+
+	}
+	// Respond with 200 OK to acknowledge receipt of the webhook
+	c.JSON(http.StatusOK, gin.H{"status": "received"})
+
+}
+
 func createSubscriptionApple(c *gin.Context) {
 	var receipt model.PurchaseRceipt
 
@@ -389,6 +524,54 @@ func createSubscriptionApple(c *gin.Context) {
 		log.Error(err)
 		c.JSON(http.StatusForbidden, gin.H{"error": "Invalid receipt"})
 		return
+	}
+
+	log.Infof("result: %v", result)
+
+	var originalTransactionId string
+	if result["originalTransactionId"] != nil {
+		originalTransactionId = result["originalTransactionId"].(string)
+	} else {
+		originalTransactionId = ""
+	}
+	log.Infof("originalTransactionId: %s", originalTransactionId)
+	if originalTransactionId != "" {
+		subscription, err := core.GetSubscriptionByReceipt(originalTransactionId)
+		if err != nil {
+			log.Error(err)
+			c.JSON(http.StatusNotFound, gin.H{"error": "Subscription not found"})
+			return
+		}
+		last := time.Now().UTC()
+		productId := result["productId"].(string)
+		var expires time.Time
+		if productId == "24_hours_flex" || productId == "10_day_flex" {
+			expires = time.Now().Add(24 * time.Hour)
+			if productId == "10_day_flex" {
+				expires = time.Now().AddDate(0, 0, 10)
+			}
+		} else {
+			expiresDate := result["expiresDate"].(float64)
+			expires = time.Unix(int64(expiresDate)/1000, 0)
+		}
+		log.Infof("expires: %s", expires)
+		transactionReason := result["transactionReason"].(string)
+		if transactionReason == "RENEWAL" {
+			subscription.Expires = &expires
+			subscription.LastUpdated = &last
+			if subscription.Status == "cancelled" || subscription.Status == "expired" {
+				subscription.Status = "active"
+				core.UpdateSubscription(subscription.Id, subscription)
+				core.RenewSubscription(subscription.Id)
+				log.Infof("subscription renewed: %s until %s", subscription.Id, expires)
+				c.JSON(http.StatusOK, subscription)
+				return
+			}
+		} else {
+			log.Infof("createSubscriptionApple: transactionReason: %s", transactionReason)
+
+		}
+		// handle cancel and did_not_renew
 	}
 
 	customer_name := receipt.Name
