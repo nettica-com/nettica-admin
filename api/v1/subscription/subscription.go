@@ -569,7 +569,12 @@ func createSubscriptionApple(c *gin.Context) {
 			}
 		} else {
 			log.Infof("createSubscriptionApple: transactionReason: %s", transactionReason)
-
+			subscription.Expires = &expires
+			subscription.LastUpdated = &last
+			core.UpdateSubscription(subscription.Id, subscription)
+			log.Infof("subscription updated: %s %v", subscription.Id, subscription)
+			c.JSON(http.StatusOK, subscription)
+			return
 		}
 		// handle cancel and did_not_renew
 	}
