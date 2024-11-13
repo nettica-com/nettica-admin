@@ -564,9 +564,13 @@ func createSubscriptionApple(c *gin.Context) {
 				core.UpdateSubscription(subscription.Id, subscription)
 				core.RenewSubscription(subscription.Id)
 				log.Infof("subscription renewed: %s until %s", subscription.Id, expires)
+			} else {
+				core.UpdateSubscription(subscription.Id, subscription)
+				log.Infof("subscription updated: %s %v", subscription.Id, subscription)
 				c.JSON(http.StatusOK, subscription)
 				return
 			}
+
 		} else {
 			log.Infof("createSubscriptionApple: transactionReason: %s", transactionReason)
 			subscription.Expires = &expires
@@ -576,6 +580,10 @@ func createSubscriptionApple(c *gin.Context) {
 			c.JSON(http.StatusOK, subscription)
 			return
 		}
+		log.Infof("*** subscription: %v", subscription)
+		log.Infof("*** result: %v", result)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		return
 		// handle cancel and did_not_renew
 	}
 
