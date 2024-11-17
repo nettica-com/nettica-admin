@@ -539,52 +539,52 @@ func createSubscriptionApple(c *gin.Context) {
 		subscription, err := core.GetSubscriptionByReceipt(originalTransactionId)
 		if err != nil {
 			log.Error(err)
-			c.JSON(http.StatusNotFound, gin.H{"error": "Subscription not found"})
-			return
-		}
-		last := time.Now().UTC()
-		productId := result["productId"].(string)
-		var expires time.Time
-		if productId == "24_hours_flex" || productId == "10_day_flex" {
-			expires = time.Now().Add(24 * time.Hour)
-			if productId == "10_day_flex" {
-				expires = time.Now().AddDate(0, 0, 10)
-			}
+			receipt.Receipt = originalTransactionId
 		} else {
-			expiresDate := result["expiresDate"].(float64)
-			expires = time.Unix(int64(expiresDate)/1000, 0)
-		}
-		log.Infof("expires: %s", expires)
-		transactionReason := result["transactionReason"].(string)
-		if transactionReason == "RENEWAL" {
-			subscription.Expires = &expires
-			subscription.LastUpdated = &last
-			if subscription.Status == "cancelled" || subscription.Status == "expired" {
-				subscription.Status = "active"
-				core.UpdateSubscription(subscription.Id, subscription)
-				core.RenewSubscription(subscription.Id)
-				log.Infof("subscription renewed: %s until %s", subscription.Id, expires)
+			last := time.Now().UTC()
+			productId := result["productId"].(string)
+			var expires time.Time
+			if productId == "24_hours_flex" || productId == "10_day_flex" {
+				expires = time.Now().Add(24 * time.Hour)
+				if productId == "10_day_flex" {
+					expires = time.Now().AddDate(0, 0, 10)
+				}
 			} else {
+				expiresDate := result["expiresDate"].(float64)
+				expires = time.Unix(int64(expiresDate)/1000, 0)
+			}
+			log.Infof("expires: %s", expires)
+			transactionReason := result["transactionReason"].(string)
+			if transactionReason == "RENEWAL" {
+				subscription.Expires = &expires
+				subscription.LastUpdated = &last
+				if subscription.Status == "cancelled" || subscription.Status == "expired" {
+					subscription.Status = "active"
+					core.UpdateSubscription(subscription.Id, subscription)
+					core.RenewSubscription(subscription.Id)
+					log.Infof("subscription renewed: %s until %s", subscription.Id, expires)
+				} else {
+					core.UpdateSubscription(subscription.Id, subscription)
+					log.Infof("subscription updated: %s %v", subscription.Id, subscription)
+					c.JSON(http.StatusOK, subscription)
+					return
+				}
+
+			} else {
+				log.Infof("createSubscriptionApple: transactionReason: %s", transactionReason)
+				subscription.Expires = &expires
+				subscription.LastUpdated = &last
 				core.UpdateSubscription(subscription.Id, subscription)
 				log.Infof("subscription updated: %s %v", subscription.Id, subscription)
 				c.JSON(http.StatusOK, subscription)
 				return
 			}
-
-		} else {
-			log.Infof("createSubscriptionApple: transactionReason: %s", transactionReason)
-			subscription.Expires = &expires
-			subscription.LastUpdated = &last
-			core.UpdateSubscription(subscription.Id, subscription)
-			log.Infof("subscription updated: %s %v", subscription.Id, subscription)
-			c.JSON(http.StatusOK, subscription)
+			log.Infof("*** subscription: %v", subscription)
+			log.Infof("*** result: %v", result)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 			return
+			// handle cancel and did_not_renew
 		}
-		log.Infof("*** subscription: %v", subscription)
-		log.Infof("*** result: %v", result)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
-		return
-		// handle cancel and did_not_renew
 	}
 
 	customer_name := receipt.Name
