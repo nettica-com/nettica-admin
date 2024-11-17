@@ -2,12 +2,15 @@ package subscription
 
 import (
 	"bytes"
+	"crypto"
 	"crypto/hmac"
+	"crypto/rsa"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/big"
 	"net/http"
 	"os"
 	"strings"
@@ -43,8 +46,7 @@ func ApplyRoutes(r *gin.RouterGroup) {
 func createSubscriptionAndroid(c *gin.Context) {
 	var receipt model.PurchaseRceipt
 
-	err := json.NewDecoder(c.Request.Body).Decode(&receipt)
-	if err != nil {
+	if err := json.NewDecoder(c.Request.Body).Decode(&receipt); err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
@@ -427,6 +429,20 @@ func handleAppleWebhook(c *gin.Context) {
 	signature := string(signatureBytes)
 	log.Infof("signature: %s", signature)
 
+	// Validate the signature - ignore errors for now
+	valid, err := validateAppleSignature(parts[0], parts[1], parts[2])
+	if err != nil {
+		log.Errorf("invalid signature %v", err)
+		//        c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Invalid signature"})
+		//        return
+	}
+
+	if !valid {
+		log.Errorf("invalid signature %v", err)
+		//        c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Invalid signature"})
+		//        return
+	}
+
 	notificationType := payload["notificationType"].(string)
 	log.Infof("notificationType: %s", notificationType)
 
@@ -500,6 +516,90 @@ func handleAppleWebhook(c *gin.Context) {
 	// Respond with 200 OK to acknowledge receipt of the webhook
 	c.JSON(http.StatusOK, gin.H{"status": "received"})
 
+}
+
+func fetchApplePublicKey(kid string) (*rsa.PublicKey, error) {
+	resp, err := http.Get("https://appleid.apple.com/auth/keys")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to fetch Apple public keys: %s", resp.Status)
+	}
+
+	var jwks map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&jwks)
+	if err != nil {
+		return nil, err
+	}
+
+	keys := jwks["keys"].([]interface{})
+	for _, key := range keys {
+		keyMap := key.(map[string]interface{})
+		if keyMap["kid"].(string) == kid {
+			alg := keyMap["alg"].(string)
+			switch alg {
+			case "RSA256":
+				nStr := keyMap["n"].(string)
+				eStr := keyMap["e"].(string)
+
+				nBytes, err := base64.RawURLEncoding.DecodeString(nStr)
+				if err != nil {
+					return nil, err
+				}
+				eBytes, err := base64.RawURLEncoding.DecodeString(eStr)
+				if err != nil {
+					return nil, err
+				}
+
+				n := new(big.Int).SetBytes(nBytes)
+				e := int(new(big.Int).SetBytes(eBytes).Int64())
+
+				pubKey := &rsa.PublicKey{
+					N: n,
+					E: e,
+				}
+				return pubKey, nil
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("public key not found")
+}
+
+func validateAppleSignature(header, payload, signature string) (bool, error) {
+	headerBytes, err := base64.RawURLEncoding.DecodeString(header)
+	if err != nil {
+		return false, err
+	}
+	var headerMap map[string]interface{}
+	err = json.Unmarshal(headerBytes, &headerMap)
+	if err != nil {
+		return false, err
+	}
+
+	kid := headerMap["kid"].(string)
+
+	pubKey, err := fetchApplePublicKey(kid)
+	if err != nil {
+		return false, err
+	}
+
+	data := fmt.Sprintf("%s.%s", header, payload)
+	hash := sha256.Sum256([]byte(data))
+
+	sig, err := base64.RawURLEncoding.DecodeString(signature)
+	if err != nil {
+		return false, err
+	}
+
+	if err = rsa.VerifyPKCS1v15(pubKey, crypto.SHA256, hash[:], sig); err != nil {
+		return false, nil
+	}
+
+	return true, nil
 }
 
 func createSubscriptionApple(c *gin.Context) {
