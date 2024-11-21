@@ -153,6 +153,15 @@ func ReadSubscriptions(email string) ([]*model.Subscription, error) {
 		}
 	}
 
+	// Update their status
+	for _, subscription := range results {
+		if subscription.Expires.After(time.Now().UTC()) {
+			subscription.Status = "active"
+		} else if subscription.Expires.Before(time.Now().UTC()) && !subscription.Expires.Before(*subscription.Issued) {
+			subscription.Status = "expired"
+		}
+	}
+
 	sort.Slice(results, func(i, j int) bool {
 		if results[i] == nil {
 			return false
@@ -185,9 +194,11 @@ func ExpireSubscription(id string) error {
 	if subscription.Status == "active" {
 		subscription.Status = "expired"
 		subscription.LastUpdated = subscription.Expires
+		subscription.UpdatedBy = "system"
 	} else {
 		last := time.Now().UTC()
 		subscription.LastUpdated = &last
+		subscription.UpdatedBy = "system"
 	}
 	_, err = UpdateSubscription(subscription.Id, subscription)
 	if err != nil {

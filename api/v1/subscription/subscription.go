@@ -271,6 +271,7 @@ func createSubscriptionAndroid(c *gin.Context) {
 		Description: description,
 		Issued:      &issued,
 		LastUpdated: &lu,
+		UpdatedBy:   receipt.Email,
 		Expires:     &expires,
 		Credits:     credits,
 		Sku:         receipt.ProductID,
@@ -293,7 +294,6 @@ func createSubscriptionAndroid(c *gin.Context) {
 	mongo.Serialize(subscription.Id, "id", "subscriptions", subscription)
 
 	c.JSON(http.StatusOK, subscription)
-	return
 
 }
 
@@ -420,6 +420,9 @@ func handleAppleWebhook(c *gin.Context) {
 	}
 	var payload map[string]interface{}
 	err = json.Unmarshal(payloadBytes, &payload)
+	if err != nil {
+		log.Error(err)
+	}
 	log.Infof("payload: %v", payload)
 
 	signatureBytes, err := base64.RawURLEncoding.DecodeString(parts[2])
@@ -470,8 +473,7 @@ func handleAppleWebhook(c *gin.Context) {
 		expiresDate = transaction["expiresDate"].(float64)
 	}
 
-	var expires time.Time
-	expires = time.Unix(int64(expiresDate)/1000, 0)
+	expires := time.Unix(int64(expiresDate)/1000, 0)
 	log.Infof("expires: %s", expires)
 
 	transactionReason := transaction["transactionReason"].(string)
@@ -486,11 +488,13 @@ func handleAppleWebhook(c *gin.Context) {
 			return
 		}
 		last := time.Now().UTC()
+		subscription.LastUpdated = &last
+		subscription.UpdatedBy = "apple"
+
 		switch transactionReason {
 		case "PURCHASE":
 		case "RENEWAL":
 			subscription.Expires = &expires
-			subscription.LastUpdated = &last
 			if subscription.Status == "cancelled" || subscription.Status == "expired" {
 				subscription.Status = "active"
 				core.UpdateSubscription(subscription.Id, subscription)
@@ -500,13 +504,11 @@ func handleAppleWebhook(c *gin.Context) {
 
 		case "CANCEL":
 			subscription.Status = "cancelled"
-			subscription.LastUpdated = &last
 			core.UpdateSubscription(subscription.Id, subscription)
 			log.Infof("subscription cancelled: %s", subscription.Id)
 
 		case "DID_NOT_RENEW":
 			subscription.Status = "expired"
-			subscription.LastUpdated = &last
 			core.UpdateSubscription(subscription.Id, subscription)
 			core.ExpireSubscription(subscription.Id)
 			log.Infof("subscription expired: %s at %s", subscription.Id, expires)
@@ -871,6 +873,7 @@ func createSubscriptionApple(c *gin.Context) {
 		Issued:      &issued,
 		LastUpdated: &lu,
 		Expires:     &expires,
+		UpdatedBy:   receipt.Email,
 		Credits:     credits,
 		Sku:         receipt.ProductID,
 		Status:      "active",
