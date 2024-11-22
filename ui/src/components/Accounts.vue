@@ -233,10 +233,10 @@
 </template>
 <style>
 .v-treeview-node {
-  padding: 10px 0; /* Add padding to the top-level items */
+  padding: 8px 0; /* Add padding to the top-level items */
 }
 .v-treeview-node--leaf {
-  padding: 0; /* Add padding to the leaf items */
+  padding: 4px 0; /* Add padding to the leaf items */
 }
 .gray {
     color: gray;
