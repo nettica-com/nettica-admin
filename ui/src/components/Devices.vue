@@ -622,10 +622,10 @@ export default {
             items: [
                 { text: "Windows", value: "Windows", },
                 { text: "Linux", value: "Linux", },
-                { text: "MacOS", value: "MacOS", },
-                { text: "Apple iOS", value: "iOS", },
+                { text: "MacOS", value: "macos", },
+                { text: "Apple iOS", value: "ios", },
                 { text: "Raspberry Pi", value: "raspberry"},
-                { text: "Android", value: "Android", },
+                { text: "Android", value: "android", },
                 { text: "Native WireGuard", value: "Native", },
             ],
         },
