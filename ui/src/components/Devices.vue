@@ -46,11 +46,14 @@
                                 </template>
                                 <template v-slot:label="{ item }">
                                     <table>
-                                        <tr><td>
+                                        <tr><td :style="{ color: item.enabled ? 'white' : 'gray' }">
                                             {{  item.name  }}
                                         </td></tr>
                                         <tr v-if="item.isDevice"><td class="gray" style="font-size: small;">
                                             {{ item.description }}
+                                        </td></tr>
+                                        <tr v-else><td class="gray" style="font-size: small;">
+                                            {{ item.vpn.current.address.join(", ") }}
                                         </td></tr>
                                     </table>
                                 </template>
@@ -826,6 +829,7 @@ export default {
                     icon: "mdi-devices",
                     symbol: "devices",
                     isDevice: true,
+                    enabled: this.devices[i].enable,
                     children: []
                 }
  
@@ -846,6 +850,7 @@ export default {
                         icon: "mdi-network-outline",
                         symbol: "network_node",
                         isDevice: false,
+                        enabled: this.devices[i].vpns[j].enable,
                         children: []
                     }
                 }

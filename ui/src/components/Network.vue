@@ -43,17 +43,19 @@
                         </template>
                         <template v-slot:label="{ item }">
                                     <table>
-                                        <tr><td>
+                                        <tr><td :style="{ color: item.enabled ? 'white' : 'gray' }">
                                             {{  item.name  }}
                                         </td></tr>
                                         <tr v-if="item.isNet"><td class="gray" style="font-size: small;">
                                             {{ item.description }}
                                         </td></tr>
+                                        <tr v-else><td class="gray" style="font-size: small;">
+                                            {{ item.vpn.current.address.join(", ") }}
+                                        </td></tr>
                                     </table>
                         </template>
                         <template v-slot:append="{ item }">
                             <v-spacer></v-spacer>
-                            <span v-if="!item.isNet" class="hidden-xs-only" >{{  item.address }}</span>
                             <v-btn v-if="item.isNet" icon @click="startAddDevice(item.net)">
                                 <v-tooltip bottom>
                                     <template v-slot:activator="{ on }">
@@ -788,6 +790,7 @@ export default {
                     icon: "mdi-network-outline",
                     symbol: "hub",
                     isNet: true,
+                    enabled: true,
                     children: []
                 }
             }
@@ -822,6 +825,7 @@ export default {
                             symbol: "network_node",
                             isNet: false,
                             isNode: true,
+                            enabled: this.vpns[j].enable,
                             children: []
                         }
                         k++
