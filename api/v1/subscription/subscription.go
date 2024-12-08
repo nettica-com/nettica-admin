@@ -3,11 +3,15 @@ package subscription
 import (
 	"bytes"
 	"crypto"
+	"crypto/ecdsa"
 	"crypto/hmac"
+	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"io"
 	"math/big"
@@ -18,6 +22,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 	"github.com/nettica-com/nettica-admin/core"
 	model "github.com/nettica-com/nettica-admin/model"
 	"github.com/nettica-com/nettica-admin/mongo"
@@ -35,6 +40,7 @@ func ApplyRoutes(r *gin.RouterGroup) {
 		g.POST("", createSubscription)
 		g.POST("/apple", createSubscriptionApple)
 		g.POST("/apple/webhook", handleAppleWebhook)
+		g.POST("/apple/discount", handleAppleDiscount)
 		g.POST("/android", createSubscriptionAndroid)
 		g.POST("/android/webhook", handleAndroidWebhook)
 		g.GET("/:id", readSubscription)
@@ -423,14 +429,17 @@ func handleAndroidWebhook(c *gin.Context) {
 	packageName := msg["packageName"].(string)
 	log.Infof("packageName: %s", packageName)
 
+	subscriptionNotification := msg["subscriptionNotification"].(map[string]interface{})
+	log.Infof("subscriptionNotification: %v", subscriptionNotification)
+
 	// Retrieve the subscription from the purchaseToken
-	if msg["purchaseToken"] == nil {
+	if subscriptionNotification["purchaseToken"] == nil {
 		log.Error("purchaseToken not found -- assuming test")
 		c.JSON(http.StatusOK, gin.H{"status": "received"})
 		return
 	}
 
-	purchaseToken := msg["purchaseToken"].(string)
+	purchaseToken := subscriptionNotification["purchaseToken"].(string)
 	log.Infof("purchaseToken: %s", purchaseToken)
 
 	// Get the Google Play Developer API access token using our refresh token
@@ -648,6 +657,82 @@ func handleAppleWebhook(c *gin.Context) {
 
 }
 
+func handleAppleDiscount(c *gin.Context) {
+
+	request := model.DiscountRequest{}
+	response := model.DiscountResponse{}
+
+	if err := c.BindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	log.Infof("discount request: %v", request)
+
+	// Generate a nonce (UUID)
+
+	nonce, err := uuid.NewRandom()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	response.Nonce = strings.ToLower(nonce.String())
+
+	// Get the current time in milliseconds
+	timestamp := time.Now().UnixMilli()
+	response.Timestamp = timestamp
+
+	response.KeyId = os.Getenv("APPLE_ITUNES_IN_APP_PURCHASE_KEY_ID")
+	response.ProductId = request.ProductId
+	response.OfferId = request.OfferId
+	response.UserName = request.UserName
+
+	bundleId := os.Getenv("APPLE_ITUNES_BUNDLE_ID")
+
+	// Create the signature
+	// appBundleId + '\u2063' + keyIdentifier + '\u2063' + productIdentifier + '\u2063' + offerIdentifier + '\u2063' + appAccountToken + '\u2063' + nonce + '\u2063' + timestamp
+
+	data := fmt.Sprintf("%s\u2063%s\u2063%s\u2063%s\u2063%s\u2063%s\u2063%d", bundleId, response.KeyId, response.ProductId, response.OfferId, response.UserName, response.Nonce, response.Timestamp)
+
+	log.Infof("data: %s", data)
+	println(data)
+
+	// Load the private key
+	bytes, err := os.ReadFile(os.Getenv("APPLE_ITUNES_IN_APP_PURCHASE_KEY"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	block, _ := pem.Decode(bytes)
+	if block == nil || block.Type != "PRIVATE KEY" {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to decode PEM block containing private key"})
+		return
+	}
+	key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	bdata := []byte(data)
+
+	// Sign the data
+	hash := sha256.Sum256(bdata)
+	r, s, err := ecdsa.Sign(rand.Reader, key.(*ecdsa.PrivateKey), hash[:])
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Encode the signature
+	signature := append(r.Bytes(), s.Bytes()...)
+
+	response.Signature = base64.StdEncoding.EncodeToString(signature)
+
+	c.JSON(http.StatusOK, response)
+
+}
+
 func fetchApplePublicKey(kid string) (*rsa.PublicKey, error) {
 	resp, err := http.Get("https://appleid.apple.com/auth/keys")
 	if err != nil {
@@ -710,6 +795,12 @@ func validateAppleSignature(header, payload, signature string) (bool, error) {
 		return false, err
 	}
 
+	log.Infof("header: %v", headerMap)
+
+	if headerMap["kid"] == nil {
+		return false, fmt.Errorf("kid not found")
+	}
+
 	kid := headerMap["kid"].(string)
 
 	pubKey, err := fetchApplePublicKey(kid)
@@ -726,7 +817,7 @@ func validateAppleSignature(header, payload, signature string) (bool, error) {
 	}
 
 	if err = rsa.VerifyPKCS1v15(pubKey, crypto.SHA256, hash[:], sig); err != nil {
-		return false, nil
+		return false, err
 	}
 
 	return true, nil
