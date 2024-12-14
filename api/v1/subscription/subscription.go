@@ -477,7 +477,8 @@ func handleAndroidWebhook(c *gin.Context) {
 	access_token := result["access_token"].(string)
 
 	// Get the subscription from google
-	url := "https://www.googleapis.com/androidpublisher/v3/applications/" + packageName + "/purchases/subscriptions/" + purchaseToken + "?access_token=" + access_token
+	url := "https://www.googleapis.com/androidpublisher/v3/applications/" + packageName + "/purchases/subscriptionsv2/tokens/" + purchaseToken + "?access_token=" + access_token
+	log.Infof("url: %s", url)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -489,7 +490,7 @@ func handleAndroidWebhook(c *gin.Context) {
 
 	if resp.StatusCode != http.StatusOK {
 		log.Errorf("invalid subscription response from Google: %s", resp.Status)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		c.JSON(http.StatusOK, gin.H{"status": "received"})
 		return
 	}
 
