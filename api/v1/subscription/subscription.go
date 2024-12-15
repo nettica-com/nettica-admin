@@ -429,81 +429,90 @@ func handleAndroidWebhook(c *gin.Context) {
 	packageName := msg["packageName"].(string)
 	log.Infof("packageName: %s", packageName)
 
-	subscriptionNotification := msg["subscriptionNotification"].(map[string]interface{})
-	log.Infof("subscriptionNotification: %v", subscriptionNotification)
+	if msg["subscriptionNotification"] != nil {
 
-	// Retrieve the subscription from the purchaseToken
-	if subscriptionNotification["purchaseToken"] == nil {
-		log.Error("purchaseToken not found -- assuming test")
-		c.JSON(http.StatusOK, gin.H{"status": "received"})
-		return
+		subscriptionNotification := msg["subscriptionNotification"].(map[string]interface{})
+		log.Infof("subscriptionNotification: %v", subscriptionNotification)
+
+		// Retrieve the subscription from the purchaseToken
+		if subscriptionNotification["purchaseToken"] == nil {
+			log.Error("purchaseToken not found -- assuming test")
+			c.JSON(http.StatusOK, gin.H{"status": "received"})
+			return
+		}
+
+		purchaseToken := subscriptionNotification["purchaseToken"].(string)
+		log.Infof("purchaseToken: %s", purchaseToken)
+
+		// Get the Google Play Developer API access token using our refresh token
+		client_id := os.Getenv("GOOGLE_PLAY_CLIENT_ID")
+		client_secret := os.Getenv("GOOGLE_PLAY_CLIENT_SECRET")
+		refresh_token := os.Getenv("GOOGLE_PLAY_REFRESH_TOKEN")
+		access_url := os.Getenv("GOOGLE_PLAY_ACCESS_URL")
+
+		// Create the request payload
+		payload := "grant_type=refresh_token&client_id=" + client_id + "&client_secret=" + client_secret + "&refresh_token=" + refresh_token
+
+		rsp, err := http.Post(access_url, "application/x-www-form-urlencoded", strings.NewReader(payload))
+		if err != nil {
+			log.Error(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+			return
+		}
+		defer rsp.Body.Close()
+
+		if rsp.StatusCode != http.StatusOK {
+			log.Errorf("invalid response from Google: %s", rsp.Status)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+			return
+		}
+
+		// Parse the response to get the access token
+		var result map[string]interface{}
+		err = json.NewDecoder(rsp.Body).Decode(&result)
+		if err != nil {
+			log.Errorf("error getting access token : %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error getting access token"})
+			return
+		}
+
+		access_token := result["access_token"].(string)
+
+		// Get the subscription from google
+		url := "https://www.googleapis.com/androidpublisher/v3/applications/" + packageName + "/purchases/subscriptionsv2/tokens/" + purchaseToken + "?access_token=" + access_token
+		log.Infof("url: %s", url)
+
+		resp, err := http.Get(url)
+		if err != nil {
+			log.Errorf("error geting subscription from google: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error getting subscription from google"})
+			return
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			log.Errorf("invalid subscription response from Google: %s", resp.Status)
+			c.JSON(http.StatusOK, gin.H{"status": "received"})
+			return
+		}
+
+		// Parse the response to check the receipt status
+		var sub map[string]interface{}
+		err = json.NewDecoder(resp.Body).Decode(&sub)
+		if err != nil {
+			log.Errorf("error decoding response: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+			return
+		}
+
+		log.Infof("google subscription: %v", sub)
 	}
 
-	purchaseToken := subscriptionNotification["purchaseToken"].(string)
-	log.Infof("purchaseToken: %s", purchaseToken)
+	if msg["voidedPurchaseNotification"] != nil {
+		voidedPurchaseNotification := msg["voidedPurchaseNotification"].(map[string]interface{})
+		log.Infof("voidedPurchaseNotification: %v", voidedPurchaseNotification)
 
-	// Get the Google Play Developer API access token using our refresh token
-	client_id := os.Getenv("GOOGLE_PLAY_CLIENT_ID")
-	client_secret := os.Getenv("GOOGLE_PLAY_CLIENT_SECRET")
-	refresh_token := os.Getenv("GOOGLE_PLAY_REFRESH_TOKEN")
-	access_url := os.Getenv("GOOGLE_PLAY_ACCESS_URL")
-
-	// Create the request payload
-	payload := "grant_type=refresh_token&client_id=" + client_id + "&client_secret=" + client_secret + "&refresh_token=" + refresh_token
-
-	rsp, err := http.Post(access_url, "application/x-www-form-urlencoded", strings.NewReader(payload))
-	if err != nil {
-		log.Error(err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
-		return
 	}
-	defer rsp.Body.Close()
-
-	if rsp.StatusCode != http.StatusOK {
-		log.Errorf("invalid response from Google: %s", rsp.Status)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
-		return
-	}
-
-	// Parse the response to get the access token
-	var result map[string]interface{}
-	err = json.NewDecoder(rsp.Body).Decode(&result)
-	if err != nil {
-		log.Errorf("error getting access token : %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "error getting access token"})
-		return
-	}
-
-	access_token := result["access_token"].(string)
-
-	// Get the subscription from google
-	url := "https://www.googleapis.com/androidpublisher/v3/applications/" + packageName + "/purchases/subscriptionsv2/tokens/" + purchaseToken + "?access_token=" + access_token
-	log.Infof("url: %s", url)
-
-	resp, err := http.Get(url)
-	if err != nil {
-		log.Errorf("error geting subscription from google: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "error getting subscription from google"})
-		return
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		log.Errorf("invalid subscription response from Google: %s", resp.Status)
-		c.JSON(http.StatusOK, gin.H{"status": "received"})
-		return
-	}
-
-	// Parse the response to check the receipt status
-	var sub map[string]interface{}
-	err = json.NewDecoder(resp.Body).Decode(&sub)
-	if err != nil {
-		log.Errorf("error decoding response: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
-		return
-	}
-
-	log.Infof("google subscription: %v", sub)
 
 	c.JSON(http.StatusOK, gin.H{"status": "received"})
 }
