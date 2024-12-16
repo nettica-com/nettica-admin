@@ -322,6 +322,16 @@ func updateVPN(c *gin.Context) {
 			}
 		}
 
+		// send push notification to the device that just had the VPN disabled
+		if push.PushDevices[v.DeviceID] != "" && !v.Enable && v.DeviceID == result.DeviceID {
+			err := push.SendPushNotification(push.PushDevices[v.DeviceID], v.NetName+" disabled", "The VPN configuration for "+v.NetName+" has been disabled")
+			if err != nil {
+				log.WithFields(log.Fields{
+					"err": err,
+				}).Error("failed to send push notification")
+			}
+		}
+
 	}
 
 	c.JSON(http.StatusOK, result)
