@@ -506,6 +506,44 @@ func handleAndroidWebhook(c *gin.Context) {
 		}
 
 		log.Infof("google subscription: %v", sub)
+		if sub["subscriptionState"] != nil && sub["subscriptionState"].(string) == "SUBSCRIPTION_STATE_ACTIVE" {
+			// retrieve the subscription
+			subscription, err := core.GetSubscriptionByReceipt(purchaseToken)
+			if err != nil {
+				log.Errorf("error getting subscription: %v", err)
+				c.JSON(http.StatusNotFound, gin.H{"error": "Subscription not found"})
+				return
+			}
+
+			// get the lineItems from the subscription.  It's an array of maps
+			lineItems, ok := sub["lineItems"].([]interface{})
+			if !ok || len(lineItems) == 0 {
+				log.Errorf("lineItems not found")
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+				return
+			}
+
+			zero := lineItems[0].(map[string]interface{})
+
+			// update the expires date with expiryTime
+			if zero["expiryTime"] != nil {
+				*subscription.Expires, err = time.Parse(time.RFC3339, zero["expiryTime"].(string))
+				if err != nil {
+					log.Errorf("error parsing expiryTime: %v", err)
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+					return
+				}
+				last := time.Now().UTC()
+				subscription.LastUpdated = &last
+				subscription.UpdatedBy = "google"
+				core.UpdateSubscription(subscription.Id, subscription)
+				log.Infof("subscription updated: %s %v", subscription.Id, subscription)
+				c.JSON(http.StatusOK, gin.H{"status": "updated"})
+				return
+			}
+		}
+		// handle cancel and did_not_renew
+
 	}
 
 	if msg["voidedPurchaseNotification"] != nil {
