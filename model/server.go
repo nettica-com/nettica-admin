@@ -9,6 +9,7 @@ type Server struct {
 	Id            string `json:"id"            bson:"id"`
 	Name          string `json:"name"          bson:"name"`
 	Description   string `json:"description"   bson:"description"`
+	Continent     string `json:"continent"     bson:"continent"`
 	IpAddress     string `json:"ipAddress"     bson:"ipAddress"`
 	PortMin       int    `json:"portMin"       bson:"portMin"`
 	PortMax       int    `json:"portMax"       bson:"portMax"`
