@@ -63,6 +63,20 @@
 
 
     mounted() {
+      if (this.$route && this.$route.query && this.$route.query.redirect_uri) {
+        TokenService.saveRedirect(this.$route.query.redirect_uri)
+        TokenService.destroyToken() // force a token exchange
+      }
+      if (this.$route && this.$route.query && this.$route.query.code && this.$route.query.state) {
+        
+        let redirect = TokenService.getRedirect()
+        if (redirect != null && redirect != "") {
+          TokenService.destroyRedirect()
+          var url = redirect + "?code=" + this.$route.query.code + "&state=" + this.$route.query.state + "&client_id=" + TokenService.getClientId();
+            window.location.replace(url);
+            return;
+        }
+      }
       if (this.$route && this.$route.query && this.$route.query.referer) {
         let r = TokenService.getReferer()
         if (r == null) {

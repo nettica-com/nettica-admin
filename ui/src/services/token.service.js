@@ -6,7 +6,19 @@ const WILD_SERVER_KEY = "wild_server";
 const REFERER_KEY = "referer";
 const STATE_KEY = "state";
 const CODE_KEY = "code";
+const REDIRECT_KEY = "redirect_uri";
 
+export const getRedirect = () => {
+  return window.localStorage.getItem(REDIRECT_KEY);
+};
+
+export const saveRedirect = redirect => {
+  window.localStorage.setItem(REDIRECT_KEY, redirect);
+};
+
+export const destroyRedirect = () => {
+  window.localStorage.removeItem(REDIRECT_KEY);
+};
 
 export const getReferer = () => {
   return window.localStorage.getItem(REFERER_KEY);
@@ -106,6 +118,9 @@ export const destroyClientId = () => {
 };
 
 export default {
+  getRedirect,
+  saveRedirect,
+  destroyRedirect,
   getToken,
   saveToken,
   destroyToken,
