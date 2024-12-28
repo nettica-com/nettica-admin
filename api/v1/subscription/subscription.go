@@ -189,7 +189,7 @@ func createSubscriptionAndroid(c *gin.Context) {
 			account.Status = "Active"
 			account.CreatedBy = receipt.Email
 			account.UpdatedBy = receipt.Email
-			account.Picture = "/account-circle.svg"
+			account.Picture = os.Getenv("SERVER") + "/account-circle.svg"
 
 			a, err := core.CreateAccount(&account)
 			log.Infof("CREATE ACCOUNT = %v", a)
@@ -1050,7 +1050,7 @@ func createSubscriptionApple(c *gin.Context) {
 			account.Status = "Active"
 			account.CreatedBy = receipt.Email
 			account.UpdatedBy = receipt.Email
-			account.Picture = "/account-circle.svg"
+			account.Picture = os.Getenv("SERVER") + "/account-circle.svg"
 
 			a, err := core.CreateAccount(&account)
 			log.Infof("CREATE ACCOUNT = %v", a)
@@ -1498,7 +1498,7 @@ func createHelioSubscription(c *gin.Context) {
 				account.Status = "Active"
 				account.CreatedBy = email
 				account.UpdatedBy = email
-				account.Picture = "/account-circle.svg"
+				account.Picture = os.Getenv("SERVER") + "/account-circle.svg"
 
 				a, err := core.CreateAccount(&account)
 				log.Infof("CREATE ACCOUNT = %v", a)
@@ -1814,7 +1814,7 @@ func createSubscription(c *gin.Context) {
 				account.Status = "Active"
 				account.CreatedBy = email
 				account.UpdatedBy = email
-				account.Picture = "/account-circle.svg"
+				account.Picture = os.Getenv("SERVER") + "/account-circle.svg"
 
 				a, err := core.CreateAccount(&account)
 				log.Infof("CREATE ACCOUNT = %v", a)
