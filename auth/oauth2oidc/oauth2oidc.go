@@ -233,7 +233,7 @@ func (o *Oauth2idc) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 	if v, found := claims["picture"]; found && v != nil {
 		user.Picture = v.(string)
 	} else {
-		user.Picture = os.Getenv("SERVER") + "/account-circle.svg"
+		user.Picture = os.Getenv("SERVER") + "/account-circle.png"
 	}
 
 	user.Issuer = idToken.Issuer

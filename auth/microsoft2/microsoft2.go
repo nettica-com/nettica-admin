@@ -171,7 +171,7 @@ func (o *Oauth2Microsoft) UserInfo(oauth2Token *oauth2.Token) (*model.User, erro
 	log.Infof("user.Sub: %s", user.Sub)
 
 	user.Name = authResult.IDToken.Name
-	user.Picture = os.Getenv("SERVER") + "/account-circle.svg"
+	user.Picture = os.Getenv("SERVER") + "/account-circle.png"
 
 	user.Issuer = authResult.IDToken.Issuer
 	user.IssuedAt = time.Unix(authResult.IDToken.IssuedAt, 0)
