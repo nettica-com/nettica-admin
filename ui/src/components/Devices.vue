@@ -78,8 +78,7 @@
                             <v-card v-else-if="selected.isDevice" :key="selected.id" class="px-3 mx-auto" flat>
                                 <v-form autocomplete="off">
                                 <v-card-text width="600">
-                                    <v-icon v-if="selected.device.type=='Service'" size="50">mdi-cloud</v-icon>
-                                    <v-icon v-else size="50">mdi-devices</v-icon>
+                                    <span class="material-symbols-outlined" style="font-size:50px;">{{ selected.symbol }}</span>
                                     <h3 class="text-h5 mb-2">
                                         {{ selected.name }}
                                     </h3>
@@ -831,6 +830,31 @@ export default {
                     isDevice: true,
                     enabled: this.devices[i].enable,
                     children: []
+                }
+
+                if (this.devices[i].os == "windows") {
+                    this.items[i].icon = "mdi-window"
+                    this.items[i].symbol = "window"
+                }
+
+                if (this.devices[i].os == "linux") {
+                    this.items[i].icon = "mdi-dns"
+                    this.items[i].symbol = "dns"
+                }
+
+                if (this.devices[i].os == "macos") {
+                    this.items[i].icon = "mdi-laptop"
+                    this.items[i].symbol = "laptop"
+                }
+
+                if (this.devices[i].os == "ios") {
+                    this.items[i].icon = "mdi-phone"
+                    this.items[i].symbol = "phone_iphone"
+                }
+
+                if (this.devices[i].os == "android") {
+                    this.items[i].icon = "mdi-phone-android"
+                    this.items[i].symbol = "phone_android"
                 }
  
                 if (this.devices[i].type == "Service") {
