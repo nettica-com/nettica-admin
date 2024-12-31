@@ -17,6 +17,7 @@ var (
 	app         *firebase.App
 	client      *messaging.Client
 	PushDevices = make(map[string]string)
+	enabled     = false
 )
 
 // Initialize initializes the push notification service
@@ -43,22 +44,27 @@ func Initialize() error {
 		PushDevices[device.Id] = device.Push
 	}
 
+	enabled = true
+
 	return nil
 
 }
 
 // SendPushNotification sends a push notification to a device
 func SendPushNotification(pushToken, title, body string) error {
-	notification := messaging.Message{
-		Notification: &messaging.Notification{
-			Title: title,
-			Body:  body,
-		},
-		Token: pushToken,
-	}
-	_, err := client.Send(context.Background(), &notification)
-	if err != nil {
-		return fmt.Errorf("error sending message: %v", err)
+
+	if enabled {
+		notification := messaging.Message{
+			Notification: &messaging.Notification{
+				Title: title,
+				Body:  body,
+			},
+			Token: pushToken,
+		}
+		_, err := client.Send(context.Background(), &notification)
+		if err != nil {
+			return fmt.Errorf("error sending message: %v", err)
+		}
 	}
 
 	return nil
