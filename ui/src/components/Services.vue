@@ -711,6 +711,7 @@ export default {
             device.name = this.svcList.selected.value.toLowerCase() + "." + this.server.name;
             device.description = `nettica.com ${this.svcList.selected.value.toLowerCase()} service in ${this.server.description}`;
             device.enable = true;
+            device.type = "Service";
 
             // switch to the wilderness
             ApiService.setWildServer();
