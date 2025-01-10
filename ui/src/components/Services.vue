@@ -696,6 +696,7 @@ export default {
                     endpoint: this.server.ipAddress + ":" + port,
                     listenPort: port,
                     subnetRouting: true,
+                    persistentKeepalive: 23,
                 }
             }
 
