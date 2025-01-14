@@ -916,7 +916,7 @@ func createSubscriptionApple(c *gin.Context) {
 	}
 
 	// Validate the receipt with Apple
-	result, err := validateReceiptApple2(s.Receipt)
+	result, err := validateReceiptApple2(receipt.Receipt)
 	if err != nil || result == nil {
 		log.Error(err)
 		c.JSON(http.StatusForbidden, gin.H{"error": "Invalid receipt"})
