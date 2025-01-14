@@ -515,6 +515,16 @@ func handleAndroidWebhook(c *gin.Context) {
 				return
 			}
 
+			if subscription.Status == "expired" {
+				subscription.Status = "active"
+				last := time.Now().UTC()
+				subscription.LastUpdated = &last
+				subscription.UpdatedBy = "google"
+				core.RenewSubscription(subscription.Id)
+				log.Infof("subscription renewed: %s", subscription.Id)
+				subscription, err = core.GetSubscriptionByReceipt(purchaseToken)
+			}
+
 			// get the lineItems from the subscription.  It's an array of maps
 			lineItems, ok := sub["lineItems"].([]interface{})
 			if !ok || len(lineItems) == 0 {
@@ -542,6 +552,24 @@ func handleAndroidWebhook(c *gin.Context) {
 				return
 			}
 		}
+
+		if sub["subscriptionState"] != nil && sub["subscriptionState"].(string) == "SUBSCRIPTION_STATE_EXPIRED" {
+			// retrieve the subscription
+			subscription, err := core.GetSubscriptionByReceipt(purchaseToken)
+			if err != nil {
+				log.Errorf("error getting subscription: %v", err)
+				c.JSON(http.StatusNotFound, gin.H{"error": "Subscription not found"})
+				return
+			}
+
+			core.ExpireSubscription(subscription.Id)
+
+			log.Infof("subscription expired: %s", subscription.Id)
+
+			c.JSON(http.StatusOK, gin.H{"status": "expired"})
+			return
+		}
+
 		// handle cancel and did_not_renew
 
 	}

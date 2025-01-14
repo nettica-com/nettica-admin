@@ -130,6 +130,7 @@ func (o *Oauth2Basic) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 			host, _ := os.Hostname()
 			account.AccountName = host
 			account.Name = user.Sub
+			account.Sub = user.Sub
 			account.Email = user.Email
 			account.Role = "Owner"
 			account.Status = "Active"

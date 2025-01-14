@@ -281,6 +281,7 @@ func (o *Oauth2idc) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 			}
 			account.AccountName = "Company"
 			account.Email = user.Email
+			account.Sub = user.Sub
 			account.Role = "Owner"
 			account.Status = "Active"
 			account.CreatedBy = user.Email
@@ -324,6 +325,15 @@ func (o *Oauth2idc) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 			mongodb.Serialize(limits_id, "id", "limits", limits)
 		}
 	}
+
+	// add sub to existing accounts missing it
+	for i := 0; i < len(accounts); i++ {
+		if accounts[i].Sub == "" {
+			accounts[i].Sub = user.Sub
+			core.UpdateAccount(accounts[i].Id, accounts[i])
+		}
+	}
+
 	for i := 0; i < len(accounts); i++ {
 		if accounts[i].Picture == "" {
 			accounts[i].Picture = user.Picture

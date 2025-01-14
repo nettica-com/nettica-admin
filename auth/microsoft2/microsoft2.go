@@ -185,6 +185,7 @@ func (o *Oauth2Microsoft) UserInfo(oauth2Token *oauth2.Token) (*model.User, erro
 		if len(accounts) == 0 {
 			var account model.Account
 			account.Name = "Me"
+			account.Sub = user.Sub
 			account.AccountName = "Company"
 			account.Email = user.Email
 			account.Role = "Owner"
