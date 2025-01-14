@@ -909,7 +909,7 @@ func createSubscriptionApple(c *gin.Context) {
 	}
 	log.Infof("apple: %s", receipt)
 
-	s, err := core.GetSubscriptionByReceipt(receipt.Receipt)
+	_, err = core.GetSubscriptionByReceipt(receipt.Receipt)
 	if err == nil {
 		c.JSON(http.StatusConflict, gin.H{"error": "Subscription already exists"})
 		return
