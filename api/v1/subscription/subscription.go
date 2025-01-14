@@ -909,14 +909,14 @@ func createSubscriptionApple(c *gin.Context) {
 	}
 	log.Infof("apple: %s", receipt)
 
-	_, err = core.GetSubscriptionByReceipt(receipt.Receipt)
+	s, err := core.GetSubscriptionByReceipt(receipt.Receipt)
 	if err == nil {
 		c.JSON(http.StatusConflict, gin.H{"error": "Subscription already exists"})
 		return
 	}
 
 	// Validate the receipt with Apple
-	result, err := validateReceiptApple2(receipt.Receipt)
+	result, err := validateReceiptApple2(s.Receipt)
 	if err != nil || result == nil {
 		log.Error(err)
 		c.JSON(http.StatusForbidden, gin.H{"error": "Invalid receipt"})
