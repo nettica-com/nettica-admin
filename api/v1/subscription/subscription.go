@@ -2,7 +2,6 @@ package subscription
 
 import (
 	"bytes"
-	"crypto"
 	"crypto/ecdsa"
 	"crypto/hmac"
 	"crypto/rand"
@@ -583,6 +582,32 @@ func handleAndroidWebhook(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "received"})
 }
 
+func fetchApplePublicKeyFromX5C(x5c string) (*ecdsa.PublicKey, error) {
+	// Decode the base64 encoded certificate
+	certBytes, err := base64.StdEncoding.DecodeString(x5c)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode x5c: %v", err)
+	}
+
+	// Parse the certificate
+	cert, err := x509.ParseCertificate(certBytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse certificate: %v", err)
+	}
+
+	// Validate the certificate (e.g., check the certificate chain, expiration, etc.)
+	// This example assumes the certificate is self-signed and trusted for simplicity.
+	// In a real-world scenario, you should validate the certificate chain against trusted CAs.
+
+	// Extract the public key
+	pubKey, ok := cert.PublicKey.(*ecdsa.PublicKey)
+	if !ok {
+		return nil, fmt.Errorf("public key is not of type ECDSA")
+	}
+
+	return pubKey, nil
+}
+
 func handleAppleWebhook(c *gin.Context) {
 	bytes, err := io.ReadAll(c.Request.Body)
 	if err != nil {
@@ -873,13 +898,18 @@ func validateAppleSignature(header, payload, signature string) (bool, error) {
 
 	log.Infof("header: %v", headerMap)
 
-	if headerMap["kid"] == nil {
-		return false, fmt.Errorf("kid not found")
+	if headerMap["x5c"] == nil {
+		return false, fmt.Errorf("x5c not found")
 	}
 
-	kid := headerMap["kid"].(string)
+	x5cArray, ok := headerMap["x5c"].([]interface{})
+	if !ok || len(x5cArray) == 0 {
+		return false, fmt.Errorf("x5c is not an array or is empty")
+	}
 
-	pubKey, err := fetchApplePublicKey(kid)
+	x5c := x5cArray[0].(string)
+
+	pubKey, err := fetchApplePublicKeyFromX5C(x5c)
 	if err != nil {
 		return false, err
 	}
@@ -892,11 +922,11 @@ func validateAppleSignature(header, payload, signature string) (bool, error) {
 		return false, err
 	}
 
-	if err = rsa.VerifyPKCS1v15(pubKey, crypto.SHA256, hash[:], sig); err != nil {
-		return false, err
-	}
+	r := new(big.Int).SetBytes(sig[:len(sig)/2])
+	s := new(big.Int).SetBytes(sig[len(sig)/2:])
 
-	return true, nil
+	valid := ecdsa.Verify(pubKey, hash[:], r, s)
+	return valid, nil
 }
 
 func createSubscriptionApple(c *gin.Context) {
@@ -1239,13 +1269,36 @@ func validateReceiptApple(receipt string) (bool, error) {
 }
 
 // validateReceiptApple2 validates an Apple purchaseId
+// It first tries to validate the receipt with the production URL
+// If that fails, it tries the sandbox URL
+// This allows the same code to run in both production and development environments
 func validateReceiptApple2(receipt string) (map[string]interface{}, error) {
+
+	production := os.Getenv("APPLE_ITUNES_RECEIPT_URL")
+	sandbox := os.Getenv("APPLE_ITUNES_SANDBOX_URL")
+
+	// Attempt validation with the production URL
+	response, err := validateReceipt(production, receipt)
+	if err != nil {
+		log.Errorf("Failed to validate receipt with production URL: %v", err)
+		// Attempt validation with the sandbox URL
+		response, err = validateReceipt(sandbox, receipt)
+		if err != nil {
+			log.Errorf("Failed to validate receipt with sandbox URL: %v", err)
+			return nil, err
+		}
+	}
+
+	return response, nil
+}
+
+func validateReceipt(url, receipt string) (map[string]interface{}, error) {
 	// Apple receipt validation URL
-	//	url := "https://buy.itunes.apple.com/verifyReceipt"
-	//url := "https://sandbox.itunes.apple.com/verifyReceipt"
 	// url := "https://api.storekit.itunes.apple.com/inApps/v1/transactions/{transactionId}"
 	// url := "https://api.storekit-sandbox.itunes.apple.com/inApps/v1/transactions/{transactionId}"
-	url := os.Getenv("APPLE_ITUNES_RECEIPT_URL") + receipt
+	url += receipt
+
+	// Create a JWT to authenticate with Apple
 	keyfile := os.Getenv("APPLE_ITUNES_IN_APP_PURCHASE_KEY")
 	keyid := os.Getenv("APPLE_ITUNES_IN_APP_PURCHASE_KEY_ID")
 	issuer := os.Getenv("APPLE_ITUNES_IN_APP_PURCHASE_KEY_ISSUER")
@@ -1291,7 +1344,7 @@ func validateReceiptApple2(receipt string) (map[string]interface{}, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("invalid response from Apple: %s", resp.Status)
+		return nil, fmt.Errorf("error statusCode from Apple: %d %s", resp.StatusCode, resp.Status)
 	}
 
 	// enough of this bullshit!
@@ -1313,8 +1366,6 @@ func validateReceiptApple2(receipt string) (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// decode the payload
 
 	// Parse the response to check the receipt status
 	var result map[string]interface{}
