@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -62,11 +63,16 @@ func main() {
 	if os.Getenv("GIN_MODE") == "debug" {
 		// set gin release debug
 		gin.SetMode(gin.DebugMode)
+		gin.DisableConsoleColor()
+		log.SetLevel(log.InfoLevel)
 	} else {
 		// set gin release mode
 		gin.SetMode(gin.ReleaseMode)
 		// disable console color
 		gin.DisableConsoleColor()
+		// Disable Gin's default logger in release mode
+		gin.DefaultWriter = io.Discard
+		gin.DefaultErrorWriter = io.Discard
 		// log level info
 		log.SetLevel(log.InfoLevel)
 	}
