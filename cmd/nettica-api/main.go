@@ -203,6 +203,8 @@ func main() {
 		log.Error(err)
 	}
 
+	app.SetTrustedProxies([]string{"127.0.0.1"})
+
 	err = app.Run(fmt.Sprintf("%s:%s", os.Getenv("LISTEN_ADDR"), os.Getenv("PORT")))
 	if err != nil {
 		log.WithFields(log.Fields{
