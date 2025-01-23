@@ -122,9 +122,10 @@ func readDevice(c *gin.Context) {
 
 	account, device, err := core.AuthFromContext(c, id)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"err": err,
-		}).Error("failed to get account from context")
+		//log.WithFields(log.Fields{
+		//	"err": err,
+		//}).Error("failed to get account from context")
+		c.JSON(http.StatusNotFound, gin.H{"error": "Not found"})
 		return
 	}
 
@@ -376,9 +377,9 @@ func statusDevice(c *gin.Context) {
 
 	device, err := core.ReadDevice(deviceId)
 	if err != nil {
-		log.WithFields(log.Fields{
-			"err": err,
-		}).Error("failed to read client config")
+		//log.WithFields(log.Fields{
+		//	"err": err,
+		//}).Error("failed to read client config")
 		if err.Error() == "mongo: no documents in result" {
 			c.JSON(http.StatusNotFound, gin.H{"error": "device not found"})
 		} else {
