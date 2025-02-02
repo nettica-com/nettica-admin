@@ -123,6 +123,11 @@ export default {
         }),
     },
 
+    mounted() {
+            // Set the document title to the host
+            document.title = document.location.host;
+    },
+
     watch: {
         user: function (val) {
             this.name = val.name;
