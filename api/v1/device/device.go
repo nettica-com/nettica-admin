@@ -157,7 +157,7 @@ func updateDevice(c *gin.Context) {
 	var data model.Device
 	id := c.Param("id")
 	if id == "" {
-		log.Error("deviceid cannot be empty")
+		//log.Error("deviceid cannot be empty")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "devceid cannot be empty"})
 	}
 
@@ -366,7 +366,7 @@ func statusDevice(c *gin.Context) {
 	deviceId := c.Param("id")
 
 	if deviceId == "" || deviceId == "device-id-" {
-		log.Error("deviceid cannot be empty")
+		//log.Error("deviceid cannot be empty")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "deviceid cannot be empty"})
 		return
 	}
