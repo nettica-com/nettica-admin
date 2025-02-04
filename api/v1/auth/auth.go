@@ -64,7 +64,7 @@ func oauth2URL(c *gin.Context) {
 		audience = os.Getenv("OAUTH2_AGENT_AUDIENCE")
 		redirect_uri = os.Getenv("OAUTH2_AGENT_REDIRECT_URL")
 
-		cacheDb.Set(clientId, state, 5*time.Minute)
+		cacheDb.Set(clientId, state, 1*time.Hour)
 	} else {
 
 		state, err = util.GenerateRandomString(32)
@@ -85,7 +85,7 @@ func oauth2URL(c *gin.Context) {
 			return
 		}
 		// save clientId and state so we can retrieve for verification
-		cacheDb.Set(clientId, state, 5*time.Minute)
+		cacheDb.Set(clientId, state, 1*time.Hour)
 		codeUrl = oauth2Client.CodeUrl(state)
 		if referer != "" {
 			codeUrl = codeUrl + "&referer=" + referer
@@ -163,7 +163,7 @@ func oauth2Exchange(c *gin.Context) {
 	// normally we should delete this, but frankly it causes more errors on the website to do that.
 	// Let it be expired out of the cache instead of deleting it.
 	// cacheDb.Delete(loginVals.ClientId)
-	cacheDb.Set(oauth2Token.AccessToken, oauth2Token, 4*time.Hour)
+	cacheDb.Set(oauth2Token.AccessToken, oauth2Token, 24*time.Hour)
 
 	c.JSON(http.StatusOK, oauth2Token.AccessToken)
 }
@@ -213,7 +213,7 @@ func token(c *gin.Context) {
 		return
 	}
 
-	cacheDb.Set(oauth2Token.AccessToken, oauth2Token, 4*time.Hour)
+	cacheDb.Set(oauth2Token.AccessToken, oauth2Token, 24*time.Hour)
 
 	c.JSON(http.StatusOK, oauth2Token.AccessToken)
 	/*
@@ -306,7 +306,7 @@ func login(c *gin.Context) {
 
 	// save the code and basic auth in the cache for
 	// later retrieval in oauth2_exchange
-	cacheDb.Set(code, loginVals.Code, 10*time.Minute)
+	cacheDb.Set(code, loginVals.Code, 1*time.Hour)
 
 	redirect := "/?code=" + code + "&state=" + loginVals.State
 
@@ -380,7 +380,7 @@ func validate(c *gin.Context) {
 		oauth2Token = oauth2Token.WithExtra(map[string]interface{}{ // Add the ID token to the extra parameters
 			"id_token": token})
 
-		cacheDb.Set(oauth2Token.AccessToken, oauth2Token, 4*time.Hour)
+		cacheDb.Set(oauth2Token.AccessToken, oauth2Token, 24*time.Hour)
 
 		c.JSON(http.StatusOK, gin.H{})
 		return
