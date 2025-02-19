@@ -4,6 +4,7 @@ import (
 	"errors"
 	"reflect"
 	"sort"
+	"strings"
 	"time"
 
 	model "github.com/nettica-com/nettica-admin/model"
@@ -173,6 +174,33 @@ func ReadSubscriptions(email string) ([]*model.Subscription, error) {
 	})
 
 	return results, err
+}
+
+func GetOffers(account string) (*model.DiscountOffers, error) {
+
+	offers := model.DiscountOffers{Offers: []string{"intro"}}
+
+	if !strings.Contains(account, "account-") {
+		return &offers, nil
+	}
+
+	subscriptions, err := mongo.ReadAllSubscriptions(account)
+	if err != nil {
+		return &offers, nil
+	}
+
+	for _, subscription := range subscriptions {
+		if subscription.Expires.After(time.Now().UTC()) {
+			offers.Offers = []string{""}
+			break
+		}
+
+		if subscription.Expires.Before(time.Now().UTC()) && !subscription.Expires.Before(*subscription.Issued) {
+			offers.Offers = []string{"promo"}
+		}
+	}
+
+	return &offers, nil
 }
 
 // ExpireSubscription by id

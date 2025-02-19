@@ -15,3 +15,7 @@ type DiscountResponse struct {
 	Nonce     string `json:"nonce" bson:"nonce"`
 	Signature string `json:"signature" bson:"signature"`
 }
+
+type DiscountOffers struct {
+	Offers []string `json:"offers" bson:"offers"`
+}

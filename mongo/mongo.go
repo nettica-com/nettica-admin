@@ -3,7 +3,6 @@ package mongo
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"os"
 	"reflect"
 	"sort"
@@ -81,13 +80,7 @@ func Serialize(id string, parm string, col string, c interface{}) error {
 
 	collection := client.Database("nettica").Collection(col)
 
-	findstr := fmt.Sprintf("{\"%s\":\"%s\"}", parm, id)
-	var filter interface{}
-	err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
-	if err != nil {
-		return err
-	}
-
+	filter := bson.D{{Key: parm, Value: id}}
 	update := bson.M{
 		"$set": b,
 	}
@@ -116,12 +109,7 @@ func Deserialize(id string, parm string, col string, t reflect.Type) (interface{
 
 	collection := client.Database("nettica").Collection(col)
 
-	findstr := fmt.Sprintf("{\"%s\":\"%s\"}", parm, id)
-	var filter interface{}
-	err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
-	if err != nil {
-		return nil, err
-	}
+	filter := bson.D{{Key: parm, Value: id}}
 
 	switch t.String() {
 
@@ -189,12 +177,7 @@ func DeleteVPN(id string, col string) error {
 
 	collection := client.Database("nettica").Collection(col)
 
-	findstr := fmt.Sprintf("{\"id\":\"%s\"}", id)
-	var filter interface{}
-	err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
-	if err != nil {
-		return err
-	}
+	filter := bson.D{{Key: "id", Value: id}}
 
 	collection.FindOneAndDelete(ctx, filter)
 
@@ -215,12 +198,7 @@ func Delete(id string, ident string, col string) error {
 
 	collection := client.Database("nettica").Collection(col)
 
-	findstr := fmt.Sprintf("{\"%s\":\"%s\"}", ident, id)
-	var filter interface{}
-	err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
-	if err != nil {
-		return err
-	}
+	filter := bson.D{{Key: ident, Value: id}}
 
 	collection.FindOneAndDelete(ctx, filter)
 
@@ -244,12 +222,7 @@ func ReadAllDevices(param string, id string) ([]*model.Device, error) {
 
 	filter := bson.D{}
 	if id != "" {
-		findstr := fmt.Sprintf("{\"%s\":\"%s\"}", param, id)
-		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
-		if err != nil {
-			return nil, err
-		}
-
+		filter = bson.D{{Key: param, Value: id}}
 	}
 
 	cursor, err := collection.Find(ctx, filter)
@@ -286,12 +259,7 @@ func GetDevicesForPushNotifications() ([]*model.Device, error) {
 
 	collection := client.Database("nettica").Collection("devices")
 
-	filter := bson.D{}
-	findstr := "{\"push\": {\"$ne\": \"\"}}"
-	err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
-	if err != nil {
-		return nil, err
-	}
+	filter := bson.D{{Key: "push", Value: bson.D{{Key: "$ne", Value: ""}}}}
 
 	cursor, err := collection.Find(ctx, filter)
 
@@ -431,12 +399,7 @@ func ReadAllVPNs(param string, id string) ([]*model.VPN, error) {
 
 	filter := bson.D{}
 	if id != "" {
-		findstr := fmt.Sprintf("{\"%s\":\"%s\"}", param, id)
-		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
-		if err != nil {
-			return nil, err
-		}
-
+		filter = bson.D{{Key: param, Value: id}}
 	}
 
 	cursor, err := collection.Find(ctx, filter)
@@ -478,12 +441,7 @@ func ReadAllNetworks(param string, id string) ([]*model.Network, error) {
 
 	filter := bson.D{}
 	if id != "" {
-		findstr := fmt.Sprintf("{\"%s\":\"%s\"}", param, id)
-		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
-		if err != nil {
-			return nil, err
-		}
-
+		filter = bson.D{{Key: param, Value: id}}
 	}
 
 	collection := client.Database("nettica").Collection("networks")
@@ -522,12 +480,7 @@ func ReadServices(param string, id string) ([]*model.Service, error) {
 
 	filter := bson.D{}
 	if id != "" {
-		findstr := fmt.Sprintf("{\"%s\":\"%s\"}", param, id)
-		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
-		if err != nil {
-			return nil, err
-		}
-
+		filter = bson.D{{Key: param, Value: id}}
 	}
 
 	collection := client.Database("nettica").Collection("services")
@@ -599,12 +552,7 @@ func ReadAllAccounts(email string) ([]*model.Account, error) {
 
 	filter := bson.D{}
 	if email != "" {
-		findstr := fmt.Sprintf("{\"%s\":\"%s\"}", "email", email)
-		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
-		if err != nil {
-			return nil, err
-		}
-
+		filter = bson.D{{Key: "email", Value: email}}
 	}
 
 	cursor, err := collection.Find(ctx, filter)
@@ -641,15 +589,11 @@ func ReadAllAccountsForID(id string) ([]*model.Account, error) {
 
 	collection := client.Database("nettica").Collection("accounts")
 
-	filter := bson.D{}
-	if id != "" {
-		findstr := fmt.Sprintf("{\"%s\":\"%s\"}", "parent", id)
-		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
-		if err != nil {
-			return nil, err
-		}
-
+	if id == "" {
+		return accounts, nil
 	}
+
+	filter := bson.D{{Key: "parent", Value: id}}
 
 	cursor, err := collection.Find(ctx, filter)
 
@@ -686,12 +630,7 @@ func ReadAccountForUser(email string, accountid string) (*model.Account, error) 
 
 	filter := bson.D{}
 	if email != "" {
-		findstr := fmt.Sprintf("{\"email\":\"%s\", \"parent\":\"%s\"}", email, accountid)
-		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
-		if err != nil {
-			return nil, err
-		}
-
+		filter = bson.D{{Key: "email", Value: email}, {Key: "parent", Value: accountid}}
 	}
 
 	cursor, err := collection.Find(ctx, filter)
@@ -730,12 +669,7 @@ func ReadAllSubscriptions(accountid string) ([]*model.Subscription, error) {
 
 	filter := bson.D{}
 	if accountid != "" {
-		findstr := fmt.Sprintf("{\"%s\":\"%s\"}", "accountid", accountid)
-		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
-		if err != nil {
-			return nil, err
-		}
-
+		filter = bson.D{{Key: "accountid", Value: accountid}}
 	}
 
 	cursor, err := collection.Find(ctx, filter)
@@ -774,12 +708,7 @@ func ReadAllServices(accountid string) ([]*model.Service, error) {
 
 	filter := bson.D{}
 	if accountid != "" {
-		findstr := fmt.Sprintf("{\"%s\":\"%s\"}", "accountid", accountid)
-		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
-		if err != nil {
-			return nil, err
-		}
-
+		filter = bson.D{{Key: "accountid", Value: accountid}}
 	}
 
 	cursor, err := collection.Find(ctx, filter)
@@ -852,12 +781,7 @@ func ReadServiceHost(id string) ([]*model.Service, error) {
 
 	filter := bson.D{}
 	if id != "" {
-		findstr := fmt.Sprintf("{\"%s\":\"%s\"}", "serviceGroup", id)
-		err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
-		if err != nil {
-			return nil, err
-		}
-
+		filter = bson.D{{Key: "serviceGroup", Value: id}}
 	}
 
 	cursor, err := collection.Find(ctx, filter)
@@ -902,12 +826,7 @@ func UpsertUser(user *model.User) error {
 		return err
 	}
 
-	findstr := fmt.Sprintf("{\"email\":\"%s\"}", user.Email)
-	var filter interface{}
-	err = bson.UnmarshalExtJSON([]byte(findstr), true, &filter)
-	if err != nil {
-		return err
-	}
+	filter := bson.D{{Key: "email", Value: user.Email}}
 
 	update := bson.M{
 		"$set": b,

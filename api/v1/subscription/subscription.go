@@ -42,11 +42,23 @@ func ApplyRoutes(r *gin.RouterGroup) {
 		g.POST("/apple/discount", handleAppleDiscount)
 		g.POST("/android", createSubscriptionAndroid)
 		g.POST("/android/webhook", handleAndroidWebhook)
+		g.GET("/offers/:id", getOffers)
 		g.GET("/:id", readSubscription)
 		g.PATCH("/:id", updateSubscription)
 		g.DELETE("/:id", deleteSubscription)
 		g.GET("", readSubscriptions)
 	}
+}
+
+func getOffers(c *gin.Context) {
+	id := c.Param("id")
+	offers, err := core.GetOffers(id)
+	if err != nil {
+		log.Error(err)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Offers not found"})
+		return
+	}
+	c.JSON(http.StatusOK, offers)
 }
 
 func createSubscriptionAndroid(c *gin.Context) {
