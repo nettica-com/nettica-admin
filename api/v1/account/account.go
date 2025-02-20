@@ -26,6 +26,7 @@ func ApplyRoutes(r *gin.RouterGroup) {
 		g.GET("/:id/limits", getLimits)
 		g.PATCH("/:id", updateAccount)
 		g.DELETE("/:id", deleteAccount)
+		g.DELETE("/:id/soft", softDeleteAccount)
 	}
 }
 
@@ -394,6 +395,91 @@ func deleteAccount(c *gin.Context) {
 		log.WithFields(log.Fields{
 			"err": err,
 		}).Error("failed to remove client")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "OK"})
+}
+
+// SoftDeleteAccount soft deletes an account
+// @Summary Soft delete an account
+// @Description Soft delete an account.  All devices, networks, and services must be deleted first.
+// @Tags accounts
+// @Security apiKey
+// @Success 200 {object} string "OK"
+// @Failure 400 {object} error
+// @Router /accounts/{id}/soft [delete]
+// @Param id path string true "Account ID"
+func softDeleteAccount(c *gin.Context) {
+	id := c.Param("id")
+
+	account, _, err := core.AuthFromContext(c, id)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to read account from context")
+		return
+	}
+
+	if account.Role == "User" || account.Role == "Guest" {
+		if account.Id != id {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to delete this account"})
+			return
+		}
+	}
+
+	if account.Id != id {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to delete this account"})
+		return
+	}
+	var devices []*model.Device
+	devices, err = core.ReadDevicesForAccount(id)
+	if err != nil {
+		log.Error(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if len(devices) > 0 {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You must delete all devices before deleting this account"})
+		return
+	}
+
+	var networks []*model.Network
+	networks, err = core.ReadNetworksForAccount(id)
+	if err != nil {
+		log.Error(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if len(networks) > 0 {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You must delete all networks before deleting this account"})
+		return
+	}
+
+	var services []*model.Service
+	services, err = core.ReadServicesForAccount(id)
+	if err != nil {
+		log.Error(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if len(services) > 0 {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You must delete all services before deleting this account"})
+		return
+	}
+
+	// Delete the account
+	log.Infof("softDeleteAccount: %s deleting account %s", account.Email, id)
+
+	err = core.DeleteAccount(id)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to soft remove client")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
