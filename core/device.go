@@ -241,6 +241,10 @@ func UpdateDevice(Id string, device *model.Device, fUpdated bool) (*model.Device
 // DeleteDevice from database
 func DeleteDevice(id string) error {
 
+	if id == "" {
+		return errors.New("id is empty")
+	}
+
 	vpns, err := mongo.ReadAllVPNs("deviceid", id)
 
 	if err != nil {

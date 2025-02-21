@@ -361,6 +361,10 @@ func UpdateVPN(Id string, vpn *model.VPN, flag bool) (*model.VPN, error) {
 // DeleteVPN from database
 func DeleteVPN(id string) error {
 
+	if id == "" {
+		return errors.New("id is empty")
+	}
+
 	return mongo.DeleteVPN(id, "vpns")
 }
 

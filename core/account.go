@@ -167,6 +167,10 @@ func UpdateAccount(Id string, user *model.Account) (*model.Account, error) {
 // DeleteAccount from mongo
 func DeleteAccount(id string) error {
 
+	if id == "" {
+		return errors.New("id is empty")
+	}
+
 	return mongo.Delete(id, "id", "accounts")
 }
 

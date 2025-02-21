@@ -103,6 +103,10 @@ func UpdateUser(Id string, user *model.User) (*model.User, error) {
 // DeleteUser from database
 func DeleteUser(id string) error {
 
+	if id == "" {
+		return errors.New("id is empty")
+	}
+
 	return mongo.Delete(id, "id", "users")
 }
 

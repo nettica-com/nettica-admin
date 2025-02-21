@@ -137,6 +137,10 @@ func UpdateNet(Id string, net *model.Network) (*model.Network, error) {
 // DeleteNet from database
 func DeleteNet(id string) error {
 
+	if id == "" {
+		return errors.New("id is empty")
+	}
+
 	// Delete all vpns associated with this network
 
 	vpns, err := mongo.ReadAllVPNs("netid", id)

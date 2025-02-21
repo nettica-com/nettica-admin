@@ -327,6 +327,10 @@ func UpdateService(Id string, service *model.Service) (*model.Service, error) {
 // DeleteService from database
 func DeleteService(id string) error {
 
+	if id == "" {
+		return errors.New("id is empty")
+	}
+
 	// Get the service
 	v, err := mongo.Deserialize(id, "id", "services", reflect.TypeOf(model.Service{}))
 	if err != nil {

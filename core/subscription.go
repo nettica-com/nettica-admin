@@ -129,6 +129,10 @@ func UpdateSubscription(Id string, subscription *model.Subscription) (*model.Sub
 // DeleteSubscription by id
 func DeleteSubscription(id string) error {
 
+	if id == "" {
+		return errors.New("id is empty")
+	}
+
 	err := mongo.Delete(id, "id", "subscriptions")
 	if err != nil {
 		return err
