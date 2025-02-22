@@ -224,6 +224,14 @@ func (o *Oauth2idc) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 
 	log.Infof("user.Sub: %s", user.Sub)
 
+	// apple and thus, auth0 sometimes does not provider an email address.  these people cannot login.
+	if user.Email == "" {
+
+		log.Errorf("email not found in user info, preventing user from logging in")
+
+		return nil, fmt.Errorf("email not found in user info")
+	}
+
 	if v, found := claims["name"]; found && v != nil {
 		user.Name = v.(string)
 	} else {

@@ -223,6 +223,10 @@ func createSubscriptionAndroid(c *gin.Context) {
 		}
 	}
 
+	if account == nil && len(accounts) > 0 {
+		account = accounts[0]
+	}
+
 	if account == nil {
 		log.Errorf("account not found for email %s", receipt.Email)
 		c.JSON(http.StatusNotFound, gin.H{"error": "Account not found"})
@@ -521,6 +525,8 @@ func handleAndroidWebhook(c *gin.Context) {
 			// retrieve the subscription
 			subscription, err := core.GetSubscriptionByReceipt(purchaseToken)
 			if err != nil {
+				// create the subscription
+
 				log.Errorf("error getting subscription: %v", err)
 				c.JSON(http.StatusNotFound, gin.H{"error": "Subscription not found"})
 				return
@@ -1143,6 +1149,10 @@ func createSubscriptionApple(c *gin.Context) {
 		}
 	}
 
+	if account == nil && len(accounts) > 0 {
+		account = accounts[0]
+	}
+
 	if account == nil {
 		log.Errorf("account not found for email %s", receipt.Email)
 		c.JSON(http.StatusNotFound, gin.H{"error": "Account not found"})
@@ -1612,6 +1622,10 @@ func createHelioSubscription(c *gin.Context) {
 			}
 		}
 
+		if account == nil && len(accounts) > 0 {
+			account = accounts[0]
+		}
+
 		if account == nil {
 			log.Errorf("account not found for email %s", email)
 			return
@@ -1926,6 +1940,10 @@ func createSubscription(c *gin.Context) {
 				account = accounts[i]
 				break
 			}
+		}
+
+		if account == nil && len(accounts) > 0 {
+			account = accounts[0]
 		}
 
 		if account == nil {

@@ -120,7 +120,7 @@
                                                 <v-text-field v-model="selected.member.name" label="Name"
                                                     :rules="[v => !!v || 'Name is required',]" required />
                                                 <v-text-field v-model="selected.member.email" label="Email Address"
-                                                    :rules="[v => !!v || 'Email address is required',]" required>
+                                                    :rules="[v => !!v || 'Email address is required',]" readonly>
                                                     <template v-slot:append>
                                                         <v-btn icon @click="resendEmail(selected.member)">
                                                             <v-icon dark>mdi-refresh</v-icon>
