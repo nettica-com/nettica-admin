@@ -489,7 +489,8 @@ func user(c *gin.Context) {
 			log.WithFields(log.Fields{
 				"err": err,
 			}).Error("failed to get user from oauth2 AccessToken")
-			c.AbortWithStatus(http.StatusBadRequest)
+			cacheDb.Delete(token)
+			c.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
 
