@@ -315,6 +315,11 @@ func createSubscriptionAndroid(c *gin.Context) {
 	// save subscription to mongodb
 	mongo.Serialize(subscription.Id, "id", "subscriptions", subscription)
 
+	err = core.SubscriptionEmail(&subscription)
+	if err != nil {
+		log.Errorf("failed to send email: %v", err)
+	}
+
 	c.JSON(http.StatusOK, subscription)
 
 }
@@ -1240,6 +1245,11 @@ func createSubscriptionApple(c *gin.Context) {
 
 	// save subscription to mongodb
 	mongo.Serialize(subscription.Id, "id", "subscriptions", subscription)
+
+	err = core.SubscriptionEmail(&subscription)
+	if err != nil {
+		log.Errorf("failed to send email: %v", err)
+	}
 
 	c.JSON(http.StatusOK, subscription)
 	return

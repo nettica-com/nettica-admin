@@ -2,14 +2,18 @@ package core
 
 import (
 	"errors"
+	"os"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
 	model "github.com/nettica-com/nettica-admin/model"
 	mongo "github.com/nettica-com/nettica-admin/mongo"
+	template "github.com/nettica-com/nettica-admin/template"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/gomail.v2"
 )
 
 // CreateSubscription all necessary data
@@ -120,10 +124,50 @@ func UpdateSubscription(Id string, subscription *model.Subscription) (*model.Sub
 	if err != nil {
 		return nil, err
 	}
+
 	subscription = v.(*model.Subscription)
+
+	err = SubscriptionEmail(subscription)
+	if err != nil {
+		log.Errorf("failed to send email: %v", err)
+	}
 
 	// data modified, dump new config
 	return subscription, nil
+}
+
+// EmailHost send email to host
+func SubscriptionEmail(sub *model.Subscription) error {
+	// get email body
+	emailBody, err := template.BillingEmail(*sub)
+	if err != nil {
+		return err
+	}
+
+	// port to int
+	port, err := strconv.Atoi(os.Getenv("SMTP_PORT"))
+	if err != nil {
+		return err
+	}
+
+	d := gomail.NewDialer(os.Getenv("SMTP_HOST"), port, os.Getenv("SMTP_USERNAME"), os.Getenv("SMTP_PASSWORD"))
+	s, err := d.Dial()
+	if err != nil {
+		return err
+	}
+	m := gomail.NewMessage()
+
+	m.SetHeader("From", os.Getenv("SMTP_FROM"))
+	m.SetAddressHeader("To", "info@nettica.com", "Nettica")
+	m.SetHeader("Subject", "Nettica Apps Billing")
+	m.SetBody("text/html", string(emailBody))
+
+	err = gomail.Send(s, m)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // DeleteSubscription by id

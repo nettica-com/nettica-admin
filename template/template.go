@@ -289,6 +289,26 @@ func DumpEmail(vpn *model.VPN, qrcodePngName string) ([]byte, error) {
 	})
 }
 
+func BillingEmail(subscription model.Subscription) ([]byte, error) {
+	file := "billing.html"
+
+	bytes, err := os.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+
+	t, err := template.New("billing").Parse(string(bytes))
+	if err != nil {
+		return nil, err
+	}
+
+	return dump(t, struct {
+		S model.Subscription
+	}{
+		S: subscription,
+	})
+}
+
 // DumpEmail invites a user to join the network
 func DumpUserEmail(accountId string) ([]byte, error) {
 	file := "invite.html"
