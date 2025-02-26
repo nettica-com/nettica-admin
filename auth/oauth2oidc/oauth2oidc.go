@@ -31,6 +31,7 @@ var (
 	oidcProvider        *oidc.Provider
 	oidcIDTokenVerifier []*oidc.IDTokenVerifier
 	userCache           *cache.Cache
+	ctx                 = context.Background()
 
 	publicConfig   *oauth2.Config
 	publicProvider *oidc.Provider
@@ -43,18 +44,37 @@ type TokenResponse struct {
 	ExpiresIn   int    `json:"expires_in"` // in seconds
 }
 
+// CustomTransport is an HTTP transport that adds a custom User-Agent header
+type CustomTransport struct {
+	Transport http.RoundTripper
+	UserAgent string
+}
+
+func (t *CustomTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Set("User-Agent", t.UserAgent)
+	return t.Transport.RoundTrip(req)
+}
+
 // Setup validate provider
 func (o *Oauth2idc) Setup() error {
 	var err error
 
 	userCache = cache.New(60*time.Minute, 10*time.Minute)
 
-	oidcProvider, err = oidc.NewProvider(context.TODO(), os.Getenv("OAUTH2_PROVIDER"))
+	client := &http.Client{
+		Transport: &CustomTransport{
+			Transport: http.DefaultTransport,
+			UserAgent: "nettica-admin/2.0",
+		},
+	}
+
+	ctx = oidc.ClientContext(context.TODO(), client)
+	oidcProvider, err = oidc.NewProvider(ctx, os.Getenv("OAUTH2_PROVIDER"))
 	if err != nil {
 		return err
 	}
 
-	publicProvider, err = oidc.NewProvider(context.TODO(), os.Getenv("OAUTH2_AGENT_PROVIDER"))
+	publicProvider, err = oidc.NewProvider(ctx, os.Getenv("OAUTH2_AGENT_PROVIDER"))
 	if err != nil {
 		return err
 	}
@@ -102,7 +122,8 @@ func (o *Oauth2idc) CodeUrl2(state string) string {
 
 // Exchange exchange code for Oauth2 token
 func (o *Oauth2idc) Exchange(code string) (*oauth2.Token, error) {
-	oauth2Token, err := oauth2Config.Exchange(context.TODO(), code)
+
+	oauth2Token, err := oauth2Config.Exchange(ctx, code)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +145,12 @@ func (o *Oauth2idc) Exchange2(code string) (*oauth2.Token, error) {
 	// to get the access token
 	// and other information
 
-	httpClient := &http.Client{}
+	httpClient := &http.Client{
+		Transport: &CustomTransport{
+			Transport: http.DefaultTransport,
+			UserAgent: "nettica-admin/2.0",
+		},
+	}
 	rsp, err := httpClient.PostForm(provider+"oauth/token/", url.Values{
 		"grant_type":    {"authorization_code"},
 		"client_id":     {client_id},
@@ -185,7 +211,7 @@ func (o *Oauth2idc) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 	var err error
 
 	for _, verifier := range oidcIDTokenVerifier {
-		idToken, err = verifier.Verify(context.TODO(), rawIDToken)
+		idToken, err = verifier.Verify(ctx, rawIDToken)
 		if err == nil {
 			verified = true
 			break
@@ -201,7 +227,7 @@ func (o *Oauth2idc) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 		return cacheUser.(*model.User), nil
 	}
 
-	userInfo, err := oidcProvider.UserInfo(context.TODO(), oauth2.StaticTokenSource(oauth2Token))
+	userInfo, err := oidcProvider.UserInfo(ctx, oauth2.StaticTokenSource(oauth2Token))
 	if err != nil {
 		return nil, err
 	}
