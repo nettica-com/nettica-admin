@@ -2,14 +2,18 @@ package account
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	core "github.com/nettica-com/nettica-admin/core"
 	model "github.com/nettica-com/nettica-admin/model"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/auth0/go-auth0/management"
 )
 
 // ApplyRoutes applies router to gin Router
@@ -429,10 +433,12 @@ func softDeleteAccount(c *gin.Context) {
 		}
 	}
 
+	// for now at least, only the account principal can soft delete their account.  Admins can hard delete.
 	if account.Id != id {
-		c.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to delete this account"})
+		c.JSON(http.StatusForbidden, gin.H{"error": "You cannot delete this account"})
 		return
 	}
+
 	var devices []*model.Device
 	devices, err = core.ReadDevicesForAccount(id)
 	if err != nil {
@@ -441,9 +447,14 @@ func softDeleteAccount(c *gin.Context) {
 		return
 	}
 
+	// only direct account devices must be deleted
 	if len(devices) > 0 {
-		c.JSON(http.StatusForbidden, gin.H{"error": "You must delete all devices before deleting this account"})
-		return
+		for _, d := range devices {
+			if d.AccountID == id {
+				c.JSON(http.StatusForbidden, gin.H{"error": "You must delete all devices before deleting this account"})
+				return
+			}
+		}
 	}
 
 	var networks []*model.Network
@@ -454,9 +465,14 @@ func softDeleteAccount(c *gin.Context) {
 		return
 	}
 
+	// don't require parent account networks to be deleted, only direct account networks
 	if len(networks) > 0 {
-		c.JSON(http.StatusForbidden, gin.H{"error": "You must delete all networks before deleting this account"})
-		return
+		for _, n := range networks {
+			if n.AccountID == id {
+				c.JSON(http.StatusForbidden, gin.H{"error": "You must delete all networks before deleting this account"})
+				return
+			}
+		}
 	}
 
 	var services []*model.Service
@@ -467,9 +483,14 @@ func softDeleteAccount(c *gin.Context) {
 		return
 	}
 
+	// don't require parent account services to be deleted
 	if len(services) > 0 {
-		c.JSON(http.StatusForbidden, gin.H{"error": "You must delete all services before deleting this account"})
-		return
+		for _, s := range services {
+			if s.AccountID == id {
+				c.JSON(http.StatusForbidden, gin.H{"error": "You must delete all services before deleting this account"})
+				return
+			}
+		}
 	}
 
 	// Delete the account
@@ -482,6 +503,26 @@ func softDeleteAccount(c *gin.Context) {
 		}).Error("failed to soft remove client")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+
+	// So much for a soft delete, Apple wants the account gone - hard delete
+	auth0 := os.Getenv("USE_AUTH0")
+	if auth0 == "true" && strings.Contains(account.Sub, "apple") {
+
+		domain := os.Getenv("OAUTH2_PROVIDER_URL")
+		clientid := os.Getenv("OAUTH2_CLIENT_ID")
+		secret := os.Getenv("OAUTH2_CLIENT_SECRET")
+
+		m, err := management.New(domain, management.WithClientCredentials(context.TODO(), clientid, secret))
+		if err == nil {
+			log.Infof("Deleting user %s (%s)from auth0", account.Email, account.Sub)
+			err = m.User.Delete(context.TODO(), account.Sub)
+			if err != nil {
+				log.Errorf("Error deleting auth0 apple user %s %v", account.Sub, err)
+			}
+		} else {
+			log.Errorf("Error talking to auth0: %v", err)
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "OK"})
