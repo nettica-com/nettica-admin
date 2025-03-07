@@ -406,6 +406,11 @@ func statusDevice(c *gin.Context) {
 		authorized = true
 	}
 
+	// Allow a serviceHost to regain its configuration
+	if !authorized && (deviceId == "device-id-"+device.InstanceID) {
+		authorized = true
+	}
+
 	if !authorized {
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
