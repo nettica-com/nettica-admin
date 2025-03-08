@@ -66,7 +66,7 @@ func Serialize(id string, parm string, col string, c interface{}) error {
 	//	return err
 	//}
 
-	if !validate(id) {
+	if !validate(id) || !validate(parm) || !validate(col) {
 		return nil
 	}
 
@@ -110,7 +110,7 @@ func Serialize(id string, parm string, col string, c interface{}) error {
 // Deserialize read interface from disk
 func Deserialize(id string, parm string, col string, t reflect.Type) (interface{}, error) {
 
-	if !validate(id) {
+	if !validate(id) || !validate(parm) || !validate(col) {
 		return nil, errors.New("invalid id")
 	}
 
@@ -182,7 +182,7 @@ func Deserialize(id string, parm string, col string, t reflect.Type) (interface{
 // DeleteVPN removes the given id from the given collection
 func DeleteVPN(id string, col string) error {
 
-	if !validate(id) {
+	if !validate(id) || !validate(col) {
 		return errors.New("invalid id")
 	}
 
@@ -207,7 +207,7 @@ func DeleteVPN(id string, col string) error {
 // Delete removes the given id from the given collection
 func Delete(id string, ident string, col string) error {
 
-	if !validate(id) {
+	if !validate(id) || !validate(ident) || !validate(col) {
 		return errors.New("invalid id")
 	}
 
@@ -233,7 +233,7 @@ func Delete(id string, ident string, col string) error {
 func ReadAllDevices(param string, id string) ([]*model.Device, error) {
 	devices := make([]*model.Device, 0)
 
-	if !validate(id) {
+	if !validate(id) || !validate(param) {
 		return nil, errors.New("invalid id")
 	}
 
@@ -421,7 +421,7 @@ func ReadVPNsforNetwork(netid string) ([]*model.VPN, error) {
 // ReadAllHosts from MongoDB
 func ReadAllVPNs(param string, id string) ([]*model.VPN, error) {
 
-	if !validate(id) {
+	if !validate(id) || !validate(param) {
 		return nil, errors.New("invalid id")
 	}
 
@@ -471,7 +471,7 @@ func ReadAllVPNs(param string, id string) ([]*model.VPN, error) {
 func ReadAllNetworks(param string, id string) ([]*model.Network, error) {
 	nets := make([]*model.Network, 0)
 
-	if !validate(id) {
+	if !validate(id) || !validate(param) {
 		return nil, errors.New("invalid id")
 	}
 
@@ -513,7 +513,7 @@ func ReadAllNetworks(param string, id string) ([]*model.Network, error) {
 func ReadServices(param string, id string) ([]*model.Service, error) {
 	services := make([]*model.Service, 0)
 
-	if !validate(id) {
+	if !validate(id) || !validate(param) {
 		return nil, errors.New("invalid id")
 	}
 
@@ -843,6 +843,11 @@ func ReadAllServers() ([]*model.Server, error) {
 
 // ReadServiceHost from MongoDB
 func ReadServiceHost(id string) ([]*model.Service, error) {
+
+	if !validate(id) {
+		return nil, errors.New("invalid id")
+	}
+
 	services := make([]*model.Service, 0)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
