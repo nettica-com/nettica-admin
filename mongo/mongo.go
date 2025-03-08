@@ -125,7 +125,7 @@ func Deserialize(id string, parm string, col string, t reflect.Type) (interface{
 
 	collection := client.Database("nettica").Collection(col)
 
-	filter := bson.D{{Key: parm, Value: bson.D{{Key: "$eq", Value: id}}}} //bson.D{{Key: parm, Value: id}}
+	filter := bson.D{{Key: parm, Value: id}}
 
 	switch t.String() {
 
@@ -222,7 +222,7 @@ func Delete(id string, ident string, col string) error {
 
 	collection := client.Database("nettica").Collection(col)
 
-	filter := bson.D{{Key: ident, Value: bson.D{{Key: "$eq", Value: id}}}}
+	filter := bson.D{{Key: ident, Value: id}}
 
 	collection.FindOneAndDelete(ctx, filter)
 
@@ -250,7 +250,7 @@ func ReadAllDevices(param string, id string) ([]*model.Device, error) {
 
 	filter := bson.D{}
 	if id != "" {
-		filter = bson.D{{Key: param, Value: bson.D{{Key: "$eq", Value: id}}}}
+		filter = bson.D{{Key: param, Value: id}}
 	}
 
 	cursor, err := collection.Find(ctx, filter)
@@ -329,7 +329,7 @@ func ReadDevicesAndVPNsForAccount(accountid string) ([]*model.Device, error) {
 	// Open an aggregation cursor
 	coll := client.Database("nettica").Collection("devices")
 	cursor, err := coll.Aggregate(ctx, bson.A{
-		bson.D{{Key: "$match", Value: bson.D{{Key: "accountid", Value: bson.D{{Key: "$eq", Value: accountid}}}}}},
+		bson.D{{Key: "$match", Value: bson.D{{Key: "accountid", Value: accountid}}}},
 		bson.D{
 			{Key: "$lookup",
 				Value: bson.D{
@@ -440,7 +440,7 @@ func ReadAllVPNs(param string, id string) ([]*model.VPN, error) {
 
 	filter := bson.D{}
 	if id != "" {
-		filter = bson.D{{Key: param, Value: bson.D{{Key: "$eq", Value: id}}}}
+		filter = bson.D{{Key: param, Value: id}}
 	}
 
 	cursor, err := collection.Find(ctx, filter)
@@ -486,7 +486,7 @@ func ReadAllNetworks(param string, id string) ([]*model.Network, error) {
 
 	filter := bson.D{}
 	if id != "" {
-		filter = bson.D{{Key: param, Value: bson.D{{Key: "$eq", Value: id}}}}
+		filter = bson.D{{Key: param, Value: id}}
 	}
 
 	collection := client.Database("nettica").Collection("networks")
@@ -529,7 +529,7 @@ func ReadServices(param string, id string) ([]*model.Service, error) {
 
 	filter := bson.D{}
 	if id != "" {
-		filter = bson.D{{Key: param, Value: bson.D{{Key: "$eq", Value: id}}}}
+		filter = bson.D{{Key: param, Value: id}}
 	}
 
 	collection := client.Database("nettica").Collection("services")
@@ -606,7 +606,7 @@ func ReadAllAccounts(email string) ([]*model.Account, error) {
 
 	filter := bson.D{}
 	if email != "" {
-		filter = bson.D{{Key: "email", Value: bson.D{{Key: "$eq", Value: email}}}}
+		filter = bson.D{{Key: "email", Value: email}}
 	}
 
 	cursor, err := collection.Find(ctx, filter)
@@ -652,7 +652,7 @@ func ReadAllAccountsForID(id string) ([]*model.Account, error) {
 		return accounts, nil
 	}
 
-	filter := bson.D{{Key: "parent", Value: bson.D{{Key: "$eq", Value: id}}}}
+	filter := bson.D{{Key: "parent", Value: id}}
 
 	cursor, err := collection.Find(ctx, filter)
 
@@ -741,7 +741,7 @@ func ReadAllSubscriptions(accountid string) ([]*model.Subscription, error) {
 
 	filter := bson.D{}
 	if accountid != "" {
-		filter = bson.D{{Key: "accountid", Value: bson.D{{Key: "$eq", Value: accountid}}}}
+		filter = bson.D{{Key: "accountid", Value: accountid}}
 	}
 
 	cursor, err := collection.Find(ctx, filter)
@@ -785,7 +785,7 @@ func ReadAllServices(accountid string) ([]*model.Service, error) {
 
 	filter := bson.D{}
 	if accountid != "" {
-		filter = bson.D{{Key: "accountid", Value: bson.D{{Key: "$eq", Value: accountid}}}}
+		filter = bson.D{{Key: "accountid", Value: accountid}}
 	}
 
 	cursor, err := collection.Find(ctx, filter)
@@ -863,7 +863,7 @@ func ReadServiceHost(id string) ([]*model.Service, error) {
 
 	filter := bson.D{}
 	if id != "" {
-		filter = bson.D{{Key: "serviceGroup", Value: bson.D{{Key: "$eq", Value: id}}}}
+		filter = bson.D{{Key: "serviceGroup", Value: id}}
 	}
 
 	cursor, err := collection.Find(ctx, filter)
@@ -913,7 +913,7 @@ func UpsertUser(user *model.User) error {
 		return err
 	}
 
-	filter := bson.D{{Key: "email", Value: bson.D{{Key: "$eq", Value: user.Email}}}}
+	filter := bson.D{{Key: "email", Value: user.Email}}
 
 	update := bson.M{
 		"$set": b,
