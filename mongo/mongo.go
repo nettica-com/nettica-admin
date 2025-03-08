@@ -3,9 +3,11 @@ package mongo
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"reflect"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -20,6 +22,12 @@ import (
 // Create a cache of mongo db connections
 var mongoClient *mongo.Client
 var m sync.Mutex
+
+func validate(s string) bool {
+
+	return !strings.ContainsAny(s, "${}()")
+
+}
 
 // getMongoClient returns a mongo client for the given connection string
 func getMongoClient() (*mongo.Client, error) {
@@ -57,6 +65,10 @@ func Serialize(id string, parm string, col string, c interface{}) error {
 	//if err != nil {
 	//	return err
 	//}
+
+	if !validate(id) {
+		return nil
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -97,6 +109,10 @@ func Serialize(id string, parm string, col string, c interface{}) error {
 
 // Deserialize read interface from disk
 func Deserialize(id string, parm string, col string, t reflect.Type) (interface{}, error) {
+
+	if !validate(id) {
+		return nil, errors.New("invalid id")
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -166,6 +182,10 @@ func Deserialize(id string, parm string, col string, t reflect.Type) (interface{
 // DeleteVPN removes the given id from the given collection
 func DeleteVPN(id string, col string) error {
 
+	if !validate(id) {
+		return errors.New("invalid id")
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -186,6 +206,10 @@ func DeleteVPN(id string, col string) error {
 
 // Delete removes the given id from the given collection
 func Delete(id string, ident string, col string) error {
+
+	if !validate(id) {
+		return errors.New("invalid id")
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -208,6 +232,10 @@ func Delete(id string, ident string, col string) error {
 // ReadAllDevices from MongoDB
 func ReadAllDevices(param string, id string) ([]*model.Device, error) {
 	devices := make([]*model.Device, 0)
+
+	if !validate(id) {
+		return nil, errors.New("invalid id")
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -283,6 +311,10 @@ func GetDevicesForPushNotifications() ([]*model.Device, error) {
 // ReadDevicesAndVPNsForAccount
 func ReadDevicesAndVPNsForAccount(accountid string) ([]*model.Device, error) {
 
+	if !validate(accountid) {
+		return nil, errors.New("invalid id")
+	}
+
 	devices := make([]*model.Device, 0)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -332,6 +364,10 @@ func ReadDevicesAndVPNsForAccount(accountid string) ([]*model.Device, error) {
 
 // ReadVPNsforNetwork from MongoDB
 func ReadVPNsforNetwork(netid string) ([]*model.VPN, error) {
+
+	if !validate(netid) {
+		return nil, errors.New("invalid id")
+	}
 
 	vpns := make([]*model.VPN, 0)
 
@@ -384,6 +420,11 @@ func ReadVPNsforNetwork(netid string) ([]*model.VPN, error) {
 
 // ReadAllHosts from MongoDB
 func ReadAllVPNs(param string, id string) ([]*model.VPN, error) {
+
+	if !validate(id) {
+		return nil, errors.New("invalid id")
+	}
+
 	vpns := make([]*model.VPN, 0)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
@@ -430,6 +471,10 @@ func ReadAllVPNs(param string, id string) ([]*model.VPN, error) {
 func ReadAllNetworks(param string, id string) ([]*model.Network, error) {
 	nets := make([]*model.Network, 0)
 
+	if !validate(id) {
+		return nil, errors.New("invalid id")
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -467,6 +512,10 @@ func ReadAllNetworks(param string, id string) ([]*model.Network, error) {
 // ReadAllServices from MongoDB
 func ReadServices(param string, id string) ([]*model.Service, error) {
 	services := make([]*model.Service, 0)
+
+	if !validate(id) {
+		return nil, errors.New("invalid id")
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -538,6 +587,11 @@ func ReadAllUsers() []*model.User {
 
 // ReadAllAccounts from MongoDB
 func ReadAllAccounts(email string) ([]*model.Account, error) {
+
+	if !validate(email) {
+		return nil, errors.New("invalid id")
+	}
+
 	accounts := make([]*model.Account, 0)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -576,6 +630,11 @@ func ReadAllAccounts(email string) ([]*model.Account, error) {
 
 // ReadAllAccountsForID from MongoDB
 func ReadAllAccountsForID(id string) ([]*model.Account, error) {
+
+	if !validate(id) {
+		return nil, errors.New("invalid id")
+	}
+
 	accounts := make([]*model.Account, 0)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -616,6 +675,14 @@ func ReadAllAccountsForID(id string) ([]*model.Account, error) {
 
 // ReadAccountForUser from MongoDB
 func ReadAccountForUser(email string, accountid string) (*model.Account, error) {
+
+	if !validate(email) {
+		return nil, errors.New("invalid email")
+	}
+	if !validate(accountid) {
+		return nil, errors.New("invalid id")
+	}
+
 	var account *model.Account
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -654,6 +721,11 @@ func ReadAccountForUser(email string, accountid string) (*model.Account, error) 
 
 // ReadAllSubscriptions from MongoDB
 func ReadAllSubscriptions(accountid string) ([]*model.Subscription, error) {
+
+	if !validate(accountid) {
+		return nil, errors.New("invalid id")
+	}
+
 	subscriptions := make([]*model.Subscription, 0)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -693,6 +765,11 @@ func ReadAllSubscriptions(accountid string) ([]*model.Subscription, error) {
 
 // ReadAllServices from MongoDB
 func ReadAllServices(accountid string) ([]*model.Service, error) {
+
+	if !validate(accountid) {
+		return nil, errors.New("invalid id")
+	}
+
 	services := make([]*model.Service, 0)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -805,6 +882,11 @@ func ReadServiceHost(id string) ([]*model.Service, error) {
 
 // UpsertUser to MongoDB
 func UpsertUser(user *model.User) error {
+
+	if user.Email == "" || !validate(user.Email) {
+		return errors.New("invalid email")
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
