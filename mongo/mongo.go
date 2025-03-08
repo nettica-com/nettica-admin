@@ -25,7 +25,7 @@ var m sync.Mutex
 
 func validate(s string) bool {
 
-	return !strings.ContainsAny(s, "${}()")
+	return !strings.ContainsAny(s, "${}()\"")
 
 }
 
