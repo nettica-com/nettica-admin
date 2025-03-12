@@ -25,7 +25,7 @@ var (
 
 func GetCleanAuthToken(c *gin.Context) string {
 	token := c.Request.Header.Get(AuthTokenHeaderName)
-	if len(token) > 0 && token[:7] == "Bearer " {
+	if len(token) > 0 && strings.HasPrefix(token, "Bearer ") {
 		token = token[7:]
 		token = strings.Trim(token, "\"")
 	}

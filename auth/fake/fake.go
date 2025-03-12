@@ -26,7 +26,7 @@ func (o *Fake) CodeUrl2(state string) string {
 }
 
 // Exchange exchange code for Oauth2 token
-func (o *Fake) Exchange(code string) (*oauth2.Token, error) {
+func (o *Fake) Exchange(auth model.Auth) (*oauth2.Token, error) {
 	rand, err := util.GenerateRandomString(32)
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func (o *Fake) Exchange(code string) (*oauth2.Token, error) {
 	}, nil
 }
 func (o *Fake) Exchange2(code string) (*oauth2.Token, error) {
-	token, err := o.Exchange(code)
+	token, err := o.Exchange(model.Auth{Code: code})
 	return token, err
 }
 

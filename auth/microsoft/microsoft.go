@@ -63,8 +63,8 @@ func (o *Oauth2Msft) CodeUrl2(state string) string {
 }
 
 // Exchange exchange code for Oauth2 token
-func (o *Oauth2Msft) Exchange(code string) (*oauth2.Token, error) {
-	oauth2Token, err := oauth2Config.Exchange(context.TODO(), code)
+func (o *Oauth2Msft) Exchange(auth model.Auth) (*oauth2.Token, error) {
+	oauth2Token, err := oauth2Config.Exchange(context.TODO(), auth.Code)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func (o *Oauth2Msft) Exchange(code string) (*oauth2.Token, error) {
 }
 
 func (o *Oauth2Msft) Exchange2(code string) (*oauth2.Token, error) {
-	token, err := o.Exchange(code)
+	token, err := o.Exchange(model.Auth{Code: code})
 	return token, err
 }
 

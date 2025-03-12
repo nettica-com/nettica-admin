@@ -39,6 +39,9 @@ func oauth2URL(c *gin.Context) {
 	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
 
 	referer := c.Request.URL.Query().Get("referer")
+	connection := c.Request.URL.Query().Get("connection")
+
+	providers := []string{}
 
 	var err error
 	var state, clientId, codeUrl, audience, redirect_uri string
@@ -90,15 +93,23 @@ func oauth2URL(c *gin.Context) {
 		if referer != "" {
 			codeUrl = codeUrl + "&referer=" + referer
 		}
+		if connection != "" {
+			codeUrl = codeUrl + "&connection=" + connection
+		}
+	}
+
+	if os.Getenv("PROVIDERS") != "" {
+		providers = strings.Split(os.Getenv("PROVIDERS"), ",")
 	}
 
 	data := &model.Auth{
-		Oauth2:   true,
-		ClientId: clientId,
-		State:    state,
-		CodeUrl:  codeUrl,
-		Audience: audience,
-		Redirect: redirect_uri,
+		Oauth2:    true,
+		ClientId:  clientId,
+		State:     state,
+		CodeUrl:   codeUrl,
+		Audience:  audience,
+		Redirect:  redirect_uri,
+		Providers: providers,
 	}
 
 	log.Infof("model.Auth = %v", data)
@@ -146,8 +157,8 @@ func oauth2Exchange(c *gin.Context) {
 	var oauth2Token *oauth2.Token
 	var err error
 
-	if loginVals.Redirect != "com.nettica.agent://callback/agent" {
-		oauth2Token, err = oauth2Client.Exchange(loginVals.Code)
+	if loginVals.Redirect != "com.nettica.agent://callback/agent" || loginVals.Connection == "apple" {
+		oauth2Token, err = oauth2Client.Exchange(loginVals)
 	} else {
 		oauth2Token, err = oauth2Client.Exchange2(loginVals.Code)
 	}
@@ -201,7 +212,7 @@ func token(c *gin.Context) {
 	var err error
 
 	if loginVals.Redirect != "com.nettica.agent://callback/agent" {
-		oauth2Token, err = oauth2Client.Exchange(loginVals.Code)
+		oauth2Token, err = oauth2Client.Exchange(loginVals)
 	} else {
 		oauth2Token, err = oauth2Client.Exchange2(loginVals.Code)
 	}

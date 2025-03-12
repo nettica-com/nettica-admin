@@ -103,10 +103,10 @@ func (o *Oauth2Microsoft) CodeUrl2(state string) string {
 }
 
 // Exchange exchange code for Oauth2 token
-func (o *Oauth2Microsoft) Exchange(code string) (*oauth2.Token, error) {
+func (o *Oauth2Microsoft) Exchange(auth model.Auth) (*oauth2.Token, error) {
 	// oauth2Token, err := oauth2Config.Exchange(context.TODO(), code)
 
-	authResult, err := clientApp.AcquireTokenByAuthCode(context.Background(), code, oauth2Config.RedirectURL, oauth2Config.Scopes)
+	authResult, err := clientApp.AcquireTokenByAuthCode(context.Background(), auth.Code, oauth2Config.RedirectURL, oauth2Config.Scopes)
 	if err != nil {
 		return nil, err
 	}

@@ -62,8 +62,8 @@ func (o *OAuth2Google) CodeUrl2(state string) string {
 }
 
 // Exchange exchange code for Oauth2 token
-func (o *OAuth2Google) Exchange(code string) (*oauth2.Token, error) {
-	oauth2Token, err := oauth2Config.Exchange(context.TODO(), code)
+func (o *OAuth2Google) Exchange(auth model.Auth) (*oauth2.Token, error) {
+	oauth2Token, err := oauth2Config.Exchange(context.TODO(), auth.Code)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func (o *OAuth2Google) Exchange(code string) (*oauth2.Token, error) {
 }
 
 func (o *OAuth2Google) Exchange2(code string) (*oauth2.Token, error) {
-	token, err := o.Exchange(code)
+	token, err := o.Exchange(model.Auth{Code: code})
 	return token, err
 }
 

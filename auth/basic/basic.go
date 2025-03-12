@@ -46,11 +46,11 @@ func (o *Oauth2Basic) CodeUrl2(state string) string {
 }
 
 // Exchange exchange code for Oauth2 token
-func (o *Oauth2Basic) Exchange(code string) (*oauth2.Token, error) {
+func (o *Oauth2Basic) Exchange(auth model.Auth) (*oauth2.Token, error) {
 
 	// code contains the username and password base64 encoded
 	// base64 decode the string
-	userpass, err := base64.StdEncoding.DecodeString(code)
+	userpass, err := base64.StdEncoding.DecodeString(auth.Code)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (o *Oauth2Basic) Exchange(code string) (*oauth2.Token, error) {
 }
 
 func (o *Oauth2Basic) Exchange2(code string) (*oauth2.Token, error) {
-	token, err := o.Exchange(code)
+	token, err := o.Exchange(model.Auth{Code: code})
 	return token, err
 }
 

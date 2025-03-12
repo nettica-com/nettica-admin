@@ -121,14 +121,80 @@ func (o *Oauth2idc) CodeUrl2(state string) string {
 }
 
 // Exchange exchange code for Oauth2 token
-func (o *Oauth2idc) Exchange(code string) (*oauth2.Token, error) {
+func (o *Oauth2idc) Exchange(auth model.Auth) (*oauth2.Token, error) {
 
-	oauth2Token, err := oauth2Config.Exchange(ctx, code)
-	if err != nil {
-		return nil, err
+	if auth.Connection == "apple" {
+		// Make a http request using the agent configuration information
+		client_id := os.Getenv("OAUTH2_AGENT_CLIENT_ID")
+		client_secret := os.Getenv("OAUTH2_AGENT_CLIENT_SECRET")
+		redirect_url := os.Getenv("OAUTH2_AGENT_REDIRECT_URL")
+		audience := os.Getenv("OAUTH2_AGENT_AUDIENCE")
+
+		provider := os.Getenv("OAUTH2_AGENT_PROVIDER")
+
+		// make an http post to the oauth2 token endpoint
+		// with the code and other required parameters
+		// to get the access token
+		// and other information
+
+		httpClient := &http.Client{
+			Transport: &CustomTransport{
+				Transport: http.DefaultTransport,
+				UserAgent: "nettica-admin/2.0",
+			},
+		}
+		rsp, err := httpClient.PostForm(provider+"oauth/token/", url.Values{
+			"grant_type":         {"urn:ietf:params:oauth:grant-type:token-exchange"},
+			"client_id":          {client_id},
+			"client_secret":      {client_secret},
+			"redirect_uri":       {redirect_url},
+			"audience":           {audience},
+			"subject_token":      {auth.Code},
+			"subject_token_type": {"http://auth0.com/oauth/token-type/apple-authz-code"},
+		})
+		if err != nil {
+			log.Info(err)
+			return nil, err
+		}
+		defer rsp.Body.Close()
+
+		body, err := io.ReadAll(rsp.Body)
+		if err != nil {
+			log.Info(err)
+			return nil, err
+		}
+		log.Infof("body: %s", body)
+
+		// read the response body and serialize it into a TokenResponse struct
+		var tokenResponse TokenResponse
+
+		// decode the body bytes into the struct
+
+		err = json.Unmarshal(body, &tokenResponse)
+		if err != nil {
+			log.Info(err)
+			return nil, err
+		}
+
+		oauth2Token := &oauth2.Token{
+			AccessToken: tokenResponse.AccessToken,
+			Expiry:      time.Now().Add(time.Duration(tokenResponse.ExpiresIn) * time.Second),
+			TokenType:   tokenResponse.TokenType,
+		}
+		oauth2Token = oauth2Token.WithExtra(map[string]interface{}{ // Add the ID token to the extra parameters
+			"id_token": auth.IdToken})
+
+		return oauth2Token, nil
+
+	} else {
+		oauth2Token, err := oauth2Config.Exchange(ctx, auth.Code)
+		if err != nil {
+			return nil, err
+		}
+		return oauth2Token, nil
 	}
 
-	return oauth2Token, nil
+	return nil, nil
 }
 func (o *Oauth2idc) Exchange2(code string) (*oauth2.Token, error) {
 
@@ -199,6 +265,29 @@ func (o *Oauth2idc) Exchange2(code string) (*oauth2.Token, error) {
 	return oauth2Token, nil
 }
 
+func verifyAppleIDToken(ctx context.Context, tokenString string) (*oidc.IDToken, error) {
+	// Apple's OIDC discovery URL
+	provider, err := oidc.NewProvider(ctx, "https://appleid.apple.com")
+	if err != nil {
+		return nil, fmt.Errorf("failed to get Apple OIDC provider: %v", err)
+	}
+
+	// Set up an ID Token verifier using the provider and your client ID
+	verifier := provider.Verifier(&oidc.Config{ClientID: "com.nettica.agent"})
+	if verifier == nil {
+		return nil, fmt.Errorf("failed to create verifier")
+	}
+
+	// Verify and parse ID Token
+	idToken, err := verifier.Verify(ctx, tokenString)
+	if err != nil {
+		return nil, fmt.Errorf("ID Token verification failed: %v", err)
+	}
+
+	// Successfully verified ID Token
+	return idToken, nil
+}
+
 // UserInfo get token user
 func (o *Oauth2idc) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 	rawIDToken, ok := oauth2Token.Extra("id_token").(string)
@@ -208,7 +297,10 @@ func (o *Oauth2idc) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 
 	verified := false
 	var idToken *oidc.IDToken
+	var userInfo *oidc.UserInfo
 	var err error
+	// ID Token payload is just JSON
+	var claims map[string]interface{}
 
 	for _, verifier := range oidcIDTokenVerifier {
 		idToken, err = verifier.Verify(ctx, rawIDToken)
@@ -216,6 +308,21 @@ func (o *Oauth2idc) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 			verified = true
 			break
 		}
+	}
+
+	if !verified {
+		idToken, err = verifyAppleIDToken(ctx, rawIDToken)
+		if err == nil {
+			verified = true
+		}
+
+		// get the user info from the id token
+		idToken.Claims(&claims)
+		userInfo = &oidc.UserInfo{
+			Subject: "apple|" + idToken.Subject,
+			Email:   claims["email"].(string),
+		}
+		// add the claims to the user info
 	}
 
 	if !verified || err != nil {
@@ -227,15 +334,16 @@ func (o *Oauth2idc) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 		return cacheUser.(*model.User), nil
 	}
 
-	userInfo, err := oidcProvider.UserInfo(ctx, oauth2.StaticTokenSource(oauth2Token))
-	if err != nil {
-		return nil, err
-	}
+	if userInfo == nil {
+		userInfo, err = oidcProvider.UserInfo(ctx, oauth2.StaticTokenSource(oauth2Token))
+		if err != nil {
+			return nil, err
+		}
 
-	// ID Token payload is just JSON
-	var claims map[string]interface{}
-	if err := userInfo.Claims(&claims); err != nil {
-		return nil, fmt.Errorf("failed to get id token claims: %s", err)
+		if err := userInfo.Claims(&claims); err != nil {
+			return nil, fmt.Errorf("failed to get id token claims: %s", err)
+		}
+
 	}
 
 	// get some infos about user
