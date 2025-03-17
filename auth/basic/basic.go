@@ -182,6 +182,7 @@ func (o *Oauth2Basic) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 	for i := 0; i < len(accounts); i++ {
 		if accounts[i].Id == accounts[i].Parent {
 			user.AccountID = accounts[i].Id
+			user.Picture = accounts[i].Picture
 			break
 		}
 	}
