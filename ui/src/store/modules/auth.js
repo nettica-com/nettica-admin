@@ -107,8 +107,9 @@ const actions = {
 
       })
       .catch(err => {
+        console.log("login error", err);
         commit('authStatus', 'error')
-        commit('error', err);
+        commit('error', err.response.data.error);
         commit('logout')
       })
   },

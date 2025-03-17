@@ -68,6 +68,7 @@ func oauth2URL(c *gin.Context) {
 		redirect_uri = os.Getenv("OAUTH2_AGENT_REDIRECT_URL")
 
 		cacheDb.Set(clientId, state, 1*time.Hour)
+		cacheDb.Set(state, state, 1*time.Hour)
 	} else {
 
 		state, err = util.GenerateRandomString(32)
@@ -89,6 +90,7 @@ func oauth2URL(c *gin.Context) {
 		}
 		// save clientId and state so we can retrieve for verification
 		cacheDb.Set(clientId, state, 1*time.Hour)
+		cacheDb.Set(state, state, 1*time.Hour)
 		codeUrl = oauth2Client.CodeUrl(state)
 		if referer != "" {
 			codeUrl = codeUrl + "&referer=" + referer
@@ -135,6 +137,10 @@ func oauth2Exchange(c *gin.Context) {
 
 	cacheDb := c.MustGet("cache").(*cache.Cache)
 	savedState, exists := cacheDb.Get(loginVals.ClientId)
+
+	if !exists {
+		savedState, exists = cacheDb.Get(loginVals.State)
+	}
 
 	if loginVals.State != "basic_auth" {
 		if !exists || savedState != loginVals.State {
@@ -198,6 +204,10 @@ func token(c *gin.Context) {
 	cacheDb := c.MustGet("cache").(*cache.Cache)
 	savedState, exists := cacheDb.Get(loginVals.Code)
 
+	if !exists {
+		savedState, exists = cacheDb.Get(loginVals.State)
+	}
+
 	if !exists || savedState != loginVals.State {
 		log.WithFields(log.Fields{
 			"state":      loginVals.State,
@@ -259,6 +269,10 @@ func login(c *gin.Context) {
 	cacheDb := c.MustGet("cache").(*cache.Cache)
 	savedState, exists := cacheDb.Get(loginVals.ClientId)
 
+	if !exists {
+		savedState, exists = cacheDb.Get(loginVals.State)
+	}
+
 	if loginVals.State != "basic_auth" {
 		if !exists || savedState != loginVals.State {
 			log.WithFields(log.Fields{
@@ -296,13 +310,18 @@ func login(c *gin.Context) {
 	user := parts[0]
 	pass := parts[1]
 
+	x := strings.Split(user, "@")
+	if len(x) > 0 {
+		user = x[0]
+	}
+
 	// validate the username and password
 	err = shadow.ShadowAuthPlain(user, pass)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
-		}).Error("shadow: invalid username or password")
-		c.AbortWithStatus(http.StatusBadRequest)
+		}).Error("invalid username or password")
+		c.JSON(http.StatusForbidden, gin.H{"error": "invalid username or password"})
 		return
 	}
 
@@ -440,7 +459,7 @@ func logout(c *gin.Context) {
 		return
 	}
 
-	cacheDb.Delete(c.Request.Header.Get(util.AuthTokenHeaderName))
+	cacheDb.Delete(util.GetCleanAuthToken(c))
 
 	var logoutUrl string
 

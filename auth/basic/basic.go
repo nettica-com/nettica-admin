@@ -93,6 +93,29 @@ func (o *Oauth2Basic) Exchange2(code string) (*oauth2.Token, error) {
 	return token, err
 }
 
+func getServerName() string {
+	// compute the name of the server
+	server := os.Getenv("SERVER")
+	server = strings.Replace(server, "http://", "", -1)
+	server = strings.Replace(server, "https://", "", -1)
+	parts := strings.SplitN(server, ".", 2)
+	if len(parts) == 2 {
+		server = parts[1]
+	} else {
+		server = parts[0]
+	}
+	parts = strings.SplitN(server, ":", 2)
+	if len(parts) > 0 {
+		server = parts[0]
+	}
+
+	if server == "" {
+		server = "localhost"
+	}
+
+	return server
+}
+
 // UserInfo get token user
 func (o *Oauth2Basic) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 	rawIDToken, ok := oauth2Token.Extra("id_token").(string)
@@ -109,11 +132,18 @@ func (o *Oauth2Basic) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 		return nil, err
 	}
 
+	server := getServerName()
+
+	email := idToken.Subject
+	if !strings.Contains(email, "@") {
+		email = email + "@" + server
+	}
+	email = strings.ToLower(email)
+
 	// get some infos about user
 	user := &model.User{}
 	user.Sub = idToken.Subject
-	user.Email = idToken.Subject + "@localhost"
-	user.Email = strings.ToLower(user.Email)
+	user.Email = email
 	user.Picture = os.Getenv("SERVER") + "/account-circle.png"
 	user.Issuer = idToken.Issuer
 	user.IssuedAt = idToken.IssuedAt

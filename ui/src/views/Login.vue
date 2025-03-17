@@ -17,6 +17,7 @@
                                         label="Username"
                                         :rules="[ v => !!v || 'username is required', ]"
                                         required
+                                        @keyup.enter="login"
                                 />
                                 <v-text-field
                                         v-model="password"
@@ -27,6 +28,7 @@
                                         label="Password"
                                         :rules="[ v => !!v || 'password is required', ]"
                                         required
+                                        @keyup.enter="login"
                                 />
 
                             </v-form>
