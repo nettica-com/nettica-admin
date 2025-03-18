@@ -462,11 +462,17 @@ func logout(c *gin.Context) {
 	cacheDb.Delete(util.GetCleanAuthToken(c))
 
 	var logoutUrl string
+	var redirect_uri string
 
-	if c.Request.URL.Query().Get("redirect_uri") != "" {
+	redirect_uri = c.Request.URL.Query().Get("redirect_uri")
+
+	if redirect_uri != "" {
 		logoutUrl = os.Getenv("OAUTH2_AGENT_LOGOUT_URL")
 		if logoutUrl != "" {
 			c.Redirect(http.StatusTemporaryRedirect, logoutUrl)
+			return
+		} else {
+			c.Redirect(http.StatusTemporaryRedirect, redirect_uri)
 			return
 		}
 	}
