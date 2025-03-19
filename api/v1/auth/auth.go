@@ -135,8 +135,14 @@ func oauth2Exchange(c *gin.Context) {
 		"loginVals": loginVals,
 	}).Info("loginVals")
 
+	exists := false
+	var savedState interface{}
+
 	cacheDb := c.MustGet("cache").(*cache.Cache)
-	savedState, exists := cacheDb.Get(loginVals.ClientId)
+
+	if loginVals.ClientId != "" {
+		savedState, exists = cacheDb.Get(loginVals.ClientId)
+	}
 
 	if !exists {
 		savedState, exists = cacheDb.Get(loginVals.State)
@@ -201,8 +207,14 @@ func token(c *gin.Context) {
 		"loginVals": loginVals,
 	}).Info("loginVals")
 
+	exists := false
+	var savedState interface{}
+
 	cacheDb := c.MustGet("cache").(*cache.Cache)
-	savedState, exists := cacheDb.Get(loginVals.Code)
+
+	if loginVals.ClientId != "" {
+		savedState, exists = cacheDb.Get(loginVals.Code)
+	}
 
 	if !exists {
 		savedState, exists = cacheDb.Get(loginVals.State)
