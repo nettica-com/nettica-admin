@@ -95,6 +95,7 @@ func createSubscriptionAndroid(c *gin.Context) {
 	zero := lineItems[0].(map[string]interface{})
 	offerDetails := zero["offerDetails"].(map[string]interface{})
 	plan := offerDetails["basePlanId"].(string)
+	expires := time.Now().AddDate(0, 2, 0)
 
 	if receipt.ProductID == "basic" && plan == "basic-monthly" {
 		receipt.ProductID = "basic_monthly"
@@ -102,6 +103,7 @@ func createSubscriptionAndroid(c *gin.Context) {
 
 	if receipt.ProductID == "basic" && plan == "basic-yearly" {
 		receipt.ProductID = "basic_yearly"
+		expires = time.Now().AddDate(1, 0, 0)
 	}
 
 	if receipt.ProductID == "premium" && plan == "premium-monthly" {
@@ -110,6 +112,7 @@ func createSubscriptionAndroid(c *gin.Context) {
 
 	if receipt.ProductID == "premium" && plan == "premium-yearly" {
 		receipt.ProductID = "premium_yearly"
+		expires = time.Now().AddDate(1, 0, 0)
 	}
 
 	if receipt.ProductID == "professional" && plan == "professional-monthly" {
@@ -118,6 +121,7 @@ func createSubscriptionAndroid(c *gin.Context) {
 
 	if receipt.ProductID == "professional" && plan == "professional-yearly" {
 		receipt.ProductID = "professional_yearly"
+		expires = time.Now().AddDate(1, 0, 0)
 	}
 
 	customer_name := receipt.Name
@@ -131,7 +135,6 @@ func createSubscriptionAndroid(c *gin.Context) {
 	relays := 0
 	autoRenew := false
 	issued := time.Now()
-	expires := time.Now().AddDate(0, 2, 0)
 
 	switch receipt.ProductID {
 	case "basic_monthly":
@@ -1082,14 +1085,17 @@ func createSubscriptionApple(c *gin.Context) {
 		name = "Basic Service (monthly)"
 	case "basic_yearly":
 		name = "Basic Service (yearly)"
+		expires = time.Now().AddDate(1, 0, 0)
 	case "premium_monthly":
 		name = "Premium Service (monthly)"
 	case "premium_yearly":
 		name = "Premium Service (yearly)"
+		expires = time.Now().AddDate(1, 0, 0)
 	case "professional_monthly":
 		name = "Professional Service (monthly)"
 	case "professional_yearly":
 		name = "Professional Service (yearly)"
+		expires = time.Now().AddDate(1, 0, 0)
 	default:
 		log.Errorf("unknown sku %s", receipt.ProductID)
 	}
