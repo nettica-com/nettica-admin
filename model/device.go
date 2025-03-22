@@ -57,7 +57,7 @@ func (a Device) IsValid() []error {
 
 	// check the name field is between 1 to 253 chars
 	if len(a.Name) < 1 || len(a.Name) > 253 {
-		errs = append(errs, fmt.Errorf("name field must be between 2-40 chars"))
+		errs = append(errs, fmt.Errorf("name field must be between 1-253 chars"))
 	}
 	match, err := regexp.MatchString(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`, a.Name)
 	if !match {
