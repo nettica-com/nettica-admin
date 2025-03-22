@@ -17,6 +17,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -61,7 +62,13 @@ func getOffers(c *gin.Context) {
 	c.JSON(http.StatusOK, offers)
 }
 
+var androidLock sync.Mutex
+
 func createSubscriptionAndroid(c *gin.Context) {
+
+	androidLock.Lock()
+	defer androidLock.Unlock()
+
 	var receipt model.PurchaseRceipt
 
 	if err := json.NewDecoder(c.Request.Body).Decode(&receipt); err != nil {
@@ -69,6 +76,13 @@ func createSubscriptionAndroid(c *gin.Context) {
 		return
 	}
 	log.Infof("android: %s", receipt)
+
+	// Check if the subscription already exists
+	s, err := core.GetSubscriptionByReceipt(receipt.Receipt)
+	if err == nil {
+		c.JSON(http.StatusOK, s)
+		return
+	}
 
 	// Validate the receipt with Google
 	result, err := validateReceiptAndroid(receipt)
@@ -117,7 +131,7 @@ func createSubscriptionAndroid(c *gin.Context) {
 	relays := 0
 	autoRenew := false
 	issued := time.Now()
-	expires := time.Now().AddDate(1, 0, 0)
+	expires := time.Now().AddDate(0, 2, 0)
 
 	switch receipt.ProductID {
 	case "basic_monthly":
@@ -632,6 +646,7 @@ func fetchApplePublicKeyFromX5C(x5c string) (*ecdsa.PublicKey, error) {
 }
 
 func handleAppleWebhook(c *gin.Context) {
+
 	bytes, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -958,7 +973,13 @@ func validateAppleSignature(header, payload, signature string) (bool, error) {
 	return valid, nil
 }
 
+var appleLock sync.Mutex
+
 func createSubscriptionApple(c *gin.Context) {
+
+	appleLock.Lock()
+	defer appleLock.Unlock()
+
 	var receipt model.PurchaseRceipt
 
 	err := json.NewDecoder(c.Request.Body).Decode(&receipt)
@@ -1054,7 +1075,7 @@ func createSubscriptionApple(c *gin.Context) {
 	relays := 0
 	autoRenew := false
 	issued := time.Now()
-	expires := time.Now().AddDate(1, 0, 0)
+	expires := time.Now().AddDate(0, 2, 0)
 
 	switch receipt.ProductID {
 	case "basic_monthly":
