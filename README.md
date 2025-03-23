@@ -13,7 +13,7 @@ A control plane for [WireGuard](https://wireguard.com).
 * nginx
 * NodeJS / Vue 2
 
-![Screenshot](nettica-architecture.webp)
+![Screenshot](https://nettica.com/wp-content/uploads/2025/01/nettica-architecture.webp)
 
 ## Features
 
@@ -39,6 +39,26 @@ A control plane for [WireGuard](https://wireguard.com).
 ### Directly
 
 Install dependencies
+
+Install MongoDB (Ubuntu 22.04 instructions):
+
+```
+sudo apt-get update
+sudo apt-get install gnupg curl
+curl -fsSL https://www.mongodb.org/static/pgp/server-8.0.asc | \
+   sudo gpg -o /usr/share/keyrings/mongodb-server-8.0.gpg \
+   --dearmor
+echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-8.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/8.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-8.0.list
+sudo apt-get update
+sudo apt-get install -y mongodb-org
+
+sudo systemctl daemon-reload
+sudo systemctl start mongod
+sudo systemctl enable mongod
+
+```
+
+
 
 Sample NGINX Config:
 
@@ -135,7 +155,13 @@ MONGODB_CONNECTION_STRING=mongodb://127.0.0.1:27017
 
 # valid settings: oauth2oidc, google, microsoft2, basic, fake
 
-# Basic auth requires no other parameters but OAUTH_PROVIDER_NAME
+# Basic auth is a first class citizen compatible with all the apps.  Login with the shadow file defined username/pass.
+# If the SERVER variable above is set to, for example, nettica.example.com, it will log you in as user@example.com,
+# removing the first label.  During login if you add a domain, such as user@example2.com, it will remove that
+# domain to validate the user, but preserve it for user creation, allowing for easy testing and evaluation of the product.
+
+# Basic auth requires these two variables set:
+OAUTH2_AGENT_REDIRECT_URL=com.nettica.agent://callback/agent
 OAUTH2_PROVIDER_NAME=basic
 
 ```
@@ -187,13 +213,14 @@ sudo systemctl start nettica-api
 
 Install NodeJS using NVM
 ```
-nvm use lts-latest
+wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash
+nvm use 18
 ```
 
 Build the frontend
 
 ```
-cd ui
+cd /usr/share/nettica-admin/ui
 npm install
 npm run build
 ```
