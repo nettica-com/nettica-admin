@@ -35,10 +35,7 @@ A control plane for [WireGuard](https://wireguard.com).
 
 ## Running
 
-
-### Directly
-
-Install dependencies
+### Install dependencies
 
 Install MongoDB (Ubuntu 22.04 instructions):
 
@@ -59,6 +56,18 @@ sudo systemctl enable mongod
 ```
 
 
+[Download and Install Golang](https://go.dev/dl/)
+
+Install nginx:
+```
+sudo apt install nginx
+sudo apt install certbot
+sudo apt install python3-certbot-nginx
+
+sudo apt enable nginx
+sudo apt start nginx
+
+```
 
 Sample NGINX Config:
 
@@ -227,6 +236,12 @@ npm run build
 
 With the given nginx config, you should now be able to use your website.  Don't forget
 to get a cert using certbot
+
+Run Certbot
+```
+sudo certbot
+```
+
 
 ## Need Help
 
