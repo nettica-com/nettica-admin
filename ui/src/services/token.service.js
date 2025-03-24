@@ -117,6 +117,14 @@ export const destroyClientId = () => {
   window.localStorage.removeItem(CLIENT_ID_KEY);
 };
 
+const AUTHORIZED_REDIRECTS = [
+  'https://my.nettica.com'
+];
+
+export const isValidRedirect = (url) => {
+  return AUTHORIZED_REDIRECTS.includes(url);
+};
+
 export default {
   getRedirect,
   saveRedirect,
@@ -144,5 +152,6 @@ export default {
   destroyState,
   getCode,
   saveCode,
-  destroyCode
+  destroyCode,
+  isValidRedirect
 };

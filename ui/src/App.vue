@@ -19,6 +19,7 @@
   import Footer from "./components/Footer";
   import TokenService from "./services/token.service";
   import ApiService from "./services/api.service";
+  import DOMPurify from 'dompurify';
   import {mapActions, mapGetters} from "vuex";
 
   export default {
@@ -64,15 +65,17 @@
 
     mounted() {
       if (this.$route && this.$route.query && this.$route.query.redirect_uri) {
-        TokenService.saveRedirect(this.$route.query.redirect_uri)
-        TokenService.destroyToken() // force a token exchange
+        if (TokenService.isValidRedirect(this.$route.query.redirect_uri)) {
+          TokenService.saveRedirect(this.$route.query.redirect_uri)
+          TokenService.destroyToken() // force a token exchange
+        }
       }
       if (this.$route && this.$route.query && this.$route.query.code && this.$route.query.state) {
         
-        let redirect = TokenService.getRedirect()
+        let redirect = DOMPurify.sanitize(TokenService.getRedirect());
         if (redirect != null && redirect != "") {
           TokenService.destroyRedirect()
-          var url = redirect + "?code=" + this.$route.query.code + "&state=" + this.$route.query.state + "&client_id=" + TokenService.getClientId();
+          var url = redirect + "?code=" + DOMPurify.sanitize(this.$route.query.code) + "&state=" + DOMPurify.sanitize(this.$route.query.state) + "&client_id=" + TokenService.getClientId();
             window.location.replace(url);
             return;
         }
