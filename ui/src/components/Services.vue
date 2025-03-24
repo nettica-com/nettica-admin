@@ -654,6 +654,9 @@ export default {
                 this.wildServer = this.wildServer.slice(0, -1)
             }
 
+            this.TokenService.setWildServer(this.wildServer)
+            this.wildServer = this.TokenService.getWildServer()
+
 
             this.dialogWilderness = false;
             

@@ -65,6 +65,7 @@ export default {
     }),
 
     accept() {
+
       var referer = TokenService.getReferer();
       TokenService.destroyReferer();
       var code = TokenService.getCode();
@@ -73,8 +74,11 @@ export default {
       TokenService.destroyState();
       var client_id = TokenService.getClientId();
       TokenService.destroyClientId();
-      var url = referer + "/?client_id=" + client_id + "&code=" + code + "&state=" + state + "&server=" + window.location.origin;
-      window.location.replace(url);
+
+      if (TokenService.isValidRedirect(referer)) { 
+        var url = referer + "/?client_id=" + client_id + "&code=" + code + "&state=" + state + "&server=" + window.location.origin;
+        window.location.replace(url);
+      }
     },
 
     reject() {
