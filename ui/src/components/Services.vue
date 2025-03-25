@@ -654,14 +654,10 @@ export default {
                 this.wildServer = this.wildServer.slice(0, -1)
             }
 
-            this.TokenService.setWildServer(this.wildServer)
-            this.wildServer = this.TokenService.getWildServer()
-
 
             this.dialogWilderness = false;
-            
-            var url = this.wildServer + "/?referer=" + window.location.origin
-            window.open( url )
+
+            window.location.replace( window.location.origin + "/api/v1.0/auth/redirect?url=" + this.wildServer)
         },
 
         async createWilderness() {

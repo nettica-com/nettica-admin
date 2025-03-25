@@ -28,6 +28,7 @@ func ApplyRoutes(r *gin.RouterGroup) {
 		g.POST("/login", login)
 		g.GET("/user", user)
 		g.GET("/logout", logout)
+		g.GET("/redirect", redirect)
 	}
 }
 
@@ -549,4 +550,18 @@ func user(c *gin.Context) {
 	log.Error("oauth2 AccessToken is not recognized")
 
 	c.AbortWithStatus(http.StatusUnauthorized)
+}
+
+func redirect(c *gin.Context) {
+	referer := os.Getenv("SERVER")
+
+	url := c.Request.URL.Query().Get("url")
+	if url == "" {
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	url = url + "?referer=" + referer
+
+	c.Redirect(http.StatusTemporaryRedirect, url)
 }
