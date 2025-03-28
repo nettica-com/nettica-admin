@@ -126,6 +126,9 @@ func (o *Oauth2Microsoft) Exchange(auth model.Auth) (*oauth2.Token, error) {
 }
 
 func (o *Oauth2Microsoft) Exchange2(code string) (*oauth2.Token, error) {
+
+	return o.Exchange(model.Auth{Code: code})
+
 	authResult, err := publicApp.AcquireTokenByAuthCode(context.Background(), code, "com.nettica.agent://callback/agent", oauth2Config.Scopes)
 	if err != nil {
 		return nil, err
