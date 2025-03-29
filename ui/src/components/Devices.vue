@@ -35,9 +35,9 @@
                             <v-treeview v-if="showTree" :items="items" :search="search" :filter="filter" :active.sync="active"
                                 :open.sync="open" activatable hoverable>
                                 <template v-slot:prepend="{ item }">
+                                    <span v-if="item.symbol && item.status != 'Online' && item.status != 'Offline'" class="material-symbols-outlined" style="color:blue;">{{ item.symbol }}</span>
                                     <span v-if="item.symbol && item.status == 'Online'" class="material-symbols-outlined" style="color:green;">{{ item.symbol }}</span>
                                     <span v-if="item.symbol && item.status == 'Offline'" class="material-symbols-outlined" style="color:red;">{{ item.symbol }}</span>
-                                    <span v-if="item.symbol && item.status == 'Native'" class="material-symbols-outlined" style="color:blue;">{{ item.symbol }}</span>
                                     <span v-if="item.symbol && !item.status" class="material-symbols-outlined">{{ item.symbol }}</span>
                                     
                                     <v-icon v-if="!item.symbol">
