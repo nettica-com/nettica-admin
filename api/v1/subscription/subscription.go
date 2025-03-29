@@ -38,6 +38,7 @@ func ApplyRoutes(r *gin.RouterGroup) {
 
 		g.POST("/helio", createHelioSubscription)
 		g.POST("", createSubscription)
+		g.POST("/update", updateSubscriptionWoo)
 		g.POST("/apple", createSubscriptionApple)
 		g.POST("/apple/webhook", handleAppleWebhook)
 		g.POST("/apple/discount", handleAppleDiscount)
@@ -2069,6 +2070,41 @@ func createSubscription(c *gin.Context) {
 	}()
 
 	c.JSON(http.StatusOK, body)
+}
+
+func updateSubscriptionWoo(c *gin.Context) {
+
+	var body string
+	//	var sub map[string]interface{}
+
+	// get the secret and hash of the body
+	//	secret := os.Getenv("WC_SECRET")
+	//	signature := c.Request.Header.Get("x-wc-webhook-signature")
+
+	// read and log the request body for now
+
+	bytes, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to read request body")
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+
+	body = string(bytes)
+	// remove all the backslashes from the body (is this needed?)
+	bodi := strings.Replace(body, "\\", "", -1)
+	body = htmlHack(bodi)
+	if body != bodi {
+		log.Info("WooPayments still broken")
+	}
+
+	log.Info(body)
+	bytes = []byte(body)
+
+	c.JSON(http.StatusOK, body)
+
 }
 
 func readSubscription(c *gin.Context) {
