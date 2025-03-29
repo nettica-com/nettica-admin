@@ -3,13 +3,17 @@ package push
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"strings"
 
 	firebase "firebase.google.com/go"
 	"firebase.google.com/go/messaging"
+	"github.com/nettica-com/nettica-admin/model"
 	"github.com/nettica-com/nettica-admin/mongo"
 
 	"os"
 
+	log "github.com/sirupsen/logrus"
 	"google.golang.org/api/option"
 )
 
@@ -17,6 +21,7 @@ var (
 	app         *firebase.App
 	client      *messaging.Client
 	PushDevices = make(map[string]string)
+	PushTokens  = make(map[string]string)
 	enabled     = false
 )
 
@@ -42,6 +47,7 @@ func Initialize() error {
 
 	for _, device := range devices {
 		PushDevices[device.Id] = device.Push
+		PushTokens[device.Push] = device.Id
 	}
 
 	enabled = true
@@ -63,6 +69,31 @@ func SendPushNotification(pushToken, title, body string) error {
 		}
 		_, err := client.Send(context.Background(), &notification)
 		if err != nil {
+			// if not found, remove the push token from the device
+			if strings.Contains(err.Error(), "404") {
+				deviceId, ok := PushTokens[pushToken]
+				if ok {
+					delete(PushTokens, pushToken)
+					delete(PushDevices, deviceId)
+					// remove the push token from the device
+					d, err := mongo.Deserialize(deviceId, "id", "devices", reflect.TypeOf(model.Device{}))
+					if err != nil {
+						log.WithFields(log.Fields{
+							"err": err,
+						}).Error("failed to read device")
+					} else {
+						device := d.(*model.Device)
+						device.Push = ""
+						err = mongo.Serialize(device.Id, "id", "devices", device)
+						if err != nil {
+							log.WithFields(log.Fields{
+								"err": err,
+							}).Error("failed to serialize device")
+						}
+					}
+					log.Infof("Push token %s removed for device %s", pushToken, deviceId)
+				}
+			}
 			return fmt.Errorf("error sending message: %v", err)
 		}
 	}
