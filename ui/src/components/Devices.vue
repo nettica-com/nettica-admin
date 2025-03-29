@@ -86,9 +86,9 @@
                                         <template>
                                             <v-icon v-if="selected.device.status == 'Online'"
                                                 color="green">mdi-check-circle</v-icon>
-                                            <v-icon v-else-if="selected.device.status == 'Native'"
-                                                color="blue">mdi-minus-circle</v-icon>
-                                            <v-icon v-else color="red">mdi-close-circle</v-icon>
+                                            <v-icon v-else-if="selected.device.status == 'Offline'"
+                                                color="red">mdi-close-circle</v-icon>
+                                            <v-icon v-else color="blue">mdi-minus-circle</v-icon>
                                             {{ selected.device.status }}
                                         </template>
 
