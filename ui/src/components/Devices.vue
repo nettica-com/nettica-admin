@@ -116,6 +116,7 @@
                                         <v-select return-object v-model="selected.platform" :items="platforms.items"
                                             item-text="text" item-value="value" label="Platform of this device" single
                                             persistent-hint :readonly="!inEdit" />
+                                        <v-text-field v-model="selected.device.version" label="Version" readonly />
                                         <v-switch v-model="selected.device.enable" color="success" inset
                                             :label="selected.device.enable ? 'Enabled' : 'Disabled'" :readonly="!inEdit" />
                                         <v-text-field v-model="selected.device.checkInterval" type="number"
