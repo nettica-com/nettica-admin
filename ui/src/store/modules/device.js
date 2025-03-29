@@ -44,7 +44,7 @@ const actions = {
           if (diff > 60000) {
             device.status = "Offline"
             if (device.platform == "Windows" || device.platform == "Native" || device.os == "ios" || device.os == "android" || device.os == "macos") {
-              device.status = "Native"
+              device.status = device.platform
             }
           } else {
             device.status = "Online"
