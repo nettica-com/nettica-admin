@@ -203,6 +203,7 @@ sudo systemctl start nettica-api
 Install NodeJS using NVM
 ```
 wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash
+source ~/.bashrc
 nvm install 18
 nvm use 18
 ```
