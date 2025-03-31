@@ -81,7 +81,10 @@ sudo systemctl start nginx
 
 ```
 
-Sample NGINX Config:
+Example NGINX Config:
+```
+sudo nano /etc/nginx/sites-enabled/nettica.example.com
+```
 
 ```
 server {
@@ -104,6 +107,9 @@ server {
 ```
 
 Example `.env` file:
+```
+sudo nano ~/go/src/nettica-admin/.env
+```
 
 ```
 SERVER=https://nettica.example.com
@@ -228,6 +234,7 @@ Build the frontend
 
 ```
 cd /home/user/go/src/nettica-admin/ui
+cp env.json.sample env.json
 npm install
 npm run build
 ```
