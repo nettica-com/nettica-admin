@@ -34,6 +34,9 @@ A control plane for [WireGuard](https://wireguard.com).
 ![Screenshot](nettica-screenshot.png)
 
 ## Running
+These instructions are for running Nettica VPN Server on an Ubuntu 22.04 server.  Adjust as necessary.
+This server can run inside the Windows Subsystem for Linux (WSL2) with the Ubuntu 22.04 VM.  A simple setup
+uses approximately 1.2 GB of memory.
 
 ### Install dependencies
 
