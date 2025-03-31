@@ -64,8 +64,8 @@ sudo apt install nginx
 sudo apt install certbot
 sudo apt install python3-certbot-nginx
 
-sudo apt enable nginx
-sudo apt start nginx
+sudo systemctl enable nginx
+sudo systemctl start nginx
 
 ```
 
@@ -74,7 +74,7 @@ Sample NGINX Config:
 ```
 server {
 
-        server_name netticavpn.com;
+        server_name nettica.example.com;
 
         root /usr/share/nettica-admin/ui/dist; index index.html; location / {
             try_files $uri $uri/ /index.html;
@@ -87,28 +87,8 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_pass http://127.0.0.1:8080;
     }
-
-
-    listen 443 ssl; # managed by Certbot
-    ssl_certificate /etc/letsencrypt/live/netticavpn.com/fullchain.pem; # managed by Certbot
-    ssl_certificate_key /etc/letsencrypt/live/netticavpn.com/privkey.pem; # managed by Certbot
-    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
-
 }
-server {
-    if ($host = netticavpn.com) {
-        return 301 https://$host$request_uri;
-    } # managed by Certbot
 
-
-
-    server_name netticavpn.com;
-    listen 80;
-    return 404; # managed by Certbot
-
-
-}
 ```
 
 Example `.env` file:
@@ -158,7 +138,7 @@ MONGODB_CONNECTION_STRING=mongodb://127.0.0.1:27017
 #OAUTH2_AGENT_PROVIDER=https://login.microsoftonline.com/common/v2.0
 #OAUTH2_AGENT_CLIENT_ID=...
 #OAUTH2_AGENT_CLIENT_SECRET=...
-#OAUTH2_AGENT_REDIRECT_URL=com.nettica.agent://callback/agent
+#OAUTH2_AGENT_REDIRECT_URL=https://nettica.example.com
 #OAUTH2_AGENT_LOGOUT_URL=https://login.microsoftonline.com/{tenet}/oauth2/v2.0/logout
 
 
@@ -201,7 +181,7 @@ ExecStart=/usr/share/nettica-admin/cmd/nettica-api/nettica-api
 PermissionsStartOnly=true
 StandardOutput=syslog
 StandardError=syslog
-SyslogIdentifier=nettica
+SyslogIdentifier=nettica-api
 
 [Install]
 WantedBy=multi-user.target
@@ -223,6 +203,7 @@ sudo systemctl start nettica-api
 Install NodeJS using NVM
 ```
 wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash
+nvm install 18
 nvm use 18
 ```
 
