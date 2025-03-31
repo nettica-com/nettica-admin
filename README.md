@@ -37,6 +37,20 @@ A control plane for [WireGuard](https://wireguard.com).
 
 ### Install dependencies
 
+
+[Download and Install Golang](https://go.dev/dl/)
+
+Clone the Project
+```
+# These instructions assume your username is "user" and you are building and running the service out of /home/user/go/src/nettica-admin
+# Adjust as necessary
+go version
+mkdir -p ~/go/src
+cd ~/go/src
+git clone https://github.com/nettica-com/nettica-admin
+
+```
+
 Install MongoDB (Ubuntu 22.04 instructions):
 
 ```
@@ -55,14 +69,9 @@ sudo systemctl enable mongod
 
 ```
 
-
-[Download and Install Golang](https://go.dev/dl/)
-
-Install nginx:
+Install nginx, certbot:
 ```
-sudo apt install nginx
-sudo apt install certbot
-sudo apt install python3-certbot-nginx
+sudo apt install nginx certbot python3-certbot-nginx
 
 sudo systemctl enable nginx
 sudo systemctl start nginx
@@ -76,7 +85,7 @@ server {
 
         server_name nettica.example.com;
 
-        root /usr/share/nettica-admin/ui/dist; index index.html; location / {
+        root /home/user/go/src/nettica-admin/ui/dist; index index.html; location / {
             try_files $uri $uri/ /index.html;
        }
 
@@ -95,6 +104,7 @@ Example `.env` file:
 
 ```
 SERVER=https://nettica.example.com
+# This file goes in the root of your nettica-admin directory.
 
 # IP address to listen to
 LISTEN_ADDR=0.0.0.0
@@ -158,10 +168,12 @@ OAUTH2_PROVIDER_NAME=basic
 Create a systemd service for the API:
 
 ```
-cat  /lib/systemd/system/nettica-api.service
+sudo nano /lib/systemd/system/nettica-api.service
+```
+```
 [Unit]
 Description=Nettica API
-ConditionPathExists=/usr/share/nettica-admin/cmd/nettica-api
+ConditionPathExists=/home/user/go/src/nettica-admin/cmd/nettica-api
 After=network.target
 
 [Service]
@@ -174,8 +186,8 @@ Restart=on-failure
 RestartSec=10
 #startLimitIntervalSec=60
 
-WorkingDirectory=/usr/share/nettica-admin/
-ExecStart=/usr/share/nettica-admin/cmd/nettica-api/nettica-api
+WorkingDirectory=/home/user/go/src/nettica-admin/
+ExecStart=/home/user/go/src/nettica-admin/cmd/nettica-api/nettica-api
 
 # make sure log directory exists and owned by syslog
 PermissionsStartOnly=true
@@ -186,10 +198,11 @@ SyslogIdentifier=nettica-api
 [Install]
 WantedBy=multi-user.target
 ```
+Ctrl-X, Y to save
 
 Build the API
 ```
-cd /usr/share/nettica-admin/cmd/nettica-api
+cd ~/go/src/nettica-admin/cmd/nettica-api
 go build
 ```
 
@@ -211,7 +224,7 @@ nvm use 18
 Build the frontend
 
 ```
-cd /usr/share/nettica-admin/ui
+cd /home/user/go/src/nettica-admin/ui
 npm install
 npm run build
 ```
