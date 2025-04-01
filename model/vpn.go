@@ -20,6 +20,7 @@ type VPN struct {
 	Failover  int        `json:"failover"                  bson:"failover"`
 	FailCount int        `json:"failCount"                 bson:"failCount"`
 	Enable    bool       `json:"enable"                    bson:"enable"`
+	ReadOnly  *bool      `json:"readonly,omitempty"        bson:"readonly,omitempty"`
 	Tags      []string   `json:"tags"                      bson:"tags"`
 	CreatedBy string     `json:"createdBy"                 bson:"createdBy"`
 	UpdatedBy string     `json:"updatedBy"                 bson:"updatedBy"`

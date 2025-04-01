@@ -161,20 +161,22 @@ func UpdateDevice(Id string, device *model.Device, fUpdated bool) (*model.Device
 		}
 	}
 
-	// current is the old value, device is the new value
-	if current.Push == "" {
-		// if the new value is not empty, add it to the push list
-		if device.Push != "" {
-			push.PushDevices[device.Id] = device.Push
-		}
-		current.Push = device.Push
-		// here we drop out of the if when both were empty
+	// Only accept tokens if push is enabled
+	if push.Enabled {
 
-	} else {
-		if device.Push != current.Push {
-			delete(push.PushDevices, current.Id)
-			if device.Push != "" {
-				push.PushDevices[device.Id] = device.Push
+		// current is the old value, device is the new value
+		if current.Push != nil && *current.Push == "" {
+			// if the new value is not empty, add it to the push list
+			if device.Push != nil && *device.Push != "" {
+				push.AddDevice(device.Id, *device.Push)
+			}
+
+		} else {
+			if device.Push != current.Push {
+				push.RemoveDevice(current.Id)
+				if device.Push != nil && *device.Push != "" {
+					push.AddDevice(device.Id, *device.Push)
+				}
 			}
 		}
 		current.Push = device.Push
@@ -227,15 +229,16 @@ func UpdateDevice(Id string, device *model.Device, fUpdated bool) (*model.Device
 		return nil, err
 	}
 
-	v, err = mongo.Deserialize(Id, "id", "devices", reflect.TypeOf(model.Device{}))
-	if err != nil {
-		return nil, err
-	}
-	device = v.(*model.Device)
-	device.VPNs = current.VPNs
+	//	v, err = mongo.Deserialize(Id, "id", "devices", reflect.TypeOf(model.Device{}))
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	device = v.(*model.Device)
+	//	device.VPNs = current.VPNs
 
 	// data modified, dump new config
-	return device, nil
+	//	return device, nil
+	return current, nil
 }
 
 // DeleteDevice from database

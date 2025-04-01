@@ -237,12 +237,13 @@ func updateDevice(c *gin.Context) {
 
 	core.FlushCache(id)
 
-	if client.Push != "" {
+	if client.Push != nil && *client.Push != "" {
 		// Add the push token to the list of push devices
-		if push.PushDevices[id] != client.Push {
-			push.PushDevices[id] = client.Push
+		if push.PushDevices[id] != *client.Push {
+			push.RemovePushToken(push.PushDevices[id])
+			push.AddDevice(id, *client.Push)
 		}
-		err = push.SendPushNotification(data.Push, "Device Updated", "Device "+device.Name+" has been updated")
+		err = push.SendPushNotification(*data.Push, "Device Updated", "Device "+device.Name+" has been updated")
 		if err != nil {
 			log.WithFields(log.Fields{
 				"err": err,
@@ -250,10 +251,9 @@ func updateDevice(c *gin.Context) {
 		}
 	} else {
 		// Remove the push token from the list of push devices
-		if push.PushDevices[id] != "" {
-			delete(push.PushDevices, id)
-		}
+		push.RemoveDevice(id)
 	}
+
 	c.JSON(http.StatusOK, client)
 }
 
@@ -511,7 +511,7 @@ func statusDevice(c *gin.Context) {
 				}
 			} else {
 				log.Errorf("internal error")
-				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
 				return
 			}
 		}
@@ -573,7 +573,6 @@ func statusDevice(c *gin.Context) {
 
 			} else {
 				// This is the current client
-				device2 := *device
 				isClient = true
 				if client.Current.SyncEndpoint && client.Role != "Ingress" {
 					// If this client has syncEndpoint on see if the ip has changed
@@ -594,16 +593,18 @@ func statusDevice(c *gin.Context) {
 						core.UpdateVPN(client.Id, client, true)
 					}
 				}
+				//				device2 := *device
 				//
 				// update device from id with new last seen
-				go func() {
-					now := time.Now()
-					device2.LastSeen = &now
-					_, err = core.UpdateDevice(device2.Id, &device2, true)
-					if err != nil {
-						log.Error(err)
-					}
-				}()
+				//				go func() {
+				//					now := time.Now()
+				//					device2.LastSeen = &now
+				//					log.Infof("device %s last seen %s", device2.Id, now)
+				//					_, err = core.UpdateDevice(device2.Id, &device2, true)
+				//					if err != nil {
+				//						log.Error(err)
+				//					}
+				//				}()
 			}
 			device.LastSeen = nil
 
@@ -644,4 +645,12 @@ func statusDevice(c *gin.Context) {
 	}
 
 	core.SetCache(device.Id, md5)
+
+	now := time.Now()
+	device.LastSeen = &now
+	_, err = core.UpdateDevice(device.Id, device, true)
+	if err != nil {
+		log.Error(err)
+	}
+
 }

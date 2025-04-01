@@ -33,7 +33,8 @@ type Device struct {
 	UpdateKeys    bool       `json:"updateKeys"                bson:"updateKeys"`
 	InstanceID    string     `json:"instanceid,omitempty"      bson:"instanceid,omitempty"`
 	EZCode        string     `json:"ezcode,omitempty"          bson:"ezcode,omitempty"`
-	Push          string     `json:"push,omitempty"            bson:"push,omitempty"`
+	Push          *string    `json:"push,omitempty"            bson:"push,omitempty"`
+	ReadOnly      *bool      `json:"readonly,omitempty"        bson:"readonly,omitempty"`
 	CreatedBy     string     `json:"createdBy"                 bson:"createdBy"`
 	UpdatedBy     string     `json:"updatedBy"                 bson:"updatedBy"`
 	Created       time.Time  `json:"created"                   bson:"created"`

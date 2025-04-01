@@ -22,7 +22,7 @@ var (
 	client      *messaging.Client
 	PushDevices = make(map[string]string)
 	PushTokens  = make(map[string]string)
-	enabled     = false
+	Enabled     = false
 )
 
 // Initialize initializes the push notification service
@@ -46,20 +46,49 @@ func Initialize() error {
 	}
 
 	for _, device := range devices {
-		PushDevices[device.Id] = device.Push
-		PushTokens[device.Push] = device.Id
+		if device.Push != nil {
+			PushDevices[device.Id] = *device.Push
+			PushTokens[*device.Push] = device.Id
+		}
 	}
 
-	enabled = true
+	Enabled = true
 
 	return nil
 
 }
 
+func AddDevice(deviceId, pushToken string) {
+	if Enabled {
+		PushDevices[deviceId] = pushToken
+		PushTokens[pushToken] = deviceId
+	}
+}
+
+func RemoveDevice(deviceId string) {
+	if Enabled {
+		pushToken, ok := PushDevices[deviceId]
+		if ok {
+			delete(PushDevices, deviceId)
+			delete(PushTokens, pushToken)
+		}
+	}
+}
+
+func RemovePushToken(pushToken string) {
+	if Enabled {
+		deviceId, ok := PushTokens[pushToken]
+		if ok {
+			delete(PushTokens, pushToken)
+			delete(PushDevices, deviceId)
+		}
+	}
+}
+
 // SendPushNotification sends a push notification to a device
 func SendPushNotification(pushToken, title, body string) error {
 
-	if enabled {
+	if Enabled {
 		notification := messaging.Message{
 			Notification: &messaging.Notification{
 				Title: title,
@@ -83,7 +112,7 @@ func SendPushNotification(pushToken, title, body string) error {
 						}).Error("failed to read device")
 					} else {
 						device := d.(*model.Device)
-						device.Push = ""
+						*device.Push = ""
 						err = mongo.Serialize(device.Id, "id", "devices", device)
 						if err != nil {
 							log.WithFields(log.Fields{

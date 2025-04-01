@@ -19,6 +19,7 @@ type Network struct {
 	Updated     *time.Time `json:"updated"     bson:"updated"`
 	ForceUpdate bool       `json:"forceUpdate" bson:"forceUpdate"`
 	Critical    bool       `json:"critical"    bson:"critical"`
+	ReadOnly    *bool      `json:"readonly,omitempty"    bson:"readonly,omitempty"`
 	Policies    Policies   `json:"policies"    bson:"policies"`
 	Default     *Settings  `json:"default"     bson:"default"`
 }
