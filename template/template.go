@@ -214,7 +214,6 @@ PersistentKeepalive = {{.VPN.Current.PersistentKeepalive}}
 `
 
 	wireguardTemplate = `{{ if .VPN.Enable }}
-# {{.VPN.Name }} / Updated: {{ .VPN.Updated }} / Created: {{ .VPN.Created }}
 [Interface]
   {{- range .VPN.Current.Address }}
 Address = {{ . }}
@@ -229,7 +228,6 @@ PrivateKey = {{ .VPN.Current.PrivateKey }}
 {{ if .VPN.Current.PostDown -}}PostDown = {{ .VPN.Current.PostDown }}{{- end}}
 {{ range .VPNs }}
 {{ if .Enable }}
-# {{.Name}} / Updated: {{.Updated}} / Created: {{.Created}}
 [Peer]
 PublicKey = {{ .Current.PublicKey }}
 PresharedKey = {{ .Current.PresharedKey }}
