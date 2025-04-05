@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 	model "github.com/nettica-com/nettica-admin/model"
 	"github.com/nettica-com/nettica-admin/shadow"
 	util "github.com/nettica-com/nettica-admin/util"
