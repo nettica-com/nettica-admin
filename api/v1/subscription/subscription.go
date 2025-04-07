@@ -1827,6 +1827,9 @@ func createSubscription(c *gin.Context) {
 
 	log.Info(sub)
 
+	receipt := sub["id"].(string)
+	log.Infof("receipt: %s", receipt)
+
 	// walk the json and find the customer href
 	links := sub["_links"].(map[string]interface{})
 	log.Info(links)
@@ -2052,6 +2055,7 @@ func createSubscription(c *gin.Context) {
 			Credits:     credits,
 			Sku:         sku,
 			Status:      status,
+			Receipt:     receipt,
 		}
 
 		errs = subscription.IsValid()
@@ -2101,7 +2105,34 @@ func updateSubscriptionWoo(c *gin.Context) {
 	}
 
 	log.Info(body)
-	bytes = []byte(body)
+
+	// unmarshal the body into a map
+
+	var sub map[string]interface{}
+	err = json.Unmarshal(bytes, &sub)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to unmarshal request body")
+		// c.AbortWithStatus(http.StatusUnprocessableEntity)
+		// return with no error so webhook doesn't get disabled
+		c.JSON(http.StatusOK, body)
+		return
+	}
+
+	log.Info(sub)
+
+	receipt := sub["id"].(string)
+	email := ""
+
+	var billing map[string]interface{}
+	if sub["billing"] != nil {
+		billing = sub["billing"].(map[string]interface{})
+		email = billing["email"].(string)
+	}
+
+	log.Infof("Receipt = %s", receipt)
+	log.Infof("Email = %s", email)
 
 	c.JSON(http.StatusOK, body)
 
