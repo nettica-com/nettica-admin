@@ -1,7 +1,7 @@
 <template>
     <div>
         <v-app-bar app clipped-left class="hidden-xs-only">
-            <a href="https://nettica.com"><img class="mr-3" src="/logo.png" height="50" width="50" alt="nettica" /></a>
+            <a href="https://nettica.com"><img class="mr-3" src="/nettica-3d-256.png" height="50" width="50" alt="nettica" /></a>
             <v-toolbar-title to="/">
                 {{ title }}</v-toolbar-title>
 
