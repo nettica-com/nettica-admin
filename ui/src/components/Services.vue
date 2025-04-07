@@ -91,7 +91,7 @@
 
             </v-data-table>
         </v-card>
-        <v-dialog v-if="subscriptions" v-model="dialogCreateService" max-width="550">
+        <v-dialog v-if="subscriptions" v-model="dialogCreateService" max-width="550"  persistent  @keydown.esc="dialogCreateService = false" >
             <v-card>
                 <v-card-title class="headline">Create New Service</v-card-title>
                 <v-card-text>
@@ -127,7 +127,7 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
-        <v-dialog v-if="subscriptions" v-model="dialogCreateMultihop" max-width="550">
+        <v-dialog v-if="subscriptions" v-model="dialogCreateMultihop" max-width="550"  persistent  @keydown.esc="dialogCreateMultihop = false" >
             <v-card>
                 <v-card-title class="headline">Create New Multihop Service</v-card-title>
                 <v-card-text>
@@ -161,7 +161,7 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
-        <v-dialog v-if="subscriptions" v-model="dialogWilderness" max-width="550">
+        <v-dialog v-if="subscriptions" v-model="dialogWilderness" max-width="550"  persistent  @keydown.esc="dialogWilderness = false" >
             <v-card>
                 <v-card-title class="headline">In the Wild</v-card-title>
                 <v-card-text>

@@ -404,7 +404,7 @@
                 </v-col>
             </v-row>
         </v-card>
-        <v-dialog v-if="net" v-model="dialogCreate" max-width="550">
+        <v-dialog v-if="net" v-model="dialogCreate" max-width="550"  persistent  @keydown.esc="dialogCreate = false" >
             <v-card>
                 <v-card-title class="headline">Create New Network</v-card-title>
                 <v-card-text>
@@ -473,7 +473,7 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
-        <v-dialog v-if="net" v-model="dialogAddDevice" max-width="550">
+        <v-dialog v-if="net" v-model="dialogAddDevice" max-width="550"  persistent  @keydown.esc="dialogAddDevice = false" >
             <v-card>
                 <v-card-title class="headline">Add Device</v-card-title>
                 <v-card-text>

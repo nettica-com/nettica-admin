@@ -160,7 +160,7 @@
                     </v-row>
                 </v-card>
             </v-col></v-row>
-        <v-dialog v-if="account" v-model="dialogCreate" max-width="550">
+        <v-dialog v-if="account" v-model="dialogCreate" max-width="550"  persistent  @keydown.esc="dialogCreate = false" >
             <v-card>
                 <v-card-title class="headline">Invite new member</v-card-title>
                 <v-card-text>
@@ -196,7 +196,7 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
-        <v-dialog v-if="accounts" v-model="dialogAPI" max-width="650">
+        <v-dialog v-if="accounts" v-model="dialogAPI" max-width="650"  persistent  @keydown.esc="dialogAPI = false" >
             <v-card>
                 <v-card-title class="headline">API Keys</v-card-title>
                 <v-card-text>

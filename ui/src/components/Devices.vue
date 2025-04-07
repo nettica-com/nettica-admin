@@ -405,7 +405,7 @@
                     </template>
 
                 </v-card>
-                <v-dialog v-if="device" v-model="dialogCreate" max-width="550">
+                <v-dialog v-if="device" v-model="dialogCreate" max-width="550" persistent  @keydown.esc="dialogCreate = false" >
                     <v-card>
                         <v-card-title class="headline">Add New Device</v-card-title>
                         <v-card-text>
@@ -450,7 +450,7 @@
                         </v-card-actions>
                     </v-card>
                 </v-dialog>
-                <v-dialog v-if="device && device.ezcode" v-model="dialogEZCode" max-width="550">
+                <v-dialog v-if="device && device.ezcode" v-model="dialogEZCode" max-width="550"  persistent  @keydown.esc="dialogEZCode = false" >
                     <v-card>
                         <v-card-title class="headline">EZ-Code</v-card-title>
                         <v-card-text>
@@ -472,7 +472,7 @@
                         </v-card-actions>
                     </v-card>
                 </v-dialog>
-                <v-dialog v-if="vpn" v-model="dialogAddVPN" max-width="550">
+                <v-dialog v-if="vpn" v-model="dialogAddVPN" max-width="550"  persistent  @keydown.esc="dialogAddVPN = false" >
                     <v-card>
                         <v-card-title class="headline">Add VPN</v-card-title>
                         <v-card-text>
