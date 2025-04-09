@@ -1836,9 +1836,9 @@ func createSubscription(c *gin.Context) {
 
 	// get the sku from the line_items
 	sku := sub["line_items"].([]interface{})[0].(map[string]interface{})["sku"].(string)
-	//status := sub["status"].(string)
+	status := sub["status"].(string)
 
-	status := "active"
+	//status := "active"
 
 	customer := links["customer"].([]interface{})
 	log.Info(customer)
@@ -1905,6 +1905,14 @@ func createSubscription(c *gin.Context) {
 		members := 0
 		relays := 0
 		expires := time.Now().AddDate(1, 0, 0)
+
+		if sub["next_payment_date_gmt"] != nil {
+
+			expires, err = time.Parse( time.RFC3339, sub["next_payment_date_gmt"].(string))
+			if err != nil {
+				log.Error(err)
+			}
+		}
 
 		// set the credits, name, and description based on the sku
 		switch sku {
@@ -2133,6 +2141,30 @@ func updateSubscriptionWoo(c *gin.Context) {
 
 	log.Infof("Receipt = %s", receipt)
 	log.Infof("Email = %s", email)
+
+	s, err := core.GetSubscriptionByReceipt(receipt);
+	if (err == nil) {
+		// We can update this puppy
+		if sub["status"] != nil {
+			s.Status = sub["status"].(string)
+		}
+
+		if sub["next_payment_date_gmt"] != nil {
+			expires := sub["next_payment_date_gmt"].(string)
+
+			*s.Expires, err = time.Parse( time.RFC3339, expires)
+			if err != nil {
+				log.Error(err)
+			}
+		}
+
+		s.UpdatedBy = "woo"
+		_, err = core.UpdateSubscription(s.Id, s)
+		if err != nil {
+			log.Errorf("Error Updating Subscription: %v %v", s, err)
+		}
+	}
+
 
 	c.JSON(http.StatusOK, body)
 
