@@ -1827,7 +1827,7 @@ func createSubscription(c *gin.Context) {
 
 	log.Info(sub)
 
-	receipt := fmt.Sprintf("%d", sub["id"].(float64))
+	receipt := fmt.Sprintf("%d", int(sub["id"].(float64)))
 	log.Infof("receipt: %s", receipt)
 
 	// walk the json and find the customer href
@@ -2122,7 +2122,7 @@ func updateSubscriptionWoo(c *gin.Context) {
 
 	log.Info(sub)
 
-	receipt := fmt.Sprintf("%d", sub["id"].(float64))
+	receipt := fmt.Sprintf("%d", int(sub["id"].(float64)))
 	email := ""
 
 	var billing map[string]interface{}
