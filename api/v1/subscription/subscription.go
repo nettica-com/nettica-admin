@@ -1907,8 +1907,8 @@ func createSubscription(c *gin.Context) {
 		expires := time.Now().AddDate(1, 0, 0)
 
 		if sub["next_payment_date_gmt"] != nil {
-
-			expires, err = time.Parse(time.RFC3339, sub["next_payment_date_gmt"].(string))
+			layout := "2006-01-02T15:04:05"
+			expires, err = time.Parse(layout, sub["next_payment_date_gmt"].(string))
 			if err != nil {
 				log.Error(err)
 			}
@@ -2171,8 +2171,8 @@ func updateSubscriptionWoo(c *gin.Context) {
 
 		if sub["next_payment_date_gmt"] != nil {
 			expires := sub["next_payment_date_gmt"].(string)
-
-			*s.Expires, err = time.Parse(time.RFC3339, expires)
+			layout := "2006-01-02T15:04:05"
+			*s.Expires, err = time.Parse(layout, expires)
 			if err != nil {
 				log.Error(err)
 			}
