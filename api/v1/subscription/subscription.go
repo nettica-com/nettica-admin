@@ -1908,7 +1908,7 @@ func createSubscription(c *gin.Context) {
 
 		if sub["next_payment_date_gmt"] != nil {
 
-			expires, err = time.Parse( time.RFC3339, sub["next_payment_date_gmt"].(string))
+			expires, err = time.Parse(time.RFC3339, sub["next_payment_date_gmt"].(string))
 			if err != nil {
 				log.Error(err)
 			}
@@ -2142,9 +2142,26 @@ func updateSubscriptionWoo(c *gin.Context) {
 	log.Infof("Receipt = %s", receipt)
 	log.Infof("Email = %s", email)
 
-	s, err := core.GetSubscriptionByReceipt(receipt);
-	if (err == nil) {
+	s, err := core.GetSubscriptionByReceipt(receipt)
+	if err == nil {
 		// We can update this puppy
+	} else {
+
+		subs, err := core.ReadSubscriptions(email)
+		if err != nil {
+			log.Infof("*************** SUBSCRIPTION %s NEEDS ATTENTION ***************", receipt)
+			log.Info(body)
+		}
+
+		if len(subs) == 1 {
+			s = subs[0]
+		} else {
+			log.Infof("*************** USER WITH MULTIPLE SUBSCRIPTIONS %s NEEDS ATTENTION ***************", receipt)
+			log.Info(body)
+		}
+	}
+
+	if s != nil {
 		if sub["status"] != nil {
 			s.Status = sub["status"].(string)
 		}
@@ -2152,7 +2169,7 @@ func updateSubscriptionWoo(c *gin.Context) {
 		if sub["next_payment_date_gmt"] != nil {
 			expires := sub["next_payment_date_gmt"].(string)
 
-			*s.Expires, err = time.Parse( time.RFC3339, expires)
+			*s.Expires, err = time.Parse(time.RFC3339, expires)
 			if err != nil {
 				log.Error(err)
 			}
@@ -2164,7 +2181,6 @@ func updateSubscriptionWoo(c *gin.Context) {
 			log.Errorf("Error Updating Subscription: %v %v", s, err)
 		}
 	}
-
 
 	c.JSON(http.StatusOK, body)
 
