@@ -2143,9 +2143,7 @@ func updateSubscriptionWoo(c *gin.Context) {
 	log.Infof("Email = %s", email)
 
 	s, err := core.GetSubscriptionByReceipt(receipt)
-	if err == nil {
-		// We can update this puppy
-	} else {
+	if err != nil {
 
 		subs, err := core.ReadSubscriptions(email)
 		if err != nil {
@@ -2171,10 +2169,23 @@ func updateSubscriptionWoo(c *gin.Context) {
 
 		if sub["next_payment_date_gmt"] != nil {
 			expires := sub["next_payment_date_gmt"].(string)
-			layout := "2006-01-02T15:04:05"
-			*s.Expires, err = time.Parse(layout, expires)
-			if err != nil {
-				log.Error(err)
+			if expires != "" {
+				layout := "2006-01-02T15:04:05"
+				*s.Expires, err = time.Parse(layout, expires)
+				if err != nil {
+					log.Error(err)
+				}
+			}
+		}
+
+		if sub["end_date_gmt"] != nil {
+			expires := sub["end_date_gmt"].(string)
+			if expires != "" {
+				layout := "2006-01-02T15:04:05"
+				*s.Expires, err = time.Parse(layout, expires)
+				if err != nil {
+					log.Error(err)
+				}
 			}
 		}
 
