@@ -2155,8 +2155,11 @@ func updateSubscriptionWoo(c *gin.Context) {
 
 		if len(subs) == 1 {
 			s = subs[0]
-		} else {
+		} else if len(subs) > 1 {
 			log.Infof("*************** USER WITH MULTIPLE SUBSCRIPTIONS %s NEEDS ATTENTION ***************", receipt)
+			log.Info(body)
+		} else {
+			log.Infof("*************** SUBSCRIPTION %s NOT FOUND ***************", receipt)
 			log.Info(body)
 		}
 	}
@@ -2179,7 +2182,10 @@ func updateSubscriptionWoo(c *gin.Context) {
 		_, err = core.UpdateSubscription(s.Id, s)
 		if err != nil {
 			log.Errorf("Error Updating Subscription: %v %v", s, err)
+		} else {
+			log.Infof("Updated Subscription: %v", s)
 		}
+
 	}
 
 	c.JSON(http.StatusOK, body)
