@@ -307,6 +307,41 @@
                 }
             }
         },
+        "/accounts/{id}/soft": {
+            "delete": {
+                "security": [
+                    {
+                        "apiKey": []
+                    }
+                ],
+                "description": "Soft delete an account.  All devices, networks, and services must be deleted first.",
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Soft delete an account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Account ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    }
+                }
+            }
+        },
         "/accounts/{id}/users": {
             "get": {
                 "security": [
@@ -1084,6 +1119,9 @@
                 "status": {
                     "type": "string"
                 },
+                "sub": {
+                    "type": "string"
+                },
                 "updated": {
                     "type": "string"
                 },
@@ -1107,32 +1145,17 @@
                 "apiKey": {
                     "type": "string"
                 },
-                "apiid": {
-                    "type": "string"
-                },
-                "appdata": {
-                    "type": "string"
-                },
                 "arch": {
-                    "type": "string"
-                },
-                "authdomain": {
                     "type": "string"
                 },
                 "checkInterval": {
                     "type": "integer"
-                },
-                "clientid": {
-                    "type": "string"
                 },
                 "created": {
                     "type": "string"
                 },
                 "createdBy": {
                     "type": "string"
-                },
-                "debug": {
-                    "type": "boolean"
                 },
                 "description": {
                     "type": "string"
@@ -1152,6 +1175,9 @@
                 "lastSeen": {
                     "type": "string"
                 },
+                "logging": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -1161,7 +1187,10 @@
                 "platform": {
                     "type": "string"
                 },
-                "quiet": {
+                "push": {
+                    "type": "string"
+                },
+                "readonly": {
                     "type": "boolean"
                 },
                 "registered": {
@@ -1272,6 +1301,12 @@
                 },
                 "id": {
                     "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
                 }
             }
         },
@@ -1307,6 +1342,9 @@
                 },
                 "policies": {
                     "$ref": "#/definitions/model.Policies"
+                },
+                "readonly": {
+                    "type": "boolean"
                 },
                 "tags": {
                     "type": "array",
@@ -1461,6 +1499,9 @@
                 "netid": {
                     "type": "string"
                 },
+                "readonly": {
+                    "type": "boolean"
+                },
                 "role": {
                     "type": "string"
                 },
@@ -1484,6 +1525,9 @@
         "model.VPNConfig": {
             "type": "object",
             "properties": {
+                "description": {
+                    "type": "string"
+                },
                 "netName": {
                     "type": "string"
                 },

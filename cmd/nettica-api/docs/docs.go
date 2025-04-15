@@ -311,6 +311,41 @@ const docTemplate = `{
                 }
             }
         },
+        "/accounts/{id}/soft": {
+            "delete": {
+                "security": [
+                    {
+                        "apiKey": []
+                    }
+                ],
+                "description": "Soft delete an account.  All devices, networks, and services must be deleted first.",
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Soft delete an account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Account ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    }
+                }
+            }
+        },
         "/accounts/{id}/users": {
             "get": {
                 "security": [
@@ -1088,6 +1123,9 @@ const docTemplate = `{
                 "status": {
                     "type": "string"
                 },
+                "sub": {
+                    "type": "string"
+                },
                 "updated": {
                     "type": "string"
                 },
@@ -1111,32 +1149,17 @@ const docTemplate = `{
                 "apiKey": {
                     "type": "string"
                 },
-                "apiid": {
-                    "type": "string"
-                },
-                "appdata": {
-                    "type": "string"
-                },
                 "arch": {
-                    "type": "string"
-                },
-                "authdomain": {
                     "type": "string"
                 },
                 "checkInterval": {
                     "type": "integer"
-                },
-                "clientid": {
-                    "type": "string"
                 },
                 "created": {
                     "type": "string"
                 },
                 "createdBy": {
                     "type": "string"
-                },
-                "debug": {
-                    "type": "boolean"
                 },
                 "description": {
                     "type": "string"
@@ -1156,6 +1179,9 @@ const docTemplate = `{
                 "lastSeen": {
                     "type": "string"
                 },
+                "logging": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -1165,7 +1191,10 @@ const docTemplate = `{
                 "platform": {
                     "type": "string"
                 },
-                "quiet": {
+                "push": {
+                    "type": "string"
+                },
+                "readonly": {
                     "type": "boolean"
                 },
                 "registered": {
@@ -1276,6 +1305,12 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
                 }
             }
         },
@@ -1311,6 +1346,9 @@ const docTemplate = `{
                 },
                 "policies": {
                     "$ref": "#/definitions/model.Policies"
+                },
+                "readonly": {
+                    "type": "boolean"
                 },
                 "tags": {
                     "type": "array",
@@ -1465,6 +1503,9 @@ const docTemplate = `{
                 "netid": {
                     "type": "string"
                 },
+                "readonly": {
+                    "type": "boolean"
+                },
                 "role": {
                     "type": "string"
                 },
@@ -1488,6 +1529,9 @@ const docTemplate = `{
         "model.VPNConfig": {
             "type": "object",
             "properties": {
+                "description": {
+                    "type": "string"
+                },
                 "netName": {
                     "type": "string"
                 },
