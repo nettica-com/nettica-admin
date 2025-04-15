@@ -611,6 +611,23 @@ func handleAndroidWebhook(c *gin.Context) {
 		}
 
 		// handle cancel and did_not_renew
+		if sub["subscriptionState"] != nil && sub["subscriptionState"].(string) == "SUBSCRIPTION_STATE_CANCELED" {
+			// retrieve the subscription
+			subscription, err := core.GetSubscriptionByReceipt(purchaseToken)
+			if err != nil {
+				log.Errorf("error getting subscription: %v", err)
+				c.JSON(http.StatusNotFound, gin.H{"error": "Subscription not found"})
+				return
+			}
+
+			subscription.Status = "cancelled"
+			core.UpdateSubscription(subscription.Id, subscription)
+
+			log.Infof("subscription cancelled: %s", subscription.Id)
+
+			c.JSON(http.StatusOK, gin.H{"status": "cancelled"})
+			return
+		}
 
 	}
 
