@@ -2170,6 +2170,7 @@ func updateSubscriptionWoo(c *gin.Context) {
 
 		if len(subs) == 1 {
 			s = subs[0]
+			s.Receipt = receipt
 		} else if len(subs) > 1 {
 			log.Infof("*************** USER WITH MULTIPLE SUBSCRIPTIONS %s NEEDS ATTENTION ***************", receipt)
 			log.Info(body)
