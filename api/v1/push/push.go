@@ -75,9 +75,9 @@ func registerPush(c *gin.Context) {
 	pusher.Updated = &now
 	pusher.Version = "1.0"
 
-	if err := pusher.IsValid(); err != nil {
+	if errs := pusher.IsValid(); len(errs) > 0 {
 		log.WithFields(log.Fields{
-			"err": err,
+			"err": errs,
 		}).Error("push: register: failed to validate pusher")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to validate pusher"})
 		return
