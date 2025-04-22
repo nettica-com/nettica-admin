@@ -9,8 +9,8 @@
             "type": "go",
             "request": "launch",
             "mode": "debug",
-            "cwd":"/home/ubuntu/go/src/nettica-admin",
-            "program": "/home/ubuntu/go/src/nettica-admin/cmd/nettica-api/main.go"
+            "cwd":"${env:HOME}/go/src/nettica-admin",
+            "program": "${env:HOME}/go/src/nettica-admin/cmd/nettica-api/main.go"
         },
         {
             "type": "firefox",
@@ -24,7 +24,7 @@
         {
             "name": "Launch via NPM",
             "request": "launch",
-            "cwd":"/home/ubuntu/go/src/nettica-admin/ui",
+            "cwd":"${env:HOME}/go/src/nettica-admin/ui",
             "env" : { "VUE_APP_API_BASE_URL" : "https://dev.nettica.com/api/v1.0/"},
             "runtimeArgs": [
                 "run",
