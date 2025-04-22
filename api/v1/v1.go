@@ -7,6 +7,7 @@ import (
 	"github.com/nettica-com/nettica-admin/api/v1/auth"
 	device "github.com/nettica-com/nettica-admin/api/v1/device"
 	"github.com/nettica-com/nettica-admin/api/v1/net"
+	"github.com/nettica-com/nettica-admin/api/v1/push"
 	"github.com/nettica-com/nettica-admin/api/v1/server"
 	"github.com/nettica-com/nettica-admin/api/v1/service"
 	"github.com/nettica-com/nettica-admin/api/v1/subscription"
@@ -26,6 +27,7 @@ func ApplyRoutes(r *gin.RouterGroup, private bool) {
 			subscription.ApplyRoutes(v1)
 			vpn.ApplyRoutes(v1)
 			device.ApplyRoutes(v1)
+			push.ApplyRoutes(v1)
 		} else {
 			auth.ApplyRoutes(v1)
 
