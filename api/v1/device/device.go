@@ -12,7 +12,6 @@ import (
 	"github.com/gin-gonic/gin"
 	core "github.com/nettica-com/nettica-admin/core"
 	model "github.com/nettica-com/nettica-admin/model"
-	"github.com/nettica-com/nettica-admin/push"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -239,11 +238,11 @@ func updateDevice(c *gin.Context) {
 
 	if client.Push != nil && *client.Push != "" {
 		// Add the push token to the list of push devices
-		if push.PushDevices[id] != *client.Push {
-			push.RemovePushToken(push.PushDevices[id])
-			push.AddDevice(id, *client.Push)
+		if core.Push.PushDevices[id] != *client.Push {
+			core.Push.RemovePushToken(core.Push.PushDevices[id])
+			core.Push.AddDevice(id, *client.Push)
 		}
-		err = push.SendPushNotification(*data.Push, "Device Updated", "Device "+device.Name+" has been updated")
+		err = core.Push.SendPushNotification(*data.Push, "Device Updated", "Device "+device.Name+" has been updated")
 		if err != nil {
 			log.WithFields(log.Fields{
 				"err": err,
@@ -251,7 +250,7 @@ func updateDevice(c *gin.Context) {
 		}
 	} else {
 		// Remove the push token from the list of push devices
-		push.RemoveDevice(id)
+		core.Push.RemoveDevice(id)
 	}
 
 	c.JSON(http.StatusOK, client)

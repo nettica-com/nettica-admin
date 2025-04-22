@@ -134,6 +134,11 @@ func Deserialize(id string, parm string, col string, t reflect.Type) (interface{
 		err = collection.FindOne(ctx, filter).Decode(&c)
 		return c, err
 
+	case "model.Pusher":
+		var c *model.Pusher
+		err = collection.FindOne(ctx, filter).Decode(&c)
+		return c, err
+
 	case "model.Account":
 		var c *model.Account
 		err = collection.FindOne(ctx, filter).Decode(&c)
@@ -928,6 +933,59 @@ func UpsertUser(user *model.User) error {
 	return nil
 }
 
+func GetPushSettings(server, hostname string) (*model.Pusher, error) {
+	var push *model.Pusher
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+		return nil, err
+	}
+
+	collection := client.Database("nettica").Collection("push")
+
+	filter := bson.D{{Key: "server", Value: server}, {Key: "hostname", Value: hostname}}
+
+	err = collection.FindOne(ctx, filter).Decode(&push)
+	if err != nil {
+		log.Error(err)
+	}
+
+	return push, nil
+}
+
+func GetPushers() ([]*model.Pusher, error) {
+	pushers := make([]*model.Pusher, 0)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+		return nil, err
+	}
+
+	collection := client.Database("nettica").Collection("push")
+
+	cursor, err := collection.Find(ctx, bson.D{})
+	if err == nil {
+		defer cursor.Close(ctx)
+		for cursor.Next(ctx) {
+			var pusher *model.Pusher
+			err = cursor.Decode(&pusher)
+			if err == nil {
+				pushers = append(pushers, pusher)
+			}
+		}
+	}
+
+	return pushers, err
+}
+
 // Initialize the mongo db and create the indexes
 func Initialize() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -1086,6 +1144,21 @@ func Initialize() error {
 		log.Error(err)
 	}
 	_, err = client.Database("nettica").Collection("limits").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"accountid": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+
+	// push
+
+	_, err = client.Database("nettica").Collection("push").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"id": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+	_, err = client.Database("nettica").Collection("push").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"server": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+	_, err = client.Database("nettica").Collection("push").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"hostname": 1}, Options: nil})
 	if err != nil {
 		log.Error(err)
 	}

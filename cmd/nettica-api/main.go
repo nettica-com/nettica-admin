@@ -16,8 +16,8 @@ import (
 	api "github.com/nettica-com/nettica-admin/api"
 	auth "github.com/nettica-com/nettica-admin/auth"
 	docs "github.com/nettica-com/nettica-admin/cmd/nettica-api/docs"
+	"github.com/nettica-com/nettica-admin/core"
 	"github.com/nettica-com/nettica-admin/mongo"
-	"github.com/nettica-com/nettica-admin/push"
 	util "github.com/nettica-com/nettica-admin/util"
 	version "github.com/nettica-com/nettica-admin/version"
 	"github.com/patrickmn/go-cache"
@@ -198,7 +198,7 @@ func main() {
 	}
 
 	// Initialize push notifications
-	err = push.Initialize()
+	err = core.Push.Initialize()
 	if err != nil {
 		log.Error(err)
 	}

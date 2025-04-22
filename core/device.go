@@ -9,7 +9,6 @@ import (
 
 	model "github.com/nettica-com/nettica-admin/model"
 	mongo "github.com/nettica-com/nettica-admin/mongo"
-	"github.com/nettica-com/nettica-admin/push"
 	util "github.com/nettica-com/nettica-admin/util"
 	log "github.com/sirupsen/logrus"
 )
@@ -162,20 +161,20 @@ func UpdateDevice(Id string, device *model.Device, fUpdated bool) (*model.Device
 	}
 
 	// Only accept tokens if push is enabled
-	if push.Enabled {
+	if Push.Enabled {
 
 		// current is the old value, device is the new value
 		if current.Push != nil && *current.Push == "" {
 			// if the new value is not empty, add it to the push list
 			if device.Push != nil && *device.Push != "" {
-				push.AddDevice(device.Id, *device.Push)
+				Push.AddDevice(device.Id, *device.Push)
 			}
 
 		} else {
 			if device.Push != current.Push {
-				push.RemoveDevice(current.Id)
+				Push.RemoveDevice(current.Id)
 				if device.Push != nil && *device.Push != "" {
-					push.AddDevice(device.Id, *device.Push)
+					Push.AddDevice(device.Id, *device.Push)
 				}
 			}
 		}

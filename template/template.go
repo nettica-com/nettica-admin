@@ -287,6 +287,26 @@ func DumpEmail(vpn *model.VPN, qrcodePngName string) ([]byte, error) {
 	})
 }
 
+func PushEmail(p *model.Pusher) ([]byte, error) {
+	file := "push.html"
+
+	bytes, err := os.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+
+	t, err := template.New("push").Parse(string(bytes))
+	if err != nil {
+		return nil, err
+	}
+
+	return dump(t, struct {
+		P *model.Pusher
+	}{
+		P: p,
+	})
+}
+
 func BillingEmail(subscription model.Subscription) ([]byte, error) {
 	file := "billing.html"
 

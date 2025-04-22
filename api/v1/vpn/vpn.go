@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	core "github.com/nettica-com/nettica-admin/core"
 	model "github.com/nettica-com/nettica-admin/model"
-	"github.com/nettica-com/nettica-admin/push"
 	log "github.com/sirupsen/logrus"
 	"github.com/skip2/go-qrcode"
 )
@@ -105,8 +104,8 @@ func createVPN(c *gin.Context) {
 		core.FlushCache(v.DeviceID)
 
 		// send push notification if appropriate
-		if push.PushDevices[v.DeviceID] != "" && v.Enable {
-			err := push.SendPushNotification(push.PushDevices[v.DeviceID], v.NetName+" updated", "The VPN configuration for "+v.NetName+" has been updated")
+		if core.Push.PushDevices[v.DeviceID] != "" && v.Enable {
+			err := core.Push.SendPushNotification(core.Push.PushDevices[v.DeviceID], v.NetName+" updated", "The VPN configuration for "+v.NetName+" has been updated")
 			if err != nil {
 				log.WithFields(log.Fields{
 					"err": err,
@@ -313,8 +312,8 @@ func updateVPN(c *gin.Context) {
 		core.FlushCache(v.DeviceID)
 
 		// send push notification if appropriate
-		if push.PushDevices[v.DeviceID] != "" && v.Enable {
-			err := push.SendPushNotification(push.PushDevices[v.DeviceID], v.NetName+" updated", "The VPN configuration for "+v.NetName+" has been updated")
+		if core.Push.PushDevices[v.DeviceID] != "" && v.Enable {
+			err := core.Push.SendPushNotification(core.Push.PushDevices[v.DeviceID], v.NetName+" updated", "The VPN configuration for "+v.NetName+" has been updated")
 			if err != nil {
 				log.WithFields(log.Fields{
 					"err": err,
@@ -323,8 +322,8 @@ func updateVPN(c *gin.Context) {
 		}
 
 		// send push notification to the device that just had the VPN disabled
-		if push.PushDevices[v.DeviceID] != "" && !v.Enable && v.DeviceID == result.DeviceID {
-			err := push.SendPushNotification(push.PushDevices[v.DeviceID], v.NetName+" disabled", "The VPN configuration for "+v.NetName+" has been disabled")
+		if core.Push.PushDevices[v.DeviceID] != "" && !v.Enable && v.DeviceID == result.DeviceID {
+			err := core.Push.SendPushNotification(core.Push.PushDevices[v.DeviceID], v.NetName+" disabled", "The VPN configuration for "+v.NetName+" has been disabled")
 			if err != nil {
 				log.WithFields(log.Fields{
 					"err": err,
@@ -436,8 +435,8 @@ func deleteVPN(c *gin.Context) {
 		core.FlushCache(v.DeviceID)
 
 		// send push notification if appropriate
-		if push.PushDevices[v.DeviceID] != "" && v.Enable {
-			err := push.SendPushNotification(push.PushDevices[v.DeviceID], v.NetName+" updated", "The VPN configuration for "+v.NetName+" has been updated")
+		if core.Push.PushDevices[v.DeviceID] != "" && v.Enable {
+			err := core.Push.SendPushNotification(core.Push.PushDevices[v.DeviceID], v.NetName+" updated", "The VPN configuration for "+v.NetName+" has been updated")
 			if err != nil {
 				log.WithFields(log.Fields{
 					"err": err,
