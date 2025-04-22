@@ -69,10 +69,6 @@ func (a Pusher) IsValid() []error {
 		errs = append(errs, fmt.Errorf("version is required. 1.0"))
 	}
 
-	if a.Id == "" {
-		errs = append(errs, fmt.Errorf("id is required"))
-	}
-
 	if a.Server == "" {
 		errs = append(errs, fmt.Errorf("server field is required"))
 	}
