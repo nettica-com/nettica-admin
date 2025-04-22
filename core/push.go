@@ -50,7 +50,7 @@ func (pm *PushManager) Register() error {
 		return errors.New("failed to get hostname: " + err.Error())
 	}
 
-	pm.Pusher, err = mongo.GetPushSettings(server, hostname)
+	pusher, err := mongo.GetPushSettings(server, hostname)
 	if err != nil {
 
 		// register with nettica
@@ -64,7 +64,7 @@ func (pm *PushManager) Register() error {
 		if err != nil {
 			return errors.New("failed to marshal pusher to JSON: " + err.Error())
 		}
-		rsp, err := http.Post("https://ny.nettica.com/api/v1.0/push", "application/json", strings.NewReader(string(jsonData)))
+		rsp, err := http.Post("https://my.nettica.com/api/v1.0/push", "application/json", strings.NewReader(string(jsonData)))
 		if err != nil {
 			log.Errorf("failed to register pusher: %v", err)
 			return errors.New("failed to register pusher: " + err.Error())
@@ -94,12 +94,12 @@ func (pm *PushManager) Register() error {
 	} else {
 
 		// update the settings from nettica
-		req, err := http.NewRequest("GET", "https://my.nettica.com/api/v1.0/push/"+pm.Pusher.Id, nil)
+		req, err := http.NewRequest("GET", "https://my.nettica.com/api/v1.0/push/"+pusher.Id, nil)
 		if err != nil {
 			return errors.New("pusher: register: failed to get request: " + err.Error())
 		}
 		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("X-API-KEY", pm.Pusher.ApiKey)
+		req.Header.Set("X-API-KEY", pusher.ApiKey)
 		req.Header.Set("Accept", "application/json")
 		req.Header.Set("User-Agent", "Nettica Push")
 		client := &http.Client{}
@@ -270,21 +270,22 @@ func (p *PushCore) Initialize() error {
 	if err == nil {
 		p.client, err = p.app.Messaging(context.Background())
 		if err != nil {
-			return fmt.Errorf("error getting Messaging client: %v", err)
-		}
-		// we are on the server so load the clients
-		err = PM.Load()
-		if err != nil {
-			return fmt.Errorf("error loading push settings: %v", err)
-		}
-	} else {
-		// we are on the client so register with the server
-		err = PM.Register()
-		if err != nil {
-			return fmt.Errorf("error initializing push client: %v", err)
+			log.Error(err)
+			// we are on the client so register with the server
+			err = PM.Register()
+			if err != nil {
+				return fmt.Errorf("error initializing push client: %v", err)
+			}
+			log.Info("Push Client Registered")
+		} else {
+
+			// we are on the server so load the clients
+			err = PM.Load()
+			if err != nil {
+				return fmt.Errorf("error loading push settings: %v", err)
+			}
 		}
 	}
-
 	devices, err := mongo.GetDevicesForPushNotifications()
 	if err != nil {
 		return fmt.Errorf("error getting devices for push notifications: %v", err)

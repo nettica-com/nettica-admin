@@ -954,7 +954,7 @@ func GetPushSettings(server, hostname string) (*model.Pusher, error) {
 		log.Error(err)
 	}
 
-	return push, nil
+	return push, err
 }
 
 func GetPushers() ([]*model.Pusher, error) {
