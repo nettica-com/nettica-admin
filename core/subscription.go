@@ -127,10 +127,10 @@ func UpdateSubscription(Id string, subscription *model.Subscription) (*model.Sub
 
 	subscription = v.(*model.Subscription)
 
-	err = SubscriptionEmail(subscription)
-	if err != nil {
-		log.Errorf("failed to send email: %v", err)
-	}
+	//	err = SubscriptionEmail(subscription)
+	//	if err != nil {
+	//		log.Errorf("failed to send email: %v", err)
+	//	}
 
 	// data modified, dump new config
 	return subscription, nil

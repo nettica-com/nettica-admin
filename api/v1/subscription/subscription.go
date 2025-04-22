@@ -544,18 +544,19 @@ func handleAndroidWebhook(c *gin.Context) {
 		}
 
 		log.Infof("google subscription: %v", sub)
+		// retrieve the subscription
+		subscription, err := core.GetSubscriptionByReceipt(purchaseToken)
+		if err != nil {
+			// create the subscription
+
+			log.Errorf("error getting subscription: %v", err)
+			c.JSON(http.StatusNotFound, gin.H{"error": "Subscription not found"})
+			return
+		}
+
 		if sub["subscriptionState"] != nil && sub["subscriptionState"].(string) == "SUBSCRIPTION_STATE_ACTIVE" {
-			// retrieve the subscription
-			subscription, err := core.GetSubscriptionByReceipt(purchaseToken)
-			if err != nil {
-				// create the subscription
 
-				log.Errorf("error getting subscription: %v", err)
-				c.JSON(http.StatusNotFound, gin.H{"error": "Subscription not found"})
-				return
-			}
-
-			if subscription.Status == "expired" {
+			if subscription.Status == "expired" || subscription.Status == "cancelled" || subscription.Status == "grace" {
 				subscription.Status = "active"
 				last := time.Now().UTC()
 				subscription.LastUpdated = &last
@@ -563,48 +564,50 @@ func handleAndroidWebhook(c *gin.Context) {
 				core.RenewSubscription(subscription.Id)
 				log.Infof("subscription renewed: %s", subscription.Id)
 				subscription, err = core.GetSubscriptionByReceipt(purchaseToken)
-			}
-
-			// get the lineItems from the subscription.  It's an array of maps
-			lineItems, ok := sub["lineItems"].([]interface{})
-			if !ok || len(lineItems) == 0 {
-				log.Errorf("lineItems not found")
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
-				return
-			}
-
-			zero := lineItems[0].(map[string]interface{})
-
-			// update the expires date with expiryTime
-			if zero["expiryTime"] != nil {
-				*subscription.Expires, err = time.Parse(time.RFC3339, zero["expiryTime"].(string))
 				if err != nil {
-					log.Errorf("error parsing expiryTime: %v", err)
-					c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+					log.Errorf("error getting subscription: %v", err)
+					c.JSON(http.StatusNotFound, gin.H{"error": "Subscription not found"})
 					return
 				}
+			}
+		}
+
+		// get the lineItems from the subscription.  It's an array of maps
+		lineItems, ok := sub["lineItems"].([]interface{})
+		if !ok || len(lineItems) == 0 {
+			log.Errorf("lineItems not found")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+			return
+		}
+
+		zero := lineItems[0].(map[string]interface{})
+
+		// update the expires date with expiryTime
+		if zero != nil && zero["expiryTime"] != nil {
+			*subscription.Expires, err = time.Parse(time.RFC3339, zero["expiryTime"].(string))
+			if err != nil {
+				log.Errorf("error parsing expiryTime: %v", err)
+				//				c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+				//				return
+			} else {
 				last := time.Now().UTC()
 				subscription.LastUpdated = &last
 				subscription.UpdatedBy = "google"
 				core.UpdateSubscription(subscription.Id, subscription)
 				log.Infof("subscription updated: %s %v", subscription.Id, subscription)
-				c.JSON(http.StatusOK, gin.H{"status": "updated"})
-				return
+				//				c.JSON(http.StatusOK, gin.H{"status": "updated"})
+				//				return
 			}
 		}
 
 		if sub["subscriptionState"] != nil && sub["subscriptionState"].(string) == "SUBSCRIPTION_STATE_EXPIRED" {
-			// retrieve the subscription
-			subscription, err := core.GetSubscriptionByReceipt(purchaseToken)
-			if err != nil {
-				log.Errorf("error getting subscription: %v", err)
-				c.JSON(http.StatusNotFound, gin.H{"error": "Subscription not found"})
-				return
-			}
+
+			subscription.Status = "expired"
 
 			core.ExpireSubscription(subscription.Id)
 
 			log.Infof("subscription expired: %s", subscription.Id)
+			core.SubscriptionEmail(subscription)
 
 			c.JSON(http.StatusOK, gin.H{"status": "expired"})
 			return
@@ -612,20 +615,27 @@ func handleAndroidWebhook(c *gin.Context) {
 
 		// handle cancel and did_not_renew
 		if sub["subscriptionState"] != nil && sub["subscriptionState"].(string) == "SUBSCRIPTION_STATE_CANCELED" {
-			// retrieve the subscription
-			subscription, err := core.GetSubscriptionByReceipt(purchaseToken)
-			if err != nil {
-				log.Errorf("error getting subscription: %v", err)
-				c.JSON(http.StatusNotFound, gin.H{"error": "Subscription not found"})
-				return
-			}
 
 			subscription.Status = "cancelled"
 			core.UpdateSubscription(subscription.Id, subscription)
+			core.SubscriptionEmail(subscription)
 
 			log.Infof("subscription cancelled: %s", subscription.Id)
 
 			c.JSON(http.StatusOK, gin.H{"status": "cancelled"})
+			return
+		}
+
+		if sub["subscriptionState"] != nil && sub["subscriptionState"].(string) == "SUBSCRIPTION_STATE_IN_GRACE_PERIOD" {
+
+			subscription.Status = "grace"
+
+			core.UpdateSubscription(subscription.Id, subscription)
+			core.SubscriptionEmail(subscription)
+
+			log.Infof("subscription grace: %s", subscription.Id)
+
+			c.JSON(http.StatusOK, gin.H{"status": "grace"})
 			return
 		}
 
@@ -816,6 +826,7 @@ func handleAppleWebhook(c *gin.Context) {
 			core.ExpireSubscription(subscription.Id)
 			log.Infof("apple: subscription DID_NOT_RENEW: %s at %s", subscription.Id, expires)
 		}
+		core.SubscriptionEmail(subscription)
 
 	}
 	// Respond with 200 OK to acknowledge receipt of the webhook
@@ -1058,11 +1069,16 @@ func createSubscriptionApple(c *gin.Context) {
 				subscription.LastUpdated = &last
 				if subscription.Status == "cancelled" || subscription.Status == "expired" {
 					subscription.Status = "active"
+					core.SubscriptionEmail(subscription)
 					core.UpdateSubscription(subscription.Id, subscription)
 					core.RenewSubscription(subscription.Id)
 					log.Infof("subscription renewed: %s until %s", subscription.Id, expires)
+					c.JSON(http.StatusOK, subscription)
+					return
 				} else {
 					core.UpdateSubscription(subscription.Id, subscription)
+					core.SubscriptionEmail(subscription)
+
 					log.Infof("subscription updated: %s %v", subscription.Id, subscription)
 					c.JSON(http.StatusOK, subscription)
 					return
@@ -1073,15 +1089,12 @@ func createSubscriptionApple(c *gin.Context) {
 				subscription.Expires = &expires
 				subscription.LastUpdated = &last
 				core.UpdateSubscription(subscription.Id, subscription)
+				core.SubscriptionEmail(subscription)
+
 				log.Infof("subscription updated: %s %v", subscription.Id, subscription)
 				c.JSON(http.StatusOK, subscription)
 				return
 			}
-			log.Infof("*** subscription: %v", subscription)
-			log.Infof("*** result: %v", result)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
-			return
-			// handle cancel and did_not_renew
 		}
 	}
 
@@ -2209,6 +2222,8 @@ func updateSubscriptionWoo(c *gin.Context) {
 
 		s.UpdatedBy = "woo"
 		_, err = core.UpdateSubscription(s.Id, s)
+		core.SubscriptionEmail(s)
+
 		if err != nil {
 			log.Errorf("Error Updating Subscription: %v %v", s, err)
 		} else {
@@ -2270,6 +2285,7 @@ func updateSubscription(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	core.SubscriptionEmail(client)
 
 	c.JSON(http.StatusOK, client)
 }
