@@ -1,4 +1,4 @@
-package push
+package push // Package push handles push notifications
 
 import (
 	"net/http"
