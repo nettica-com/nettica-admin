@@ -947,7 +947,7 @@ func GetPushSettings(server, hostname string) (*model.Pusher, error) {
 
 	collection := client.Database("nettica").Collection("push")
 
-	filter := bson.D{{Key: "server", Value: server}, {Key: "hostname", Value: hostname}}
+	filter := bson.D{{Key: "server", Value: server}, {Key: "host", Value: hostname}}
 
 	err = collection.FindOne(ctx, filter).Decode(&push)
 	if err != nil {
