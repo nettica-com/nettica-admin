@@ -14,11 +14,11 @@
                         <v-text-field v-model="search" append-icon="mdi-magnify" label="Search" single-line
                             hide-details></v-text-field>
                         <v-spacer></v-spacer>
-                        <v-btn color="success" @click="startInvite">
+                        <v-btn color="#004000" @click="startInvite">
                             Invite
                             <v-icon right dark>mdi-account-group</v-icon>
                         </v-btn>&nbsp;
-                        <v-btn color="primary" @click="dialogAPI = true">
+                        <v-btn color="#000040" @click="dialogAPI = true">
                             API
                             <v-icon right dark>mdi-key</v-icon>
                         </v-btn>
@@ -144,12 +144,12 @@
                                         </v-col>
                                     </v-row>
                                     <v-card-actions>
-                                        <v-btn color="success" @click="updateMember(selected)">
+                                        <v-btn color="#004000" @click="updateMember(selected)">
                                             Save
                                             <v-icon right dark>mdi-check-outline</v-icon>
                                         </v-btn>
                                         <v-spacer></v-spacer>
-                                        <v-btn color="error" @click="remove(selected.member)">
+                                        <v-btn color="#400000" @click="remove(selected.member)">
                                             Delete
                                             <v-icon right dark>mdi-delete-outline</v-icon>
                                         </v-btn>
@@ -185,11 +185,11 @@
                 </v-card-text>
                 <v-card-actions>
                     <v-spacer />
-                    <v-btn :disabled="!valid" color="success" @click="create(toAddress, netList.selected)">
+                    <v-btn :disabled="!valid" color="#004000" @click="create(toAddress, netList.selected)">
                         Submit
                         <v-icon right dark>mdi-check-outline</v-icon>
                     </v-btn>
-                    <v-btn color="primary" @click="dialogCreate = false">
+                    <v-btn color="#000040" @click="dialogCreate = false">
                         Cancel
                         <v-icon right dark>mdi-close-circle-outline</v-icon>
                     </v-btn>
@@ -222,7 +222,7 @@
                     </v-row>
                 </v-card-text>
                 <v-card-actions>
-                    <v-btn color="primary" @click="dialogAPI = false">
+                    <v-btn color="#000040" @click="dialogAPI = false">
                         OK
                     </v-btn>
                 </v-card-actions>

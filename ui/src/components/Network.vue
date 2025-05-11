@@ -17,7 +17,7 @@
                             hide-details></v-text-field>
                     </v-col>
                     <v-col cols="4" class="text-right">
-                        <v-btn color="success" @click="startCreate">
+                        <v-btn color="#004000" @click="startCreate">
                             Create
                             <span class="material-symbols-outlined">hub</span>
                         </v-btn>
@@ -142,19 +142,19 @@
                                 <table>
                                     <tr>
                                         <td colspan="2">
-                                            <v-switch v-model="selected.net.forceUpdate" color="success" inset
+                                            <v-switch v-model="selected.net.forceUpdate" color="#004000" inset
                                                 :label="selected.net.forceUpdate ? 'Force updates immediately' : 'Applies to new devices only'" />
                                         </td>
                                     </tr>
                                     <tr>
                                         <td colspan="2">
-                                            <v-switch v-model="selected.net.policies.userEndpoints" color="success" inset
+                                            <v-switch v-model="selected.net.policies.userEndpoints" color="#004000" inset
                                                 :label="selected.net.policies.userEndpoints ? 'Only Admins can create Endpoints' : 'Users can create Endpoints'" />
                                         </td>
                                     </tr>
                                     <tr>
                                         <td colspan="2">
-                                            <v-switch v-model="selected.net.policies.onlyEndpoints" color="success" inset
+                                            <v-switch v-model="selected.net.policies.onlyEndpoints" color="#004000" inset
                                                 :label="selected.net.policies.onlyEndpoints ? 'Clients can only see Endpoints' : 'Clients can see all devices'" />
                                         </td>
                                     </tr>
@@ -163,31 +163,31 @@
                                 <table width="100%">
                                     <tr>
                                         <td>
-                                            <v-switch v-model="selected.net.default.syncEndpoint" color="success" inset
+                                            <v-switch v-model="selected.net.default.syncEndpoint" color="#004000" inset
                                                 label="Sync Endpoint" />
                                         </td>
                                         <td>
-                                            <v-switch v-model="selected.net.default.hasSSH" color="success" inset
+                                            <v-switch v-model="selected.net.default.hasSSH" color="#004000" inset
                                                 label="SSH" />
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <v-switch v-model="selected.net.default.upnp" color="success" inset
+                                            <v-switch v-model="selected.net.default.upnp" color="#004000" inset
                                                 label="Enable UPnP" />
                                         </td>
                                         <td>
-                                            <v-switch v-model="selected.net.default.hasRDP" color="success" inset
+                                            <v-switch v-model="selected.net.default.hasRDP" color="#004000" inset
                                                 label="Remote Desktop" />
                                         </td>
                                     </tr>
                                     <tr>
                                         <td>
-                                            <v-switch v-model="selected.net.default.failsafe" color="success" inset
+                                            <v-switch v-model="selected.net.default.failsafe" color="#004000" inset
                                                 label="FailSafe" />
                                         </td>
                                         <td>
-                                            <v-switch v-model="selected.net.default.enableDns" color="success" inset
+                                            <v-switch v-model="selected.net.default.enableDns" color="#004000" inset
                                                 label="Enable Nettica DNS" />
                                         </td>
                                     </tr>
@@ -212,13 +212,13 @@
                             <v-container>
                                 <v-row>
                                     <v-col>
-                                        <v-btn color="success" @click="update(selected.net)">
+                                        <v-btn color="#004000" @click="update(selected.net)">
                                             Save
                                             <v-icon right dark>mdi-check-outline</v-icon>
                                         </v-btn>
                                     </v-col>
                                     <v-col>
-                                        <v-btn color="error" @click="remove(selected.net)">
+                                        <v-btn color="#400000" @click="remove(selected.net)">
                                             Delete
                                             <v-icon right dark>mdi-delete-outline</v-icon>
                                         </v-btn>
@@ -277,7 +277,7 @@
                                     label="MTU" hint="Leave at 0 for auto, 1350 for IPv6 or problems occur" />
                                 <v-text-field type="number" v-model="selected.vpn.current.persistentKeepalive"
                                     label="Persistent keepalive" hint="To disable, set to 0.  Recommended value 23 (seconds)" />
-                                <v-switch v-model="selected.vpn.enable" color="success" inset
+                                <v-switch v-model="selected.vpn.enable" color="#004000" inset
                                     :label="selected.vpn.enable ? 'Enabled' : 'Disabled'" :readonly="!inEdit" />
                                 <p class="text-caption">Created by {{ selected.vpn.createdBy }} at {{ selected.vpn.created |
                                     formatDate }}<br />
@@ -323,37 +323,37 @@
                                                 hint="Command to run before stopping VPN" />
                                             <v-textarea v-model="selected.vpn.current.postDown" label="PostDown Script"
                                                 hint="Command to run after stopping VPN" />
-                                            <v-switch v-model="selected.vpn.current.subnetRouting" color="success" inset
+                                            <v-switch v-model="selected.vpn.current.subnetRouting" color="#004000" inset
                                                 label="Enable subnet routing" />
                                             <v-divider></v-divider>
                                             <table width="100%">
                                                 <tr>
                                                     <td>
-                                                        <v-switch v-model="selected.vpn.current.syncEndpoint" color="success" inset
+                                                        <v-switch v-model="selected.vpn.current.syncEndpoint" color="#004000" inset
                                                             label="Sync Endpoint" />
                                                     </td>
                                                     <td>
-                                                        <v-switch v-model="selected.vpn.current.hasSSH" color="success" inset
+                                                        <v-switch v-model="selected.vpn.current.hasSSH" color="#004000" inset
                                                             label="SSH" />
                                                     </td>
                                                 </tr>
                                                 <tr>
                                                     <td>
-                                                        <v-switch v-model="selected.vpn.current.upnp" color="success" inset
+                                                        <v-switch v-model="selected.vpn.current.upnp" color="#004000" inset
                                                             label="Enable UPnP" />
                                                     </td>
                                                     <td>
-                                                        <v-switch v-model="selected.vpn.current.hasRDP" color="success" inset
+                                                        <v-switch v-model="selected.vpn.current.hasRDP" color="#004000" inset
                                                             label="Remote Desktop" />
                                                     </td>
                                                 </tr>
                                                 <tr>
                                                     <td>
-                                                        <v-switch v-model="selected.vpn.current.failsafe" color="success" inset
+                                                        <v-switch v-model="selected.vpn.current.failsafe" color="#004000" inset
                                                             label="FailSafe" />
                                                     </td>
                                                     <td>
-                                                        <v-switch v-model="selected.vpn.current.enableDns" color="success" inset
+                                                        <v-switch v-model="selected.vpn.current.enableDns" color="#004000" inset
                                                             label="Nettica DNS" />
                                                     </td>
                                                 </tr>
@@ -365,11 +365,11 @@
                         </v-expansion-panels>
                         <v-card>
                             <v-card-actions v-if="inEdit">
-                                <v-btn color="success" @click="updateVPN(selected.vpn)">
+                                <v-btn color="#004000" @click="updateVPN(selected.vpn)">
                                     Submit
                                     <v-icon right dark>mdi-check-outline</v-icon>
                                 </v-btn>
-                                <v-btn color="primary" @click="inEdit = false">
+                                <v-btn color="#000040" @click="inEdit = false">
                                     Cancel
                                     <v-icon right dark>mdi-close-circle-outline</v-icon>
                                 </v-btn>
@@ -378,19 +378,19 @@
                                 <v-container>
                                     <v-row>
                                         <v-col>
-                                            <v-btn color="success" @click="forceFileDownload(selected.vpn)">
+                                            <v-btn color="#004000" @click="forceFileDownload(selected.vpn)">
                                                 Download
                                                 <v-icon right dark>mdi-cloud-download-outline</v-icon>
                                             </v-btn>
                                         </v-col>
                                         <v-col>
-                                            <v-btn class="px-3" color="primary" @click="inEdit = true">
+                                            <v-btn class="px-3" color="#000040" @click="inEdit = true">
                                                 Edit
                                                 <v-icon right dark>mdi-pencil-outline</v-icon>
                                             </v-btn>
                                         </v-col>
                                         <v-col>
-                                            <v-btn class="px-3" color="error" @click="removeVPN(selected.vpn)">
+                                            <v-btn class="px-3" color="#400000" @click="removeVPN(selected.vpn)">
                                                 Delete
                                                 <v-icon right dark>mdi-delete-outline</v-icon>
                                             </v-btn>
@@ -446,15 +446,15 @@
                                         </v-chip>
                                     </template>
                                 </v-combobox>
-                                <v-switch v-model="net.policies.userEndpoints" color="success" inset
+                                <v-switch v-model="net.policies.userEndpoints" color="#004000" inset
                                     label="Users can create Endpoints" />
-                                <v-switch v-model="net.policies.onlyEndpoints" color="success" inset
+                                <v-switch v-model="net.policies.onlyEndpoints" color="#004000" inset
                                     label="Clients can only see Endpoints" />
-                                <v-switch v-model="net.default.upnp" color="success" inset
+                                <v-switch v-model="net.default.upnp" color="#004000" inset
                                     label="Enable UPnP where possible" />
-                                <v-switch v-model="net.default.failsafe" color="success" inset
+                                <v-switch v-model="net.default.failsafe" color="#004000" inset
                                     label="Enable FailSafe" />
-                                <v-switch v-model="net.default.enableDns" color="success" inset
+                                <v-switch v-model="net.default.enableDns" color="#004000" inset
                                     label="Enable Nettica DNS" />
                             </v-form>
                         </v-col>
@@ -462,11 +462,11 @@
                 </v-card-text>
                 <v-card-actions>
                     <v-spacer />
-                    <v-btn :disabled="!valid" color="success" @click="create(net)">
+                    <v-btn :disabled="!valid" color="#004000" @click="create(net)">
                         Submit
                         <v-icon right dark>mdi-check-outline</v-icon>
                     </v-btn>
-                    <v-btn color="primary" @click="dialogCreate = false">
+                    <v-btn color="#000040" @click="dialogCreate = false">
                         Cancel
                         <v-icon right dark>mdi-close-circle-outline</v-icon>
                     </v-btn>
@@ -488,9 +488,9 @@
                                     :rules="[rules.required, rules.host]" required />
                                 <v-text-field v-model="vpn.current.endpoint" label="Public endpoint for clients"
                                     :rules="[ rules.ipport ]" />
-                                <v-switch v-model="vpn.enable" color="success" inset
+                                <v-switch v-model="vpn.enable" color="#004000" inset
                                     :label="vpn.enable ? 'Enable VPN after creation' : 'Disable VPN after creation'" />
-                                <v-switch v-model="vpn.current.syncEndpoint" color="success" inset
+                                <v-switch v-model="vpn.current.syncEndpoint" color="#004000" inset
                                     :label="vpn.current.syncEndpoint ? 'Automatically sync endpoint using server' : 'Do not sync endpoint using server'"
                                     :disabled="!(vpn.current.endpoint && vpn.current.endpoint.length > 0)" />
                             </v-form>
@@ -499,11 +499,11 @@
                 </v-card-text>
                 <v-card-actions>
                     <v-spacer />
-                    <v-btn :disabled="!valid" color="success" @click="addDevice(device)">
+                    <v-btn :disabled="!valid" color="#004000" @click="addDevice(device)">
                         Submit
                         <v-icon right dark>mdi-check-outline</v-icon>
                     </v-btn>
-                    <v-btn color="primary" @click="dialogAddDevice = false">
+                    <v-btn color="#000040" @click="dialogAddDevice = false">
                         Cancel
                         <v-icon right dark>mdi-close-circle-outline</v-icon>
                     </v-btn>

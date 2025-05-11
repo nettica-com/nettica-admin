@@ -13,15 +13,15 @@
                 <v-text-field v-if="listView" v-model="search" append-icon="mdi-magnify" label="Search" single-line
                     hide-details></v-text-field>
                 <v-spacer></v-spacer>
-                <v-btn color="success" @click="startCreateService">
+                <v-btn color="#004000" @click="startCreateService">
                     Add Service
                     <v-icon right dark>mdi-weather-cloudy</v-icon>
                 </v-btn>&nbsp;
-                <v-btn color="success" @click="startCreateMultihop">
+                <v-btn color="#004000" @click="startCreateMultihop">
                     Add Multihop
                     <v-icon right dark>mdi-weather-cloudy</v-icon>
                 </v-btn>&nbsp;
-                <v-btn color="red" @click="startCreateWilderness">
+                <v-btn color="#400000" @click="startCreateWilderness">
                     In the Wild
                     <v-icon right dark>mdi-weather-cloudy</v-icon>
                 </v-btn>
@@ -116,11 +116,11 @@
                 </v-card-text>
                 <v-card-actions>
                     <v-spacer />
-                    <v-btn :disabled="!valid" color="success" @click="create()">
+                    <v-btn :disabled="!valid" color="#004000" @click="create()">
                         Submit
                         <v-icon right dark>mdi-check-outline</v-icon>
                     </v-btn>
-                    <v-btn color="primary" @click="dialogCreateService = false">
+                    <v-btn color="#000040" @click="dialogCreateService = false">
                         Cancel
                         <v-icon right dark>mdi-close-circle-outline</v-icon>
                     </v-btn>
@@ -150,11 +150,11 @@
                 </v-card-text>
                 <v-card-actions>
                     <v-spacer />
-                    <v-btn :disabled="!valid" color="success" @click="create_multihop()">
+                    <v-btn :disabled="!valid" color="#004000" @click="create_multihop()">
                         Submit
                         <v-icon right dark>mdi-check-outline</v-icon>
                     </v-btn>
-                    <v-btn color="primary" @click="dialogCreateMultihop = false">
+                    <v-btn color="#000040" @click="dialogCreateMultihop = false">
                         Cancel
                         <v-icon right dark>mdi-close-circle-outline</v-icon>
                     </v-btn>
@@ -173,9 +173,13 @@
                                 embedded in your network.  Click Login to log in and accept the consent, then navigate back to
                                 services to create your service.</p>
                                 <v-text-field v-model="wildServer" label="Server Name" :readonly="wild" required></v-text-field>
-                                <v-btn v-if="!wild" color="error" @click="loginWild">
+                                <v-btn v-if="!wild" color="#400000" @click="loginWild">
                                     Login
                                     <v-icon right dark>mdi-lock</v-icon>
+                                </v-btn>&nbsp;&nbsp;
+                                <v-btn v-if="!wild" color="#000040" @click="dialogWilderness = false">
+                                    Cancel
+                                    <v-icon right dark>mdi-close-circle-outline</v-icon>
                                 </v-btn>
                                 <div v-if="wild">
                                     <v-select return-object v-model="svcList.selected" :items="svcList.items" item-text="text"
@@ -194,11 +198,11 @@
                 </v-card-text>
                 <v-card-actions v-if="wild">
                     <v-spacer />
-                    <v-btn :disabled="!valid" color="success" @click="createWilderness">
+                    <v-btn :disabled="!valid" color="#004000" @click="createWilderness">
                         Submit
                         <v-icon right dark>mdi-check-outline</v-icon>
                     </v-btn>
-                    <v-btn color="primary" @click="dialogWilderness = false">
+                    <v-btn color="#000040" @click="dialogWilderness = false">
                         Cancel
                         <v-icon right dark>mdi-close-circle-outline</v-icon>
                     </v-btn>

@@ -47,3 +47,6 @@ __debug_bin*
 *.sw?
 ui/env.json.save
 .env.save
+
+basic/*
+

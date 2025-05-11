@@ -25,7 +25,7 @@
           <v-text-field label="Invitation From" v-model="account.createdBy" readonly></v-text-field>
           <v-text-field label="Network" v-model="account.netName" readonly></v-text-field>
           <v-text-field label="Status" v-model="account.status" readonly></v-text-field>
-          <v-btn color="primary" v-on:click="login">Login</v-btn>
+          <v-btn color="#000040" v-on:click="login">Login</v-btn>
         </v-col>
       </v-row>
       <v-card-actions>

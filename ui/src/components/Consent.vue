@@ -26,8 +26,8 @@
       </v-row>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="success" v-on:click="accept">Accept</v-btn>
-        <v-btn color="error" v-on:click="reject">Reject</v-btn>
+        <v-btn color="#004000" v-on:click="accept">Accept</v-btn>
+        <v-btn color="#400000" v-on:click="reject">Reject</v-btn>
         <v-spacer></v-spacer>
       </v-card-actions>
     </v-card>

@@ -17,7 +17,7 @@
                                     hide-details></v-text-field>
                             </v-col>
                             <v-col cols="4" class="text-right">
-                                <v-btn color="success" @click="startCreate">
+                                <v-btn color="#004000" @click="startCreate">
                                     Add Device
                                     <span class="material-symbols-outlined">devices</span>
                                 </v-btn>
@@ -117,7 +117,7 @@
                                             item-text="text" item-value="value" label="Platform of this device" single
                                             persistent-hint :readonly="!inEdit" />
                                         <v-text-field v-model="selected.device.version" label="Version" readonly />
-                                        <v-switch v-model="selected.device.enable" color="success" inset
+                                        <v-switch v-model="selected.device.enable" color="#004000" inset
                                             :label="selected.device.enable ? 'Enabled' : 'Disabled'" :readonly="!inEdit" />
                                         <v-text-field v-model="selected.device.checkInterval" type="number"
                                             label="Check interval" hint="In seconds" :readonly="!inEdit" />
@@ -143,11 +143,11 @@
                                     </v-col>
                                 </v-row>
                                 <v-card-actions v-if="inEdit">
-                                    <v-btn color="success" @click="updateDevice(selected)">
+                                    <v-btn color="#004000" @click="updateDevice(selected)">
                                         Submit
                                         <v-icon right dark>mdi-check-outline</v-icon>
                                     </v-btn>
-                                    <v-btn color="primary" @click="inEdit = false">
+                                    <v-btn color="#000040" @click="inEdit = false">
                                         Cancel
                                         <v-icon right dark>mdi-close-circle-outline</v-icon>
                                     </v-btn>
@@ -156,19 +156,19 @@
                                     <v-container>
                                         <v-row>
                                             <v-col>
-                                                <v-btn color="success" @click="copyDeviceConfig(selected.device)">
+                                                <v-btn color="#004000" @click="copyDeviceConfig(selected.device)">
                                                     Copy
                                                     <v-icon right dark>mdi-cloud-download-outline</v-icon>
                                                 </v-btn>
                                             </v-col>
                                             <v-col>
-                                                <v-btn class="px-3" color="primary" @click="inEdit = true">
+                                                <v-btn class="px-3" color="#000040" @click="inEdit = true">
                                                     Edit
                                                     <v-icon right dark>mdi-pencil-outline</v-icon>
                                                 </v-btn>
                                             </v-col>
                                             <v-col>
-                                                <v-btn class="px-3" color="error" @click="removeDevice(selected.device)">
+                                                <v-btn class="px-3" color="#400000" @click="removeDevice(selected.device)">
                                                     Delete
                                                     <v-icon right dark>mdi-delete-outline</v-icon>
                                                 </v-btn>
@@ -228,7 +228,7 @@
                                         <v-text-field type="number"
                                             v-model="selected.vpn.current.persistentKeepalive" label="Persistent keepalive"
                                             hint="To disable, set to 0.  Recommended value 23 (seconds)" />
-                                        <v-switch v-model="selected.vpn.enable" color="success" inset
+                                        <v-switch v-model="selected.vpn.enable" color="#004000" inset
                                         :label="selected.vpn.enable ? 'Enabled' : 'Disabled'" :readonly="!inEdit" />
                                         <p class="text-caption">Created by {{ selected.vpn.createdBy }} at {{ selected.vpn.created | formatDate }}<br/>
                                                             Last update by {{ selected.vpn.updatedBy }} at {{ selected.vpn.updated | formatDate }}</p>
@@ -268,37 +268,37 @@
                                                         hint="Only applies to linux servers" />
                                                     <v-textarea v-model="selected.vpn.current.postDown" label="PostDown Script"
                                                         hint="Only applies to linux servers" />
-                                                    <v-switch v-model="selected.vpn.current.subnetRouting" color="success" inset
+                                                    <v-switch v-model="selected.vpn.current.subnetRouting" color="#004000" inset
                                                         label="Enable subnet routing" />
                                                     <v-divider></v-divider>
                                                     <table width="100%">
                                                         <tr>
                                                             <td>
-                                                                <v-switch v-model="selected.vpn.current.syncEndpoint" color="success" inset
+                                                                <v-switch v-model="selected.vpn.current.syncEndpoint" color="#004000" inset
                                                                     label="Sync Endpoint" />
                                                             </td>
                                                             <td>
-                                                                <v-switch v-model="selected.vpn.current.hasSSH" color="success" inset
+                                                                <v-switch v-model="selected.vpn.current.hasSSH" color="#004000" inset
                                                                     label="SSH" />
                                                             </td>
                                                         </tr>
                                                         <tr>
                                                             <td>
-                                                                <v-switch v-model="selected.vpn.current.upnp" color="success" inset
+                                                                <v-switch v-model="selected.vpn.current.upnp" color="#004000" inset
                                                                     label="UPnP" />
                                                             </td>
                                                             <td>
-                                                                <v-switch v-model="selected.vpn.current.hasRDP" color="success" inset
+                                                                <v-switch v-model="selected.vpn.current.hasRDP" color="#004000" inset
                                                                     label="Remote Desktop" />
                                                             </td>
                                                         </tr>
                                                         <tr>
                                                             <td>
-                                                                <v-switch v-model="selected.vpn.current.failsafe" color="success" inset
+                                                                <v-switch v-model="selected.vpn.current.failsafe" color="#004000" inset
                                                                     label="FailSafe" />
                                                             </td>
                                                             <td>
-                                                                <v-switch v-model="selected.vpn.current.enableDns" color="success" inset
+                                                                <v-switch v-model="selected.vpn.current.enableDns" color="#004000" inset
                                                                     label="Nettica DNS" />
                                                             </td>
                                                         </tr>
@@ -312,11 +312,11 @@
 
                                 <v-card>
                                     <v-card-actions v-if="inEdit">
-                                        <v-btn color="success" @click="updateVPN(selected.vpn)">
+                                        <v-btn color="#004000" @click="updateVPN(selected.vpn)">
                                             Submit
                                             <v-icon right dark>mdi-check-outline</v-icon>
                                         </v-btn>
-                                        <v-btn color="primary" @click="inEdit = false">
+                                        <v-btn color="#000040" @click="inEdit = false">
                                             Cancel
                                             <v-icon right dark>mdi-close-circle-outline</v-icon>
                                         </v-btn>
@@ -325,19 +325,19 @@
                                         <v-container>
                                             <v-row>
                                                 <v-col>
-                                                    <v-btn color="success" @click="forceFileDownload(selected.vpn)">
+                                                    <v-btn color="#004000" @click="forceFileDownload(selected.vpn)">
                                                         Download
                                                         <v-icon right dark>mdi-cloud-download-outline</v-icon>
                                                     </v-btn>
                                                 </v-col>
                                                 <v-col>
-                                                    <v-btn class="px-3" color="primary" @click="inEdit = true">
+                                                    <v-btn class="px-3" color="#000040" @click="inEdit = true">
                                                         Edit
                                                         <v-icon right dark>mdi-pencil-outline</v-icon>
                                                     </v-btn>
                                                 </v-col>
                                                 <v-col>
-                                                    <v-btn class="px-3" color="error" @click="removeVPN(selected.vpn)">
+                                                    <v-btn class="px-3" color="#400000" @click="removeVPN(selected.vpn)">
                                                         Delete
                                                         <v-icon right dark>mdi-delete-outline</v-icon>
                                                     </v-btn>
@@ -399,7 +399,7 @@
                             <v-icon class="pr-1 pl-1" @click="remove(item)" title="Delete">
                                 mdi-trash-can-outline
                             </v-icon>
-                            <v-switch dark class="pr-1 pl-1" color="success" v-model="item.enable"
+                            <v-switch dark class="pr-1 pl-1" color="#004000" v-model="item.enable"
                                 v-on:change="updateEnable(item)" />
                         </v-row>
                     </template>
@@ -428,9 +428,9 @@
                                             item-text="text" item-value="value" label="Platform of this device" single
                                             persistent-hint />
                                         <v-text-field v-model="device.instanceid" label="AWS or Azure Instance ID" />
-                                        <v-switch v-model="device.enable" color="success" inset
+                                        <v-switch v-model="device.enable" color="#004000" inset
                                             :label="device.enable ? 'Enable device after creation' : 'Disable device after creation'" />
-                                        <v-switch v-model="use_ezcode" color="success" inset
+                                        <v-switch v-model="use_ezcode" color="#004000" inset
                                             :label="use_ezcode ? 'Use EZ-Code' : 'Do not use EZ-Code'" />
 
                                     </v-form>
@@ -439,11 +439,11 @@
                         </v-card-text>
                         <v-card-actions>
                             <v-spacer />
-                            <v-btn :disabled="!valid" color="success" @click="create(device)">
+                            <v-btn :disabled="!valid" color="#004000" @click="create(device)">
                                 Submit
                                 <v-icon right dark>mdi-check-outline</v-icon>
                             </v-btn>
-                            <v-btn color="primary" @click="dialogCreate = false">
+                            <v-btn color="#000040" @click="dialogCreate = false">
                                 Cancel
                                 <v-icon right dark>mdi-close-circle-outline</v-icon>
                             </v-btn>
@@ -465,7 +465,7 @@
                         </v-card-text>
                         <v-card-actions>
                             <v-spacer />
-                            <v-btn color="success" @click="dialogEZCode=false;">
+                            <v-btn color="#004000" @click="dialogEZCode=false;">
                                 OK
                                 <v-icon right dark>mdi-check-outline</v-icon>
                             </v-btn>
@@ -486,9 +486,9 @@
                                             :rules="[rules.required, rules.host]" required />
                                         <v-text-field v-model="vpn.current.endpoint" label="Public endpoint for clients"
                                             :rules="[ rules.ipport ]" />
-                                        <v-switch v-model="vpn.enable" color="success" inset
+                                        <v-switch v-model="vpn.enable" color="#004000" inset
                                             :label="vpn.enable ? 'Enable VPN after creation' : 'Disable VPN after creation'" />
-                                        <v-switch v-model="vpn.current.syncEndpoint" color="success" inset
+                                        <v-switch v-model="vpn.current.syncEndpoint" color="#004000" inset
                                             :label="vpn.current.syncEndpoint ? 'Automatically sync endpoint using server' : 'Do not sync endpoint using server'"
                                             :disabled="!(vpn.current.endpoint && vpn.current.endpoint.length > 0)" />
                                     </v-form>
@@ -497,11 +497,11 @@
                         </v-card-text>
                         <v-card-actions>
                             <v-spacer />
-                            <v-btn :disabled="!valid" color="success" @click="createVPN(vpn)">
+                            <v-btn :disabled="!valid" color="#004000" @click="createVPN(vpn)">
                                 Submit
                                 <v-icon right dark>mdi-check-outline</v-icon>
                             </v-btn>
-                            <v-btn color="primary" @click="dialogAddVPN = false">
+                            <v-btn color="#000040" @click="dialogAddVPN = false">
                                 Cancel
                                 <v-icon right dark>mdi-close-circle-outline</v-icon>
                             </v-btn>
@@ -533,11 +533,11 @@
                     </v-card>
                     <v-card>
                         <v-card-actions>
-                            <v-btn :disabled="!valid" color="success" @click="update(device)">
+                            <v-btn :disabled="!valid" color="#004000" @click="update(device)">
                                 Submit
                                 <v-icon right dark>mdi-check-outline</v-icon>
                             </v-btn>
-                            <v-btn color="primary" @click="dialogServiceHost = false">
+                            <v-btn color="#000040" @click="dialogServiceHost = false">
                                 Cancel
                                 <v-icon right dark>mdi-close-circle-outline</v-icon>
                             </v-btn>
@@ -611,7 +611,7 @@ export default {
             selected: { text: "None", value: "" },
             items: [
                 { text: "None", value: "" },
-                { text: "Errors", value: "error" },
+                { text: "Errors", value: "#400000" },
                 { text: "Info", value: "info" },
                 { text: "Debug", value: "debug" },
             ],
@@ -808,7 +808,7 @@ export default {
             for (let i = 0; i < this.devices.length; i++) {
                 var text = "None"
                 if (this.devices[i].logging != null) {
-                    if (this.devices[i].logging == "error") {
+                    if (this.devices[i].logging == "#400000") {
                         text = "Errors"
                     } else if (this.devices[i].logging == "info") {
                         text = "Info"
