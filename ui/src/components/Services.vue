@@ -256,6 +256,7 @@ export default {
                 { text: "OpenDNS DNS", value: [ "208.67.222.222", "208.67.220.222" ]},
                 { text: "OpenDNS Family Shield DNS", value: [ "208.67.222.123", "208.67.220.123" ]},
                 { text: "Quad9 DNS", value: [ "9.9.9.9" , "149.112.112.112" ] },
+                { text: "AdGuard DNS", value: [ "94.140.14.14", "94.140.15.15" ] },
             ]
         },
         svcList: {
