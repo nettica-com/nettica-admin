@@ -139,7 +139,8 @@
                                         <v-select return-object v-model="selected.logging" :items="logging.items"
                                             item-text="text" item-value="value" label="Logging" single persistent-hint :readonly="!inEdit" />
                                         <p class="text-caption">Created by {{ selected.device.createdBy }} at {{ selected.device.created | formatDate }}<br/>
-                                                            Last update by {{ selected.device.updatedBy }} at {{ selected.device.updated | formatDate }}</p>
+                                                            Last update by {{ selected.device.updatedBy }} at {{ selected.device.updated | formatDate }}<br/>
+                                                            <span v-if="selected.device.lastSeen">Last Seen on {{ selected.device.lastSeen | formatDate }}</span></p>
                                     </v-col>
                                 </v-row>
                                 <v-card-actions v-if="inEdit">

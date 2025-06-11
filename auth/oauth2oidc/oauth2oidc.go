@@ -2,11 +2,13 @@ package oauth2oidc
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -18,9 +20,6 @@ import (
 	"github.com/patrickmn/go-cache"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
-
-	//	"gopkg.in/auth0.v4"
-	"os"
 )
 
 // Oauth2idc in order to implement interface, struct is required
@@ -38,10 +37,11 @@ var (
 )
 
 type TokenResponse struct {
-	AccessToken string `json:"access_token"`
-	IdToken     string `json:"id_token"`
-	TokenType   string `json:"token_type"`
-	ExpiresIn   int    `json:"expires_in"` // in seconds
+	AccessToken  string `json:"access_token"`
+	IdToken      string `json:"id_token"`
+	TokenType    string `json:"token_type"`
+	ExpiresIn    int    `json:"expires_in"` // in seconds
+	RefreshToken string `json:"refresh_token"`
 }
 
 // CustomTransport is an HTTP transport that adds a custom User-Agent header
@@ -177,13 +177,36 @@ func (o *Oauth2idc) Exchange(auth model.Auth) (*oauth2.Token, error) {
 		}
 
 		oauth2Token := &oauth2.Token{
-			AccessToken: tokenResponse.AccessToken,
-			Expiry:      time.Now().Add(time.Duration(tokenResponse.ExpiresIn) * time.Second),
-			TokenType:   tokenResponse.TokenType,
+			AccessToken:  tokenResponse.AccessToken,
+			Expiry:       time.Now().Add(time.Duration(tokenResponse.ExpiresIn) * time.Second),
+			TokenType:    tokenResponse.TokenType,
+			RefreshToken: tokenResponse.RefreshToken,
 		}
 		oauth2Token = oauth2Token.WithExtra(map[string]interface{}{ // Add the ID token to the extra parameters
 			"id_token": auth.IdToken})
 
+		// Store refresh token if present
+		if tokenResponse.RefreshToken != "" {
+			// Parse ID token for sub/email
+			var claims map[string]interface{}
+			if auth.IdToken != "" {
+				idToken, err := oidcIDTokenVerifier[0].Verify(ctx, auth.IdToken)
+				if err == nil {
+					idToken.Claims(&claims)
+					sub := ""
+					email := ""
+					if v, ok := claims["sub"].(string); ok {
+						sub = v
+					}
+					if v, ok := claims["email"].(string); ok {
+						email = v
+					}
+					issuedAt := time.Now()
+					expiresAt := issuedAt.Add(time.Duration(tokenResponse.ExpiresIn) * time.Second)
+					_ = mongodb.StoreRefreshToken(tokenResponse.RefreshToken, sub, email, issuedAt, expiresAt)
+				}
+			}
+		}
 		return oauth2Token, nil
 
 	} else {
@@ -191,10 +214,31 @@ func (o *Oauth2idc) Exchange(auth model.Auth) (*oauth2.Token, error) {
 		if err != nil {
 			return nil, err
 		}
+		// Store refresh token if present
+		if oauth2Token.RefreshToken != "" {
+			idTokenRaw, _ := oauth2Token.Extra("id_token").(string)
+			var claims map[string]interface{}
+			if idTokenRaw != "" {
+				idToken, err := oidcIDTokenVerifier[0].Verify(ctx, idTokenRaw)
+				if err == nil {
+					idToken.Claims(&claims)
+					sub := ""
+					email := ""
+					if v, ok := claims["sub"].(string); ok {
+						sub = v
+					}
+					if v, ok := claims["email"].(string); ok {
+						email = v
+					}
+					issuedAt := time.Now()
+					expiresAt := oauth2Token.Expiry
+					_ = mongodb.StoreRefreshToken(oauth2Token.RefreshToken, sub, email, issuedAt, expiresAt)
+				}
+			}
+		}
 		return oauth2Token, nil
 	}
 
-	return nil, nil
 }
 func (o *Oauth2idc) Exchange2(code string) (*oauth2.Token, error) {
 
@@ -248,43 +292,77 @@ func (o *Oauth2idc) Exchange2(code string) (*oauth2.Token, error) {
 		log.Info(err)
 		return nil, err
 	}
-
 	oauth2Token := &oauth2.Token{
-		AccessToken: tokenResponse.AccessToken,
-		Expiry:      time.Now().Add(time.Duration(tokenResponse.ExpiresIn) * time.Second),
-		TokenType:   tokenResponse.TokenType,
+		AccessToken:  tokenResponse.AccessToken,
+		Expiry:       time.Now().Add(time.Duration(tokenResponse.ExpiresIn) * time.Second),
+		TokenType:    tokenResponse.TokenType,
+		RefreshToken: tokenResponse.RefreshToken,
 	}
 	oauth2Token = oauth2Token.WithExtra(map[string]interface{}{ // Add the ID token to the extra parameters
 		"id_token": tokenResponse.IdToken})
 
-	//	oauth2Token, err := publicConfig.Exchange(context.TODO(), code)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-
+	// Store refresh token if present
+	if tokenResponse.RefreshToken != "" {
+		var claims map[string]interface{}
+		if tokenResponse.IdToken != "" {
+			idToken, err := oidcIDTokenVerifier[0].Verify(ctx, tokenResponse.IdToken)
+			if err == nil {
+				idToken.Claims(&claims)
+				sub := ""
+				email := ""
+				if v, ok := claims["sub"].(string); ok {
+					sub = v
+				}
+				if v, ok := claims["email"].(string); ok {
+					email = v
+				}
+				issuedAt := time.Now()
+				expiresAt := issuedAt.Add(time.Duration(tokenResponse.ExpiresIn) * time.Second)
+				_ = mongodb.StoreRefreshToken(tokenResponse.RefreshToken, sub, email, issuedAt, expiresAt)
+			}
+		}
+	}
 	return oauth2Token, nil
 }
 
+// Improved Apple ID token verification: dynamically use the issuer from the token header
 func verifyAppleIDToken(ctx context.Context, tokenString string) (*oidc.IDToken, error) {
-	// Apple's OIDC discovery URL
-	provider, err := oidc.NewProvider(ctx, "https://appleid.apple.com")
+	appleClientID := os.Getenv("OAUTH2_APPLE_CLIENT_ID")
+	if appleClientID == "" {
+		appleClientID = "com.nettica.agent"
+	}
+
+	// Parse the JWT payload to get the issuer
+	segments := strings.Split(tokenString, ".")
+	if len(segments) < 2 {
+		return nil, fmt.Errorf("invalid token format")
+	}
+	payload, err := base64.RawURLEncoding.DecodeString(segments[1])
 	if err != nil {
-		return nil, fmt.Errorf("failed to get Apple OIDC provider: %v", err)
+		return nil, fmt.Errorf("failed to decode token payload: %v", err)
 	}
-
-	// Set up an ID Token verifier using the provider and your client ID
-	verifier := provider.Verifier(&oidc.Config{ClientID: "com.nettica.agent"})
-	if verifier == nil {
-		return nil, fmt.Errorf("failed to create verifier")
+	var claims struct {
+		Issuer string `json:"iss"`
 	}
-
-	// Verify and parse ID Token
+	err = json.Unmarshal(payload, &claims)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal token payload: %v", err)
+	}
+	issuer := claims.Issuer
+	if issuer != "https://appleid.apple.com" && issuer != "https://account.apple.com" {
+		return nil, fmt.Errorf("unexpected Apple ID token issuer: %s", issuer)
+	}
+	// Use InsecureIssuerURLContext to skip strict issuer validation
+	insecureCtx := oidc.InsecureIssuerURLContext(ctx, issuer)
+	provider, err := oidc.NewProvider(insecureCtx, issuer)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get Apple OIDC provider for %s: %v", issuer, err)
+	}
+	verifier := provider.Verifier(&oidc.Config{ClientID: appleClientID})
 	idToken, err := verifier.Verify(ctx, tokenString)
 	if err != nil {
-		return nil, fmt.Errorf("ID Token verification failed: %v", err)
+		return nil, fmt.Errorf("apple ID token verification failed for issuer %s: %v", issuer, err)
 	}
-
-	// Successfully verified ID Token
 	return idToken, nil
 }
 
@@ -314,15 +392,16 @@ func (o *Oauth2idc) UserInfo(oauth2Token *oauth2.Token) (*model.User, error) {
 		idToken, err = verifyAppleIDToken(ctx, rawIDToken)
 		if err == nil {
 			verified = true
-		}
 
-		// get the user info from the id token
-		idToken.Claims(&claims)
-		userInfo = &oidc.UserInfo{
-			Subject: "apple|" + idToken.Subject,
-			Email:   claims["email"].(string),
+			// get the user info from the id token
+			idToken.Claims(&claims)
+			userInfo = &oidc.UserInfo{
+				Subject: "apple|" + idToken.Subject,
+				Email:   claims["email"].(string),
+			}
+			// add the claims to the user info
+
 		}
-		// add the claims to the user info
 	}
 
 	if !verified || err != nil {

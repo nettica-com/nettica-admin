@@ -7,7 +7,7 @@ toolchain go1.23.4
 require (
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.2.2
 	github.com/auth0/go-auth0 v1.17.0
-	github.com/coreos/go-oidc/v3 v3.11.0
+	github.com/coreos/go-oidc/v3 v3.14.1
 	github.com/danielkov/gin-helmet v0.0.0-20171108135313-1387e224435e
 	github.com/gin-contrib/cors v1.7.2
 	github.com/gin-contrib/static v1.1.2
@@ -22,7 +22,7 @@ require (
 	github.com/swaggo/gin-swagger v1.6.0
 	github.com/swaggo/swag v1.16.3
 	go.mongodb.org/mongo-driver v1.16.1
-	golang.org/x/oauth2 v0.26.0
+	golang.org/x/oauth2 v0.30.0
 	golang.zx2c4.com/wireguard/wgctrl v0.0.0-20230429144221-925a1e7659e6
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 )

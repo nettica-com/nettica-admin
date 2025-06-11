@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	model "github.com/nettica-com/nettica-admin/model"
+	"github.com/nettica-com/nettica-admin/model"
 	log "github.com/sirupsen/logrus"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -724,8 +724,43 @@ func ReadAccountForUser(email string, accountid string) (*model.Account, error) 
 
 }
 
+func ReadTrialSubscriptions() ([]*model.Subscription, error) {
+
+	subscriptions := make([]*model.Subscription, 0)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+		return nil, err
+	}
+
+	collection := client.Database("nettica").Collection("subscriptions")
+
+	filter := bson.D{{Key: "sku", Value: "trial"}}
+
+	cursor, err := collection.Find(ctx, filter)
+
+	if err == nil {
+		defer cursor.Close(ctx)
+		for cursor.Next(ctx) {
+			var subscription *model.Subscription
+			err = cursor.Decode(&subscription)
+			if err == nil {
+				subscriptions = append(subscriptions, subscription)
+			}
+		}
+	}
+
+	return subscriptions, err
+
+}
+
 // ReadAllSubscriptions from MongoDB
-func ReadAllSubscriptions(accountid string) ([]*model.Subscription, error) {
+// isDeleted is now an optional parameter using variadic pattern
+func ReadAllSubscriptions(accountid string, isDeleted ...bool) ([]*model.Subscription, error) {
 
 	if !validate(accountid) {
 		return nil, errors.New("invalid id")
@@ -747,12 +782,16 @@ func ReadAllSubscriptions(accountid string) ([]*model.Subscription, error) {
 	filter := bson.D{}
 	if accountid != "" {
 		filter = bson.D{{Key: "accountid", Value: accountid}}
+		if len(isDeleted) > 0 {
+			filter = append(filter, bson.E{Key: "isDeleted", Value: isDeleted[0]})
+		} else {
+			filter = append(filter, bson.E{Key: "isDeleted", Value: bson.D{{Key: "$ne", Value: true}}})
+		}
 	}
 
 	cursor, err := collection.Find(ctx, filter)
 
 	if err == nil {
-
 		defer cursor.Close(ctx)
 		for cursor.Next(ctx) {
 			var subscription *model.Subscription
@@ -761,7 +800,6 @@ func ReadAllSubscriptions(accountid string) ([]*model.Subscription, error) {
 				subscriptions = append(subscriptions, subscription)
 			}
 		}
-
 	}
 
 	return subscriptions, err
@@ -790,7 +828,9 @@ func ReadAllServices(accountid string) ([]*model.Service, error) {
 
 	filter := bson.D{}
 	if accountid != "" {
-		filter = bson.D{{Key: "accountid", Value: accountid}}
+		filter = bson.D{
+			{Key: "accountid", Value: accountid},
+		}
 	}
 
 	cursor, err := collection.Find(ctx, filter)
@@ -986,6 +1026,85 @@ func GetPushers() ([]*model.Pusher, error) {
 	return pushers, err
 }
 
+// StoreRefreshToken stores a refresh token in the refresh_tokens collection
+func StoreRefreshToken(token, sub, email string, issuedAt, expiresAt time.Time) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+		return err
+	}
+	collection := client.Database("nettica").Collection("refresh_tokens")
+	doc := model.RefreshToken{
+		Token:     token,
+		Sub:       sub,
+		Email:     email,
+		IssuedAt:  issuedAt,
+		ExpiresAt: expiresAt,
+		Revoked:   false,
+	}
+	_, err = collection.InsertOne(ctx, doc)
+	return err
+}
+
+// GetRefreshToken retrieves a refresh token by token value
+func GetRefreshToken(token string) (*model.RefreshToken, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+		return nil, err
+	}
+	collection := client.Database("nettica").Collection("refresh_tokens")
+	var rt model.RefreshToken
+	err = collection.FindOne(ctx, bson.M{"token": token}).Decode(&rt)
+	if err != nil {
+		return nil, err
+	}
+	return &rt, nil
+}
+
+// DeleteRefreshToken removes a refresh token by token value
+func DeleteRefreshToken(token string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+		return err
+	}
+	collection := client.Database("nettica").Collection("refresh_tokens")
+	_, err = collection.DeleteOne(ctx, bson.M{"token": token})
+	return err
+}
+
+// ListRefreshTokensForUser lists all refresh tokens for a given sub
+func ListRefreshTokensForUser(sub string) ([]*model.RefreshToken, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+		return nil, err
+	}
+	collection := client.Database("nettica").Collection("refresh_tokens")
+	cursor, err := collection.Find(ctx, bson.M{"sub": sub})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+	tokens := make([]*model.RefreshToken, 0)
+	for cursor.Next(ctx) {
+		var rt model.RefreshToken
+		if err := cursor.Decode(&rt); err == nil {
+			tokens = append(tokens, &rt)
+		}
+	}
+	return tokens, nil
+}
+
 // Initialize the mongo db and create the indexes
 func Initialize() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -1098,6 +1217,14 @@ func Initialize() error {
 	if err != nil {
 		log.Error(err)
 	}
+	_, err = client.Database("nettica").Collection("subscriptions").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"sku": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+	_, err = client.Database("nettica").Collection("subscriptions").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"accountid": 1, "isDeleted": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
 	_, err = client.Database("nettica").Collection("subscriptions").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"email": 1}, Options: nil})
 	if err != nil {
 		log.Error(err)
@@ -1159,6 +1286,16 @@ func Initialize() error {
 		log.Error(err)
 	}
 	_, err = client.Database("nettica").Collection("push").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"hostname": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+
+	// refresh_tokens
+	_, err = client.Database("nettica").Collection("refresh_tokens").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"token": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+	_, err = client.Database("nettica").Collection("refresh_tokens").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"sub": 1}, Options: nil})
 	if err != nil {
 		log.Error(err)
 	}

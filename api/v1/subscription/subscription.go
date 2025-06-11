@@ -45,11 +45,162 @@ func ApplyRoutes(r *gin.RouterGroup) {
 		g.POST("/android", createSubscriptionAndroid)
 		g.POST("/android/webhook", handleAndroidWebhook)
 		g.GET("/offers/:id", getOffers)
+		g.POST("/trial/:id", createTrial)
 		g.GET("/:id", readSubscription)
 		g.PATCH("/:id", updateSubscription)
 		g.DELETE("/:id", deleteSubscription)
+		g.DELETE("/trials", deleteTrialSubscriptions)
 		g.GET("", readSubscriptions)
 	}
+}
+
+func deleteTrialSubscriptions(c *gin.Context) {
+
+	// get the basic auth credentials from the request and check them
+	// against the environment variables WC_USERNAME and WC_PASSWORD
+	username, password, ok := c.Request.BasicAuth()
+	if !ok || username != os.Getenv("WC_USERNAME") || password != os.Getenv("WC_PASSWORD") {
+		log.Error("deleteTrialSubscriptions: invalid basic auth credentials")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	subscriptions, err := core.ReadAllTrials()
+	if err != nil {
+		log.Error(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "deleteTrialSubscriptions: Internal server error"})
+		return
+	}
+
+	now := time.Now().UTC()
+	for _, subscription := range subscriptions {
+		if subscription.Status == "active" && subscription.Expires.Before(now) && !subscription.Expires.Before(*subscription.Issued) {
+			log.Infof("suspending trial subscription %v", subscription)
+			core.ExpireSubscription(subscription.Id)
+		}
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "OK", "message": "Service for expired trial subscriptions suspended"})
+}
+
+func createTrial(c *gin.Context) {
+	id := c.Param("id")
+
+	discounts, err := core.GetOffers(id)
+	if err != nil {
+		log.Error(err)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Offers not found"})
+		return
+	}
+
+	if len(discounts.Offers) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "No offers available"})
+		return
+	}
+
+	// get user from token and add to client infos
+	oauth2Token := c.MustGet("oauth2Token").(*oauth2.Token)
+	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
+	user, err := oauth2Client.UserInfo(oauth2Token)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"oauth2Token": oauth2Token,
+			"err":         err,
+		}).Error("failed to get user with oauth token")
+		c.AbortWithStatus(http.StatusForbidden)
+		return
+	}
+
+	// update the limits
+
+	limits, err := core.ReadLimits(id)
+	if err != nil {
+		log.Error(err)
+		limits_id, err := util.GenerateRandomString(8)
+		if err != nil {
+			log.Error(err)
+		}
+		limits_id = "limits-" + limits_id
+
+		limits = &model.Limits{
+			Id:          limits_id,
+			AccountID:   id,
+			MaxDevices:  5,
+			MaxNetworks: 2,
+			MaxMembers:  2,
+			MaxServices: 0,
+			Tolerance:   core.GetDefaultTolerance(),
+			CreatedBy:   user.Email,
+			UpdatedBy:   user.Email,
+			Created:     time.Now(),
+			Updated:     time.Now(),
+		}
+	}
+
+	limits.MaxDevices += 1
+	limits.MaxNetworks += 1
+	limits.MaxServices += 1
+
+	errs := limits.IsValid()
+	if len(errs) != 0 {
+		for _, err := range errs {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("limits validation error")
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Limits validation error"})
+		return
+	}
+
+	// save limits to mongodb
+	mongo.Serialize(limits.Id, "id", "limits", limits)
+
+	// create a new subscription
+	var subscription model.Subscription
+	subscription.Id, _ = util.RandomString(8)
+	subscription.Id = "trial-" + subscription.Id
+	subscription.AccountID = user.AccountID
+	subscription.Email = user.Email
+	subscription.Name = "Trial"
+	subscription.Description = "Free 7 Day Trial"
+	now := time.Now()
+	expires := now.AddDate(0, 0, 7)
+	subscription.Issued = &now
+	subscription.LastUpdated = &now
+	subscription.CreatedBy = user.Email
+	subscription.Expires = &expires
+	subscription.UpdatedBy = user.Email
+	subscription.Credits = 1
+	subscription.Sku = "trial"
+	subscription.Status = "active"
+	subscription.AutoRenew = false
+	subscription.Receipt, _ = util.RandomString(16) // generate a random receipt for trial subscriptions
+	subscription.Receipt = "trial-" + subscription.Receipt
+	isDeleted := false
+	subscription.IsDeleted = &isDeleted
+
+	errs = subscription.IsValid()
+	if len(errs) != 0 {
+		for _, err := range errs {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("subscription validation error")
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Subscription validation error"})
+		return
+	}
+
+	// save subscription to mongodb
+	mongo.Serialize(subscription.Id, "id", "subscriptions", subscription)
+
+	log.Infof("created trial subscription: %s for %s", subscription.Id, user.Email)
+
+	err = core.SubscriptionEmail(&subscription)
+	if err != nil {
+		log.Errorf("failed to send email: %v", err)
+	}
+
+	c.JSON(http.StatusOK, subscription)
+
 }
 
 func getOffers(c *gin.Context) {
@@ -303,6 +454,8 @@ func createSubscriptionAndroid(c *gin.Context) {
 
 	// construct a subscription object
 	lu := time.Now()
+	isDeleted := false
+
 	subscription := model.Subscription{
 		Id:          id,
 		AccountID:   account.Id,
@@ -318,6 +471,8 @@ func createSubscriptionAndroid(c *gin.Context) {
 		Status:      "active",
 		AutoRenew:   autoRenew,
 		Receipt:     receipt.Receipt,
+		IsDeleted:   &isDeleted,
+		CreatedBy:   receipt.Email,
 	}
 
 	errs = subscription.IsValid()
@@ -592,17 +747,15 @@ func handleAndroidWebhook(c *gin.Context) {
 			} else {
 				last := time.Now().UTC()
 				subscription.LastUpdated = &last
-				subscription.UpdatedBy = "google"
-				core.UpdateSubscription(subscription.Id, subscription)
 				log.Infof("subscription updated: %s %v", subscription.Id, subscription)
 				//				c.JSON(http.StatusOK, gin.H{"status": "updated"})
 				//				return
 			}
+			subscription.UpdatedBy = "google"
+			core.UpdateSubscription(subscription.Id, subscription)
 		}
 
 		if sub["subscriptionState"] != nil && sub["subscriptionState"].(string) == "SUBSCRIPTION_STATE_EXPIRED" {
-
-			subscription.Status = "expired"
 
 			core.ExpireSubscription(subscription.Id)
 
@@ -618,6 +771,7 @@ func handleAndroidWebhook(c *gin.Context) {
 
 			subscription.Status = "cancelled"
 			core.UpdateSubscription(subscription.Id, subscription)
+			core.ExpireSubscription(subscription.Id)
 			core.SubscriptionEmail(subscription)
 
 			log.Infof("subscription cancelled: %s", subscription.Id)
@@ -816,13 +970,14 @@ func handleAppleWebhook(c *gin.Context) {
 			log.Infof("apple: subscription RENWAL: %s until %s", subscription.Id, expires)
 
 		case "CANCEL":
-			subscription.Status = "cancelled"
+			subscription.Status = "active"
 			core.UpdateSubscription(subscription.Id, subscription)
+
+			// this will only expire services if it is after the expires date
+			core.ExpireSubscription(subscription.Id)
 			log.Infof("apple: subscription CANCEL: %s", subscription.Id)
 
 		case "DID_NOT_RENEW":
-			subscription.Status = "expired"
-			core.UpdateSubscription(subscription.Id, subscription)
 			core.ExpireSubscription(subscription.Id)
 			log.Infof("apple: subscription DID_NOT_RENEW: %s at %s", subscription.Id, expires)
 		}
@@ -911,7 +1066,7 @@ func handleAppleDiscount(c *gin.Context) {
 }
 
 func fetchApplePublicKey(kid string) (*rsa.PublicKey, error) {
-	resp, err := http.Get("https://appleid.apple.com/auth/keys")
+	resp, err := http.Get("https://account.apple.com/auth/keys")
 	if err != nil {
 		return nil, err
 	}
@@ -1280,6 +1435,7 @@ func createSubscriptionApple(c *gin.Context) {
 
 	// construct a subscription object
 	lu := time.Now()
+	isDeleted := false
 	subscription := model.Subscription{
 		Id:          id,
 		AccountID:   account.Id,
@@ -1295,6 +1451,7 @@ func createSubscriptionApple(c *gin.Context) {
 		Status:      "active",
 		AutoRenew:   autoRenew,
 		Receipt:     receipt.Receipt,
+		IsDeleted:   &isDeleted,
 	}
 
 	errs = subscription.IsValid()
@@ -1316,7 +1473,6 @@ func createSubscriptionApple(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, subscription)
-	return
 
 }
 
@@ -1751,6 +1907,7 @@ func createHelioSubscription(c *gin.Context) {
 		issued := time.Now()
 		lu := time.Now()
 		expires := endedAtUnix
+		isDeleted := false
 		subscription := model.Subscription{
 			Id:          id,
 			AccountID:   account.Id,
@@ -1763,6 +1920,9 @@ func createHelioSubscription(c *gin.Context) {
 			Credits:     credits,
 			Sku:         sku,
 			Status:      status,
+			IsDeleted:   &isDeleted,
+			UpdatedBy:   email,
+			CreatedBy:   email,
 		}
 
 		errs = subscription.IsValid()
@@ -2081,6 +2241,7 @@ func createSubscription(c *gin.Context) {
 		// construct a subscription object
 		issued := time.Now()
 		lu := time.Now()
+		isDeleted := false
 		subscription := model.Subscription{
 			Id:          id,
 			AccountID:   account.Id,
@@ -2094,6 +2255,9 @@ func createSubscription(c *gin.Context) {
 			Sku:         sku,
 			Status:      status,
 			Receipt:     receipt,
+			IsDeleted:   &isDeleted,
+			UpdatedBy:   email,
+			CreatedBy:   email,
 		}
 
 		errs = subscription.IsValid()
