@@ -27,6 +27,16 @@ const routes = [
     }
   },
   {
+    path: '/agent',
+    name: 'agent',
+    component: function () {
+      return import(/* webpackChunkName: "Agent" */ '../views/Agent.vue')
+    },
+    meta: {
+      requiresAuth: false
+    }
+  },
+  {
     path: '/devices',
     name: 'devices',
     component: function () {

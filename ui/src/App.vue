@@ -63,6 +63,11 @@
 
 
     mounted() {
+      // Detect Dart user agent and close window if present
+      if (navigator.userAgent && navigator.userAgent.toLowerCase().includes('dart')) {
+        window.close();
+        return;
+      }
       if (this.$route && this.$route.query && this.$route.query.redirect_uri) {
         TokenService.saveRedirect(this.$route.query.redirect_uri)
         TokenService.destroyToken() // force a token exchange
