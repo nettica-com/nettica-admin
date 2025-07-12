@@ -222,15 +222,18 @@ func DeleteSubscription(id string) error {
 }
 
 // ReadSubscriptions all clients
-func ReadSubscriptions(email string) ([]*model.Subscription, error) {
+func ReadSubscriptions(email string, isDeleted ...bool) ([]*model.Subscription, error) {
 
 	accounts, err := mongo.ReadAllAccounts(email)
+	if err != nil {
+		return nil, err
+	}
 
 	results := make([]*model.Subscription, 0)
 
 	for _, account := range accounts {
 		if account.Status == "Active" {
-			subscriptions, err := mongo.ReadAllSubscriptions(account.Parent)
+			subscriptions, err := mongo.ReadAllSubscriptions(account.Parent, isDeleted...)
 			if err == nil {
 				results = append(results, subscriptions...)
 			}

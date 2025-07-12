@@ -51,6 +51,7 @@ func ApplyRoutes(r *gin.RouterGroup) {
 		g.DELETE("/:id", deleteSubscription)
 		g.DELETE("/trials", deleteTrialSubscriptions)
 		g.GET("", readSubscriptions)
+		g.GET("/deleted", readSubscriptionsDeleted)
 	}
 }
 
@@ -2494,6 +2495,42 @@ func readSubscriptions(c *gin.Context) {
 	}
 
 	subscriptions, err := core.ReadSubscriptions(user.Email)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to list clients")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, subscriptions)
+}
+
+func readSubscriptionsDeleted(c *gin.Context) {
+	value, exists := c.Get("oauth2Token")
+	if !exists {
+		c.AbortWithStatus(401)
+		return
+	}
+	oauth2Token := value.(*oauth2.Token)
+	oauth2Client := c.MustGet("oauth2Client").(model.Authentication)
+	user, err := oauth2Client.UserInfo(oauth2Token)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"oauth2Token": oauth2Token,
+			"err":         err,
+		}).Error("failed to get user with oauth token")
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	if user.Email == "" && os.Getenv("OAUTH2_PROVIDER_NAME") != "fake" {
+
+		log.Error("security alert: Email empty on authenticated token")
+		c.JSON(http.StatusForbidden, gin.H{"error": "This error has been logged"})
+	}
+
+	subscriptions, err := core.ReadSubscriptions(user.Email, true)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
