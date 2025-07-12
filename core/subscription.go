@@ -283,7 +283,7 @@ func GetOffers(account string) (*model.DiscountOffers, error) {
 
 	if len(subscriptions) == 0 {
 		// if there are no subscriptions, we offer the trial discount
-		offers.Offers = []string{"trial"}
+		offers.Offers = []string{""}
 		return &offers, nil
 	}
 
