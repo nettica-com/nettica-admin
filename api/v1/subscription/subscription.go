@@ -1177,12 +1177,6 @@ func createSubscriptionApple(c *gin.Context) {
 	}
 	log.Infof("apple: %s", receipt)
 
-	_, err = core.GetSubscriptionByReceipt(receipt.Receipt)
-	if err == nil {
-		c.JSON(http.StatusConflict, gin.H{"error": "Subscription already exists"})
-		return
-	}
-
 	// Validate the receipt with Apple
 	result, err := validateReceiptApple2(receipt.Receipt)
 	if err != nil || result == nil {
@@ -1197,7 +1191,11 @@ func createSubscriptionApple(c *gin.Context) {
 	if result["originalTransactionId"] != nil {
 		originalTransactionId = result["originalTransactionId"].(string)
 	} else {
-		originalTransactionId = ""
+		if result["transactionId"] != nil {
+			originalTransactionId = result["transactionId"].(string)
+		} else {
+			originalTransactionId = receipt.Receipt
+		}
 	}
 	log.Infof("originalTransactionId: %s", originalTransactionId)
 	if originalTransactionId != "" {
@@ -1206,6 +1204,12 @@ func createSubscriptionApple(c *gin.Context) {
 			log.Error(err)
 			receipt.Receipt = originalTransactionId
 		} else {
+			isDeleted := false
+			subscription.IsDeleted = &isDeleted
+			subscription.AccountID = receipt.AccountID
+			subscription.Email = receipt.Email
+			subscription.Name = receipt.Name
+			subscription.Sku = receipt.ProductID
 			last := time.Now().UTC()
 			productId := result["productId"].(string)
 			var expires time.Time
@@ -1223,6 +1227,7 @@ func createSubscriptionApple(c *gin.Context) {
 			if transactionReason == "RENEWAL" {
 				subscription.Expires = &expires
 				subscription.LastUpdated = &last
+				subscription.UpdatedBy = "apple"
 				if subscription.Status == "cancelled" || subscription.Status == "expired" {
 					subscription.Status = "active"
 					core.SubscriptionEmail(subscription)
@@ -1244,6 +1249,7 @@ func createSubscriptionApple(c *gin.Context) {
 				log.Infof("createSubscriptionApple: transactionReason: %s", transactionReason)
 				subscription.Expires = &expires
 				subscription.LastUpdated = &last
+				subscription.UpdatedBy = "apple"
 				core.UpdateSubscription(subscription.Id, subscription)
 				core.SubscriptionEmail(subscription)
 
@@ -1254,8 +1260,6 @@ func createSubscriptionApple(c *gin.Context) {
 		}
 	}
 
-	customer_name := receipt.Name
-
 	credits := 0
 	name := ""
 	description := ""
@@ -1265,7 +1269,12 @@ func createSubscriptionApple(c *gin.Context) {
 	relays := 0
 	autoRenew := false
 	issued := time.Now()
-	expires := time.Now().AddDate(0, 2, 0)
+	expires := time.Now().AddDate(0, 1, 0)
+
+	if result["expiresDate"] != nil {
+		expiresDate := result["expiresDate"].(float64)
+		expires = time.Unix(int64(expiresDate)/1000, 0)
+	}
 
 	switch receipt.ProductID {
 	case "basic_monthly":
@@ -1344,7 +1353,7 @@ func createSubscriptionApple(c *gin.Context) {
 		//  If there's no error and no account, create one.
 		if len(accounts) == 0 {
 			var account model.Account
-			account.Name = customer_name
+			account.Name = "Me"
 			account.AccountName = "Company"
 			account.Email = receipt.Email
 			account.Role = "Owner"
