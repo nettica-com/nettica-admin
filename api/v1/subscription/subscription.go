@@ -1198,65 +1198,67 @@ func createSubscriptionApple(c *gin.Context) {
 		}
 	}
 	log.Infof("originalTransactionId: %s", originalTransactionId)
-	if originalTransactionId != "" {
-		subscription, err := core.GetSubscriptionByReceipt(originalTransactionId)
-		if err != nil {
-			log.Error(err)
-			receipt.Receipt = originalTransactionId
-		} else {
-			isDeleted := false
-			subscription.IsDeleted = &isDeleted
-			subscription.AccountID = receipt.AccountID
-			subscription.Email = receipt.Email
-			subscription.Name = receipt.Name
-			subscription.Sku = receipt.ProductID
-			last := time.Now().UTC()
-			productId := result["productId"].(string)
-			var expires time.Time
-			if productId == "24_hours_flex" || productId == "10_day_flex" {
-				expires = time.Now().Add(24 * time.Hour)
-				if productId == "10_day_flex" {
-					expires = time.Now().AddDate(0, 0, 10)
-				}
-			} else {
-				expiresDate := result["expiresDate"].(float64)
-				expires = time.Unix(int64(expiresDate)/1000, 0)
+	subscription, err := core.GetSubscriptionByReceipt(originalTransactionId)
+	if err != nil {
+		log.Error(err)
+		receipt.Receipt = originalTransactionId
+	}
+	if subscription != nil {
+		isDeleted := false
+		subscription.IsDeleted = &isDeleted
+		subscription.AccountID = receipt.AccountID
+		subscription.Email = receipt.Email
+		subscription.Name = receipt.Name
+		subscription.Sku = receipt.ProductID
+		last := time.Now().UTC()
+		productId := result["productId"].(string)
+		var expires time.Time
+		if productId == "24_hours_flex" || productId == "10_day_flex" {
+			isDeleted = true
+			expires = time.Now().Add(24 * time.Hour)
+			if productId == "10_day_flex" {
+				expires = time.Now().AddDate(0, 0, 10)
 			}
-			log.Infof("expires: %s", expires)
-			transactionReason := result["transactionReason"].(string)
-			if transactionReason == "RENEWAL" {
-				subscription.Expires = &expires
-				subscription.LastUpdated = &last
-				subscription.UpdatedBy = "apple"
-				if subscription.Status == "cancelled" || subscription.Status == "expired" {
-					subscription.Status = "active"
-					core.SubscriptionEmail(subscription)
-					core.UpdateSubscription(subscription.Id, subscription)
-					core.RenewSubscription(subscription.Id)
-					log.Infof("subscription renewed: %s until %s", subscription.Id, expires)
-					c.JSON(http.StatusOK, subscription)
-					return
-				} else {
-					core.UpdateSubscription(subscription.Id, subscription)
-					core.SubscriptionEmail(subscription)
-
-					log.Infof("subscription updated: %s %v", subscription.Id, subscription)
-					c.JSON(http.StatusOK, subscription)
-					return
-				}
-
-			} else {
-				log.Infof("createSubscriptionApple: transactionReason: %s", transactionReason)
-				subscription.Expires = &expires
-				subscription.LastUpdated = &last
-				subscription.UpdatedBy = "apple"
-				core.UpdateSubscription(subscription.Id, subscription)
+		} else {
+			expiresDate := result["expiresDate"].(float64)
+			expires = time.Unix(int64(expiresDate)/1000, 0)
+		}
+		log.Infof("expires: %s", expires)
+		transactionReason := result["transactionReason"].(string)
+		if transactionReason == "RENEWAL" {
+			subscription.Expires = &expires
+			subscription.LastUpdated = &last
+			subscription.UpdatedBy = "apple"
+			if subscription.Status == "cancelled" || subscription.Status == "expired" {
+				subscription.Status = "active"
 				core.SubscriptionEmail(subscription)
-
-				log.Infof("subscription updated: %s %v", subscription.Id, subscription)
+				core.UpdateSubscription(subscription.Id, subscription)
+				core.RenewSubscription(subscription.Id)
+				log.Infof("subscription renewed: %s until %s", subscription.Id, expires)
 				c.JSON(http.StatusOK, subscription)
 				return
+			} else {
+				// we're going to let it fall through here and update the subscription
+				// (upgrade/downgrade/etc)
+				//core.UpdateSubscription(subscription.Id, subscription)
+				//core.SubscriptionEmail(subscription)
+
+				//log.Infof("subscription updated: %s %v", subscription.Id, subscription)
+				//c.JSON(http.StatusOK, subscription)
+				return
 			}
+
+		} else {
+			log.Infof("createSubscriptionApple: transactionReason: %s", transactionReason)
+			subscription.Expires = &expires
+			subscription.LastUpdated = &last
+			subscription.UpdatedBy = "apple"
+			core.UpdateSubscription(subscription.Id, subscription)
+			core.SubscriptionEmail(subscription)
+
+			log.Infof("subscription updated: %s %v", subscription.Id, subscription)
+			c.JSON(http.StatusOK, subscription)
+			return
 		}
 	}
 
@@ -1446,7 +1448,8 @@ func createSubscriptionApple(c *gin.Context) {
 	// construct a subscription object
 	lu := time.Now()
 	isDeleted := false
-	subscription := model.Subscription{
+
+	sub := model.Subscription{
 		Id:          id,
 		AccountID:   account.Id,
 		Email:       receipt.Email,
@@ -1464,7 +1467,17 @@ func createSubscriptionApple(c *gin.Context) {
 		IsDeleted:   &isDeleted,
 	}
 
-	errs = subscription.IsValid()
+	if subscription != nil {
+		log.Infof("subscription found: %s", subscription.Id)
+		sub.Id = subscription.Id
+		sub.Issued = subscription.Issued
+
+	} else {
+		log.Infof("creating new subscription")
+
+	}
+
+	errs = sub.IsValid()
 	if len(errs) != 0 {
 		for _, err := range errs {
 			log.WithFields(log.Fields{
@@ -1475,14 +1488,16 @@ func createSubscriptionApple(c *gin.Context) {
 	}
 
 	// save subscription to mongodb
-	mongo.Serialize(subscription.Id, "id", "subscriptions", subscription)
+	mongo.Serialize(sub.Id, "id", "subscriptions", sub)
 
-	err = core.SubscriptionEmail(&subscription)
+	err = core.SubscriptionEmail(&sub)
 	if err != nil {
 		log.Errorf("failed to send email: %v", err)
 	}
 
-	c.JSON(http.StatusOK, subscription)
+	log.Infof("subscription created: %s %v", sub.Id, sub)
+
+	c.JSON(http.StatusOK, sub)
 
 }
 
