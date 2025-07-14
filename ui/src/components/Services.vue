@@ -792,10 +792,6 @@ export default {
 
 
         removeSubscription(item) {
-            if (item.status == "active") {
-                alert("You cannot delete an active subscription. Please cancel it first.")
-                return
-            }
             
             this.inDelete = true;
             if (confirm(`Do you really want to delete ${item.name} (not recommended)? This is an irreversible action.`)) {
