@@ -311,7 +311,7 @@ func updateVPN(c *gin.Context) {
 		// flush the cache for this vpn
 		core.FlushCache(v.DeviceID)
 
-		if core.Push.PushDevices[v.DeviceID] == "" && v.Enable && v.DeviceID == result.DeviceID {
+		if core.Push.PushDevices[v.DeviceID] != "" && v.Enable && v.DeviceID == result.DeviceID {
 			err := core.Push.SendPushNotification(core.Push.PushDevices[v.DeviceID], v.NetName+" enabled", "Connection to "+v.NetName+" has been established")
 			if err != nil {
 				log.WithFields(log.Fields{
