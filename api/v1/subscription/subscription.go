@@ -1246,10 +1246,10 @@ func createSubscriptionApple(c *gin.Context) {
 		var expires time.Time
 		if productId == "24_hours_flex" || productId == "10_day_flex" {
 			isDeleted = true
-			expires = time.Now().Add(24 * time.Hour)
-			if productId == "10_day_flex" {
-				expires = time.Now().AddDate(0, 0, 10)
-			}
+			subscription.Status = "expired"
+			core.UpdateSubscription(subscription.Id, subscription)
+			c.JSON(http.StatusForbidden, gin.H{"error": "Invalid subscription"})
+			return
 		} else {
 			expiresDate := result["expiresDate"].(float64)
 			expires = time.Unix(int64(expiresDate)/1000, 0)
