@@ -1276,7 +1276,7 @@ func createSubscriptionApple(c *gin.Context) {
 
 				//log.Infof("subscription updated: %s %v", subscription.Id, subscription)
 				//c.JSON(http.StatusOK, subscription)
-				return
+				//return
 			}
 
 		} else {
