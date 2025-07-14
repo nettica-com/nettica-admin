@@ -311,8 +311,15 @@ func updateVPN(c *gin.Context) {
 		// flush the cache for this vpn
 		core.FlushCache(v.DeviceID)
 
-		// send push notification if appropriate
-		if core.Push.PushDevices[v.DeviceID] != "" && v.Enable {
+		if core.Push.PushDevices[v.DeviceID] == "" && v.Enable && v.DeviceID == result.DeviceID {
+			err := core.Push.SendPushNotification(core.Push.PushDevices[v.DeviceID], v.NetName+" enabled", "Connection to "+v.NetName+" has been established")
+			if err != nil {
+				log.WithFields(log.Fields{
+					"err": err,
+				}).Error("failed to send push notification")
+			}
+		} else if core.Push.PushDevices[v.DeviceID] != "" && v.Enable {
+			// send push notification if appropriate
 			err := core.Push.SendPushNotification(core.Push.PushDevices[v.DeviceID], v.NetName+" updated", "The VPN configuration for "+v.NetName+" has been updated")
 			if err != nil {
 				log.WithFields(log.Fields{
@@ -330,7 +337,6 @@ func updateVPN(c *gin.Context) {
 				}).Error("failed to send push notification")
 			}
 		}
-
 	}
 
 	c.JSON(http.StatusOK, result)
