@@ -956,6 +956,37 @@ func handleAppleWebhook(c *gin.Context) {
 		switch transactionReason {
 		case "PURCHASE":
 			subscription.Expires = &expires
+			subscription.Sku = transaction["productId"].(string)
+			switch subscription.Sku {
+			case "basic_monthly":
+				subscription.Name = "Basic Service (monthly)"
+				subscription.Description = "A single tunnel or relay in any region"
+				subscription.Credits = 1
+			case "basic_yearly":
+				subscription.Name = "Basic Service (yearly)"
+				subscription.Description = "A single tunnel or relay in any region"
+				subscription.Credits = 1
+			case "premium_monthly":
+				subscription.Name = "Premium Service (monthly)"
+				subscription.Description = "Up to 5 tunnels or relays in any region"
+				subscription.Credits = 5
+			case "premium_yearly":
+				subscription.Name = "Premium Service (yearly)"
+				subscription.Description = "Up to 5 tunnels or relays in any region"
+				subscription.Credits = 5
+			case "professional_monthly":
+				subscription.Name = "Professional Service (monthly)"
+				subscription.Description = "Up to 10 tunnels or relays in any region"
+				subscription.Credits = 10
+			case "professional_yearly":
+				subscription.Name = "Professional Service (yearly)"
+				subscription.Description = "Up to 10 tunnels or relays in any region"
+				subscription.Credits = 10
+			default:
+				log.Errorf("unknown sku %s", subscription.Sku)
+			}
+			log.Infof("subscription sku apple: %s", subscription.Sku)
+			log.Infof("apple subscription: %v", subscription)
 			core.UpdateSubscription(subscription.Id, subscription)
 			log.Infof("apple: subscription PURCHASE updated: %s until %s", subscription.Id, expires)
 

@@ -30,6 +30,8 @@ type Subscription struct {
 	Sku         string     `json:"sku"                 bson:"sku"`
 	Credits     int        `json:"credits"             bson:"credits"`
 	AutoRenew   bool       `json:"autoRenew"           bson:"autoRenew"`
+	Original    string     `json:"original,omitempty"  bson:"original,omitempty"`
+	TxIds       string     `json:"txIds,omitempty"     bson:"txIds,omitempty"`
 	Receipt     string     `json:"receipt,omitempty"   bson:"receipt,omitempty"`
 	IsDeleted   *bool      `json:"isDeleted,omitempty" bson:"isDeleted,omitempty"`
 }
