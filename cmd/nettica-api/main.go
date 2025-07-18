@@ -23,6 +23,7 @@ import (
 	"github.com/patrickmn/go-cache"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
+	lumberjack "gopkg.in/natefinch/lumberjack.v2"
 )
 
 var (
@@ -30,9 +31,22 @@ var (
 )
 
 func init() {
+	sn := os.Getenv("SERVICE_NAME")
+	if sn == "" {
+		sn = "nettica-api"
+	}
+	filename := "/var/log/nettica/" + sn + ".log"
+	lumberjackWriter := &lumberjack.Logger{
+		Filename:   filename,
+		MaxSize:    50, // megabytes
+		MaxBackups: 10,
+		MaxAge:     30, // days
+		Compress:   true,
+	}
+
 	log.SetFormatter(&log.TextFormatter{})
-	log.SetOutput(os.Stderr)
 	log.SetLevel(log.DebugLevel)
+	log.SetOutput(io.MultiWriter(os.Stderr, lumberjackWriter))
 }
 
 //		@title			Nettica API
