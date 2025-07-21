@@ -8,20 +8,21 @@ import (
 
 // Network structure
 type Network struct {
-	Id          string     `json:"id"          bson:"id"`
-	AccountID   string     `json:"accountid"   bson:"accountid"`
-	NetName     string     `json:"netName"     bson:"netName"`
-	Description string     `json:"description" bson:"description"`
-	Tags        []string   `json:"tags"        bson:"tags"`
-	CreatedBy   string     `json:"createdBy"   bson:"createdBy"`
-	UpdatedBy   string     `json:"updatedBy"   bson:"updatedBy"`
-	Created     *time.Time `json:"created"     bson:"created"`
-	Updated     *time.Time `json:"updated"     bson:"updated"`
-	ForceUpdate bool       `json:"forceUpdate" bson:"forceUpdate"`
-	Critical    bool       `json:"critical"    bson:"critical"`
-	ReadOnly    *bool      `json:"readonly,omitempty"    bson:"readonly,omitempty"`
-	Policies    Policies   `json:"policies"    bson:"policies"`
-	Default     *Settings  `json:"default"     bson:"default"`
+	Id          string     `json:"id"                  bson:"id"`
+	AccountID   string     `json:"accountid"           bson:"accountid"`
+	NetName     string     `json:"netName"             bson:"netName"`
+	Description string     `json:"description"         bson:"description"`
+	Tags        []string   `json:"tags"                bson:"tags"`
+	CreatedBy   string     `json:"createdBy"           bson:"createdBy"`
+	UpdatedBy   string     `json:"updatedBy"           bson:"updatedBy"`
+	Created     *time.Time `json:"created"             bson:"created"`
+	Updated     *time.Time `json:"updated"             bson:"updated"`
+	ForceUpdate bool       `json:"forceUpdate"         bson:"forceUpdate"`
+	Critical    bool       `json:"critical"            bson:"critical"`
+	ReadOnly    *bool      `json:"readonly,omitempty"  bson:"readonly,omitempty"`
+	Policies    Policies   `json:"policies"            bson:"policies"`
+	Default     *Settings  `json:"default"             bson:"default"`
+	VPNs        []*VPN     `json:"vpns,omitempty"      bson:"vpns,omitempty"`
 }
 
 type Policies struct {
