@@ -142,6 +142,8 @@ func CreateVPN(vpn *model.VPN) (*model.VPN, error) {
 	vpn.Current.PostUp = Sanitize(vpn.Current.PostUp)
 	vpn.Current.PreDown = Sanitize(vpn.Current.PreDown)
 	vpn.Current.PostDown = Sanitize(vpn.Current.PostDown)
+	vpn.Current.IncludedApps = Sanitize(vpn.Current.IncludedApps)
+	vpn.Current.ExcludedApps = Sanitize(vpn.Current.ExcludedApps)
 
 	// check if vpn is valid
 	errs := vpn.IsValid()
@@ -171,22 +173,23 @@ func CreateVPN(vpn *model.VPN) (*model.VPN, error) {
 
 func Sanitize(s string) string {
 
-	// remove path and shell special characters
-	s = strings.Replace(s, "/", "", -1)
-	s = strings.Replace(s, "\\", "", -1)
-	s = strings.Replace(s, ":", "", -1)
-	s = strings.Replace(s, "*", "", -1)
-	s = strings.Replace(s, "?", "", -1)
-	s = strings.Replace(s, "\"", "", -1)
-	s = strings.Replace(s, "<", "", -1)
-	s = strings.Replace(s, ">", "", -1)
-	s = strings.Replace(s, "|", "", -1)
-	s = strings.Replace(s, "&", "", -1)
-	s = strings.Replace(s, "%", "", -1)
-	s = strings.Replace(s, "$", "", -1)
-	s = strings.Replace(s, "#", "", -1)
-	s = strings.Replace(s, "@", "", -1)
-	s = strings.Replace(s, "!", "", -1)
+	s = strings.NewReplacer(
+		"/", "", // remove slashes
+		"\\", "", // remove backslashes
+		":", "", // remove colons
+		"*", "", // remove asterisks
+		"?", "", // remove question marks
+		"\"", "", // remove double quotes
+		"<", "", // remove less than signs
+		">", "", // remove greater than signs
+		"|", "", // remove pipe characters
+		"&", "", // remove ampersands
+		"%", "", // remove percent signs
+		"$", "", // remove dollar signs
+		"#", "", // remove hash signs
+		"@", "", // remove at signs
+		"!", "", // remove exclamation marks
+	).Replace(s)
 
 	return s
 }
@@ -324,6 +327,8 @@ func UpdateVPN(Id string, vpn *model.VPN, flag bool) (*model.VPN, error) {
 	vpn.Current.PostUp = Sanitize(vpn.Current.PostUp)
 	vpn.Current.PreDown = Sanitize(vpn.Current.PreDown)
 	vpn.Current.PostDown = Sanitize(vpn.Current.PostDown)
+	vpn.Current.IncludedApps = Sanitize(vpn.Current.IncludedApps)
+	vpn.Current.ExcludedApps = Sanitize(vpn.Current.ExcludedApps)
 
 	// check if vpn is valid
 	errs := vpn.IsValid()
