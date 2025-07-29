@@ -193,6 +193,7 @@ func readVPN(c *gin.Context) {
 // @Router /vpn/{id}/enable [patch]
 func enableVPN(c *gin.Context) {
 	id := c.Param("id")
+	by := ""
 
 	account, v, err := core.AuthFromContext(c, id)
 	if err != nil {
@@ -200,6 +201,10 @@ func enableVPN(c *gin.Context) {
 			"err": err,
 		}).Error("failed to get account from context")
 		return
+	}
+
+	if account != nil && account.Email != "" {
+		by = account.Email
 	}
 
 	vpn := v.(*model.VPN)
@@ -221,6 +226,7 @@ func enableVPN(c *gin.Context) {
 
 		if device.ApiKey == apikey {
 			authorized = true
+			by = device.Name
 		}
 
 		if !authorized {
@@ -243,7 +249,7 @@ func enableVPN(c *gin.Context) {
 
 	now := time.Now()
 	vpn.Enable = true
-	vpn.UpdatedBy = account.Email
+	vpn.UpdatedBy = by
 	vpn.Updated = &now
 
 	vpn, err = core.UpdateVPN(id, vpn, true)
@@ -269,6 +275,7 @@ func enableVPN(c *gin.Context) {
 // @Router /vpn/{id}/disable [patch]
 func disableVPN(c *gin.Context) {
 	id := c.Param("id")
+	by := ""
 
 	account, v, err := core.AuthFromContext(c, id)
 	if err != nil {
@@ -276,6 +283,10 @@ func disableVPN(c *gin.Context) {
 			"err": err,
 		}).Error("failed to get account from context")
 		return
+	}
+
+	if account != nil && account.Email != "" {
+		by = account.Email
 	}
 
 	vpn := v.(*model.VPN)
@@ -297,6 +308,7 @@ func disableVPN(c *gin.Context) {
 
 		if device.ApiKey == apikey {
 			authorized = true
+			by = device.Name
 		}
 
 		if !authorized {
@@ -319,7 +331,7 @@ func disableVPN(c *gin.Context) {
 
 	now := time.Now()
 	vpn.Enable = false
-	vpn.UpdatedBy = account.Email
+	vpn.UpdatedBy = by
 	vpn.Updated = &now
 
 	vpn, err = core.UpdateVPN(id, vpn, true)
