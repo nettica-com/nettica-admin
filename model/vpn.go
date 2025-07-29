@@ -7,6 +7,15 @@ import (
 	"time"
 )
 
+// EnableDisableVPN structure
+// This is used to enable or disable a VPN without changing any other settings
+// It contains only the fields required for authentication and identification
+type EnableDisableVPN struct {
+	Id        string `json:"id"                        bson:"id"`
+	AccountID string `json:"accountid"                 bson:"accountid"`
+	DeviceID  string `json:"deviceid"                  bson:"deviceid"`
+}
+
 // VPN structure
 type VPN struct {
 	Id        string     `json:"id"                        bson:"id"`

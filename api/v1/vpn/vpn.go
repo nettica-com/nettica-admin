@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	core "github.com/nettica-com/nettica-admin/core"
@@ -20,6 +21,8 @@ func ApplyRoutes(r *gin.RouterGroup) {
 		g.POST("", createVPN)
 		g.GET("/:id", readVPN)
 		g.PATCH("/:id", updateVPN)
+		g.PATCH("/:id/enable", enableVPN)
+		g.PATCH("/:id/disable", disableVPN)
 		g.DELETE("/:id", deleteVPN)
 		g.GET("", readVPNs)
 		g.GET("/:id/config", configVPN)
@@ -173,6 +176,158 @@ func readVPN(c *gin.Context) {
 	if account != nil && account.Status == "Suspended" {
 		log.Errorf("readVPN: account %s is suspended", account.Email)
 		c.JSON(http.StatusForbidden, gin.H{"error": "Account is suspended"})
+		return
+	}
+
+	c.JSON(http.StatusOK, vpn)
+}
+
+// enableVPN enables a VPN
+// @Summary Enable a VPN
+// @Description Enable a VPN without changing any other settings
+// @Tags vpn
+// @Produce  json
+// @Param id path string true "VPN ID"
+// @Security apiKey
+// @Success 200 {object} model.VPN
+// @Router /vpn/{id}/enable [patch]
+func enableVPN(c *gin.Context) {
+	id := c.Param("id")
+
+	account, v, err := core.AuthFromContext(c, id)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to get account from context")
+		return
+	}
+
+	vpn := v.(*model.VPN)
+
+	authorized := false
+
+	apikey := c.Request.Header.Get("X-API-KEY")
+
+	if apikey != "" && strings.HasPrefix(apikey, "device-api-") {
+
+		device, err := core.ReadDevice(vpn.DeviceID)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("failed to read client config")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		if device.ApiKey == apikey {
+			authorized = true
+		}
+
+		if !authorized {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			return
+		}
+
+	}
+
+	if !authorized && account == nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	if account != nil && account.Status == "Suspended" {
+		log.Errorf("readVPN: account %s is suspended", account.Email)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Account is suspended"})
+		return
+	}
+
+	now := time.Now()
+	vpn.Enable = true
+	vpn.UpdatedBy = account.Email
+	vpn.Updated = &now
+
+	vpn, err = core.UpdateVPN(id, vpn, true)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to enable VPN")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, vpn)
+}
+
+// disableVPN disables a VPN
+// @Summary Disable a VPN
+// @Description Disable a VPN without changing any other settings
+// @Tags vpn
+// @Produce  json
+// @Param id path string true "VPN ID"
+// @Security apiKey
+// @Success 200 {object} model.VPN
+// @Router /vpn/{id}/disable [patch]
+func disableVPN(c *gin.Context) {
+	id := c.Param("id")
+
+	account, v, err := core.AuthFromContext(c, id)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to get account from context")
+		return
+	}
+
+	vpn := v.(*model.VPN)
+
+	authorized := false
+
+	apikey := c.Request.Header.Get("X-API-KEY")
+
+	if apikey != "" && strings.HasPrefix(apikey, "device-api-") {
+
+		device, err := core.ReadDevice(vpn.DeviceID)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("failed to read client config")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		if device.ApiKey == apikey {
+			authorized = true
+		}
+
+		if !authorized {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			return
+		}
+
+	}
+
+	if !authorized && account == nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	if account != nil && account.Status == "Suspended" {
+		log.Errorf("readVPN: account %s is suspended", account.Email)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Account is suspended"})
+		return
+	}
+
+	now := time.Now()
+	vpn.Enable = false
+	vpn.UpdatedBy = account.Email
+	vpn.Updated = &now
+
+	vpn, err = core.UpdateVPN(id, vpn, true)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to disable VPN")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
