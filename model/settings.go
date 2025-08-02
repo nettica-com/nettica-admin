@@ -28,12 +28,14 @@ type Settings struct {
 	HasRDP              bool     `json:"hasRDP,omitempty"          bson:"hasRDP,omitempty"`
 	ShowSystemApps      *bool    `json:"showSystemApps,omitempty"  bson:"showSystemApps,omitempty"`
 	EnableApps          *bool    `json:"enableApps,omitempty"      bson:"enableApps,omitempty"`
+	EnableOnDemand      *bool    `json:"enableOnDemand,omitempty"  bson:"enableOnDemand,omitempty"`
 	PreUp               string   `json:"preUp,omitempty"           bson:"preUp,omitempty"`
 	PostUp              string   `json:"postUp,omitempty"          bson:"postUp,omitempty"`
 	PreDown             string   `json:"preDown,omitempty"         bson:"preDown,omitempty"`
 	PostDown            string   `json:"postDown,omitempty"        bson:"postDown,omitempty"`
 	IncludedApps        string   `json:"includedApps,omitempty"    bson:"includedApps,omitempty"`
 	ExcludedApps        string   `json:"excludedApps,omitempty"    bson:"excludedApps,omitempty"`
+	OnDemand            string   `json:"onDemand,omitempty"        bson:"onDemand,omitempty"`
 }
 
 // IsValid check if model is valid

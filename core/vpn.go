@@ -79,6 +79,12 @@ func CreateVPN(vpn *model.VPN) (*model.VPN, error) {
 		vpn.Current.HasSSH = current.HasSSH
 	}
 
+	vpn.Current.IncludedApps = current.IncludedApps
+	vpn.Current.ExcludedApps = current.ExcludedApps
+	vpn.Current.OnDemand = current.OnDemand
+	vpn.Current.EnableApps = current.EnableApps
+	vpn.Current.EnableOnDemand = current.EnableOnDemand
+
 	// if the vpn data already has a public key and empty private key,
 	// we know the client has already generated a key pair
 	if vpn.Current.PublicKey != "" && vpn.Current.PrivateKey == "" {
@@ -144,6 +150,7 @@ func CreateVPN(vpn *model.VPN) (*model.VPN, error) {
 	vpn.Current.PostDown = Sanitize(vpn.Current.PostDown)
 	vpn.Current.IncludedApps = Sanitize(vpn.Current.IncludedApps)
 	vpn.Current.ExcludedApps = Sanitize(vpn.Current.ExcludedApps)
+	vpn.Current.OnDemand = Sanitize(vpn.Current.OnDemand)
 
 	// check if vpn is valid
 	errs := vpn.IsValid()
@@ -328,6 +335,7 @@ func UpdateVPN(Id string, vpn *model.VPN, flag bool) (*model.VPN, error) {
 	vpn.Current.PostDown = Sanitize(vpn.Current.PostDown)
 	vpn.Current.IncludedApps = Sanitize(vpn.Current.IncludedApps)
 	vpn.Current.ExcludedApps = Sanitize(vpn.Current.ExcludedApps)
+	vpn.Current.OnDemand = Sanitize(vpn.Current.OnDemand)
 
 	// check if vpn is valid
 	errs := vpn.IsValid()
