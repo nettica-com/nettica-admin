@@ -176,7 +176,6 @@ func Sanitize(s string) string {
 	s = strings.NewReplacer(
 		"/", "", // remove slashes
 		"\\", "", // remove backslashes
-		":", "", // remove colons
 		"*", "", // remove asterisks
 		"?", "", // remove question marks
 		"\"", "", // remove double quotes
