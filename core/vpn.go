@@ -174,6 +174,7 @@ func CreateVPN(vpn *model.VPN) (*model.VPN, error) {
 	}
 	vpn = v.(*model.VPN)
 
+	vpn.Complete = util.BoolPtr(true)
 	// data modified, dump new config
 	return vpn, nil
 }
@@ -241,6 +242,7 @@ func ReadVPN(id string) (*model.VPN, error) {
 		return nil, err
 	}
 	vpn := v.(*model.VPN)
+	vpn.Complete = util.BoolPtr(true)
 
 	return vpn, nil
 }
@@ -445,6 +447,7 @@ func ReadVPNsForUser(email string) ([]*model.VPN, error) {
 					}
 				}
 				if !found {
+					vpn.Complete = util.BoolPtr(true)
 					results = append(results, vpn)
 				}
 			}

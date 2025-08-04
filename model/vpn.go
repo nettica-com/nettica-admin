@@ -31,6 +31,7 @@ type VPN struct {
 	Enable    bool       `json:"enable"                    bson:"enable"`
 	ReadOnly  *bool      `json:"readonly,omitempty"        bson:"readonly,omitempty"`
 	Tags      []string   `json:"tags"                      bson:"tags"`
+	Complete  *bool      `json:"complete,omitempty"` // complete indicates this is a complete record
 	CreatedBy string     `json:"createdBy"                 bson:"createdBy"`
 	UpdatedBy string     `json:"updatedBy"                 bson:"updatedBy"`
 	Created   *time.Time `json:"created"                   bson:"created"`

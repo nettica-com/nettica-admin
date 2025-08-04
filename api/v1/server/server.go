@@ -16,7 +16,7 @@ func ApplyRoutes(r *gin.RouterGroup) {
 	g := r.Group("/server")
 	{
 		g.GET("", readServer)
-		g.PATCH("", updateServer)
+		// g.PATCH("", updateServer)
 		g.GET("/version", versionStr)
 	}
 }

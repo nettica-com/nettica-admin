@@ -32,6 +32,14 @@ func GetCleanAuthToken(c *gin.Context) string {
 	return token
 }
 
+// BoolPtr returns a pointer to the boolean value
+func BoolPtr(b bool) *bool {
+	if b {
+		return &b
+	}
+	return nil
+}
+
 func DuplicateEliminate(s []string) []string {
 
 	for i := 0; i < len(s); i++ {
