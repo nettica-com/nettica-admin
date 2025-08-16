@@ -217,6 +217,26 @@ func readAllAccounts(c *gin.Context) {
 		return
 	}
 
+	for i, a := range accounts {
+		if a.Email == account.Email || a.Id == account.Id {
+			if a.Status == "Suspended" {
+				accounts = append(accounts[:i], accounts[i+1:]...)
+				i--
+			}
+			continue
+		}
+		if a.Parent == account.Parent { // && (account.Role == "Admin" || account.Role == "Owner") {
+			// Admins for the account can see this account, but if there are multiple accounts, they won't see the other accounts
+			// for security, do not return the API key.  They can change it though.
+			a.ApiKey = ""
+			continue
+		}
+
+		// no more checks required, remove this account from the results
+		accounts = append(accounts[:i], accounts[i+1:]...)
+		i--
+	}
+
 	c.JSON(http.StatusOK, accounts)
 }
 
@@ -264,14 +284,14 @@ func readUsers(c *gin.Context) {
 		return
 	}
 
-	if role == "User" || role == "Guest" {
+	if role == "Guest" {
 		result := []*model.Account{}
 		result = append(result, acnt)
 		c.JSON(http.StatusOK, result)
 		return
 	}
 
-	if role == "Admin" || role == "Owner" {
+	if role == "Admin" || role == "Owner" || role == "User" {
 		accounts, err = core.ReadAllAccounts(id)
 		if err != nil {
 			log.WithFields(log.Fields{
@@ -280,6 +300,12 @@ func readUsers(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+	}
+
+	// readUsers is a list of all user for an account.  If they want their API key,
+	// they read by the account ID.
+	for _, a := range accounts {
+		a.ApiKey = ""
 	}
 
 	c.JSON(http.StatusOK, accounts)
@@ -335,9 +361,18 @@ func updateAccount(c *gin.Context) {
 		account.Role = "Owner"
 	}
 
+	if account.Id != account.Parent && account.Status == "Suspended" {
+		log.Infof("updateAccount: %s is suspended, cannot update account", account.Email)
+		c.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to update this account"})
+		return
+	}
+
 	// check if the account is authorized to update this account
 
 	if account.Role == "Admin" || account.Role == "Owner" {
+		if data.ApiKey == "" {
+			data.ApiKey = update.ApiKey
+		}
 		update = &data
 	} else if account.Id == id {
 		if update.NetName != data.NetName {
@@ -347,9 +382,11 @@ func updateAccount(c *gin.Context) {
 		update.Name = data.Name
 		update.Picture = data.Picture
 		update.Email = strings.ToLower(data.Email)
-		update.ApiKey = data.ApiKey
+		if data.ApiKey != "" {
+			update.ApiKey = data.ApiKey
+		}
 	} else {
-		c.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to update this account"})
+		c.JSON(http.StatusForbidden, gin.H{"error": "What do you think you're doing?"})
 		return
 	}
 
