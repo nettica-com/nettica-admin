@@ -1507,6 +1507,11 @@ func createSubscriptionApple(c *gin.Context) {
 		sub.Email = subscription.Email
 		sub.Issued = subscription.Issued
 		sub.Receipt = subscription.Receipt
+		sub.CreatedBy = receipt.Email
+		sub.UpdatedBy = subscription.UpdatedBy
+		sub.LastUpdated = subscription.LastUpdated
+		sub.Expires = subscription.Expires
+		sub.Status = subscription.Status
 
 	} else {
 		log.Infof("creating new subscription")
