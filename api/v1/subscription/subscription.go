@@ -291,9 +291,9 @@ func createSubscriptionAndroid(c *gin.Context) {
 
 	switch receipt.ProductID {
 	case "basic_monthly":
-		name = "Basic Service (monthly)"
+		name = "Core Service (monthly)"
 	case "basic_yearly":
-		name = "Basic Service (yearly)"
+		name = "Core Service (yearly)"
 	case "premium_monthly":
 		name = "Premium Service (monthly)"
 	case "premium_yearly":
@@ -959,11 +959,11 @@ func handleAppleWebhook(c *gin.Context) {
 			subscription.Sku = transaction["productId"].(string)
 			switch subscription.Sku {
 			case "basic_monthly":
-				subscription.Name = "Basic Service (monthly)"
+				subscription.Name = "Core Service (monthly)"
 				subscription.Description = "A single tunnel or relay in any region"
 				subscription.Credits = 1
 			case "basic_yearly":
-				subscription.Name = "Basic Service (yearly)"
+				subscription.Name = "Core Service (yearly)"
 				subscription.Description = "A single tunnel or relay in any region"
 				subscription.Credits = 1
 			case "premium_monthly":
@@ -1313,9 +1313,9 @@ func createSubscriptionApple(c *gin.Context) {
 
 	switch receipt.ProductID {
 	case "basic_monthly":
-		name = "Basic Service (monthly)"
+		name = "Core Service (monthly)"
 	case "basic_yearly":
-		name = "Basic Service (yearly)"
+		name = "Core Service (yearly)"
 		expires = time.Now().AddDate(1, 0, 0)
 	case "premium_monthly":
 		name = "Premium Service (monthly)"
