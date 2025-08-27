@@ -1232,7 +1232,7 @@ func createSubscriptionApple(c *gin.Context) {
 	subscription, err := core.GetSubscriptionByReceipt(originalTransactionId)
 	if err != nil {
 		log.Error(err)
-		receipt.Receipt = originalTransactionId
+		//		receipt.Receipt = originalTransactionId
 	}
 	if subscription != nil {
 		isDeleted := false
@@ -1502,6 +1502,7 @@ func createSubscriptionApple(c *gin.Context) {
 		log.Infof("subscription found: %s", subscription.Id)
 		sub.Id = subscription.Id
 		sub.Issued = subscription.Issued
+		sub.Receipt = subscription.Receipt
 
 	} else {
 		log.Infof("creating new subscription")
