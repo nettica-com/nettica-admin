@@ -1237,8 +1237,10 @@ func createSubscriptionApple(c *gin.Context) {
 	if subscription != nil {
 		isDeleted := false
 		subscription.IsDeleted = &isDeleted
-		subscription.AccountID = receipt.AccountID
-		subscription.Email = receipt.Email
+		if subscription.Email == "" {
+			subscription.Email = receipt.Email
+			subscription.AccountID = receipt.AccountID
+		}
 		subscription.Name = receipt.Name
 		subscription.Sku = receipt.ProductID
 		last := time.Now().UTC()
