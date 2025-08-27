@@ -1501,6 +1501,8 @@ func createSubscriptionApple(c *gin.Context) {
 	if subscription != nil {
 		log.Infof("subscription found: %s", subscription.Id)
 		sub.Id = subscription.Id
+		sub.AccountID = subscription.AccountID
+		sub.Email = subscription.Email
 		sub.Issued = subscription.Issued
 		sub.Receipt = subscription.Receipt
 
