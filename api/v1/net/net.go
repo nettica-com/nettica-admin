@@ -401,6 +401,13 @@ func deleteNet(c *gin.Context) {
 		return
 	}
 
+	vpns, err := core.ReadVPN2("netid", id)
+	if err != nil {
+		log.Infof("deleteNet: failed to read vpns for net %s: %v", net.Id, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
 	err = core.DeleteNet(id)
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -408,6 +415,20 @@ func deleteNet(c *gin.Context) {
 		}).Error("failed to delete network")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+
+	for _, v := range vpns { // flush the cache for this vpn
+		core.FlushCache(v.DeviceID)
+
+		// send push notification if appropriate
+		if core.Push.PushDevices[v.DeviceID] != "" {
+			err := core.Push.SendPushNotification(core.Push.PushDevices[v.DeviceID], v.NetName+" deleted", v.NetName+" has been deleted")
+			if err != nil {
+				log.WithFields(log.Fields{
+					"err": err,
+				}).Error("failed to send push notification")
+			}
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "OK"})
