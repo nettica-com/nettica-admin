@@ -181,6 +181,7 @@ func (pm *PushManager) Send(msg *model.Push) error {
 			log.Errorf("failed to read response body: %v", err)
 			return errors.New("failed to read response body: " + err.Error())
 		}
+		log.Infof("Push: title: %s, message: %s", msg.Title, msg.Message)
 
 	}
 	return nil
