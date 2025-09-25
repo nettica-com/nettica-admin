@@ -335,6 +335,8 @@ func (p *PushCore) RemovePushToken(pushToken string) {
 // SendPushNotification sends a push notification to a device
 func (p *PushCore) SendPushNotification(pushToken, title, body string) error {
 
+	log.Infof("Push: %s - %s", title, body)
+
 	if PM.Enabled != nil && *PM.Enabled {
 		msg := &model.Push{
 			Title:   title,
