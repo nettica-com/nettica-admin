@@ -1850,7 +1850,7 @@ func createHelioSubscription(c *gin.Context) {
 			fallthrough
 		case "RelayYear-1":
 			credits = 1
-			name = "Relay Service"
+			name = "Core Service"
 			description = "A single tunnel or relay in any Region"
 			devices = 5
 			networks = 1
@@ -2185,7 +2185,7 @@ func createSubscription(c *gin.Context) {
 			fallthrough
 		case "RelayYear-1":
 			credits = 1
-			name = "Relay Service"
+			name = "Core Service"
 			description = "A single tunnel or relay in any Region"
 			devices = 5
 			networks = 1
