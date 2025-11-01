@@ -261,6 +261,47 @@ func enableVPN(c *gin.Context) {
 		return
 	}
 
+	vpns, err := core.ReadVPN2("netid", vpn.NetId)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to read vpns")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	for _, v := range vpns {
+		// flush the cache for this vpn
+		core.FlushCache(v.DeviceID)
+
+		if core.Push.PushDevices[v.DeviceID] != "" && v.Enable && v.DeviceID == vpn.DeviceID {
+			err := core.Push.SendPushNotification(core.Push.PushDevices[v.DeviceID], v.NetName+" enabled", "Connection to "+v.NetName+" has been established")
+			if err != nil {
+				log.WithFields(log.Fields{
+					"err": err,
+				}).Error("failed to send push notification")
+			}
+		} else if core.Push.PushDevices[v.DeviceID] != "" && v.Enable {
+			// send push notification if appropriate
+			err := core.Push.SendPushNotification(core.Push.PushDevices[v.DeviceID], v.NetName+" updated", "The VPN configuration for "+v.NetName+" has been updated")
+			if err != nil {
+				log.WithFields(log.Fields{
+					"err": err,
+				}).Error("failed to send push notification")
+			}
+		}
+
+		// send push notification to the device that just had the VPN disabled
+		if core.Push.PushDevices[v.DeviceID] != "" && !v.Enable && v.DeviceID == vpn.DeviceID {
+			err := core.Push.SendPushNotification(core.Push.PushDevices[v.DeviceID], v.NetName+" disabled", "The VPN configuration for "+v.NetName+" has been disabled")
+			if err != nil {
+				log.WithFields(log.Fields{
+					"err": err,
+				}).Error("failed to send push notification")
+			}
+		}
+	}
+
 	c.JSON(http.StatusOK, vpn)
 }
 
@@ -341,6 +382,47 @@ func disableVPN(c *gin.Context) {
 		}).Error("failed to disable VPN")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+
+	vpns, err := core.ReadVPN2("netid", vpn.NetId)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to read vpns")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	for _, v := range vpns {
+		// flush the cache for this vpn
+		core.FlushCache(v.DeviceID)
+
+		if core.Push.PushDevices[v.DeviceID] != "" && v.Enable && v.DeviceID == vpn.DeviceID {
+			err := core.Push.SendPushNotification(core.Push.PushDevices[v.DeviceID], v.NetName+" enabled", "Connection to "+v.NetName+" has been established")
+			if err != nil {
+				log.WithFields(log.Fields{
+					"err": err,
+				}).Error("failed to send push notification")
+			}
+		} else if core.Push.PushDevices[v.DeviceID] != "" && v.Enable {
+			// send push notification if appropriate
+			err := core.Push.SendPushNotification(core.Push.PushDevices[v.DeviceID], v.NetName+" updated", "The VPN configuration for "+v.NetName+" has been updated")
+			if err != nil {
+				log.WithFields(log.Fields{
+					"err": err,
+				}).Error("failed to send push notification")
+			}
+		}
+
+		// send push notification to the device that just had the VPN disabled
+		if core.Push.PushDevices[v.DeviceID] != "" && !v.Enable && v.DeviceID == vpn.DeviceID {
+			err := core.Push.SendPushNotification(core.Push.PushDevices[v.DeviceID], v.NetName+" disabled", "The VPN configuration for "+v.NetName+" has been disabled")
+			if err != nil {
+				log.WithFields(log.Fields{
+					"err": err,
+				}).Error("failed to send push notification")
+			}
+		}
 	}
 
 	c.JSON(http.StatusOK, vpn)
