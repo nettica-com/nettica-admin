@@ -17,7 +17,9 @@ type Account struct {
 	NetId          string     `json:"netId"                     bson:"netId"`
 	NetName        string     `json:"netName"                   bson:"netName"`
 	Picture        string     `json:"picture"                   bson:"picture"`
+	ProfilePict    string     `json:"profilePict,omitempty"     bson:"profilePict,omitempty"`
 	AccountPicture string     `json:"accountPicture,omitempty"  bson:"accountPicture,omitempty"`
+	AccountPict    string     `json:"accountPict,omitempty"     bson:"accountPict,omitempty"`
 	Role           string     `json:"role"                      bson:"role"`
 	Status         string     `json:"status"                    bson:"status"`
 	ApiKey         string     `json:"apiKey"                    bson:"apiKey"`
