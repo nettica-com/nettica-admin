@@ -381,6 +381,7 @@ func updateAccount(c *gin.Context) {
 		}
 		update.Name = data.Name
 		update.Picture = data.Picture
+		update.UserPicture = data.UserPicture
 		update.Email = strings.ToLower(data.Email)
 		if data.ApiKey != "" {
 			update.ApiKey = data.ApiKey
