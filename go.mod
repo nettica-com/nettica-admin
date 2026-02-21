@@ -1,8 +1,8 @@
 module github.com/nettica-com/nettica-admin
 
-go 1.23.0
+go 1.26
 
-toolchain go1.23.4
+toolchain go1.26.0
 
 require (
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.2.2
