@@ -28,7 +28,9 @@ A control plane for [WireGuard](https://wireguard.com).
  * Simple
  * Lightweight
  * Secure
-
+ * Nettica mobile apps support (iOS, Android, MacOS)
+    * Long-press login from apps main menu to add to your server
+ * For Nettica VPN Agent on Windows and Linux, click "add server" to add your server
 
 
 ![Screenshot](nettica-screenshot.png)
@@ -226,8 +228,8 @@ Install NodeJS using NVM
 ```
 wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash
 source ~/.bashrc
-nvm install 18
-nvm use 18
+nvm install 25
+nvm use 25
 ```
 
 Build the frontend
