@@ -84,3 +84,13 @@ func (a Device) IsValid() []error {
 
 	return errs
 }
+
+type DevicePush struct {
+	AccountID  string `json:"id" bson:"id"`
+	DeviceID   string `json:"deviceId" bson:"deviceId"`
+	ApiKey     string `json:"apiKey" bson:"apiKey"`
+	NetID      string `json:"netid" bson:"netid"`
+	ToDeviceID string `json:"toDeviceId" bson:"toDeviceId"`
+	Title      string `json:"title" bson:"title"`
+	Message    string `json:"message" bson:"message"`
+}

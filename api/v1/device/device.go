@@ -24,6 +24,7 @@ func ApplyRoutes(r *gin.RouterGroup) {
 		g.GET("/:id", readDevice)
 		g.PATCH("/:id", updateDevice)
 		g.DELETE("/:id", deleteDevice)
+		g.POST("/:id/push", pushDevice)
 		g.GET("", readDevices)
 		g.GET("/:id/status", statusDevice)
 	}
@@ -103,6 +104,52 @@ func createDevice(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, client)
+}
+
+// pushDevice pushes a notification to a device
+// @Summary Push a notification to a device
+// @Description Push a notification to a device
+// @Tags devices
+// @Security apiKey
+// @Accept  json
+// @Produce  json
+// @Param id path string true "Device ID"
+// @Param push body model.DevicePush true "Device Push"
+// @Success 200 {object} json
+// @Failure 400 {object} error
+// @Failure 401 {object} error
+// @Failure 403 {object} error
+// @Failure 404 {object} error
+// @Router /device/{id}/push [post]
+func pushDevice(c *gin.Context) {
+	var p model.DevicePush
+
+	if err := c.ShouldBindJSON(&p); err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to bind")
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+
+	token, exists := core.Push.PushDevices[p.ToDeviceID]
+	if !exists {
+		log.WithFields(log.Fields{
+			"device": p.ToDeviceID,
+		}).Error("device not found in push devices")
+		c.JSON(http.StatusNotFound, gin.H{"error": "Device not found"})
+		return
+	}
+
+	err := core.Push.SendPushNotification(token, p.Title, p.Message)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to send push notification")
+		c.JSON(http.StatusPreconditionFailed, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Push notification sent"})
 }
 
 // ReadDevice reads a device
