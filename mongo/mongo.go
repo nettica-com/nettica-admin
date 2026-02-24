@@ -313,6 +313,42 @@ func GetDevicesForPushNotifications() ([]*model.Device, error) {
 
 }
 
+// GetDevicesForVoipNotifications from MongoDB
+func GetDevicesForVoipNotifications() ([]*model.Device, error) {
+	devices := make([]*model.Device, 0)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	client, err := getMongoClient()
+	if err != nil {
+		log.Errorf("getMongoClient: %v", err)
+		return nil, err
+	}
+
+	collection := client.Database("nettica").Collection("devices")
+
+	filter := bson.D{{Key: "voipPush", Value: bson.D{{Key: "$ne", Value: ""}}}}
+
+	cursor, err := collection.Find(ctx, filter)
+
+	if err == nil {
+
+		defer cursor.Close(ctx)
+		for cursor.Next(ctx) {
+			var device *model.Device
+			err = cursor.Decode(&device)
+			if err == nil {
+				devices = append(devices, device)
+			}
+		}
+
+	}
+
+	return devices, err
+
+}
+
 // ReadDevicesAndVPNsForAccount
 func ReadDevicesAndVPNsForAccount(accountid string) ([]*model.Device, error) {
 
@@ -1169,6 +1205,14 @@ func Initialize() error {
 		log.Error(err)
 	}
 	_, err = client.Database("nettica").Collection("devices").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"ezcode": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+	_, err = client.Database("nettica").Collection("devices").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"push": 1}, Options: nil})
+	if err != nil {
+		log.Error(err)
+	}
+	_, err = client.Database("nettica").Collection("devices").Indexes().CreateOne(ctx, mongo.IndexModel{Keys: bson.M{"voip": 1}, Options: nil})
 	if err != nil {
 		log.Error(err)
 	}

@@ -300,6 +300,15 @@ func updateDevice(c *gin.Context) {
 		core.Push.RemoveDevice(id)
 	}
 
+	if client.VoIP != nil && *client.VoIP != "" {
+		if core.Push.VoipDevices[id] != *client.VoIP {
+			core.Push.RemoveVoipDevice(id)
+			core.Push.AddVoipDevice(id, *client.VoIP)
+		}
+	} else {
+		core.Push.RemoveVoipDevice(id)
+	}
+
 	c.JSON(http.StatusOK, client)
 }
 

@@ -34,6 +34,7 @@ type Device struct {
 	InstanceID    string     `json:"instanceid,omitempty"      bson:"instanceid,omitempty"`
 	EZCode        string     `json:"ezcode,omitempty"          bson:"ezcode,omitempty"`
 	Push          *string    `json:"push,omitempty"            bson:"push,omitempty"`
+	VoIP          *string    `json:"voip,omitempty"            bson:"voip,omitempty"`
 	ReadOnly      *bool      `json:"readonly,omitempty"        bson:"readonly,omitempty"`
 	CreatedBy     string     `json:"createdBy"                 bson:"createdBy"`
 	UpdatedBy     string     `json:"updatedBy"                 bson:"updatedBy"`
@@ -88,9 +89,10 @@ func (a Device) IsValid() []error {
 type DevicePush struct {
 	AccountID  string `json:"id" bson:"id"`
 	DeviceID   string `json:"deviceId" bson:"deviceId"`
-	ApiKey     string `json:"apiKey" bson:"apiKey"`
 	NetID      string `json:"netid" bson:"netid"`
+	NetName    string `json:"netName" bson:"netName"`
 	ToDeviceID string `json:"toDeviceId" bson:"toDeviceId"`
+	IsVoIP     bool   `json:"isVoIP" bson:"isVoIP"`
 	Title      string `json:"title" bson:"title"`
 	Message    string `json:"message" bson:"message"`
 }

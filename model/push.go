@@ -6,12 +6,13 @@ import (
 )
 
 type Push struct {
-	Version string `json:"version"                   bson:"version"`
-	Id      string `json:"id"                        bson:"id"`
-	ApiKey  string `json:"apiKey"                    bson:"apiKey"`
-	Title   string `json:"title"                     bson:"title"`
-	Message string `json:"message"                   bson:"message"`
-	Token   string `json:"token"`
+	Version   string `json:"version"                   bson:"version"`
+	Id        string `json:"id"                        bson:"id"`
+	ApiKey    string `json:"apiKey"                    bson:"apiKey"`
+	Title     string `json:"title"                     bson:"title"`
+	Message   string `json:"message"                   bson:"message"`
+	Token     string `json:"token"`
+	VoipToken string `json:"voipToken,omitempty"`
 }
 
 // Pusher client/server structure
@@ -36,7 +37,7 @@ type PusherInterface interface {
 }
 
 func (a Push) IsValid() error {
-	if a.Id == "" || a.Version == "" || a.ApiKey == "" || a.Title == "" || a.Message == "" || a.Token == "" {
+	if a.Id == "" || a.Version == "" || a.ApiKey == "" || a.Title == "" || a.Message == "" && (a.Token != "" || a.VoipToken != "") {
 		return fmt.Errorf("all fields are required")
 	}
 	return nil

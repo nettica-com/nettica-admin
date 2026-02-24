@@ -1,11 +1,15 @@
 package core
 
 import (
+	"crypto/ecdsa"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"errors"
 	"io"
 	"net/http"
 	"os"
+	"time"
 
 	model "github.com/nettica-com/nettica-admin/model"
 	mongo "github.com/nettica-com/nettica-admin/mongo"
@@ -17,6 +21,9 @@ import (
 
 	firebase "firebase.google.com/go"
 	"firebase.google.com/go/messaging"
+
+	"github.com/sideshow/apns2"
+	"github.com/sideshow/apns2/token"
 
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/api/option"
@@ -259,6 +266,8 @@ type PushCore struct {
 	client      *messaging.Client
 	PushDevices map[string]string
 	PushTokens  map[string]string
+	VoipDevices map[string]string
+	VoipTokens  map[string]string
 	Enabled     bool
 }
 
@@ -293,9 +302,21 @@ func (p *PushCore) Initialize() error {
 	}
 
 	for _, device := range devices {
-		if device.Push != nil {
+		if device.Push != nil && *device.Push != "" {
 			p.PushDevices[device.Id] = *device.Push
 			p.PushTokens[*device.Push] = device.Id
+		}
+	}
+
+	devices, err = mongo.GetDevicesForVoipNotifications()
+	if err != nil {
+		return fmt.Errorf("error getting devices for VoIP push notifications: %v", err)
+	}
+
+	for _, device := range devices {
+		if device.VoIP != nil && *device.VoIP != "" {
+			p.VoipDevices[device.Id] = *device.VoIP
+			p.VoipTokens[*device.VoIP] = device.Id
 		}
 	}
 
@@ -328,6 +349,33 @@ func (p *PushCore) RemovePushToken(pushToken string) {
 		if ok {
 			delete(p.PushTokens, pushToken)
 			delete(p.PushDevices, deviceId)
+		}
+	}
+}
+
+func (p *PushCore) AddVoipDevice(deviceId, pushToken string) {
+	if p.Enabled {
+		p.VoipDevices[deviceId] = pushToken
+		p.VoipTokens[pushToken] = deviceId
+	}
+}
+
+func (p *PushCore) RemoveVoipDevice(deviceId string) {
+	if p.Enabled {
+		pushToken, ok := p.VoipDevices[deviceId]
+		if ok {
+			delete(p.VoipDevices, deviceId)
+			delete(p.VoipTokens, pushToken)
+		}
+	}
+}
+
+func (p *PushCore) RemoveVoipToken(pushToken string) {
+	if p.Enabled {
+		deviceId, ok := p.VoipTokens[pushToken]
+		if ok {
+			delete(p.VoipTokens, pushToken)
+			delete(p.VoipDevices, deviceId)
 		}
 	}
 }
@@ -402,4 +450,179 @@ func (p *PushCore) RemovePushTokenFromDevice(pushToken string) {
 		}
 		log.Infof("Push token %s removed for device %s", pushToken, deviceId)
 	}
+}
+
+// SendPushNotification sends a push notification to a device
+func (p *PushCore) SendVoipNotification(pushToken, title, body string) error {
+
+	log.Infof("VoIP : %s - %s", title, body)
+
+	if PM.Enabled != nil && *PM.Enabled {
+		msg := &model.Push{
+			Title:     title,
+			Message:   body,
+			VoipToken: pushToken,
+			Version:   "1.0",
+			Id:        PM.Id,
+			ApiKey:    PM.ApiKey,
+		}
+		err := msg.IsValid()
+		if err != nil {
+			return fmt.Errorf("error validating voip notification: %v", err)
+		}
+		err = PM.Send(msg)
+		if err != nil {
+			p.RemoveVoipTokenFromDevice(pushToken)
+			return fmt.Errorf("error sending voip notification: %v", err)
+		}
+		return nil
+	}
+
+	if p.Enabled {
+		err := p.SendiPhoneVoipPush(pushToken, title, body)
+		if err != nil {
+			// if not found, remove the push token from the device
+			if strings.Contains(err.Error(), "404") {
+				p.RemoveVoipTokenFromDevice(pushToken)
+			}
+			return fmt.Errorf("error sending message: %v", err)
+		}
+	}
+
+	return nil
+}
+
+func (p *PushCore) RemoveVoipTokenFromDevice(pushToken string) {
+	deviceId, ok := p.VoipTokens[pushToken]
+	if ok {
+		delete(p.VoipTokens, pushToken)
+		delete(p.VoipDevices, deviceId)
+		// remove the voip token from the device
+		d, err := mongo.Deserialize(deviceId, "id", "devices", reflect.TypeOf(model.Device{}))
+		if err != nil {
+			log.WithFields(log.Fields{
+				"err": err,
+			}).Error("failed to read device")
+		} else {
+			device := d.(*model.Device)
+			*device.VoIP = ""
+			err = mongo.Serialize(device.Id, "id", "devices", device)
+			if err != nil {
+				log.WithFields(log.Fields{
+					"err": err,
+				}).Error("failed to serialize device")
+			}
+		}
+		log.Infof("VoIP token %s removed for device %s", pushToken, deviceId)
+	}
+}
+
+func (p *PushCore) SendiPhoneVoipPush(pushToken, title, body string) error {
+
+	// iPhone VoIP push notification logic here
+
+	keyID := os.Getenv("APPLE_VOIP_KEY_ID")
+	teamID := os.Getenv("APPLE_TEAM_ID")
+	topic := os.Getenv("APPLE_ITUNES_BUNDLE_ID") + ".voip"
+	auth := os.Getenv("APPLE_VOIP_TOKEN")
+	if keyID == "" || teamID == "" || topic == "" || auth == "" {
+		return nil
+	}
+
+	// send the push notification to the device using the APN token
+	log.Infof("Sending VoIP push notification to %s with title %s and body %s", pushToken, title, body)
+	if _, err := os.Stat(auth); err == nil {
+		b, err := os.ReadFile(auth)
+		if err != nil {
+			return fmt.Errorf("read auth key file: %w", err)
+		}
+		auth = string(b)
+	}
+
+	// create a ecdsa private key from the auth string that's in .p8 format
+
+	var authKey *ecdsa.PrivateKey
+
+	// try to decode PEM first
+	if block, _ := pem.Decode([]byte(auth)); block != nil {
+		der := block.Bytes
+		switch block.Type {
+		case "PRIVATE KEY":
+			k, err := x509.ParsePKCS8PrivateKey(der)
+			if err != nil {
+				return fmt.Errorf("parse pkcs8 key: %w", err)
+			}
+			var ok bool
+			authKey, ok = k.(*ecdsa.PrivateKey)
+			if !ok {
+				return fmt.Errorf("unexpected key type: %T", k)
+			}
+		case "EC PRIVATE KEY":
+			k, err := x509.ParseECPrivateKey(der)
+			if err != nil {
+				return fmt.Errorf("parse ec key: %w", err)
+			}
+			authKey = k
+		default:
+			k, err := x509.ParsePKCS8PrivateKey(der)
+			if err != nil {
+				return fmt.Errorf("unsupported PEM block %s: %w", block.Type, err)
+			}
+			var ok bool
+			authKey, ok = k.(*ecdsa.PrivateKey)
+			if !ok {
+				return fmt.Errorf("unexpected key type: %T", k)
+			}
+		}
+	} else {
+		// assume raw DER (PKCS#8) or EC DER
+		var (
+			err1 error
+			err2 error
+			k    interface{}
+		)
+		k, err1 = x509.ParsePKCS8PrivateKey([]byte(auth))
+		if err1 == nil {
+			var ok bool
+			authKey, ok = k.(*ecdsa.PrivateKey)
+			if !ok {
+				return fmt.Errorf("unexpected key type: %T", k)
+			}
+		} else {
+			var k2 *ecdsa.PrivateKey
+			k2, err2 = x509.ParseECPrivateKey([]byte(auth))
+			if err2 == nil {
+				authKey = k2
+			} else {
+				return fmt.Errorf("failed to parse private key: %v / %v", err1, err2)
+			}
+		}
+	}
+
+	tok := &token.Token{
+		AuthKey: authKey,
+		KeyID:   keyID,
+		TeamID:  teamID,
+	}
+
+	client := apns2.NewTokenClient(tok)
+	payload := []byte(fmt.Sprintf(`{"aps":{"alert":{"title":"%s","body":"%s"},"sound":"default"}}`, title, body))
+	notification := &apns2.Notification{
+		DeviceToken: pushToken,
+		Topic:       topic,
+		Payload:     payload,
+		Priority:    apns2.PriorityHigh,
+		Expiration:  time.Now().Add(1 * time.Hour),
+	}
+
+	resp, err := client.Production().Push(notification)
+	if err != nil {
+		resp2, err2 := client.Development().Push(notification)
+		return fmt.Errorf("push error: %w, development error: %w resp2: %v", err, err2, resp2)
+	}
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("apns response: %d %s", resp.StatusCode, resp.Reason)
+	}
+	return nil
+
 }
