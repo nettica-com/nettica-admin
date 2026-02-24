@@ -615,10 +615,11 @@ func (p *PushCore) SendiPhoneVoipPush(pushToken, title, body string) error {
 		Payload:     payload,
 		Priority:    apns2.PriorityHigh,
 		Expiration:  time.Now().Add(1 * time.Hour),
+		PushType:    apns2.PushTypeVOIP,
 	}
 
 	resp, err := client.Production().Push(notification)
-	if err != nil {
+	if err != nil || resp.StatusCode != 200 {
 		resp2, err2 := client.Development().Push(notification)
 		return fmt.Errorf("push error: %w, development error: %w resp2: %v", err, err2, resp2)
 	}
