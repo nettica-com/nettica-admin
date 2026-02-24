@@ -180,7 +180,7 @@ func UpdateDevice(Id string, device *model.Device, fUpdated bool) (*model.Device
 		}
 		current.Push = device.Push
 	}
-
+	current.VoIP = device.VoIP
 	current.Enable = device.Enable
 	current.Logging = device.Logging
 	current.Tags = device.Tags
