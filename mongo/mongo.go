@@ -329,7 +329,7 @@ func GetDevicesForVoipNotifications() ([]*model.Device, error) {
 
 	collection := client.Database("nettica").Collection("devices")
 
-	filter := bson.D{{Key: "voipPush", Value: bson.D{{Key: "$ne", Value: ""}}}}
+	filter := bson.D{{Key: "voip", Value: bson.D{{Key: "$nin", Value: bson.A{"", nil}}}}}
 
 	cursor, err := collection.Find(ctx, filter)
 

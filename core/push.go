@@ -37,6 +37,8 @@ var (
 	Push PushCore = PushCore{
 		PushDevices: make(map[string]string),
 		PushTokens:  make(map[string]string),
+		VoipDevices: make(map[string]string),
+		VoipTokens:  make(map[string]string),
 		Enabled:     false,
 	}
 )
