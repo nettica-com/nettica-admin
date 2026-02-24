@@ -621,7 +621,14 @@ func (p *PushCore) SendiPhoneVoipPush(pushToken, title, body string) error {
 	resp, err := client.Production().Push(notification)
 	if err != nil || resp.StatusCode != 200 {
 		resp2, err2 := client.Development().Push(notification)
-		return fmt.Errorf("push error: %w, development error: %w resp2: %v", err, err2, resp2)
+		if err2 != nil {
+			return fmt.Errorf("push error: %v, development error: %v resp2: %v", err, err2, resp2)
+		}
+		if resp2.StatusCode != 200 {
+			return fmt.Errorf("push error: %v, development push failed with status: %d, reason: %s", err, resp2.StatusCode, resp2.Reason)
+		}
+		log.Infof("VoIP push sent to development environment for device %s", pushToken)
+		return nil
 	}
 	if resp.StatusCode != 200 {
 		return fmt.Errorf("apns response: %d %s", resp.StatusCode, resp.Reason)
