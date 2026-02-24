@@ -14,9 +14,9 @@ import (
 	"github.com/nettica-com/nettica-admin/model"
 	log "github.com/sirupsen/logrus"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 // Create a cache of mongo db connections
@@ -40,11 +40,11 @@ func getMongoClient() (*mongo.Client, error) {
 		return mongoClient, nil
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 	o := options.Client().SetMinPoolSize(2)
 	o = o.ApplyURI(os.Getenv("MONGODB_CONNECTION_STRING"))
-	client, err := mongo.Connect(ctx, o)
+	timeout := time.Second * 10
+	o.ConnectTimeout = &timeout
+	client, err := mongo.Connect(o)
 
 	if err != nil {
 		return nil, err
@@ -97,7 +97,8 @@ func Serialize(id string, parm string, col string, c interface{}) error {
 		"$set": b,
 	}
 
-	opts := options.Update().SetUpsert(true)
+	opts := options.UpdateOne().SetUpsert(true)
+
 	_, err = collection.UpdateOne(ctx, filter, update, opts)
 
 	//	if res != nil && res.Err != nil {
@@ -1000,7 +1001,7 @@ func UpsertUser(user *model.User) error {
 		"$set": b,
 	}
 
-	opts := options.Update().SetUpsert(true)
+	opts := options.UpdateOne().SetUpsert(true)
 	_, err = collection.UpdateOne(ctx, filter, update, opts)
 	if err != nil {
 		log.Error(err)
