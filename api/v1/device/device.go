@@ -132,46 +132,44 @@ func pushDevice(c *gin.Context) {
 		return
 	}
 
+	token := ""
+
 	if p.IsVoIP {
 		token, exists := core.Push.VoipDevices[p.ToDeviceID]
-		if !exists {
-			log.WithFields(log.Fields{
-				"device": p.ToDeviceID,
-			}).Error("device not found in voip devices")
-			c.JSON(http.StatusNotFound, gin.H{"error": "Device not found"})
+		if exists {
+			err := core.Push.SendVoipNotification(token, p.Title, p.Message)
+			if err != nil {
+				log.WithFields(log.Fields{
+					"err": err,
+				}).Error("failed to send voip notification")
+				c.JSON(http.StatusPreconditionFailed, gin.H{"error": err.Error()})
+				return
+			}
+			c.JSON(http.StatusOK, gin.H{"message": "VoIP notification sent"})
 			return
 		}
-
-		err := core.Push.SendVoipNotification(token, p.Title, p.Message)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"err": err,
-			}).Error("failed to send voip notification")
-			c.JSON(http.StatusPreconditionFailed, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{"message": "VoIP notification sent"})
-
-	} else {
-		token, exists := core.Push.PushDevices[p.ToDeviceID]
-		if !exists {
-			log.WithFields(log.Fields{
-				"device": p.ToDeviceID,
-			}).Error("device not found in push devices")
-			c.JSON(http.StatusNotFound, gin.H{"error": "Device not found"})
-			return
-		}
-
-		err := core.Push.SendPushNotification(token, p.Title, p.Message)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"err": err,
-			}).Error("failed to send push notification")
-			c.JSON(http.StatusPreconditionFailed, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{"message": "Push notification sent"})
 	}
+
+	// fallback to regular push if voip push fails or if it's not a voip push
+
+	token, exists := core.Push.PushDevices[p.ToDeviceID]
+	if !exists {
+		log.WithFields(log.Fields{
+			"device": p.ToDeviceID,
+		}).Error("device not found in push devices")
+		c.JSON(http.StatusNotFound, gin.H{"error": "Device not found"})
+		return
+	}
+
+	err := core.Push.SendPushNotification(token, p.Title, p.Message)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"err": err,
+		}).Error("failed to send push notification")
+		c.JSON(http.StatusPreconditionFailed, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Push notification sent"})
 }
 
 // ReadDevice reads a device
