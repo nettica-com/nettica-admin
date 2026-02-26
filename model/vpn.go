@@ -18,27 +18,30 @@ type EnableDisableVPN struct {
 
 // VPN structure
 type VPN struct {
-	Id        string     `json:"id"                        bson:"id"`
-	AccountID string     `json:"accountid"                 bson:"accountid"`
-	DeviceID  string     `json:"deviceid"                  bson:"deviceid"`
-	Name      string     `json:"name"                      bson:"name"`
-	NetId     string     `json:"netid"                     bson:"netid"`
-	NetName   string     `json:"netName"                   bson:"netName"`
-	Role      string     `json:"role,omitempty"            bson:"role,omitempty"`
-	Type      string     `json:"type,omitempty"            bson:"type,omitempty"`
-	Failover  int        `json:"failover"                  bson:"failover"`
-	FailCount int        `json:"failCount"                 bson:"failCount"`
-	Enable    bool       `json:"enable"                    bson:"enable"`
-	ReadOnly  *bool      `json:"readonly,omitempty"        bson:"readonly,omitempty"`
-	Tags      []string   `json:"tags"                      bson:"tags"`
-	Complete  *bool      `json:"complete,omitempty"        bson:"-"` // complete indicates this is a complete record
-	CreatedBy string     `json:"createdBy"                 bson:"createdBy"`
-	UpdatedBy string     `json:"updatedBy"                 bson:"updatedBy"`
-	Created   *time.Time `json:"created"                   bson:"created"`
-	Updated   *time.Time `json:"updated"                   bson:"updated"`
-	Current   *Settings  `json:"current,omitempty"         bson:"current,omitempty"`
-	Default   *Settings  `json:"default,omitempty"         bson:"default,omitempty"`
-	Devices   []*Device  `json:"devices,omitempty"         bson:"devices,omitempty"`
+	Id                string     `json:"id"                        bson:"id"`
+	AccountID         string     `json:"accountid"                 bson:"accountid"`
+	DeviceID          string     `json:"deviceid"                  bson:"deviceid"`
+	Name              string     `json:"name"                      bson:"name"`
+	NetId             string     `json:"netid"                     bson:"netid"`
+	NetName           string     `json:"netName"                   bson:"netName"`
+	Role              string     `json:"role,omitempty"            bson:"role,omitempty"`
+	Type              string     `json:"type,omitempty"            bson:"type,omitempty"`
+	Failover          int        `json:"failover"                  bson:"failover"`
+	FailCount         int        `json:"failCount"                 bson:"failCount"`
+	Enable            bool       `json:"enable"                    bson:"enable"`
+	ReadOnly          *bool      `json:"readonly,omitempty"        bson:"readonly,omitempty"`
+	TextEnabled       *bool      `json:"textEnabled,omitempty"     bson:"textEnabled,omitempty"`
+	VideoEnabled      *bool      `json:"videoEnabled,omitempty"    bson:"videoEnabled,omitempty"`
+	ConferenceEnabled *bool      `json:"conferenceEnabled,omitempty" bson:"conferenceEnabled,omitempty"`
+	Tags              []string   `json:"tags"                      bson:"tags"`
+	Complete          *bool      `json:"complete,omitempty"        bson:"-"` // complete indicates this is a complete record
+	CreatedBy         string     `json:"createdBy"                 bson:"createdBy"`
+	UpdatedBy         string     `json:"updatedBy"                 bson:"updatedBy"`
+	Created           *time.Time `json:"created"                   bson:"created"`
+	Updated           *time.Time `json:"updated"                   bson:"updated"`
+	Current           *Settings  `json:"current,omitempty"         bson:"current,omitempty"`
+	Default           *Settings  `json:"default,omitempty"         bson:"default,omitempty"`
+	Devices           []*Device  `json:"devices,omitempty"         bson:"devices,omitempty"`
 }
 
 // IsValid check if model is valid
