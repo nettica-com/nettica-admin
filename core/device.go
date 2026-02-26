@@ -241,6 +241,9 @@ func UpdateDevice(Id string, device *model.Device, fUpdated bool) (*model.Device
 	current.EZCode = device.EZCode
 	current.LastSeen = device.LastSeen
 	current.UpdateKeys = device.UpdateKeys
+	current.TextEnabled = device.TextEnabled
+	current.VideoEnabled = device.VideoEnabled
+	current.ConferenceEnabled = device.ConferenceEnabled
 
 	err = mongo.Serialize(device.Id, "id", "devices", current)
 	if err != nil {
