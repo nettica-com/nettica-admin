@@ -132,7 +132,7 @@ func pushDevice(c *gin.Context) {
 		return
 	}
 
-	token := ""
+	log.Infof("Push Device: %v", p)
 
 	if p.IsVoIP {
 		token, exists := core.Push.VoipDevices[p.ToDeviceID]
@@ -152,7 +152,7 @@ func pushDevice(c *gin.Context) {
 
 	// fallback to regular push if voip push fails or if it's not a voip push
 
-	token, exists := core.Push.PushDevices[p.ToDeviceID]
+	tok, exists := core.Push.PushDevices[p.ToDeviceID]
 	if !exists {
 		log.WithFields(log.Fields{
 			"device": p.ToDeviceID,
@@ -161,7 +161,7 @@ func pushDevice(c *gin.Context) {
 		return
 	}
 
-	err := core.Push.SendPushNotification(token, p.Title, p.Message)
+	err := core.Push.SendPushNotification(tok, p.Title, p.Message)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
