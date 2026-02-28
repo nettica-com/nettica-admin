@@ -310,12 +310,12 @@ func (p *PushCore) Initialize() error {
 		}
 	}
 
-	devices, err = mongo.GetDevicesForVoipNotifications()
+	dds, err := mongo.GetDevicesForVoipNotifications()
 	if err != nil {
 		return fmt.Errorf("error getting devices for VoIP push notifications: %v", err)
 	}
 
-	for _, device := range devices {
+	for _, device := range dds {
 		if device.VoIP != nil && *device.VoIP != "" {
 			p.VoipDevices[device.Id] = *device.VoIP
 			p.VoipTokens[*device.VoIP] = device.Id
