@@ -422,7 +422,7 @@ func (p *PushCore) SendPushNotification(pushToken, title, body string, isVoIP ..
 			},
 			Token: pushToken,
 			Android: &messaging.AndroidConfig{
-				Priority: "HIGH",
+				Priority: "high",
 			},
 		}
 		if voip {
