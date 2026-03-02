@@ -226,7 +226,7 @@ func sendPush(c *gin.Context) {
 		return
 	}
 
-	err = core.Push.SendPushNotification(push.Token, push.Title, push.Message)
+	err = core.Push.SendPushNotification(push.Token, push.Title, push.Message, push.IsVoIP)
 	if err != nil {
 		log.Errorf("push: send: failed to send push: %v", err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "failed to send push"})

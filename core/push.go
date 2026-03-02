@@ -383,7 +383,12 @@ func (p *PushCore) RemoveVoipToken(pushToken string) {
 }
 
 // SendPushNotification sends a push notification to a device
-func (p *PushCore) SendPushNotification(pushToken, title, body string) error {
+// isVoIP is optional and defaults to false if not provided
+func (p *PushCore) SendPushNotification(pushToken, title, body string, isVoIP ...bool) error {
+	voip := false
+	if len(isVoIP) > 0 {
+		voip = isVoIP[0]
+	}
 
 	log.Infof("Push: %s - %s (%s)", title, body, pushToken)
 
@@ -395,6 +400,7 @@ func (p *PushCore) SendPushNotification(pushToken, title, body string) error {
 			Version: "1.0",
 			Id:      PM.Id,
 			ApiKey:  PM.ApiKey,
+			IsVoIP:  voip,
 		}
 		err := msg.IsValid()
 		if err != nil {
@@ -415,6 +421,13 @@ func (p *PushCore) SendPushNotification(pushToken, title, body string) error {
 				Body:  body,
 			},
 			Token: pushToken,
+			Android: &messaging.AndroidConfig{
+				Priority: "HIGH",
+			},
+		}
+		if voip {
+			zero := time.Duration(0)
+			notification.Android.TTL = &zero
 		}
 		_, err := p.client.Send(context.Background(), &notification)
 		if err != nil {

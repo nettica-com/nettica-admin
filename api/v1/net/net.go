@@ -344,7 +344,7 @@ func updateNet(c *gin.Context) {
 
 		// send push notification if appropriate
 		if core.Push.PushDevices[v.DeviceID] != "" {
-			err := core.Push.SendPushNotification(core.Push.PushDevices[v.DeviceID], v.NetName+" updated", "The VPN configuration for "+v.NetName+" has been updated")
+			   err := core.Push.SendPushNotification(core.Push.PushDevices[v.DeviceID], v.NetName+" updated", "The VPN configuration for "+v.NetName+" has been updated")
 			if err != nil {
 				log.WithFields(log.Fields{
 					"err": err,
@@ -422,7 +422,7 @@ func deleteNet(c *gin.Context) {
 
 		// send push notification if appropriate
 		if core.Push.PushDevices[v.DeviceID] != "" {
-			err := core.Push.SendPushNotification(core.Push.PushDevices[v.DeviceID], v.NetName+" deleted", v.NetName+" has been deleted")
+			   err := core.Push.SendPushNotification(core.Push.PushDevices[v.DeviceID], v.NetName+" deleted", v.NetName+" has been deleted")
 			if err != nil {
 				log.WithFields(log.Fields{
 					"err": err,

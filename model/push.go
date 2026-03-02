@@ -9,6 +9,7 @@ type Push struct {
 	Version   string `json:"version"                   bson:"version"`
 	Id        string `json:"id"                        bson:"id"`
 	ApiKey    string `json:"apiKey"                    bson:"apiKey"`
+	IsVoIP    bool   `json:"isVoip"                    bson:"isVoip"`
 	Title     string `json:"title"                     bson:"title"`
 	Message   string `json:"message"                   bson:"message"`
 	Token     string `json:"token"`

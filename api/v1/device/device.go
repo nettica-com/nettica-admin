@@ -166,7 +166,7 @@ func pushDevice(c *gin.Context) {
 		return
 	}
 
-	err := core.Push.SendPushNotification(tok, p.Title, p.Message)
+	err := core.Push.SendPushNotification(tok, p.Title, p.Message, p.IsVoIP)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"err": err,
