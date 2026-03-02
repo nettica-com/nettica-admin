@@ -108,7 +108,7 @@ func createVPN(c *gin.Context) {
 
 		// send push notification if appropriate
 		if core.Push.PushDevices[v.DeviceID] != "" && v.Enable {
-			   err := core.Push.SendPushNotification(core.Push.PushDevices[v.DeviceID], v.NetName+" updated", "The VPN configuration for "+v.NetName+" has been updated")
+			err := core.Push.SendPushNotification(core.Push.PushDevices[v.DeviceID], v.NetName+" updated", "The VPN configuration for "+v.NetName+" has been updated")
 			if err != nil {
 				log.WithFields(log.Fields{
 					"err": err,
@@ -275,7 +275,7 @@ func enableVPN(c *gin.Context) {
 		core.FlushCache(v.DeviceID)
 
 		if core.Push.PushDevices[v.DeviceID] != "" && v.Enable && v.DeviceID == vpn.DeviceID {
-			   err := core.Push.SendPushNotification(core.Push.PushDevices[v.DeviceID], v.NetName+" enabled", "Connection to "+v.NetName+" has been established")
+			err := core.Push.SendPushNotification(core.Push.PushDevices[v.DeviceID], v.NetName+" enabled", "Connection to "+v.NetName+" has been established")
 			if err != nil {
 				log.WithFields(log.Fields{
 					"err": err,
@@ -283,7 +283,7 @@ func enableVPN(c *gin.Context) {
 			}
 		} else if core.Push.PushDevices[v.DeviceID] != "" && v.Enable {
 			// send push notification if appropriate
-			   err := core.Push.SendPushNotification(core.Push.PushDevices[v.DeviceID], v.NetName+" updated", "The VPN configuration for "+v.NetName+" has been updated")
+			err := core.Push.SendPushNotification(core.Push.PushDevices[v.DeviceID], v.NetName+" updated", "The VPN configuration for "+v.NetName+" has been updated")
 			if err != nil {
 				log.WithFields(log.Fields{
 					"err": err,
@@ -293,7 +293,7 @@ func enableVPN(c *gin.Context) {
 
 		// send push notification to the device that just had the VPN disabled
 		if core.Push.PushDevices[v.DeviceID] != "" && !v.Enable && v.DeviceID == vpn.DeviceID {
-			   err := core.Push.SendPushNotification(core.Push.PushDevices[v.DeviceID], v.NetName+" disabled", "The VPN configuration for "+v.NetName+" has been disabled")
+			err := core.Push.SendPushNotification(core.Push.PushDevices[v.DeviceID], v.NetName+" disabled", "The VPN configuration for "+v.NetName+" has been disabled")
 			if err != nil {
 				log.WithFields(log.Fields{
 					"err": err,
