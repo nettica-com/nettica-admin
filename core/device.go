@@ -185,18 +185,27 @@ func UpdateDevice(Id string, device *model.Device, fUpdated bool) (*model.Device
 	if current.VoIP != nil && *current.VoIP == "" {
 		// if the new value is not empty, add it to the push list
 		if device.VoIP != nil && *device.VoIP != "" {
-			Push.AddDevice(device.Id, *device.VoIP)
+			Push.AddVoipDevice(device.Id, *device.VoIP)
 		}
 
 	} else {
 		if device.VoIP != current.VoIP {
-			Push.RemoveDevice(current.Id)
+			Push.RemoveVoipDevice(current.Id)
 			if device.VoIP != nil && *device.VoIP != "" {
-				Push.AddDevice(device.Id, *device.VoIP)
+				Push.AddVoipDevice(device.Id, *device.VoIP)
 			}
 		}
 	}
 	current.Push = device.Push
+
+	current.IsAgent = device.IsAgent
+	current.IsApp = device.IsApp
+	current.HasSpecialPerms = device.HasSpecialPerms
+	current.OwnerID = device.OwnerID
+
+	if current.OwnerID == "" {
+		current.OwnerID = current.AccountID
+	}
 
 	current.VoIP = device.VoIP
 	current.Enable = device.Enable

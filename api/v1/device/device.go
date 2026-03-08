@@ -134,10 +134,10 @@ func pushDevice(c *gin.Context) {
 
 	log.Infof("Push Device: %v", p)
 
-	if !p.IsVoIP && strings.Contains(p.Message, "is calling") {
-		log.Warn("VoIP message detected but IsVoIP is false, setting IsVoIP to true")
-		p.IsVoIP = true
-	}
+	//if !p.IsVoIP && strings.Contains(p.Message, "is calling") {
+	//	log.Warn("VoIP message detected but IsVoIP is false, setting IsVoIP to true")
+	//	p.IsVoIP = true
+	//}
 
 	if p.IsVoIP {
 		token, exists := core.Push.VoipDevices[p.ToDeviceID]
