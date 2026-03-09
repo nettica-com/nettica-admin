@@ -16,7 +16,7 @@ type Device struct {
 	Server            string     `json:"server"                    bson:"server"`
 	ApiKey            string     `json:"apiKey"                    bson:"apiKey"`
 	AccountID         string     `json:"accountid"                 bson:"accountid"`
-	OwnerID           string     `json:"owner,omitempty"           bson:"owner,omitempty"`
+	Owner             *string    `json:"owner,omitempty"           bson:"owner,omitempty"`
 	Name              string     `json:"name"                      bson:"name"`
 	Description       string     `json:"description"               bson:"description"`
 	Type              string     `json:"type,omitempty"            bson:"type,omitempty"`
@@ -36,8 +36,7 @@ type Device struct {
 	EZCode            string     `json:"ezcode,omitempty"          bson:"ezcode,omitempty"`
 	Push              *string    `json:"push,omitempty"            bson:"push,omitempty"`
 	VoIP              *string    `json:"voip,omitempty"            bson:"voip,omitempty"`
-	IsAgent           *bool      `json:"isAgent,omitempty"         bson:"isAgent,omitempty"`
-	IsApp             *bool      `json:"isApp,omitempty"           bson:"isApp,omitempty"`
+	App               *string    `json:"app,omitempty"             bson:"app,omitempty"`
 	HasSpecialPerms   *bool      `json:"hasSpecialPerms,omitempty" bson:"hasSpecialPerms,omitempty"`
 	ReadOnly          *bool      `json:"readonly,omitempty"        bson:"readonly,omitempty"`
 	TextEnabled       *bool      `json:"textEnabled,omitempty"     bson:"textEnabled,omitempty"`
