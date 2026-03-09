@@ -198,13 +198,12 @@ func UpdateDevice(Id string, device *model.Device, fUpdated bool) (*model.Device
 	}
 	current.Push = device.Push
 
-	current.IsAgent = device.IsAgent
-	current.IsApp = device.IsApp
+	current.App = device.App
 	current.HasSpecialPerms = device.HasSpecialPerms
-	current.OwnerID = device.OwnerID
+	current.Owner = device.Owner
 
-	if current.OwnerID == "" {
-		current.OwnerID = current.AccountID
+	if current.Owner == nil {
+		current.Owner = &current.AccountID
 	}
 
 	current.VoIP = device.VoIP
