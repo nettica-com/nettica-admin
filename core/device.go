@@ -113,7 +113,7 @@ func UpdateDevice(Id string, device *model.Device, fUpdated bool) (*model.Device
 	}
 
 	if current.Updated.After(device.Updated) {
-		log.Errorf("UpdateDevice: device %s has been updated by another user", device.Id)
+		log.Errorf("UpdateDevice: device %s has been updated from stale data", device.Id)
 	}
 
 	if !fUpdated {
@@ -201,10 +201,6 @@ func UpdateDevice(Id string, device *model.Device, fUpdated bool) (*model.Device
 	current.App = device.App
 	current.HasSpecialPerms = device.HasSpecialPerms
 	current.Owner = device.Owner
-
-	if current.Owner == nil {
-		current.Owner = &current.AccountID
-	}
 
 	current.VoIP = device.VoIP
 	current.Enable = device.Enable

@@ -70,6 +70,10 @@ func createDevice(c *gin.Context) {
 		data.AccountID = account.Parent
 	}
 
+	if data.Owner == nil || *data.Owner == "" {
+		data.Owner = &account.Id
+	}
+
 	if core.EnforceLimits() {
 		limit, err := core.ReadLimits(data.AccountID)
 		if err != nil {
@@ -267,14 +271,15 @@ func updateDevice(c *gin.Context) {
 
 	} else {
 
-		account, err := core.GetAccount(account.Email, device.AccountID)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"err": err,
-			}).Error("failed to read account")
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
+		// This code should be unnecessary since the AuthFromContext should provide the proper account for the device
+		//account, err := core.GetAccount(account.Email, device.AccountID)
+		//if err != nil {
+		//	log.WithFields(log.Fields{
+		//		"err": err,
+		//	}).Error("failed to read account")
+		//	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		//	return
+		//}
 		if account == nil {
 			log.WithFields(log.Fields{
 				"err": err,
@@ -292,6 +297,11 @@ func updateDevice(c *gin.Context) {
 		if !authorized {
 			c.JSON(http.StatusForbidden, gin.H{"error": "You cannot update this device"})
 			return
+		}
+
+		// backfill owner if missing
+		if device.Owner == nil && device.CreatedBy == account.Email {
+			data.Owner = &account.Id
 		}
 
 		data.UpdatedBy = account.Email
