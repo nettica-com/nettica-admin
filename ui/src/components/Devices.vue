@@ -3,7 +3,7 @@
         <v-row><v-col cols="12">
                 <div>
                     <v-btn class="mb-3 mt-0" @click="Refresh()">
-                        <v-icon dark>mdi-refresh</v-icon>
+                        <v-icon>mdi-refresh</v-icon>
                         Refresh
                     </v-btn>
                 </div>
@@ -12,8 +12,7 @@
                         <v-row>
                             <v-col cols="4">Devices</v-col>
                             <v-col cols="4">
-
-                                <v-text-field v-model="search" append-icon="mdi-magnify" label="Search" single-line
+                                <v-text-field v-model="search" append-inner-icon="mdi-magnify" label="Search"
                                     hide-details></v-text-field>
                             </v-col>
                             <v-col cols="4" class="text-right">
@@ -25,55 +24,54 @@
                         </v-row>
                     </v-card-title>
                     <div v-if="friendly">
-                        <v-alert type="info" color="#336699" dismissible>
+                        <v-alert type="info" color="#336699" closable>
                             No devices found. <a style="color:white;" @click="startCreate">Click here to add your first device.</a>
                         </v-alert>
                     </div>
 
                     <v-row v-if="!friendly">
                         <v-col cols="6">
-                            <v-treeview v-if="showTree" :items="items" :search="search" :filter="filter" :active.sync="active"
-                                :open.sync="open" activatable hoverable>
+                            <VTreeview v-if="showTree" :items="items" :search="search" :filter-fn="filter"
+                                v-model:activated="active" v-model:opened="open"
+                                item-title="name" item-value="id"
+                                activatable hoverable>
                                 <template v-slot:prepend="{ item }">
-                                    <span v-if="item.symbol && item.status == 'Online'" class="material-symbols-outlined" style="color:green;">{{ item.symbol }}</span>
-                                    <span v-else-if="item.symbol && item.status == 'Offline'" class="material-symbols-outlined" style="color:red;">{{ item.symbol }}</span>
-                                    <span v-else-if="item.symbol && item.status && item.status != 'Online' && item.status != 'Offline' " class="material-symbols-outlined" style="color:blue;">{{ item.symbol }}</span>
-                                    <span v-else="item.symbol && !item.status" class="material-symbols-outlined">{{ item.symbol }}</span>
-                                    
-                                    <v-icon v-if="!item.symbol" style="color:white;">
-                                        {{ item.icon }}
+                                    <span v-if="item.raw.symbol && item.raw.status == 'Online'" class="material-symbols-outlined" style="color:green;">{{ item.raw.symbol }}</span>
+                                    <span v-else-if="item.raw.symbol && item.raw.status == 'Offline'" class="material-symbols-outlined" style="color:red;">{{ item.raw.symbol }}</span>
+                                    <span v-else-if="item.raw.symbol && item.raw.status && item.raw.status != 'Online' && item.raw.status != 'Offline'" class="material-symbols-outlined" style="color:blue;">{{ item.raw.symbol }}</span>
+                                    <span v-else-if="item.raw.symbol" class="material-symbols-outlined">{{ item.raw.symbol }}</span>
+                                    <v-icon v-else style="color:white;">
+                                        {{ item.raw.icon }}
                                     </v-icon>
                                 </template>
                                 <template v-slot:label="{ item }">
                                     <table>
-                                        <tr><td :style="{ color: item.enabled ? 'white' : 'gray' }">
-                                            {{  item.name  }}
+                                        <tr><td :style="{ color: item.raw.enabled ? 'white' : 'gray' }">
+                                            {{ item.raw.name }}
                                         </td></tr>
-                                        <tr v-if="item.isDevice"><td class="gray" style="font-size: small;">
-                                            {{ item.description }}
+                                        <tr v-if="item.raw.isDevice"><td class="gray" style="font-size: small;">
+                                            {{ item.raw.description }}
                                         </td></tr>
                                         <tr v-else><td class="gray" style="font-size: small;">
-                                            {{ item.vpn.current.address.join(", ") }}
+                                            {{ item.raw.vpn.current.address.join(', ') }}
                                         </td></tr>
                                     </table>
                                 </template>
                                 <template v-slot:append="{ item }">
-                                    <v-btn v-if="item.isDevice" icon @click="startAddVPN(item.device)">
-                                        <v-tooltip bottom>
-                                            <template v-slot:activator="{ on }">
-                                                <v-icon v-on="on" color="#336699">mdi-plus-circle</v-icon>
+                                    <v-btn v-if="item.raw.isDevice" icon @click="startAddVPN(item.raw.device)">
+                                        <v-tooltip text="Add network to this device" location="bottom">
+                                            <template #activator="{ props: tooltipProps }">
+                                                <v-icon v-bind="tooltipProps" color="#336699">mdi-plus-circle</v-icon>
                                             </template>
-                                            <span>Add network to this device</span>
                                         </v-tooltip>
                                     </v-btn>
                                 </template>
-                            </v-treeview>
+                            </VTreeview>
                         </v-col>
                         <v-divider vertical></v-divider>
                         <v-col cols="6" class="text-center">
-                            <div v-if="!selected" class="text-h6 grey--text text--lighten-1 font-weight-light"
+                            <div v-if="!selected" class="text-h6 text-grey-lighten-1 font-weight-light"
                                 style="align-self: center;">
-
                             </div>
                             <v-card v-else-if="selected.isDevice" :key="selected.id" class="px-3 mx-auto" flat>
                                 <v-form autocomplete="off">
@@ -83,15 +81,10 @@
                                         {{ selected.name }}
                                     </h3>
                                     <div class="mb-2">
-                                        <template>
-                                            <v-icon v-if="selected.device.status == 'Online'"
-                                                color="green">mdi-check-circle</v-icon>
-                                            <v-icon v-else-if="selected.device.status == 'Offline'"
-                                                color="red">mdi-close-circle</v-icon>
-                                            <v-icon v-else color="blue">mdi-minus-circle</v-icon>
-                                            {{ selected.device.status }}
-                                        </template>
-
+                                        <v-icon v-if="selected.device.status == 'Online'" color="green">mdi-check-circle</v-icon>
+                                        <v-icon v-else-if="selected.device.status == 'Offline'" color="red">mdi-close-circle</v-icon>
+                                        <v-icon v-else color="blue">mdi-minus-circle</v-icon>
+                                        {{ selected.device.status }}
                                     </div>
                                 </v-card-text>
                                 <v-divider></v-divider>
@@ -99,22 +92,14 @@
                                 <v-row class="px-3" width="600">
                                     <v-col flex>
                                         <div :hidden="selected.device.registered">
-                                            <v-text-field v-model="selected.device.ezcode" label="EZ-Code"
-                                                :readonly="true" />
+                                            <v-text-field v-model="selected.device.ezcode" label="EZ-Code" :readonly="true" />
                                         </div>
                                         <v-text-field v-model="selected.device.description" label="Description" :readonly="!inEdit" />
-                                        <v-combobox v-model="selected.device.tags" chips
-                                            hint="Enter a tag, hit tab, hit enter." label="Tags" multiple dark
-                                            :readonly="!inEdit">
-                                            <template v-slot:selection="{ attrs, item, select }">
-                                                <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                                    @click:close="selected.device.tags.splice(selected.device.tags.indexOf(item), 1)">
-                                                    <strong>{{ item }}</strong>&nbsp;
-                                                </v-chip>
-                                            </template>
-                                        </v-combobox>
+                                        <v-combobox v-model="selected.device.tags" chips closable-chips
+                                            hint="Enter a tag, hit tab, hit enter." label="Tags" multiple
+                                            :readonly="!inEdit" />
                                         <v-select return-object v-model="selected.platform" :items="platforms.items"
-                                            item-text="text" item-value="value" label="Platform of this device" single
+                                            item-title="text" item-value="value" label="Platform of this device"
                                             persistent-hint :readonly="!inEdit" />
                                         <v-text-field v-model="selected.device.version" label="Version" readonly />
                                         <v-switch v-model="selected.device.enable" color="#004000" inset
@@ -122,35 +107,33 @@
                                         <v-text-field v-model="selected.device.checkInterval" type="number"
                                             label="Check interval" hint="In seconds" :readonly="!inEdit" />
                                         <v-select return-object v-model="selected.accountid" :items="acntList.items"
-                                            item-text="text" item-value="value" label="Account ID" single
+                                            item-title="text" item-value="value" label="Account ID"
                                             persistent-hint :readonly="!inEdit" />
                                         <v-text-field v-model="selected.device.id" label="Device ID" readonly />
                                         <v-text-field v-model="selected.device.server" label="Server" :readonly="!inEdit" />
-                                        
                                         <v-text-field v-if="!inEdit" label="API Key" readonly
-                                            append-icon="mdi-content-copy" @click:append="copy(selected.device.apiKey)">* * * *</v-text-field>
+                                            append-inner-icon="mdi-content-copy" @click:append-inner="copy(selected.device.apiKey)">* * * *</v-text-field>
                                         <v-text-field v-if="inEdit" v-model="selected.device.apiKey" label="API Key" />
-                                    
-                                        <v-text-field v-model="selected.device.instanceid" label="AWS or Azure Instance ID" :readonly="!inEdit" />  
+                                        <v-text-field v-model="selected.device.instanceid" label="AWS or Azure Instance ID" :readonly="!inEdit" />
                                         <div :hidden="!inEdit">
                                             <v-text-field v-model="selected.device.name" label="Device friendly name"
-                                                :rules="[v => !!v || 'device name is required',]" required />
+                                                :rules="[v => !!v || 'device name is required']" required />
                                         </div>
                                         <v-select return-object v-model="selected.logging" :items="logging.items"
-                                            item-text="text" item-value="value" label="Logging" single persistent-hint :readonly="!inEdit" />
-                                        <p class="text-caption">Created by {{ selected.device.createdBy }} at {{ selected.device.created | formatDate }}<br/>
-                                                            Last update by {{ selected.device.updatedBy }} at {{ selected.device.updated | formatDate }}<br/>
-                                                            <span v-if="selected.device.lastSeen">Last Seen on {{ selected.device.lastSeen | formatDate }}</span></p>
+                                            item-title="text" item-value="value" label="Logging" persistent-hint :readonly="!inEdit" />
+                                        <p class="text-caption">Created by {{ selected.device.createdBy }} at {{ formatDate(selected.device.created) }}<br/>
+                                                            Last update by {{ selected.device.updatedBy }} at {{ formatDate(selected.device.updated) }}<br/>
+                                                            <span v-if="selected.device.lastSeen">Last Seen on {{ formatDate(selected.device.lastSeen) }}</span></p>
                                     </v-col>
                                 </v-row>
                                 <v-card-actions v-if="inEdit">
                                     <v-btn color="#004000" @click="updateDevice(selected)">
                                         Submit
-                                        <v-icon right dark>mdi-check-outline</v-icon>
+                                        <v-icon end>mdi-check-outline</v-icon>
                                     </v-btn>
                                     <v-btn color="#000040" @click="inEdit = false">
                                         Cancel
-                                        <v-icon right dark>mdi-close-circle-outline</v-icon>
+                                        <v-icon end>mdi-close-circle-outline</v-icon>
                                     </v-btn>
                                 </v-card-actions>
                                 <v-card-actions v-else>
@@ -159,19 +142,19 @@
                                             <v-col>
                                                 <v-btn color="#004000" @click="copyDeviceConfig(selected.device)">
                                                     Copy
-                                                    <v-icon right dark>mdi-cloud-download-outline</v-icon>
+                                                    <v-icon end>mdi-cloud-download-outline</v-icon>
                                                 </v-btn>
                                             </v-col>
                                             <v-col>
                                                 <v-btn class="px-3" color="#000040" @click="inEdit = true">
                                                     Edit
-                                                    <v-icon right dark>mdi-pencil-outline</v-icon>
+                                                    <v-icon end>mdi-pencil-outline</v-icon>
                                                 </v-btn>
                                             </v-col>
                                             <v-col>
                                                 <v-btn class="px-3" color="#400000" @click="removeDevice(selected.device)">
                                                     Delete
-                                                    <v-icon right dark>mdi-delete-outline</v-icon>
+                                                    <v-icon end>mdi-delete-outline</v-icon>
                                                 </v-btn>
                                             </v-col>
                                         </v-row>
@@ -179,7 +162,7 @@
                                 </v-card-actions>
                                 </v-form>
                             </v-card>
-                            <v-card v-else-if="!selected.isDevice">
+                            <v-card v-else-if="selected && !selected.isDevice">
                                 <v-form autocomplete="off">
                                 <v-card-text width="600" class="px-3">
                                     <v-icon class="material-symbols-outlined" size="50">hub</v-icon>
@@ -192,36 +175,14 @@
                                     <v-col flex>
                                         <v-text-field v-model="selected.vpn.name" label="DNS name" :readonly="!inEdit"
                                           :rules="[ rules.required, rules.host ]" />
-                                        <v-combobox :readonly="!inEdit" v-model="selected.vpn.current.address" chips
-                                            hint="Write IPv4 or IPv6 CIDR and hit enter" label="Addresses" multiple dark>
-                                            <template v-slot:selection="{ attrs, item, select }">
-                                                <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                                    @click:close="selected.vpn.current.address.splice(selected.vpn.current.address.indexOf(item), 1)">
-                                                    <strong>{{ item }}</strong>&nbsp;
-                                                </v-chip>
-                                            </template>
-                                        </v-combobox>
-                                        <v-combobox :readonly="!inEdit" v-model="selected.vpn.current.dns" chips
+                                        <v-combobox :readonly="!inEdit" v-model="selected.vpn.current.address" chips closable-chips
+                                            hint="Write IPv4 or IPv6 CIDR and hit enter" label="Addresses" multiple />
+                                        <v-combobox :readonly="!inEdit" v-model="selected.vpn.current.dns" chips closable-chips
                                             hint="Enter IP address(es) and hit enter or leave empty."
-                                            label="DNS servers for this device" multiple dark>
-                                            <template v-slot:selection="{ attrs, item, select }">
-
-                                                <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                                    @click:close="selected.vpn.current.dns.splice(selected.vpn.current.dns.indexOf(item), 1)">
-                                                    <strong>{{ item }}</strong>&nbsp;
-                                                </v-chip>
-                                            </template>
-                                        </v-combobox>
-                                        <v-combobox v-if="selected.vpn.type=='Service'" v-model="selected.vpn.current.allowedIPs" chips
+                                            label="DNS servers for this device" multiple />
+                                        <v-combobox v-if="selected.vpn.type=='Service'" v-model="selected.vpn.current.allowedIPs" chips closable-chips
                                                 hint="Write IPv4 or IPv6 CIDR and hit enter" label="Allowed IPs" multiple
-                                                dark :readonly="!inEdit" >
-                                            <template v-slot:selection="{ attrs, item, select }">
-                                                <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                                    @click:close="selected.vpn.current.allowedIPs.splice(selected.vpn.current.allowedIPs.indexOf(item), 1)">
-                                                    <strong>{{ item }}</strong>&nbsp;
-                                                </v-chip>
-                                            </template>
-                                        </v-combobox>
+                                                :readonly="!inEdit" />
                                         <v-text-field :readonly="!inEdit" v-model="selected.vpn.current.endpoint"
                                             label="Public endpoint for clients" :rules="[ rules.ipport ]" />
                                         <v-text-field type="number" v-model="selected.vpn.current.mtu"
@@ -231,40 +192,32 @@
                                             hint="To disable, set to 0.  Recommended value 23 (seconds)" />
                                         <v-switch v-model="selected.vpn.enable" color="#004000" inset
                                         :label="selected.vpn.enable ? 'Enabled' : 'Disabled'" :readonly="!inEdit" />
-                                        <p class="text-caption">Created by {{ selected.vpn.createdBy }} at {{ selected.vpn.created | formatDate }}<br/>
-                                                            Last update by {{ selected.vpn.updatedBy }} at {{ selected.vpn.updated | formatDate }}</p>
+                                        <p class="text-caption">Created by {{ selected.vpn.createdBy }} at {{ formatDate(selected.vpn.created) }}<br/>
+                                                            Last update by {{ selected.vpn.updatedBy }} at {{ formatDate(selected.vpn.updated) }}</p>
 
                                     </v-col>
                                 </v-row>
-                                <v-expansion-panels v-if="inEdit &&!(selected.vpn.type=='Service')">
+                                <v-expansion-panels v-if="inEdit && !(selected.vpn.type=='Service')">
                                     <v-expansion-panel>
-                                        <v-expansion-panel-header dark>Advanced Configuration</v-expansion-panel-header>
-                                        <v-expansion-panel-content>
+                                        <v-expansion-panel-title>Advanced Configuration</v-expansion-panel-title>
+                                        <v-expansion-panel-text>
                                             <div class="d-flex flex-no-wrap justify-space-between">
                                                 <v-col cols="12">
-                                                    <v-combobox v-model="selected.vpn.current.allowedIPs" chips
+                                                    <v-combobox v-model="selected.vpn.current.allowedIPs" chips closable-chips
                                                         hint="Write IPv4 or IPv6 CIDR and hit enter" label="Allowed IPs"
-                                                        multiple dark>
-
-                                                        <template v-slot:selection="{ attrs, item, select }">
-                                                            <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                                                @click:close="selected.vpn.current.allowedIPs.splice(selected.vpn.current.allowedIPs.indexOf(item), 1)">
-                                                                <strong>{{ item }}</strong>&nbsp;
-                                                            </v-chip>
-                                                        </template>
-                                                    </v-combobox>
+                                                        multiple />
                                                     <v-text-field v-model="selected.vpn.id" label="VPN ID" readonly />
                                                     <v-text-field v-model="selected.vpn.netid" label="Network ID" readonly />
                                                     <v-text-field v-model="selected.vpn.deviceid" label="Device ID" disabled />
                                                     <v-combobox v-model="selected.vpn.role" :items="['', 'Ingress', 'Egress']"
-                                                        label="Role" single dark />
+                                                        label="Role" />
                                                     <v-text-field v-model="selected.vpn.current.table" label="Table" />
                                                     <v-text-field v-model="selected.vpn.current.publicKey" label="Public key" />
-                                                    <v-text-field v-if="!editPrivate" label="Private key" readonly append-icon="mdi-square-edit-outline" @click:append="editPrivate = true" />
+                                                    <v-text-field v-if="!editPrivate" label="Private key" readonly append-inner-icon="mdi-square-edit-outline" @click:append-inner="editPrivate = true" />
                                                     <v-text-field v-if="editPrivate" v-model="selected.vpn.current.privateKey" label="Private key"
                                                         hint="Clear this field to have the client manage its private key" />
-                                                    <v-text-field label="Preshared Key" readonly 
-                                                        append-icon="mdi-content-copy" @click:append="copy(selected.vpn.current.presharedKey)" />
+                                                    <v-text-field label="Preshared Key" readonly
+                                                        append-inner-icon="mdi-content-copy" @click:append-inner="copy(selected.vpn.current.presharedKey)" />
                                                     <v-textarea v-model="selected.vpn.current.postUp" label="PostUp Script"
                                                         hint="Only applies to linux servers" />
                                                     <v-textarea v-model="selected.vpn.current.postDown" label="PostDown Script"
@@ -306,20 +259,19 @@
                                                     </table>
                                                 </v-col>
                                             </div>
-                                        </v-expansion-panel-content>
+                                        </v-expansion-panel-text>
                                     </v-expansion-panel>
                                 </v-expansion-panels>
-
 
                                 <v-card>
                                     <v-card-actions v-if="inEdit">
                                         <v-btn color="#004000" @click="updateVPN(selected.vpn)">
                                             Submit
-                                            <v-icon right dark>mdi-check-outline</v-icon>
+                                            <v-icon end>mdi-check-outline</v-icon>
                                         </v-btn>
                                         <v-btn color="#000040" @click="inEdit = false">
                                             Cancel
-                                            <v-icon right dark>mdi-close-circle-outline</v-icon>
+                                            <v-icon end>mdi-close-circle-outline</v-icon>
                                         </v-btn>
                                     </v-card-actions>
                                     <v-card-actions v-else>
@@ -328,19 +280,19 @@
                                                 <v-col>
                                                     <v-btn color="#004000" @click="forceFileDownload(selected.vpn)">
                                                         Download
-                                                        <v-icon right dark>mdi-cloud-download-outline</v-icon>
+                                                        <v-icon end>mdi-cloud-download-outline</v-icon>
                                                     </v-btn>
                                                 </v-col>
                                                 <v-col>
                                                     <v-btn class="px-3" color="#000040" @click="inEdit = true">
                                                         Edit
-                                                        <v-icon right dark>mdi-pencil-outline</v-icon>
+                                                        <v-icon end>mdi-pencil-outline</v-icon>
                                                     </v-btn>
                                                 </v-col>
                                                 <v-col>
                                                     <v-btn class="px-3" color="#400000" @click="removeVPN(selected.vpn)">
                                                         Delete
-                                                        <v-icon right dark>mdi-delete-outline</v-icon>
+                                                        <v-icon end>mdi-delete-outline</v-icon>
                                                     </v-btn>
                                                 </v-col>
                                             </v-row>
@@ -352,88 +304,34 @@
                         </v-col>
                     </v-row>
 
-                    <template v-slot:item.name="{ item }">
-                        {{ item.name }}
-                    </template>
-                    <template v-slot:item.status="{ item }">
-                        <v-icon v-if="item.status == 'Online'" color="green">mdi-check-circle</v-icon>
-                        <v-icon v-else-if="item.status == 'Native'" color="blue">mdi-minus-circle</v-icon>
-                        <v-icon v-else color="red">mdi-close-circle</v-icon>
-                        {{ item.status }}
-                    </template>
-
-                    <template v-slot:item.address="{ item }">
-                        <v-chip v-for="(ip, i) in item.address" :key="i" color="#336699" text-color="white">
-                            <v-icon left>mdi-ip-network</v-icon>
-                            {{ ip }}
-                        </v-chip>
-                    </template>
-                    <template v-slot:item.tags="{ item }">
-                        <v-chip v-for="(tag, i) in item.tags" :key="i" color="blue-grey" text-color="white">
-                            <v-icon left>mdi-tag</v-icon>
-                            {{ tag }}
-                        </v-chip>
-                    </template>
-                    <template v-slot:item.created="{ item }">
-                        <v-row>
-                            <p>{{ item.createdBy }} at {{ item.created | formatDate }}</p>
-                        </v-row>
-                    </template>
-                    <template v-slot:item.updated="{ item }">
-                        <v-row>
-                            <p>At {{ item.updated | formatDate }} by {{ item.updatedBy }}</p>
-                        </v-row>
-                    </template>
-                    <template v-slot:item.action="{ item }">
-                        <v-row v-if="item.type == 'ServiceHost'">
-                            <v-icon class="pr-1 pl-1" @click.stop="startUpdateServiceHost(item)" title="Edit Service">
-                                mdi-square-edit-outline
-                            </v-icon>
-                        </v-row>
-                        <v-row v-if="item.type != 'ServiceHost'">
-                            <v-icon class="pr-1 pl-1" @click.stop="startUpdate(item)" title="Edit">
-                                mdi-square-edit-outline
-                            </v-icon>
-                            <v-icon class="pr-1 pl-1" @click.stop="startCopy(item)" title="Copy">
-                                mdi-content-copy
-                            </v-icon>
-                            <v-icon class="pr-1 pl-1" @click="remove(item)" title="Delete">
-                                mdi-trash-can-outline
-                            </v-icon>
-                            <v-switch dark class="pr-1 pl-1" color="#004000" v-model="item.enable"
-                                v-on:change="updateEnable(item)" />
-                        </v-row>
-                    </template>
-
                 </v-card>
-                <v-dialog v-if="device" v-model="dialogCreate" max-width="550" persistent  @keydown.esc="dialogCreate = false" >
+                <v-dialog v-if="device" v-model="dialogCreate" max-width="550" persistent @keydown.esc="dialogCreate = false">
                     <v-card>
                         <v-card-title class="headline">Add New Device</v-card-title>
                         <v-card-text>
                             <v-row>
                                 <v-col cols="12">
                                     <v-form ref="form" v-model="valid">
-                                        <v-text-field v-model="device.name" 
-                                            :rules="[rules.required, rules.host]" required >
+                                        <v-text-field v-model="device.name"
+                                            :rules="[rules.required, rules.host]" required>
                                             <template #label>
-                                                <span class="red--text"><strong>* </strong></span>Host friendly name
+                                                <span class="text-red"><strong>* </strong></span>Host friendly name
                                             </template>
                                         </v-text-field>
-                                        <v-select return-object v-model="addNet.selected" :items="addNet.items" v-on:change="onNetChange"
-                                            item-text="text" item-value="value" label="Join this network (optional)"
-                                            single persistent-hint />
-                                        <v-select return-object v-model="acntList.selected" :items="acntList.items" item-text="text"
+                                        <v-select return-object v-model="addNet.selected" :items="addNet.items" @update:model-value="onNetChange"
+                                            item-title="text" item-value="value" label="Join this network (optional)"
+                                            persistent-hint />
+                                        <v-select return-object v-model="acntList.selected" :items="acntList.items" item-title="text"
                                             item-value="value" label="For this account"
-                                            :rules="[v => !!v || 'Account is required',]" single persistent-hint />
+                                            :rules="[v => !!v || 'Account is required']" persistent-hint />
                                         <v-select return-object v-model="platforms.selected" :items="platforms.items"
-                                            item-text="text" item-value="value" label="Platform of this device" single
+                                            item-title="text" item-value="value" label="Platform of this device"
                                             persistent-hint />
                                         <v-text-field v-model="device.instanceid" label="AWS or Azure Instance ID" />
                                         <v-switch v-model="device.enable" color="#004000" inset
                                             :label="device.enable ? 'Enable device after creation' : 'Disable device after creation'" />
                                         <v-switch v-model="use_ezcode" color="#004000" inset
                                             :label="use_ezcode ? 'Use EZ-Code' : 'Do not use EZ-Code'" />
-
                                     </v-form>
                                 </v-col>
                             </v-row>
@@ -442,16 +340,16 @@
                             <v-spacer />
                             <v-btn :disabled="!valid" color="#004000" @click="create(device)">
                                 Submit
-                                <v-icon right dark>mdi-check-outline</v-icon>
+                                <v-icon end>mdi-check-outline</v-icon>
                             </v-btn>
                             <v-btn color="#000040" @click="dialogCreate = false">
                                 Cancel
-                                <v-icon right dark>mdi-close-circle-outline</v-icon>
+                                <v-icon end>mdi-close-circle-outline</v-icon>
                             </v-btn>
                         </v-card-actions>
                     </v-card>
                 </v-dialog>
-                <v-dialog v-if="device && device.ezcode" v-model="dialogEZCode" max-width="550"  persistent  @keydown.esc="dialogEZCode = false" >
+                <v-dialog v-if="device && device.ezcode" v-model="dialogEZCode" max-width="550" persistent @keydown.esc="dialogEZCode = false">
                     <v-card>
                         <v-card-title class="headline">EZ-Code</v-card-title>
                         <v-card-text>
@@ -466,23 +364,23 @@
                         </v-card-text>
                         <v-card-actions>
                             <v-spacer />
-                            <v-btn color="#004000" @click="dialogEZCode=false;">
+                            <v-btn color="#004000" @click="dialogEZCode = false">
                                 OK
-                                <v-icon right dark>mdi-check-outline</v-icon>
+                                <v-icon end>mdi-check-outline</v-icon>
                             </v-btn>
                         </v-card-actions>
                     </v-card>
                 </v-dialog>
-                <v-dialog v-if="vpn" v-model="dialogAddVPN" max-width="550"  persistent  @keydown.esc="dialogAddVPN = false" >
+                <v-dialog v-if="vpn" v-model="dialogAddVPN" max-width="550" persistent @keydown.esc="dialogAddVPN = false">
                     <v-card>
                         <v-card-title class="headline">Add VPN</v-card-title>
                         <v-card-text>
                             <v-row>
                                 <v-col cols="12">
                                     <v-form ref="form" v-model="valid">
-                                        <v-select return-object v-model="netList.selected" :items="netList.items" v-on:change="updateDefaults"
-                                            item-text="text" item-value="value" label="Join this network"
-                                            :rules="[v => !!v || 'Network is required',]" single persistent-hint required />
+                                        <v-select return-object v-model="netList.selected" :items="netList.items" @update:model-value="updateDefaults"
+                                            item-title="text" item-value="value" label="Join this network"
+                                            :rules="[v => !!v || 'Network is required']" persistent-hint required />
                                         <v-text-field v-model="vpn.name" label="DNS name for this device"
                                             :rules="[rules.required, rules.host]" required />
                                         <v-text-field v-model="vpn.current.endpoint" label="Public endpoint for clients"
@@ -500,11 +398,11 @@
                             <v-spacer />
                             <v-btn :disabled="!valid" color="#004000" @click="createVPN(vpn)">
                                 Submit
-                                <v-icon right dark>mdi-check-outline</v-icon>
+                                <v-icon end>mdi-check-outline</v-icon>
                             </v-btn>
                             <v-btn color="#000040" @click="dialogAddVPN = false">
                                 Cancel
-                                <v-icon right dark>mdi-close-circle-outline</v-icon>
+                                <v-icon end>mdi-close-circle-outline</v-icon>
                             </v-btn>
                         </v-card-actions>
                     </v-card>
@@ -513,20 +411,11 @@
                     <v-card>
                         <v-card-title class="headline">Manage Service: {{ vpn.name }}</v-card-title>
                         <v-card-text>
-
                             <v-row>
                                 <v-col cols="12">
                                     <v-form ref="form" v-model="valid">
-                                        <v-combobox v-model="vpn.current.allowedIPs" chips
-                                            hint="Enter IPv4 or IPv6 CIDR and press tab" label="Allowed IPs" multiple dark>
-
-                                            <template v-slot:selection="{ attrs, item, select, selected }">
-                                                <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                                    @click:close="vpn.current.allowedIPs.splice(vpn.current.allowedIPs.indexOf(item), 1)">
-                                                    <strong>{{ item }}</strong>&nbsp;
-                                                </v-chip>
-                                            </template>
-                                        </v-combobox>
+                                        <v-combobox v-model="vpn.current.allowedIPs" chips closable-chips
+                                            hint="Enter IPv4 or IPv6 CIDR and press tab" label="Allowed IPs" multiple />
                                     </v-form>
                                 </v-col>
                             </v-row>
@@ -534,17 +423,16 @@
                     </v-card>
                     <v-card>
                         <v-card-actions>
-                            <v-btn :disabled="!valid" color="#004000" @click="update(device)">
+                            <v-btn :disabled="!valid" color="#004000" @click="updateDevice(selected)">
                                 Submit
-                                <v-icon right dark>mdi-check-outline</v-icon>
+                                <v-icon end>mdi-check-outline</v-icon>
                             </v-btn>
                             <v-btn color="#000040" @click="dialogServiceHost = false">
                                 Cancel
-                                <v-icon right dark>mdi-close-circle-outline</v-icon>
+                                <v-icon end>mdi-close-circle-outline</v-icon>
                             </v-btn>
                         </v-card-actions>
                     </v-card>
-
                 </v-dialog>
             </v-col></v-row>
     </v-container>
@@ -552,744 +440,435 @@
 
 <style>
 .v-treeview-node {
-  padding: 10px 0; /* Add padding to the top-level items */
+  padding: 10px 0;
 }
 .v-treeview-node--leaf {
-  padding: 0; /* Add padding to the leaf items */
+  padding: 0;
 }
 .gray {
     color: gray;
 }
 </style>
 
-<script>
-
-import { mapActions, mapGetters } from 'vuex'
+<script setup>
+import { ref, computed, watch, onMounted } from 'vue'
+import { useDeviceStore } from '@/stores/device'
+import { useNetStore } from '@/stores/net'
+import { useAccountStore } from '@/stores/account'
+import { useVpnStore } from '@/stores/vpn'
+import { useAuthStore } from '@/stores/auth'
 import ApiService from '@/services/api.service'
+import { formatDate } from '@/utils/formatDate'
 
+const deviceStore = useDeviceStore()
+const netStore = useNetStore()
+const accountStore = useAccountStore()
+const vpnStore = useVpnStore()
+const authStore = useAuthStore()
 
-export default {
-    name: 'Devices',
+const acntList = ref({})
+const showPrivate = ref(false)
+const showPreshared = ref(false)
+const showApiKey = ref(false)
+const showTree = ref(false)
+const friendly = ref(false)
+const editPrivate = ref(false)
+const use_ezcode = ref(true)
+const dialogCreate = ref(false)
+const dialogAddVPN = ref(false)
+const dialogServiceHost = ref(false)
+const dialogEZCode = ref(false)
+const device = ref(null)
+const net = ref(null)
+const vpn = ref(null)
+const items = ref([])
+const active = ref([])
+const open = ref([])
+const inEdit = ref(false)
+const valid = ref(false)
+const refreshing = ref(false)
+const search = ref('')
+const netList = ref({})
+const addNet = ref({})
+const publicSubnets = ref(false)
 
-    data: () => ({
+const logging = ref({
+    selected: { text: 'None', value: '' },
+    items: [
+        { text: 'None', value: '' },
+        { text: 'Errors', value: '#400000' },
+        { text: 'Info', value: 'info' },
+        { text: 'Debug', value: 'debug' },
+    ],
+})
 
-        acntList: {},
-        showPrivate: false,
-        showPreshared: false,
-        showApiKey: false,
-        showTree: false,
-        friendly: false,
-        editPrivate: false,
-        use_ezcode: true,
-        footerProps: { 'items-per-page-options': [25, 50, 100, -1] },
-        dialogCreate: false,
-        dialogAddVPN: false,
-        dialogServiceHost: false,
-        dialogEZCode: false,
-        device: null,
-        net: null,
-        vpn: null,
-        items: [],
-        active: [],
-        open: [],
-        inEdit: false,
-        name: '',
-        panel: 1,
-        valid: false,
-        rules: {
-            required: value => !!value || 'Required.',
-            not_required: value => !value || (value && value.length == 0) || 'If present, must be valid IPv4 or IPv6 address and port',
-            email: v => /.+@.+\..+/.test(v) || 'E-mail must be valid',
-            host: v => /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/.test(v) || 'Only letters, numbers, dots and hyphens are allowed. Must start and end with a letter or number.',
-            ipv4port: v => (!v || v && v.length == 0 || /^((\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}\b)|^$)$/.test(v)) || 'IPv4 address and port required',
-            ipv6port: v => (!v || v && v.length == 0 || /^(\[([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\]:[0-9]{1,5}|^$)$/.test(v)) || 'IPv6 address and port required',
-            ipport: v => (!v || v && v.length == 0 || /^(((\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}\b)|(\[([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\]:[0-9]{1,5})|^$)(,\s+((\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}\b)|(\[([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\]:[0-9]{1,5})|^$))*)$/.test(v)) || 'If present, must be valid IPv4 or IPv6 address and port',
-        },
-        netList: {},
-        addNet: {},
-        platList: {},
-        logging: { 
-            selected: { text: "None", value: "" },
-            items: [
-                { text: "None", value: "" },
-                { text: "Errors", value: "#400000" },
-                { text: "Info", value: "info" },
-                { text: "Debug", value: "debug" },
-            ],
-        },
-        publicSubnets: false,
-        platforms: {
-            selected: { text: "", value: "" },
-            items: [
-                { text: "Windows", value: "Windows", },
-                { text: "Linux", value: "Linux", },
-                { text: "MacOS", value: "macos", },
-                { text: "Apple iOS", value: "ios", },
-                { text: "Raspberry Pi", value: "raspberry"},
-                { text: "Android", value: "android", },
-                { text: "Native WireGuard", value: "Native", },
-            ],
-        },
-        search: '',
-    }),
+const platforms = ref({
+    selected: { text: '', value: '' },
+    items: [
+        { text: 'Windows', value: 'Windows' },
+        { text: 'Linux', value: 'Linux' },
+        { text: 'MacOS', value: 'macos' },
+        { text: 'Apple iOS', value: 'ios' },
+        { text: 'Raspberry Pi', value: 'raspberry' },
+        { text: 'Android', value: 'android' },
+        { text: 'Native WireGuard', value: 'Native' },
+    ],
+})
 
-    computed: {
-        inverse(x) {
-            return !x
-        },
-        selected() {
-            if (!this.active.length) return undefined
+const rules = {
+    required: value => !!value || 'Required.',
+    email: v => /.+@.+\..+/.test(v) || 'E-mail must be valid',
+    host: v => /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/.test(v) || 'Only letters, numbers, dots and hyphens are allowed. Must start and end with a letter or number.',
+    ipport: v => (!v || v && v.length == 0 || /^(((\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}\b)|(\[([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\]:[0-9]{1,5})|^$)(,\s+((\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}\b)|(\[([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\]:[0-9]{1,5})|^$))*)$/.test(v)) || 'If present, must be valid IPv4 or IPv6 address and port',
+}
 
-            const id = this.active[0]
-            console.log("selected id = ", id)
+const selected = computed(() => {
+    if (!active.value.length) return undefined
+    const id = active.value[0]
+    for (let i = 0; i < items.value.length; i++) {
+        if (items.value[i].id === id) return items.value[i]
+        for (let j = 0; j < items.value[i].children.length; j++) {
+            if (items.value[i].children[j].id === id) return items.value[i].children[j]
+        }
+    }
+    return undefined
+})
 
-            for (let i = 0; i < this.items.length; i++) {
-                if (this.items[i].id == id) {
-                    return this.items[i]
-                }
-                for (let j = 0; j < this.items[i].children.length; j++) {
-                    if (this.items[i].children[j].id == id) {
-                        console.log("vpn.current.address[0] = ", this.items[i].children[j].vpn.current.address[0])
-                        return this.items[i].children[j]
-                    }
-                }
-            }
-        },
-        ...mapGetters({
-            user: 'auth/user',
-            servers: 'server/servers',
-            accounts: 'account/accounts',
-            devices: 'device/devices',
-            nets: 'net/nets',
-            vpns: 'vpn/vpns',
-            deviceQrcodes: 'device/deviceQrcodes',
-            getvpnconfig: "vpn/getVPNConfig",
+watch(() => deviceStore.devices, () => {
+    buildTree()
+    showTree.value = true
+    friendly.value = deviceStore.devices.length === 0
+})
 
-        }),
-    },
+watch(() => accountStore.accounts, (val) => {
+    acntList.value = {
+        selected: { text: '', value: '' },
+        items: []
+    }
+    for (let i = 0; i < val.length; i++) {
+        acntList.value.items[i] = { text: val[i].accountName + ' - ' + val[i].parent, value: val[i].parent }
+    }
+})
 
-    mounted() {
-        this.readAllAccounts(this.user.email)
-        this.readAllDevices()
-        this.readAllNetworks()
-
-    },
-
-    watch: {
-        devices: function (val) {
-            console.log("buildTree = ", this.buildTree())
-            this.showTree = true
-            if (this.devices.length == 0) {
-                this.friendly = true
-            } else {
-                this.friendly = false
-            }
-        },
-
-        accounts: function (val) {
-            this.acntList = {
-                selected: { "text": "", "value": "" },
-                items: []
-            }
-
-            for (let i = 0; i < this.accounts.length; i++) {
-                this.acntList.items[i] = { "text": this.accounts[i].accountName + " - " + this.accounts[i].parent, "value": this.accounts[i].parent }
-            }           
-        },
-        nets: function (val) {
-            this.netList = {
-                selected: { "text": "", "value": "" },
-                items: []
-            }
-
-            for (let i = 0; i < this.nets.length; i++) {
-                // check if this net is already on the device
-                if (this.device != null && this.device.vpns != null) {
-                    var found = false
-                    for (let j = 0; j < this.device.vpns.length; j++) {
-                        if (this.device.vpns[j].netid == this.nets[i].id) {
-                            found = true
-                            break
-                        }
-                    }
-                    if (found) {
-                        continue
-                    }
-                }
-                this.netList.items[i] = { "text": this.nets[i].netName, "value": this.nets[i].id }
-            }           
-        },
-    },
-
-    methods: {
-        ...mapActions('device', {
-            errorDevice: 'error',
-            readAllDevices: 'readAll',
-            readQrCode: 'readQrcode',
-            readConfig: 'readConfig',
-            createdevice: 'create',
-            updatedevice: 'update',
-            deletedevice: 'delete',
-            updatedevice_vpn: 'update_vpn',
-        }),
-        ...mapActions('net', {
-            readAllNetworks: 'readAll',
-        }),
-        ...mapActions('account', {
-            readAllAccounts: 'readAll',
-        }),
-        ...mapActions("vpn", {
-            createvpn: "create",
-            readAllVPNs: "readAll",
-            updatevpn: "update",
-            deletevpn: "delete",
-            readvpnconfig: "readConfig",
-        }),
-
-        Refresh() {
-            this.readAllAccounts(this.user.email)
-            this.readAllDevices()
-        },
-
-        Refreshing() {
-            this.refreshing = true
-            this.Refresh()
-
-            for (let i = 0; i < 5; i++) {
-                if (this.refreshing) {
-                    setTimeout(() => {
-                        console.log("Refreshing", i)
-                        this.Refresh()
-                    }, (i+1) * 2000)
-                if (i == 4) {
-                    this.refreshing = false
-                }   
-                } else {
+watch(() => netStore.nets, (val) => {
+    netList.value = {
+        selected: { text: '', value: '' },
+        items: []
+    }
+    for (let i = 0; i < val.length; i++) {
+        if (device.value != null && device.value.vpns != null) {
+            let found = false
+            for (let j = 0; j < device.value.vpns.length; j++) {
+                if (device.value.vpns[j].netid === val[i].id) {
+                    found = true
                     break
                 }
             }
-        },
+            if (found) continue
+        }
+        netList.value.items[i] = { text: val[i].netName, value: val[i].id }
+    }
+})
 
+onMounted(() => {
+    accountStore.readAll(authStore.user.email)
+    deviceStore.readAll()
+    netStore.readAll()
+})
 
-        async asyncRefresh() {
-            await this.readAllAccounts(this.user.email)
-            await this.readAllDevices()
-            console.log("buildTree = ", this.buildTree())
-        },
-        filter(item) {
-            if (this.search == "") {
-                return true
-            }
+function Refresh() {
+    accountStore.readAll(authStore.user.email)
+    deviceStore.readAll()
+}
 
-            if (item.name.toLowerCase().includes(this.search.toLowerCase())) {
-                return true
-            }
-            if (item.isDevice && item.device.tags != null) {
-                for (let i = 0; i < item.device.tags.length; i++) {
-                    if (item.device.tags[i].toLowerCase().includes(this.search.toLowerCase())) {
-                        return true
-                    }
-                }
-            }
-            if (!item.isDevice && item.vpn.current.address.length > 0) {
-                for (let i = 0; i < item.vpn.current.address.length; i++) {
-                    if (item.vpn.current.address[i].toLowerCase().includes(this.search.toLowerCase())) {
-                        return true
-                    }
-                }
-            }
+function Refreshing() {
+    refreshing.value = true
+    Refresh()
+    for (let i = 0; i < 5; i++) {
+        if (refreshing.value) {
+            setTimeout(() => { Refresh() }, (i + 1) * 2000)
+            if (i === 4) refreshing.value = false
+        } else {
+            break
+        }
+    }
+}
 
-            return false;
-        },
+async function asyncRefresh() {
+    await accountStore.readAll(authStore.user.email)
+    await deviceStore.readAll()
+    buildTree()
+}
 
-        buildTree() {
-            // build the treeview using the devices and vpns
-            this.items = []
-            var k = 0
-            for (let i = 0; i < this.devices.length; i++) {
-                var text = "None"
-                if (this.devices[i].logging != null) {
-                    if (this.devices[i].logging == "#400000") {
-                        text = "Errors"
-                    } else if (this.devices[i].logging == "info") {
-                        text = "Info"
-                    } else if (this.devices[i].logging == "debug") {
-                        text = "Debug"
-                    }
-                }
+function filter(value, query, item) {
+    const raw = item?.raw ?? item
+    if (!query) return true
+    if (raw.name && raw.name.toLowerCase().includes(query.toLowerCase())) return true
+    if (raw.isDevice && raw.device.tags != null) {
+        for (const tag of raw.device.tags) {
+            if (tag.toLowerCase().includes(query.toLowerCase())) return true
+        }
+    }
+    if (!raw.isDevice && raw.vpn?.current?.address?.length > 0) {
+        for (const addr of raw.vpn.current.address) {
+            if (addr.toLowerCase().includes(query.toLowerCase())) return true
+        }
+    }
+    return false
+}
 
-                this.items[i] = {
-                    id: this.devices[i].id,
-                    name: this.devices[i].name,
-                    description: this.devices[i].description,
-                    device: this.devices[i],
-                    status: this.devices[i].status,
-                    platform: { "text": this.devices[i].platform, "value": this.devices[i].platform },
-                    accountid: { "text": this.devices[i].accountid, "value": this.devices[i].accountid },
-                    logging: { "text": text,"value": this.devices[i].logging },
-                    icon: "mdi-devices",
-                    symbol: "devices",
-                    isDevice: true,
-                    enabled: this.devices[i].enable,
+function buildTree() {
+    items.value = []
+    for (let i = 0; i < deviceStore.devices.length; i++) {
+        const d = deviceStore.devices[i]
+        let logText = 'None'
+        if (d.logging === '#400000') logText = 'Errors'
+        else if (d.logging === 'info') logText = 'Info'
+        else if (d.logging === 'debug') logText = 'Debug'
+
+        const treeItem = {
+            id: d.id,
+            name: d.name,
+            description: d.description,
+            device: d,
+            status: d.status,
+            platform: { text: d.platform, value: d.platform },
+            accountid: { text: d.accountid, value: d.accountid },
+            logging: { text: logText, value: d.logging },
+            icon: 'mdi-devices',
+            symbol: 'devices',
+            isDevice: true,
+            enabled: d.enable,
+            children: []
+        }
+
+        if (d.os === 'windows') { treeItem.icon = 'mdi-window'; treeItem.symbol = 'window' }
+        if (d.os === 'linux') { treeItem.icon = 'mdi-dns'; treeItem.symbol = 'dns' }
+        if (d.os === 'macos') { treeItem.icon = 'mdi-laptop'; treeItem.symbol = 'laptop' }
+        if (d.os === 'ios') { treeItem.icon = 'mdi-phone'; treeItem.symbol = 'phone_iphone' }
+        if (d.os === 'android') { treeItem.icon = 'mdi-phone-android'; treeItem.symbol = 'phone_android' }
+        if (d.type === 'Service') { treeItem.icon = 'mdi-cloud'; treeItem.symbol = 'cloud' }
+
+        if (d.vpns) {
+            for (let j = 0; j < d.vpns.length; j++) {
+                treeItem.children[j] = {
+                    id: d.vpns[j].id,
+                    name: d.vpns[j].netName,
+                    vpn: d.vpns[j],
+                    icon: 'mdi-network-outline',
+                    symbol: 'network_node',
+                    isDevice: false,
+                    enabled: d.vpns[j].enable,
                     children: []
                 }
-
-                if (this.devices[i].os == "windows") {
-                    this.items[i].icon = "mdi-window"
-                    this.items[i].symbol = "window"
-                }
-
-                if (this.devices[i].os == "linux") {
-                    this.items[i].icon = "mdi-dns"
-                    this.items[i].symbol = "dns"
-                }
-
-                if (this.devices[i].os == "macos") {
-                    this.items[i].icon = "mdi-laptop"
-                    this.items[i].symbol = "laptop"
-                }
-
-                if (this.devices[i].os == "ios") {
-                    this.items[i].icon = "mdi-phone"
-                    this.items[i].symbol = "phone_iphone"
-                }
-
-                if (this.devices[i].os == "android") {
-                    this.items[i].icon = "mdi-phone-android"
-                    this.items[i].symbol = "phone_android"
-                }
- 
-                if (this.devices[i].type == "Service") {
-                    this.items[i].icon = "mdi-cloud"
-                    this.items[i].symbol = "cloud"
-                }
-                if (this.devices[i].vpns == null) {
-                    continue
-                }
-                for (let j = 0; j < this.devices[i].vpns.length; j++) {
-                    this.vpns[k] = this.devices[i].vpns[j]
-                    k++
-                    this.items[i].children[j] = {
-                        id: this.devices[i].vpns[j].id,
-                        name: this.devices[i].vpns[j].netName, 
-                        vpn: this.devices[i].vpns[j],
-                        icon: "mdi-network-outline",
-                        symbol: "network_node",
-                        isDevice: false,
-                        enabled: this.devices[i].vpns[j].enable,
-                        children: []
-                    }
-                }
             }
-            this.items.sort((a, b) => {
-            const nameA = a.name.toUpperCase(); // ignore upper and lowercase
-            const nameB = b.name.toUpperCase(); // ignore upper and lowercase
-            if (nameA < nameB) {
-                return -1;
-            }
-            if (nameA > nameB) {
-                return 1;
-            }
+        }
 
-            // names must be equal
-            return 0;
-            });
-
-            return this.items
-
-        },
-
-        startCreate() {
-            this.device = {
-                name: "",
-                accountid: "",
-                email: this.user.email,
-                enable: true,
-                tags: [],
-                current: {},
-                quiet: true,
-                debug: false,
-            }
-
-            this.netList = {
-                selected: { "text": "", "value": "" },
-                items: []
-            }
-
-            var selected = 0;
-            for (let i = 0; i < this.nets.length; i++) {
-                this.netList.items[i] = { "text": this.nets[i].netName, "value": this.nets[i].id }
-                if (this.netList.items[i].text == this.device.netName) {
-                    selected = i
-                }
-            }
-
-            this.netList.selected = this.netList.items[selected];
-
-            this.addNet = {
-                selected: { "text": "", "value": "" },
-                items: [ { "text": "", "value": "" } ] 
-            }
-
-            for (let i = 0; i < this.nets.length; i++) {
-                this.addNet.items[i+1] = { "text": this.nets[i].netName, "value": this.nets[i] }
-            }
-
-            this.acntList = {
-                selected: { "text": "", "value": "" },
-                items: []
-            }
-
-            selected = 0;
-            for (let i = 0; i < this.accounts.length; i++) {
-                this.acntList.items[i] = { "text": this.accounts[i].accountName + " - " + this.accounts[i].parent, "value": this.accounts[i].parent }
-                if (this.acntList.items[i].value == this.device.accountid) {
-                    selected = i
-                }
-            }
-
-            this.acntList.selected = this.acntList.items[selected];
-
-            this.dialogCreate = true;
-        },
-
-        make_ezcode() {
-            const length = 4;
-            let result = 'ez-';
-            const characters = 'ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
-            const charactersLength = characters.length;
-            let counter = 0;
-            while (counter < length) {
-                result += characters.charAt(Math.floor(Math.random() * charactersLength));
-                counter += 1;
-            }
-            return result;
-        },
-
-        async create(device) {
-
-            if (this.use_ezcode) {
-                device.ezcode = this.make_ezcode()
-                console.log("ezcode = ", device.ezcode)
-            }
-            this.device = device
-            this.device.platform = this.platforms.selected.value
-            this.device.logging = ""
-            this.device.checkInterval = 10
-            this.device.accountid = this.acntList.selected.value
-            this.device.name = this.device.name.trim()
-
-            this.dialogCreate = false;
-
-            ApiService.post('/device', this.device)
-                .then( d => {
-                    console.log("create device response = ", d )
-                    if (this.use_ezcode) {
-                        this.dialogEZCode = true;
-                    }
-                    if (this.addNet.selected.value == "") {
-                        this.Refresh()
-                        this.errorDevice(`Device ${this.device.name} created`)
-                    } else {
-                        var vpn = {
-                            name: this.device.name + "." + this.addNet.selected.text,
-                            netName: this.addNet.selected.text,
-                            netid: this.addNet.selected.value.id,
-                            deviceid: d.id,
-                            accountid: this.addNet.selected.value.accountid,
-                            enable: true,
-                            current: {},
-                        }
-                        ApiService.post('/vpn', vpn)
-                            .then( v => {
-                                console.log("create vpn response = ", v)
-                                this.errorDevice(`Device ${this.device.name} created and added to ${v.netName}`)
-                                this.Refresh()
-                            })
-                            .catch((error) => {
-                                console.log("create vpn error = ", error)
-                                this.errorDevice(error)
-                            })
-                    }
-                })
-                .catch((error) => {
-                    console.log("create device error = ", error)
-                    this.errorDevice(error)
-                })
-
-        },
-
-        startAddVPN(device) {
-            this.device = device
-            this.readAllNetworks()
-            this.vpn = {
-                name: "",
-                deviceid: device.id,
-                email: this.user.email,
-                enable: true,
-                tags: [],
-                current: {},
-            }
-
-
-            this.netList = {
-                selected: { "text": "", "value": "" },
-                items: []
-            }
-
-            var selected = 0;
-            for (let i = 0; i < this.nets.length; i++) {
-                this.netList.items[i] = { "text": this.nets[i].netName, "value": this.nets[i].id }
-                if (this.netList.items[i].text == this.device.netName) {
-                    selected = i
-                    break
-                }
-            }
-
-            this.netList.selected = this.netList.items[selected];
-            
-            this.dialogAddVPN = true;
-        },
-
-        updateDefaults(net) {
-            console.log("updateDefaults", net)
-            var selected = 0;
-            for (let i = 0; i < this.nets.length; i++) {
-                if (this.nets[i].id == net.value) {
-                    selected = i
-                    break
-                }
-            }
-
-            // Change the host name to be the device name + the network name
-            this.vpn.name = this.device.name + "." + this.nets[selected].netName
-
-            this.vpn.current.syncEndpoint = this.nets[selected].default.syncEndpoint
-            this.vpn.current.hasSSH = this.nets[selected].default.hasSSH
-            this.vpn.current.hasRDP = this.nets[selected].default.hasRDP
-            this.vpn.current.upnp = this.nets[selected].default.upnp
-            this.vpn.current.failsafe = this.nets[selected].default.failsafe
-            this.vpn.current.enableDns = this.nets[selected].default.enableDns
-            console.log("updateDefaults = ", this.vpn, this.nets[selected])
-
-        },
-
-        async createVPN(vpn) {
-            this.vpn = vpn
-            this.vpn.current.listenPort = 0
-
-            // get the listen port from the endpoint field if it is there
-            if (this.vpn.current.endpoint != null && this.vpn.current.endpoint != "" && this.vpn.current.endpoint.indexOf(":") != -1) {
-                let parts = this.vpn.current.endpoint.split(":")
-                this.vpn.current.listenPort = parseInt(parts[parts.length-1], 10)
-            }
-
-            this.vpn.name = this.vpn.name
-            this.vpn.netName = this.netList.selected.text
-            this.vpn.netid = this.netList.selected.value
-            this.dialogAddVPN = false;
-            await this.createvpn(vpn)
-            // wait a second
-            await new Promise(r => setTimeout(r, 2000));
-            await this.asyncRefresh()
-
-        },
-
-        updateVPN(vpn) {
-            this.vpn = vpn
-            this.vpn.current.listenPort = 0
-
-            // get the listen port from the endpoint field if it is there
-            if (this.vpn.current.endpoint != null && this.vpn.current.endpoint != "" && this.vpn.current.endpoint.indexOf(":") != -1) {
-                let parts = this.vpn.current.endpoint.split(":")
-                this.vpn.current.listenPort = parseInt(parts[parts.length-1], 10)
-            }
-
-            this.vpn.current.persistentKeepalive = parseInt(this.vpn.current.persistentKeepalive, 10);
-            this.vpn.current.mtu = parseInt(this.vpn.current.mtu, 10);
-
-            if (this.publicSubnets) {
-                this.vpn.current.allowedIPs.push("0.0.0.0/5", "8.0.0.0/7", "11.0.0.0/8", "12.0.0.0/6", "16.0.0.0/4", "32.0.0.0/3", "64.0.0.0/3",
-				"96.0.0.0/4", "112.0.0.0/5", "120.0.0.0/6", "124.0.0.0/7", "126.0.0.0/8", "128.0.0.0/3", "160.0.0.0/5", "168.0.0.0/6",
-				"172.0.0.0/12", "172.32.0.0/11", "172.64.0.0/10", "172.128.0.0/9", "173.0.0.0/8", "174.0.0.0/7", "176.0.0.0/4", "192.0.0.0/9", "192.128.0.0/11",
-				"192.160.0.0/13", "192.169.0.0/16", "192.170.0.0/15", "192.172.0.0/14", "192.176.0.0/12", "192.192.0.0/10", "193.0.0.0/8", "194.0.0.0/7",
-				"196.0.0.0/6", "200.0.0.0/5", "208.0.0.0/4", "::/1", "8000::/2", "c000::/3", "e000::/4", "f000::/5", "f800::/6", "fe00::/9", "fe80::/10", "ff00::/8")
-            }
-
-            // check allowed IPs
-            // for (let i = 0; i < this.vpn.current.allowedIPs.length; i++) {
-            //    if (this.$isCidr(this.vpn.current.allowedIPs[i]) === 0) {
-            //        this.errorDevice('Invalid CIDR detected, please correct before submitting');
-            //        return
-            //    }
-            // }
-            // check address
-            //for (let i = 0; i < this.vpn.current.address.length; i++) {
-            //    if (this.$isCidr(this.vpn.current.address[i]) === 0) {
-            //        this.errorDevice('Invalid CIDR detected, please correct before submitting');
-            //        return
-            //    }
-            //}
-            vpn = this.vpn
-            this.inEdit = false;
-            this.editPrivate = false;
-            this.updatevpn(this.vpn)
-    //        this.updatedevice_vpn(this.vpn)
-//            this.Refreshing()
-        },
-
-
-        removeDevice(device) {
-            if (confirm(`Do you really want to delete ${device.name} ?`)) {
-                this.deletedevice(device)
-            }
-        },
-
-        async removeVPN(vpn) {
-            if (confirm(`Do you really want to delete ${vpn.name} from ${vpn.netName}?`)) {
-                this.deletevpn(vpn)
-                // refresh the page
-                this.Refreshing()
-            }
-        },
-
-        startUpdate(device) {
-
-            this.device = device;
-            //        this.readQrCode(this.device);
-            //        this.readConfig(device);
-
-            this.netList = {
-                selected: { "text": this.device.netName, "value": this.device.netid },
-                items: []
-            }
-
-            var selected = 0;
-            for (let i = 0; i < this.nets.length; i++) {
-                this.netList.items[i] = { "text": this.nets[i].netName, "value": this.nets[i].id }
-                if (this.netList.items[i].text == this.device.netName) {
-                    selected = i
-                }
-            }
-
-            this.netList.selected = this.netList.items[selected];
-
-            for (let i = 0; i < this.platforms.items.length; i++) {
-                if (this.platforms.items[i].value == this.device.platform) {
-                    this.platforms.selected = this.platforms.items[i]
-                    break
-                }
-            }
-
-            for (let i = 0; i< this.logging.items.length; i++) {
-                if (this.logging.items[i].value == this.device.logging) {
-                    this.logging.selected = this.logging.items[i]
-                    break
-                }
-            }
-
-            this.publicSubnets = false;
-            this.dialogUpdate = true;
-
-        },
-
-        startUpdateServiceHost(device) {
-
-            this.device = device;
-            //        this.readConfig(device);
-
-            this.dialogServiceHost = true;
-
-        },
-
-
-        updateEnable(device) {
-            // the switch automatically updates device.enable to the proper value
-            this.updatedevice(device)
-        },
-
-        onNetChange(net) {
-            console.log("onNetChange = ", net)
-            this.addNet = {
-                selected: { "text": net.text, "value": net.value },
-                items: [ { "text": net.text, "value": net.value } ] 
-            }
-
-            for (let i = 0; i < this.nets.length; i++) {
-                this.addNet.items[i+1] = { "text": this.nets[i].netName, "value": this.nets[i] }
-            }
-        },
-
-        copyDeviceConfig(device) {
-            var url = "curl \"http://localhost:53280/config/?id=" + device.id + "&apiKey=" + device.apiKey + "&server=" + device.server + "\""
-
-            // copy url to clipboard 
-
-            navigator.clipboard
-                .writeText(url)
-                .then(() => {
-                    this.errorDevice('Copied to clipboard');
-                })
-
-        },
-
-        async updateDevice(item) {
-            console.log("updateDevice = ", item)
-            this.noEdit = true;
-            this.device = item.device;
-            console.log( "device = ", this.device)
-
-            this.device.logging = item.logging.value
-            console.log("logging = ", this.device.logging)
-
-            this.device.platform = item.platform.value
-            console.log("platform = ", this.device.platform)
-
-            // set the account id
-            this.device.accountid = item.accountid.value
-            console.log("accountid = ", this.device.accountid)
-
-            // fixup the checkInterval
-            this.device.checkInterval = parseInt(this.device.checkInterval, 10);
-
-            // all good, submit
-            this.dialogUpdate = false;
-            this.dialogServiceHost = false;
-            this.inEdit = false;
-
-            this.updatedevice(this.device)
-            //this.Refreshing()
-        },
-
-        copy(text) {
-            navigator.clipboard
-                .writeText(text)
-                .then(() => {
-                    this.errorDevice("Copied to clipboard")
-                })
-        },
-
-
-        async forceFileDownload(vpn) {
-            console.log(vpn)
-            await this.readvpnconfig(vpn)
-            // sleep for one second
-            await new Promise(r => setTimeout(r, 1000));
-            let config = this.getvpnconfig(vpn.id)
-            if (!config) {
-                console.log("failed to get config")
-                this.errorDevice('Failed to download device config');
-                return
-            }
-            console.log('config', config)
-
-            const url = window.URL.createObjectURL(new Blob([config]))
-            const link = document.createElement('a')
-            link.href = url
-            link.setAttribute('download', vpn.name.split(' ').join('-') + '-' + vpn.netName.split(' ').join('-') + '.zip') //or any other extension
-            document.body.appendChild(link)
-            link.click()
-        },
+        items.value[i] = treeItem
     }
-};
+
+    items.value.sort((a, b) => a.name.toUpperCase() < b.name.toUpperCase() ? -1 : a.name.toUpperCase() > b.name.toUpperCase() ? 1 : 0)
+}
+
+function startCreate() {
+    device.value = {
+        name: '',
+        accountid: '',
+        email: authStore.user.email,
+        enable: true,
+        tags: [],
+        current: {},
+        quiet: true,
+        debug: false,
+    }
+
+    addNet.value = {
+        selected: { text: '', value: '' },
+        items: [{ text: '', value: '' }]
+    }
+    for (let i = 0; i < netStore.nets.length; i++) {
+        addNet.value.items[i + 1] = { text: netStore.nets[i].netName, value: netStore.nets[i] }
+    }
+
+    acntList.value = { selected: { text: '', value: '' }, items: [] }
+    let selected = 0
+    for (let i = 0; i < accountStore.accounts.length; i++) {
+        acntList.value.items[i] = { text: accountStore.accounts[i].accountName + ' - ' + accountStore.accounts[i].parent, value: accountStore.accounts[i].parent }
+        if (acntList.value.items[i].value === device.value.accountid) selected = i
+    }
+    acntList.value.selected = acntList.value.items[selected]
+    dialogCreate.value = true
+}
+
+function make_ezcode() {
+    const chars = 'ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789'
+    let result = 'ez-'
+    for (let i = 0; i < 4; i++) result += chars.charAt(Math.floor(Math.random() * chars.length))
+    return result
+}
+
+async function create(dev) {
+    if (use_ezcode.value) dev.ezcode = make_ezcode()
+    device.value = dev
+    device.value.platform = platforms.value.selected.value
+    device.value.logging = ''
+    device.value.checkInterval = 10
+    device.value.accountid = acntList.value.selected.value
+    device.value.name = device.value.name.trim()
+    dialogCreate.value = false
+
+    ApiService.post('/device', device.value)
+        .then(d => {
+            if (use_ezcode.value) dialogEZCode.value = true
+            if (addNet.value.selected.value === '') {
+                Refresh()
+                deviceStore.error = `Device ${device.value.name} created`
+            } else {
+                const newVpn = {
+                    name: device.value.name + '.' + addNet.value.selected.text,
+                    netName: addNet.value.selected.text,
+                    netid: addNet.value.selected.value.id,
+                    deviceid: d.id,
+                    accountid: addNet.value.selected.value.accountid,
+                    enable: true,
+                    current: {},
+                }
+                ApiService.post('/vpn', newVpn)
+                    .then(v => {
+                        deviceStore.error = `Device ${device.value.name} created and added to ${v.netName}`
+                        Refresh()
+                    })
+                    .catch(error => deviceStore.error = error)
+            }
+        })
+        .catch(error => deviceStore.error = error)
+}
+
+function startAddVPN(dev) {
+    device.value = dev
+    netStore.readAll()
+    vpn.value = {
+        name: '',
+        deviceid: dev.id,
+        email: authStore.user.email,
+        enable: true,
+        tags: [],
+        current: {},
+    }
+
+    netList.value = { selected: { text: '', value: '' }, items: [] }
+    let sel = 0
+    for (let i = 0; i < netStore.nets.length; i++) {
+        netList.value.items[i] = { text: netStore.nets[i].netName, value: netStore.nets[i].id }
+        if (netList.value.items[i].text === dev.netName) { sel = i; break }
+    }
+    netList.value.selected = netList.value.items[sel]
+    dialogAddVPN.value = true
+}
+
+function updateDefaults(net) {
+    let sel = 0
+    for (let i = 0; i < netStore.nets.length; i++) {
+        if (netStore.nets[i].id === net.value) { sel = i; break }
+    }
+    vpn.value.name = device.value.name + '.' + netStore.nets[sel].netName
+    vpn.value.current.syncEndpoint = netStore.nets[sel].default.syncEndpoint
+    vpn.value.current.hasSSH = netStore.nets[sel].default.hasSSH
+    vpn.value.current.hasRDP = netStore.nets[sel].default.hasRDP
+    vpn.value.current.upnp = netStore.nets[sel].default.upnp
+    vpn.value.current.failsafe = netStore.nets[sel].default.failsafe
+    vpn.value.current.enableDns = netStore.nets[sel].default.enableDns
+}
+
+async function createVPN(v) {
+    vpn.value = v
+    vpn.value.current.listenPort = 0
+    if (vpn.value.current.endpoint && vpn.value.current.endpoint.includes(':')) {
+        const parts = vpn.value.current.endpoint.split(':')
+        vpn.value.current.listenPort = parseInt(parts[parts.length - 1], 10)
+    }
+    vpn.value.netName = netList.value.selected.text
+    vpn.value.netid = netList.value.selected.value
+    dialogAddVPN.value = false
+    await vpnStore.create(vpn.value)
+    await new Promise(r => setTimeout(r, 2000))
+    await asyncRefresh()
+}
+
+function updateVPN(v) {
+    vpn.value = v
+    vpn.value.current.listenPort = 0
+    if (vpn.value.current.endpoint && vpn.value.current.endpoint.includes(':')) {
+        const parts = vpn.value.current.endpoint.split(':')
+        vpn.value.current.listenPort = parseInt(parts[parts.length - 1], 10)
+    }
+    vpn.value.current.persistentKeepalive = parseInt(vpn.value.current.persistentKeepalive, 10)
+    vpn.value.current.mtu = parseInt(vpn.value.current.mtu, 10)
+    inEdit.value = false
+    editPrivate.value = false
+    vpnStore.update(vpn.value)
+}
+
+function removeDevice(dev) {
+    if (confirm(`Do you really want to delete ${dev.name} ?`)) {
+        deviceStore.delete(dev)
+    }
+}
+
+async function removeVPN(v) {
+    if (confirm(`Do you really want to delete ${v.name} from ${v.netName}?`)) {
+        await vpnStore.delete(v)
+        Refreshing()
+    }
+}
+
+function updateEnable(dev) {
+    deviceStore.update(dev)
+}
+
+function onNetChange(n) {
+    addNet.value = {
+        selected: { text: n.text, value: n.value },
+        items: [{ text: n.text, value: n.value }]
+    }
+    for (let i = 0; i < netStore.nets.length; i++) {
+        addNet.value.items[i + 1] = { text: netStore.nets[i].netName, value: netStore.nets[i] }
+    }
+}
+
+function copyDeviceConfig(dev) {
+    const url = `curl "http://localhost:53280/config/?id=${dev.id}&apiKey=${dev.apiKey}&server=${dev.server}"`
+    navigator.clipboard.writeText(url).then(() => deviceStore.error = 'Copied to clipboard')
+}
+
+async function updateDevice(item) {
+    device.value = item.device
+    device.value.logging = item.logging.value
+    device.value.platform = item.platform.value
+    device.value.accountid = item.accountid.value
+    device.value.checkInterval = parseInt(device.value.checkInterval, 10)
+    dialogServiceHost.value = false
+    inEdit.value = false
+    deviceStore.update(device.value)
+}
+
+function copy(text) {
+    navigator.clipboard.writeText(text).then(() => deviceStore.error = 'Copied to clipboard')
+}
+
+async function forceFileDownload(v) {
+    await vpnStore.readConfig(v)
+    await new Promise(r => setTimeout(r, 1000))
+    const config = vpnStore.getVPNConfig(v.id)
+    if (!config) {
+        deviceStore.error = 'Failed to download device config'
+        return
+    }
+    const url = window.URL.createObjectURL(new Blob([config]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', v.name.split(' ').join('-') + '-' + v.netName.split(' ').join('-') + '.zip')
+    document.body.appendChild(link)
+    link.click()
+}
 </script>

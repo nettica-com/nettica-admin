@@ -2,21 +2,25 @@
   <v-container v-if="server">
     <v-row>
       <v-col cols="12">
-        <v-card dark>
-          <v-card-title>
-            Net Configuration
-          </v-card-title>
+        <v-card>
+          <v-card-title>Net Configuration</v-card-title>
           <div class="d-flex flex-no-wrap justify-space-between">
             <v-col cols="12">
               <v-text-field v-model="server.id" label="Net ID" disabled />
               <v-text-field v-model="server.netName" label="Net Name" disabled />
-              <v-combobox v-model="server.address" chips
-                hint="Write IPv4 or IPv6 CIDR and hit enter.  A 100.x.x.0/24 address is recommended."
-                label="Host interface address pool" multiple dark>
-                <template v-slot:selection="{ attrs, item, select, selected }">
-                  <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                    @click:close="server.address.splice(server.address.indexOf(item), 1)">
-                    <strong>{{ item }}</strong>&nbsp;
+              <v-combobox
+                v-model="server.address"
+                chips
+                hint="Write IPv4 or IPv6 CIDR and hit enter. A 100.x.x.0/24 address is recommended."
+                label="Host interface address pool"
+                multiple
+              >
+                <template #selection="{ item }">
+                  <v-chip
+                    closable
+                    @click:close="server.address.splice(server.address.indexOf(item.value), 1)"
+                  >
+                    <strong>{{ item.value }}</strong>&nbsp;
                   </v-chip>
                 </template>
               </v-combobox>
@@ -24,146 +28,126 @@
           </div>
           <div class="d-flex flex-no-wrap justify-space-between">
             <v-col cols="12">
-              <v-text-field v-model="server.listenPort" type="number" :rules="[
-                v => !!v || 'Listen port is required',
-              ]" label="Default Listen port" required />
-              <v-combobox v-model="server.dns" chips hint="Write IPv4 or IPv6 address and hit enter"
-                label="DNS servers for clients" multiple dark>
-                <template v-slot:selection="{ attrs, item, select, selected }">
-                  <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                    @click:close="server.dns.splice(server.dns.indexOf(item), 1)">
-                    <strong>{{ item }}</strong>&nbsp;
+              <v-text-field
+                v-model="server.listenPort"
+                type="number"
+                :rules="[v => !!v || 'Listen port is required']"
+                label="Default Listen port"
+                required
+              />
+              <v-combobox
+                v-model="server.dns"
+                chips
+                hint="Write IPv4 or IPv6 address and hit enter"
+                label="DNS servers for clients"
+                multiple
+              >
+                <template #selection="{ item }">
+                  <v-chip
+                    closable
+                    @click:close="server.dns.splice(server.dns.indexOf(item.value), 1)"
+                  >
+                    <strong>{{ item.value }}</strong>&nbsp;
                   </v-chip>
                 </template>
               </v-combobox>
-              <v-combobox v-model="server.allowedips" chips hint="Write IPv4 or IPv6 address and hit enter"
-                label="Default Allowed IPs for clients" multiple dark>
-                <template v-slot:selection="{ attrs, item, select, selected }">
-                  <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                    @click:close="server.allowedips.splice(server.allowedips.indexOf(item), 1)">
-                    <strong>{{ item }}</strong>&nbsp;
+              <v-combobox
+                v-model="server.allowedips"
+                chips
+                hint="Write IPv4 or IPv6 address and hit enter"
+                label="Default Allowed IPs for clients"
+                multiple
+              >
+                <template #selection="{ item }">
+                  <v-chip
+                    closable
+                    @click:close="server.allowedips.splice(server.allowedips.indexOf(item.value), 1)"
+                  >
+                    <strong>{{ item.value }}</strong>&nbsp;
                   </v-chip>
                 </template>
               </v-combobox>
-              <v-text-field type="number" v-model="server.mtu" label="Define global MTU"
-                hint="Leave at 0 and let wg-quick take care of MTU" />
-              <v-text-field type="number" v-model="server.persistentKeepalive" label="Persistent keepalive"
-                hint="Leave at 0 if you dont want to specify persistent keepalive" />
+              <v-text-field
+                v-model="server.mtu"
+                type="number"
+                label="Define global MTU"
+                hint="Leave at 0 and let wg-quick take care of MTU"
+              />
+              <v-text-field
+                v-model="server.persistentKeepalive"
+                type="number"
+                label="Persistent keepalive"
+                hint="Leave at 0 if you dont want to specify persistent keepalive"
+              />
             </v-col>
           </div>
         </v-card>
       </v-col>
     </v-row>
-    <v-divider dark />
-    <v-btn class="ma-2" color="success" v-on:click="forceFileDownload()">
+    <v-divider />
+    <v-btn class="ma-2" color="success" @click="forceFileDownload">
       Download server configuration
-      <v-icon right dark>mdi-cloud-download-outline</v-icon>
+      <v-icon end>mdi-cloud-download-outline</v-icon>
     </v-btn>
     <v-spacer></v-spacer>
-    <v-btn class="ma-2" color="warning" @click="update">
+    <v-btn class="ma-2" color="warning" @click="updateServer">
       Update server configuration
-      <v-icon right dark>mdi-update</v-icon>
+      <v-icon end>mdi-update</v-icon>
     </v-btn>
-    <v-spacer></v-spacer>
-    <v-btn color="warning" @click="applyGlobals">
-      Apply globals to all clients
-      <v-icon right dark>mdi-update</v-icon>
-    </v-btn>
-
-    <v-divider dark />
+    <v-divider />
   </v-container>
 </template>
-<script>
-import { mapActions, mapGetters } from "vuex";
 
-export default {
-  name: 'Server',
+<script setup>
+import { computed, onMounted } from 'vue'
+import { useServerStore } from '@/stores/server'
+import { isCidr } from '@/plugins/cidr'
 
-  data: () => ({
+const serverStore = useServerStore()
 
-  }),
+const server = computed(() => serverStore.servers?.[0] ?? null)
 
-  computed: {
-    ...mapGetters({
-      server: 'server/server',
-      config: 'server/config',
-      clients: 'client/clients',
-    }),
-  },
+onMounted(() => {
+  serverStore.read()
+})
 
-  mounted() {
-    this.readServer()
-  },
+function updateServer() {
+  if (!server.value) return
+  server.value.listenPort = parseInt(server.value.listenPort, 10)
+  server.value.persistentKeepalive = parseInt(server.value.persistentKeepalive, 10)
+  server.value.mtu = parseInt(server.value.mtu, 10)
 
-  methods: {
-    ...mapActions('server', {
-      errorServer: 'error',
-      readServer: 'read',
-      updateServer: 'update',
-    }),
-
-    ...mapActions('client', {
-      updateClient: 'update',
-    }),
-
-    applyGlobals() {
-      this.update()
-
-      this.clients.forEach(client => {
-        client.allowedips = this.server.allowedips
-        this.updateClient(client)
-      })
-    },
-
-    update() {
-      // convert int values
-      this.server.listenPort = parseInt(this.server.listenPort, 10);
-      this.server.persistentKeepalive = parseInt(this.server.persistentKeepalive, 10);
-      this.server.mtu = parseInt(this.server.mtu, 10);
-
-      // check server addresses
-      if (this.server.address.length < 1) {
-        this.errorServer('Please provide at least one valid CIDR address for server interface');
-        return;
-      }
-      for (let i = 0; i < this.server.address.length; i++) {
-        if (this.$isCidr(this.server.address[i]) === 0) {
-          this.errorServer(`Invalid CIDR detected, please correct ${this.server.address[i]} before submitting`);
-          return
-        }
-      }
-
-      // check DNS correct
-      for (let i = 0; i < this.server.dns.length; i++) {
-        if (this.$isCidr(this.server.dns[i] + '/32') === 0) {
-          this.errorServer(`Invalid IP detected, please correct ${this.server.dns[i]} before submitting`);
-          return
-        }
-      }
-
-      // check client AllowedIPs
-      if (this.server.allowedips.length < 0) {
-        this.errorServer('Please provide at least one valid CIDR address for client allowed IPs');
-        return;
-      }
-      for (let i = 0; i < this.server.allowedips.length; i++) {
-        if (this.$isCidr(this.server.allowedips[i]) === 0) {
-          this.errorServer('Invalid CIDR detected, please correct before submitting');
-          return
-        }
-      }
-
-      this.updateServer(this.server)
-    },
-
-    forceFileDownload() {
-      const url = window.URL.createObjectURL(new Blob([this.config]))
-      const link = document.createElement('a')
-      link.href = url
-      link.setAttribute('download', 'wg0.conf') //or any other extension
-      document.body.appendChild(link)
-      link.click()
-    },
+  if (server.value.address.length < 1) {
+    serverStore.error = 'Please provide at least one valid CIDR address for server interface'
+    return
   }
-};
+  for (const addr of server.value.address) {
+    if (isCidr(addr) === 0) {
+      serverStore.error = `Invalid CIDR detected, please correct ${addr} before submitting`
+      return
+    }
+  }
+  for (const dns of server.value.dns) {
+    if (isCidr(dns + '/32') === 0) {
+      serverStore.error = `Invalid IP detected, please correct ${dns} before submitting`
+      return
+    }
+  }
+  for (const ip of server.value.allowedips) {
+    if (isCidr(ip) === 0) {
+      serverStore.error = 'Invalid CIDR detected, please correct before submitting'
+      return
+    }
+  }
+  serverStore.update(server.value)
+}
+
+function forceFileDownload() {
+  const url = window.URL.createObjectURL(new Blob([serverStore.config]))
+  const link = document.createElement('a')
+  link.href = url
+  link.setAttribute('download', 'wg0.conf')
+  document.body.appendChild(link)
+  link.click()
+}
 </script>

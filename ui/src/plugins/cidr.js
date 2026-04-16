@@ -1,11 +1,3 @@
-import Vue from 'vue'
-const isCidr = require('is-cidr');
+import isCidr from 'is-cidr'
 
-const plugin = {
-  install () {
-    Vue.isCidr = isCidr;
-    Vue.prototype.$isCidr = isCidr
-  }
-};
-
-Vue.use(plugin);
+export { isCidr }

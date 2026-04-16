@@ -1,16 +1,9 @@
 <template>
   <v-main>
-    <Hosts/>
+    <Hosts />
   </v-main>
 </template>
 
-<script>
-  import Hosts from '../components/Hosts'
-
-  export default {
-    name: 'hosts',
-    components: {
-      Hosts
-    }
-  }
+<script setup>
+import Hosts from '../components/Hosts.vue'
 </script>

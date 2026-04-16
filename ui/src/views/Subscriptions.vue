@@ -1,16 +1,9 @@
 <template>
   <v-main>
-    <Subscriptions/>
+    <Subscriptions />
   </v-main>
 </template>
 
-<script>
-  import Subscriptions from '../components/Subscriptions'
-
-  export default {
-    name: 'subscriptions',
-    components: {
-      Subscriptions
-    }
-  }
+<script setup>
+import Subscriptions from '../components/Subscriptions.vue'
 </script>

@@ -12,18 +12,7 @@
   </v-footer>
 </template>
 
-<script>
-import { mapActions, mapGetters } from "vuex";
-import mypackage from "../../package.json";
-
-export default {
-  name: 'Footer',
-
-  data: () => ({
-
-    version: mypackage.version,
-
-  }),
-
-}
+<script setup>
+import mypackage from '../../package.json'
+const version = mypackage.version
 </script>

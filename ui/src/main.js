@@ -1,25 +1,19 @@
-import Vue from 'vue'
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
-import store from './store'
-import vuetify from './plugins/vuetify';
-import './plugins/moment';
-import './plugins/cidr'
-import './plugins/axios'
-import D3Network from 'vue-d3-network'
-components: {
-  D3Network
-}
+import vuetify from './plugins/vuetify'
+import axios from './plugins/axios'
+import { isCidr } from './plugins/cidr'
 
-// Don't warn about using the dev version of Vue in development.
-Vue.config.productionTip = process.env.NODE_ENV === 'production'
-Vue.use(D3Network)
-Vue.component('d3-network', D3Network);
+const app = createApp(App)
+const pinia = createPinia()
 
-new Vue({
-  router,
-  store,
-  vuetify,
-  D3Network,
-  render: function (h) { return h(App) }
-}).$mount('#app')
+app.use(pinia)
+app.use(router)
+app.use(vuetify)
+
+app.config.globalProperties.$isCidr = isCidr
+app.config.globalProperties.$http = axios
+
+app.mount('#app')
