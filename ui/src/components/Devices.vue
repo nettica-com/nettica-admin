@@ -44,7 +44,7 @@
                                         {{ item.icon }}
                                     </v-icon>
                                 </template>
-                                <template v-slot:label="{ item }">
+                                <template v-slot:title="{ item }">
                                     <table>
                                         <tr><td :style="{ color: item.enabled ? 'white' : 'gray' }">
                                             {{ item.name }}

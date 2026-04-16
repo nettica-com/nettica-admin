@@ -13,6 +13,7 @@ export const useAuthStore = defineStore('auth', {
     referer: '',
     authRedirectUrl: '',
     requiresAuth: true,
+    intendedRoute: '',
   }),
 
   getters: {

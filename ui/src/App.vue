@@ -209,8 +209,10 @@ watch(requiresAuth, (newValue, oldValue) => {
 
 watch(isAuthenticated, (newValue, oldValue) => {
   console.log(`Updating isAuthenticated from ${oldValue} to ${newValue}`)
-  if ((newValue === true && authStore.requiresAuth === true) || location.pathname === '/') {
-    router.push('/')
+  if (newValue === true) {
+    const dest = authStore.intendedRoute || '/'
+    authStore.intendedRoute = ''
+    router.push(dest)
   }
 })
 

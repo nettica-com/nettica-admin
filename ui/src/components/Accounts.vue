@@ -10,16 +10,21 @@
         </div>
         <v-card>
           <v-card-title>
-            Accounts
-            <v-spacer></v-spacer>
-            <v-text-field v-model="search" append-inner-icon="mdi-magnify" label="Search" hide-details></v-text-field>
-            <v-spacer></v-spacer>
-            <v-btn color="#004000" @click="startInvite">
-              Invite <v-icon end>mdi-account-group</v-icon>
-            </v-btn>&nbsp;
-            <v-btn color="#000040" @click="dialogAPI = true">
-              API <v-icon end>mdi-key</v-icon>
-            </v-btn>
+            <v-row>
+              <v-col cols="3">Accounts</v-col>
+              <v-col cols="4">
+                <v-text-field v-model="search" append-inner-icon="mdi-magnify" label="Search" hide-details></v-text-field>
+              </v-col>
+              <v-col cols="5" class="text-right">
+                <v-btn color="#004000" @click="startInvite">
+                  Invite <v-icon end>mdi-account-group</v-icon>
+                </v-btn>
+                &nbsp;
+                <v-btn color="#000040" @click="dialogAPI = true">
+                  API <v-icon end>mdi-key</v-icon>
+                </v-btn>
+              </v-col>
+            </v-row>
           </v-card-title>
         </v-card>
         <v-card>
@@ -30,8 +35,10 @@
                 v-if="showTree"
                 :items="items"
                 :search="search"
-                :filter="filter"
-                v-model:active="active"
+                :filter-fn="filter"
+                item-title="name"
+                item-value="id"
+                v-model:activated="active"
                 v-model:opened="open"
                 activatable
                 open-all
@@ -41,7 +48,7 @@
                   <span v-if="item.symbol" class="material-symbols-outlined">{{ item.symbol }}</span>
                   <v-icon v-else>{{ item.icon }}</v-icon>
                 </template>
-                <template #label="{ item }">
+                <template #title="{ item }">
                   <table>
                     <tr><td>{{ item.name }}</td></tr>
                     <tr v-if="item.isMember"><td class="gray" style="font-size: small;">{{ item.email }}</td></tr>
@@ -245,22 +252,19 @@ onMounted(() => {
   if (authuser.value) accountStore.readAll(authuser.value.email)
 })
 
-watch(accounts, (newAccounts) => {
+watch(accounts, async (newAccounts) => {
+  const memberFetches = newAccounts.map(a => accountStore.readMembers(a.parent))
   for (const a of newAccounts) {
-    accountStore.readMembers(a.parent)
     if (a.role === 'Owner' || a.role === 'Admin') {
-      console.log('readLimits: ', a.parent)
       accountStore.readLimits(a.parent)
     }
   }
+  await Promise.all(memberFetches)
   buildTree()
 })
 
-watch(members, () => buildTree())
-watch(limits, () => {
-  console.log('Limits:', limits.value)
-  buildTree()
-})
+watch(members, () => buildTree(), { deep: true })
+watch(limits, () => buildTree(), { deep: true })
 
 watch(nets, (newNets) => {
   netList.value.items = [{ text: 'All Networks', value: '' }]
@@ -335,7 +339,6 @@ function buildTree() {
           icon: 'mdi-account',
           isAccount: false,
           isMember: true,
-          children: [],
         }
       }
     }
@@ -365,7 +368,6 @@ function buildTree() {
         icon: 'mdi-account',
         isAccount: false,
         isMember: true,
-        children: [],
       }
     }
   }

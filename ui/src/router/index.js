@@ -68,7 +68,8 @@ router.beforeEach((to) => {
   if (to.matched.some((record) => record.meta.requiresAuth)) {
     authStore.requiresAuth = true
     if (!authStore.isAuthenticated) {
-      return false
+      authStore.intendedRoute = to.fullPath
+      return { path: '/' }
     }
   } else {
     authStore.requiresAuth = false
