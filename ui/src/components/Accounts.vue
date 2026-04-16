@@ -46,6 +46,9 @@
               >
                 <template #prepend="{ item }">
                   <span v-if="item.symbol" class="material-symbols-outlined">{{ item.symbol }}</span>
+                  <v-avatar v-else-if="item.member?.userPicture || item.member?.picture" size="32">
+                    <img :src="memberImageSrc(item.member)" width="32" height="32" />
+                  </v-avatar>
                   <v-icon v-else>{{ item.icon }}</v-icon>
                 </template>
                 <template #title="{ item }">
@@ -79,8 +82,8 @@
               <v-card v-else-if="selected.isMember" :key="selected.id" class="px-3 mx-auto" flat>
                 <v-form autocomplete="off">
                   <v-card-text>
-                    <v-avatar v-if="selected.member.picture" size="50">
-                      <img :src="selected.member.picture" class="mx-auto d-block" width="50" height="50" />
+                    <v-avatar v-if="selected.member.userPicture || selected.member.picture" size="50">
+                      <img :src="memberImageSrc(selected.member)" class="mx-auto d-block" width="50" height="50" />
                     </v-avatar>
                     <v-icon v-else size="50">mdi-account</v-icon>
                     <h3 class="text-h5 mb-2">{{ selected.name }}</h3>
@@ -100,7 +103,9 @@
                             </v-btn>
                           </template>
                         </v-text-field>
-                        <v-text-field v-model="selected.member.picture" label="Picture" />
+                        <input ref="fileInput" type="file" accept="image/*" style="display:none" @change="onFileSelected" />
+                        <v-text-field v-model="selected.member.picture" label="Picture"
+                          append-inner-icon="mdi-upload" @click:append-inner="fileInput.click()" />
                         <v-select :items="networks" v-model="selected.netName" label="To this net" :readonly="selected.isReadOnly" />
                         <v-select :items="roles" v-model="selected.role" label="Role" :readonly="selected.isReadOnly" />
                         <v-select :items="statuses" v-model="selected.status" label="Status" />
@@ -210,6 +215,7 @@ const { accounts, members, limits } = storeToRefs(accountStore)
 const { nets } = storeToRefs(netStore)
 
 const showTree = ref(false)
+const fileInput = ref(null)
 const items = ref([])
 const open = ref([])
 const active = ref([])
@@ -274,6 +280,33 @@ watch(nets, (newNets) => {
     networks.value[i + 1] = newNets[i].netName
   }
 })
+
+function onFileSelected(event) {
+  const file = event.target.files[0]
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    const img = new Image()
+    img.onload = () => {
+      const size = Math.min(img.width, img.height)
+      const sx = (img.width - size) / 2
+      const sy = (img.height - size) / 2
+      const canvas = document.createElement('canvas')
+      canvas.width = 80
+      canvas.height = 80
+      canvas.getContext('2d').drawImage(img, sx, sy, size, size, 0, 0, 80, 80)
+      selected.value.member.userPicture = canvas.toDataURL('image/png').split(',')[1]
+      event.target.value = ''
+    }
+    img.src = e.target.result
+  }
+  reader.readAsDataURL(file)
+}
+
+function memberImageSrc(member) {
+  if (member?.userPicture) return `data:image/png;base64,${member.userPicture}`
+  return member?.picture || ''
+}
 
 function Refresh() {
   if (authuser.value) accountStore.readAll(authuser.value.email)
