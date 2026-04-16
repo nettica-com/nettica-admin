@@ -116,10 +116,6 @@ func UpdateDevice(Id string, device *model.Device, fUpdated bool) (*model.Device
 		log.Errorf("UpdateDevice: device %s has been updated from stale data", device.Id)
 	}
 
-	if !fUpdated {
-		device.Updated = time.Now().UTC()
-	}
-
 	if !strings.HasPrefix(device.AccountID, "account-") {
 		device.AccountID = current.AccountID
 	}
@@ -145,7 +141,12 @@ func UpdateDevice(Id string, device *model.Device, fUpdated bool) (*model.Device
 	if device.AccountID != "" {
 		current.AccountID = device.AccountID
 	}
+
+	if !fUpdated {
+		device.Updated = time.Now().UTC()
+	}
 	current.Updated = device.Updated
+
 	if device.Server != "" {
 		current.Server = device.Server
 	}
