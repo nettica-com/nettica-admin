@@ -38,25 +38,25 @@
                         item-title="name" item-value="id"
                         activatable hoverable @update:activated="loadNetwork">
                         <template v-slot:prepend="{ item }">
-                            <span v-if="item.raw.symbol" class="material-symbols-outlined">{{ item.raw.symbol }}</span>
-                            <v-icon v-else>{{ item.raw.icon }}</v-icon>
+                            <span v-if="item.symbol" class="material-symbols-outlined">{{ item.symbol }}</span>
+                            <v-icon v-else>{{ item.icon }}</v-icon>
                         </template>
                         <template v-slot:label="{ item }">
                             <table>
-                                <tr><td :style="{ color: item.raw.enabled ? 'white' : 'gray' }">
-                                    {{ item.raw.name }}
+                                <tr><td :style="{ color: item.enabled ? 'white' : 'gray' }">
+                                    {{ item.name }}
                                 </td></tr>
-                                <tr v-if="item.raw.isNet"><td class="gray" style="font-size: small;">
-                                    {{ item.raw.description }}
+                                <tr v-if="item.isNet"><td class="gray" style="font-size: small;">
+                                    {{ item.description }}
                                 </td></tr>
                                 <tr v-else><td class="gray" style="font-size: small;">
-                                    {{ item.raw.vpn.current.address.join(', ') }}
+                                    {{ item.vpn.current.address.join(', ') }}
                                 </td></tr>
                             </table>
                         </template>
                         <template v-slot:append="{ item }">
                             <v-spacer></v-spacer>
-                            <v-btn v-if="item.raw.isNet" icon @click="startAddDevice(item.raw.net)">
+                            <v-btn v-if="item.isNet" icon @click="startAddDevice(item.net)">
                                 <v-tooltip text="Add device to this network" location="bottom">
                                     <template #activator="{ props: tooltipProps }">
                                         <v-icon v-bind="tooltipProps" color="#336699">mdi-plus-circle</v-icon>
@@ -629,7 +629,6 @@ function buildTree() {
                     isNet: false,
                     isNode: true,
                     enabled: vpnStore.vpns[j].enable,
-                    children: []
                 }
                 k++
             }

@@ -1,42 +1,11 @@
 <template>
   <div ref="container" class="d3-network-container">
-    <svg ref="svg" :width="options.size.w" :height="options.size.h">
-      <g ref="linksGroup">
-        <line
-          v-for="(link, i) in renderedLinks"
-          :key="'link-' + i"
-          :stroke="link._color || '#fff'"
-          stroke-width="1.5"
-          stroke-opacity="0.7"
-        />
-      </g>
-      <g ref="nodesGroup">
-        <g
-          v-for="node in renderedNodes"
-          :key="'node-' + node.id"
-          class="node-group"
-        >
-          <circle
-            :r="nodeRadius"
-            :fill="node._color || '#336699'"
-            stroke="#5b81a7"
-            stroke-width="1.5"
-          />
-          <text
-            v-if="options.nodeLabels"
-            dy="-12"
-            text-anchor="middle"
-            font-size="11"
-            fill="white"
-          >{{ node.name }}</text>
-        </g>
-      </g>
-    </svg>
+    <svg ref="svg" :width="options.size.w" :height="options.size.h"></svg>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import * as d3 from 'd3'
 
 const props = defineProps({
@@ -56,44 +25,65 @@ const props = defineProps({
 
 const container = ref(null)
 const svg = ref(null)
-const linksGroup = ref(null)
-const nodesGroup = ref(null)
-const renderedNodes = ref([])
-const renderedLinks = ref([])
 let simulation = null
 
 const nodeRadius = 10
 
-function buildGraph() {
+async function buildGraph() {
+  await nextTick()
   if (!svg.value || !props.netNodes.length) return
 
   const nodes = props.netNodes.map((n) => ({ ...n }))
   const links = props.netLinks.map((l) => ({ source: l.sid, target: l.tid, _color: l._color }))
 
-  renderedNodes.value = nodes
-  renderedLinks.value = props.netLinks
-
   if (simulation) simulation.stop()
+
+  const svgEl = d3.select(svg.value)
+  svgEl.selectAll('*').remove()
+
+  const linksGroup = svgEl.append('g')
+  const nodesGroup = svgEl.append('g')
+
+  const linkEls = linksGroup
+    .selectAll('line')
+    .data(links)
+    .join('line')
+    .attr('stroke', (d) => d._color || '#fff')
+    .attr('stroke-width', 1.5)
+    .attr('stroke-opacity', 0.7)
+
+  const nodeEls = nodesGroup
+    .selectAll('g.node-group')
+    .data(nodes)
+    .join('g')
+    .attr('class', 'node-group')
+
+  nodeEls
+    .append('circle')
+    .attr('r', nodeRadius)
+    .attr('fill', (d) => d._color || '#336699')
+    .attr('stroke', '#5b81a7')
+    .attr('stroke-width', 1.5)
+
+  if (props.options.nodeLabels) {
+    nodeEls
+      .append('text')
+      .attr('dy', '-12')
+      .attr('text-anchor', 'middle')
+      .attr('font-size', 11)
+      .attr('fill', 'white')
+      .text((d) => d.name)
+  }
 
   simulation = d3
     .forceSimulation(nodes)
     .force('charge', d3.forceManyBody().strength(-(props.options.force || 3000) / 10))
     .force(
       'link',
-      d3
-        .forceLink(links)
-        .id((d) => d.id)
-        .distance(80),
+      d3.forceLink(links).id((d) => d.id).distance(80),
     )
-    .force(
-      'center',
-      d3.forceCenter(props.options.size.w / 2, props.options.size.h / 2),
-    )
+    .force('center', d3.forceCenter(props.options.size.w / 2, props.options.size.h / 2))
     .force('collision', d3.forceCollide(nodeRadius + 5))
-
-  const svgEl = d3.select(svg.value)
-  const linkEls = d3.select(linksGroup.value).selectAll('line').data(links)
-  const nodeEls = d3.select(nodesGroup.value).selectAll('g.node-group').data(nodes)
 
   simulation.on('tick', () => {
     linkEls
@@ -123,9 +113,6 @@ function buildGraph() {
         d.fy = null
       }),
   )
-
-  // suppress unused var warning — svgEl used for potential zoom extension
-  void svgEl
 }
 
 onMounted(buildGraph)

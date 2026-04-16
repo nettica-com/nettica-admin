@@ -36,29 +36,29 @@
                                 item-title="name" item-value="id"
                                 activatable hoverable>
                                 <template v-slot:prepend="{ item }">
-                                    <span v-if="item.raw.symbol && item.raw.status == 'Online'" class="material-symbols-outlined" style="color:green;">{{ item.raw.symbol }}</span>
-                                    <span v-else-if="item.raw.symbol && item.raw.status == 'Offline'" class="material-symbols-outlined" style="color:red;">{{ item.raw.symbol }}</span>
-                                    <span v-else-if="item.raw.symbol && item.raw.status && item.raw.status != 'Online' && item.raw.status != 'Offline'" class="material-symbols-outlined" style="color:blue;">{{ item.raw.symbol }}</span>
-                                    <span v-else-if="item.raw.symbol" class="material-symbols-outlined">{{ item.raw.symbol }}</span>
+                                    <span v-if="item.symbol && item.status == 'Online'" class="material-symbols-outlined" style="color:green;">{{ item.symbol }}</span>
+                                    <span v-else-if="item.symbol && item.status == 'Offline'" class="material-symbols-outlined" style="color:red;">{{ item.symbol }}</span>
+                                    <span v-else-if="item.symbol && item.status && item.status != 'Online' && item.status != 'Offline'" class="material-symbols-outlined" style="color:blue;">{{ item.symbol }}</span>
+                                    <span v-else-if="item.symbol" class="material-symbols-outlined">{{ item.symbol }}</span>
                                     <v-icon v-else style="color:white;">
-                                        {{ item.raw.icon }}
+                                        {{ item.icon }}
                                     </v-icon>
                                 </template>
                                 <template v-slot:label="{ item }">
                                     <table>
-                                        <tr><td :style="{ color: item.raw.enabled ? 'white' : 'gray' }">
-                                            {{ item.raw.name }}
+                                        <tr><td :style="{ color: item.enabled ? 'white' : 'gray' }">
+                                            {{ item.name }}
                                         </td></tr>
-                                        <tr v-if="item.raw.isDevice"><td class="gray" style="font-size: small;">
-                                            {{ item.raw.description }}
+                                        <tr v-if="item.isDevice"><td class="gray" style="font-size: small;">
+                                            {{ item.description }}
                                         </td></tr>
                                         <tr v-else><td class="gray" style="font-size: small;">
-                                            {{ item.raw.vpn.current.address.join(', ') }}
+                                            {{ item.vpn.current.address.join(', ') }}
                                         </td></tr>
                                     </table>
                                 </template>
                                 <template v-slot:append="{ item }">
-                                    <v-btn v-if="item.raw.isDevice" icon @click="startAddVPN(item.raw.device)">
+                                    <v-btn v-if="item.isDevice" icon @click="startAddVPN(item.device)">
                                         <v-tooltip text="Add network to this device" location="bottom">
                                             <template #activator="{ props: tooltipProps }">
                                                 <v-icon v-bind="tooltipProps" color="#336699">mdi-plus-circle</v-icon>
@@ -659,7 +659,6 @@ function buildTree() {
                     symbol: 'network_node',
                     isDevice: false,
                     enabled: d.vpns[j].enable,
-                    children: []
                 }
             }
         }

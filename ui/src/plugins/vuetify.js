@@ -9,6 +9,11 @@ export default createVuetify({
     ...components,
   },
   directives,
+  defaults: {
+    VCardActions: {
+      VBtn: { variant: 'elevated' },
+    },
+  },
   icons: {
     defaultSet: 'mdi',
   },

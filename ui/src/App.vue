@@ -54,11 +54,12 @@ function notify(msg) {
 
 theme.global.name.value = 'dark'
 
-onMounted(() => {
+onMounted(async () => {
   if (navigator.userAgent && navigator.userAgent.toLowerCase().includes('dart')) {
     window.close()
     return
   }
+  await router.isReady()
   if (route.query.redirect_uri) {
     TokenService.saveRedirect(route.query.redirect_uri)
     TokenService.destroyToken()
