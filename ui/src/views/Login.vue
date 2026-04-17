@@ -58,14 +58,14 @@ const password = ref('')
 const showPrivate = ref(false)
 
 watch(isAuthenticated, (newValue, oldValue) => {
-  console.log(`login: Updating isAuthenticated from ${oldValue} to ${newValue}`)
+  // console.log(`login: Updating isAuthenticated from ${oldValue} to ${newValue}`)
   if (newValue === true) {
     router.push('/')
   }
 })
 
 watch(authStatus, (newValue, oldValue) => {
-  console.log(`login: Updating authStatus from ${oldValue} to ${newValue}`)
+  // console.log(`login: Updating authStatus from ${oldValue} to ${newValue}`)
   if (newValue === 'redirect') {
     authStore.authStatus = 'basic_auth'
   }

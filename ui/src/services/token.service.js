@@ -109,7 +109,7 @@ export const getClientId = () => {
 };
 
 export const saveClientId = token => {
-  console.log("saveClientId = ", token );
+  // console.log("saveClientId = ", token );
   window.localStorage.setItem(CLIENT_ID_KEY, token);
 };
 

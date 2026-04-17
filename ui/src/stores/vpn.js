@@ -19,7 +19,7 @@ export const useVpnStore = defineStore('vpn', {
     },
     getVPNConfig: (state) => (id) => {
       const item = state.vpnConfigs.find((v) => v.id === id)
-      console.log('getVPNConfig: ' + id + ' item: ' + item)
+      // console.log('getVPNConfig: ' + id + ' item: ' + item)
       return item ? item.config : null
     },
   },
@@ -57,7 +57,7 @@ export const useVpnStore = defineStore('vpn', {
         this.error = `${vpn.name} updated`
       } catch (error) {
         if (error.response) this.error = error.response.data.error
-        console.log(error)
+        // console.log(error)
       }
     },
 

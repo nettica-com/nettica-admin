@@ -28,7 +28,7 @@ export const useHostStore = defineStore('host', {
         const resp = await ApiService.get('/host')
         for (const host of resp) {
           const diff = Math.abs(Date.now() - new Date(host.lastSeen))
-          console.log('Host: ' + host.name + ' lastSeen: ' + host.lastSeen + ' ms: ' + diff)
+          // console.log('Host: ' + host.name + ' lastSeen: ' + host.lastSeen + ' ms: ' + diff)
           if (diff > 30000) {
             host.status =
               host.platform === 'Native' ||

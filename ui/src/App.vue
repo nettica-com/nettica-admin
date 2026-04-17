@@ -81,7 +81,7 @@ onMounted(async () => {
     const r = TokenService.getReferer()
     if (r == null) {
       TokenService.saveReferer(route.query.referer)
-      console.log('saved referer ', route.query.referer)
+      // console.log('saved referer ', route.query.referer)
       TokenService.destroyToken()
     }
   }
@@ -97,7 +97,7 @@ onMounted(async () => {
       clientId: route.query.client_id,
       server: route.query.server,
     }).catch((err) => {
-      console.log('exchange error', err)
+      // console.log('exchange error', err)
     })
     return
   }
@@ -130,7 +130,7 @@ onMounted(async () => {
           }
         }
       } else {
-        console.log('route.path = %s', route.path)
+        // console.log('route.path = %s', route.path)
         if (!location.pathname.startsWith('/join') && !location.pathname.startsWith('/consent')) {
           authStore.oauth2_url()
         }
@@ -142,7 +142,7 @@ onMounted(async () => {
 watch(
   () => authStore.error,
   (newValue) => {
-    console.log(newValue)
+    // console.log(newValue)
     notify(newValue)
   },
 )
@@ -204,11 +204,11 @@ watch(
 )
 
 watch(requiresAuth, (newValue, oldValue) => {
-  console.log(`Updating requiresAuth from ${oldValue} to ${newValue}`)
+  // console.log(`Updating requiresAuth from ${oldValue} to ${newValue}`)
 })
 
 watch(isAuthenticated, (newValue, oldValue) => {
-  console.log(`Updating isAuthenticated from ${oldValue} to ${newValue}`)
+  // console.log(`Updating isAuthenticated from ${oldValue} to ${newValue}`)
   if (newValue === true) {
     const dest = authStore.intendedRoute || '/'
     authStore.intendedRoute = ''
@@ -217,9 +217,9 @@ watch(isAuthenticated, (newValue, oldValue) => {
 })
 
 watch(authStatus, (newValue, oldValue) => {
-  console.log(`Updating authStatus from ${oldValue} to ${newValue}`)
+  // console.log(`Updating authStatus from ${oldValue} to ${newValue}`)
   if (newValue === 'redirect') {
-    console.log('redirecting to ', authStore.authRedirectUrl)
+    // console.log('redirecting to ', authStore.authRedirectUrl)
     window.location.replace(authStore.authRedirectUrl)
   }
 })
@@ -231,7 +231,7 @@ function exchange(x) {
     let token
     ApiService.post('/auth/oauth2_exchange', x)
       .then((resp) => {
-        console.log('wild exchange successful')
+        // console.log('wild exchange successful')
         token = resp
         TokenService.saveWildToken(token)
         ApiService.setServer()
@@ -240,7 +240,7 @@ function exchange(x) {
         resolve(token)
       })
       .catch((err) => {
-        console.log('wild exchange error', err)
+        // console.log('wild exchange error', err)
         TokenService.destroyWildToken()
         TokenService.destroyWildServer()
         reject(err)

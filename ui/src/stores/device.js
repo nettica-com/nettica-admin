@@ -29,7 +29,7 @@ export const useDeviceStore = defineStore('device', {
         for (const device of resp) {
           if (device.lastSeen == null) continue
           const diff = Math.abs(Date.now() - new Date(device.lastSeen))
-          console.log('Host: ' + device.name + ' lastSeen: ' + device.lastSeen + ' ms: ' + diff)
+          // console.log('Host: ' + device.name + ' lastSeen: ' + device.lastSeen + ' ms: ' + diff)
           if (diff > 60000) {
             device.status =
               device.platform === 'Windows' ||

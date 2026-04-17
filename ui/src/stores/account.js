@@ -42,7 +42,7 @@ export const useAccountStore = defineStore('account', {
     async readMembers(id) {
       try {
         const resp = await ApiService.get(`/accounts/${id}/users`, { responseType: 'arraybuffer' })
-        console.log('readMembers: ', resp)
+        // console.log('readMembers: ', resp)
         const index = this.members.findIndex((x) => x.id === id)
         if (index !== -1) this.members.splice(index, 1)
         this.members.push({ id, members: resp })
@@ -54,7 +54,7 @@ export const useAccountStore = defineStore('account', {
     async readLimits(id) {
       try {
         const resp = await ApiService.get(`/accounts/${id}/limits`)
-        console.log('readLimits: ', resp)
+        // console.log('readLimits: ', resp)
         const index = this.limits.findIndex((x) => x.id === id)
         if (index !== -1) this.limits.splice(index, 1)
         this.limits.push({ id, limits: resp })
@@ -74,7 +74,7 @@ export const useAccountStore = defineStore('account', {
     },
 
     async update(account) {
-      console.log('action update account: ', account)
+      // console.log('action update account: ', account)
       try {
         const resp = await ApiService.patch(`/accounts/${account.id}`, account)
         // update in members list

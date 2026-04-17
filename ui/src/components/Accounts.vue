@@ -253,7 +253,7 @@ const selected = computed(() => {
       }
     }
   }
-  console.log('selected item = ', findValue(items.value, id))
+  // console.log('selected item = ', findValue(items.value, id))
   return findValue(items.value, id)
 })
 

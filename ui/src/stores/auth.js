@@ -44,11 +44,11 @@ export const useAuthStore = defineStore('auth', {
           TokenService.saveClientId(resp.clientId)
         }
         if (resp.codeUrl === '/login') {
-          console.log('server report oauth2 is disabled, basic auth')
+          // console.log('server report oauth2 is disabled, basic auth')
           this.authStatus = 'redirect'
           this.authRedirectUrl = resp.codeUrl
         } else if (resp.codeUrl === '_magic_string_fake_auth_no_redirect_') {
-          console.log('server report oauth2 is disabled, fake exchange')
+          // console.log('server report oauth2 is disabled, fake exchange')
           this.authStatus = 'disabled'
           await this.oauth2_exchange({ code: '', state: resp.state })
         } else {
@@ -69,7 +69,7 @@ export const useAuthStore = defineStore('auth', {
     async login(data) {
       try {
         const resp = await ApiService.post('/auth/login', data)
-        console.log('login', resp)
+        // console.log('login', resp)
         this.code = resp.code
         TokenService.saveCode(resp.code)
         this.State = resp.state
@@ -77,7 +77,7 @@ export const useAuthStore = defineStore('auth', {
         this.authRedirectUrl = resp.redirect_uri
         this.authStatus = 'redirect'
       } catch (err) {
-        console.log('login error', err)
+        // console.log('login error', err)
         this.authStatus = 'error'
         this.error = err.response?.data?.error
         this.logout()
@@ -85,7 +85,7 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async oauth2_exchange(data) {
-      console.log('oauth2_exchange', data)
+      // console.log('oauth2_exchange', data)
       if (data.clientId === undefined) {
         data.clientId = TokenService.getClientId()
       }
@@ -106,7 +106,7 @@ export const useAuthStore = defineStore('auth', {
         }
         this.authStatus = 'success'
       } catch (err) {
-        console.log('oauth2_exchange error', err)
+        // console.log('oauth2_exchange error', err)
         if (data.server) {
           TokenService.destroyWildToken()
           TokenService.destroyWildServer()
