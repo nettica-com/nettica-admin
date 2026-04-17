@@ -1,27 +1,26 @@
-import Vue from 'vue'
-import axios from "axios";
-import VueAxios from "vue-axios";
-import TokenService from "../services/token.service";
+import axios from 'axios'
+import TokenService from '../services/token.service'
 
-Vue.use(VueAxios, axios);
-
-let baseUrl = "/api/v1.0";
-if (process.env.NODE_ENV === "development"){
-  baseUrl = process.env.VUE_APP_API_BASE_URL;
+let baseUrl = '/api/v1.0'
+if (import.meta.env.MODE === 'development') {
+  baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://dev.nettica.com/api/v1.0'
 }
 
-Vue.axios.defaults.baseURL = baseUrl;
-TokenService.saveServer(baseUrl);
+const instance = axios.create({ baseURL: baseUrl })
 
-Vue.axios.interceptors.response.use(function (response) {
-  return response;
-}, function (error) {
-  if (401 === error.response.status) {
-    TokenService.destroyToken();
-    TokenService.destroyClientId();
-    window.location = '/';
-  } else {
-    return Promise.reject(error);
-  }
-});
+TokenService.saveServer(baseUrl)
 
+instance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      TokenService.destroyToken()
+      TokenService.destroyClientId()
+      window.location = '/'
+    } else {
+      return Promise.reject(error)
+    }
+  },
+)
+
+export default instance

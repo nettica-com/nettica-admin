@@ -1,119 +1,79 @@
-import Vue from 'vue'
-import VueRouter from 'vue-router'
-import store from "../store";
-import env from "../../env";
-
-Vue.use(VueRouter);
+import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 const routes = [
   {
-    path: '/join*',
+    path: '/join/:pathMatch(.*)*',
     name: 'join',
-    component: function () {
-      return import(/* webpackChunkName: "Join" */ '../views/Join.vue')
-    },
-    meta: {
-      requiresAuth: false
-    }
+    component: () => import('../views/Join.vue'),
+    meta: { requiresAuth: false },
   },
   {
-    path: '/consent*',
+    path: '/consent/:pathMatch(.*)*',
     name: 'consent',
-    component: function () {
-      return import(/* webpackChunkName: "Consent" */ '../views/Consent.vue')
-    },
-    meta: {
-      requiresAuth: false
-    }
+    component: () => import('../views/Consent.vue'),
+    meta: { requiresAuth: false },
   },
   {
     path: '/agent',
     name: 'agent',
-    component: function () {
-      return import(/* webpackChunkName: "Agent" */ '../views/Agent.vue')
-    },
-    meta: {
-      requiresAuth: false
-    }
+    component: () => import('../views/Agent.vue'),
+    meta: { requiresAuth: false },
   },
   {
     path: '/devices',
     name: 'devices',
-    component: function () {
-      return import(/* webpackChunkName: "Devices" */ '../views/Devices.vue')
-    },
-    meta: {
-      requiresAuth: true
-    }
+    component: () => import('../views/Devices.vue'),
+    meta: { requiresAuth: true },
   },
   {
     path: '/networks',
     name: 'networks',
-    component: function () {
-      return import(/* webpackChunkName: "Network" */ '../views/Network.vue')
-    },
-    meta: {
-      requiresAuth: true
-    }
+    component: () => import('../views/Network.vue'),
+    meta: { requiresAuth: true },
   },
   {
     path: '/accounts',
     name: 'accounts',
-    component: function () {
-      return import(/* webpackChunkName: "Accounts" */ '../views/Accounts.vue')
-    },
-    meta: {
-      requiresAuth: true
-    }
+    component: () => import('../views/Accounts.vue'),
+    meta: { requiresAuth: true },
   },
-  { 
+  {
     path: '/services',
     name: 'services',
-    component: function () {
-      return import(/* webpackChunkName: "Services" */ '../views/Services.vue')
-    },
-    meta: {
-      requiresAuth: true
-    }
+    component: () => import('../views/Services.vue'),
+    meta: { requiresAuth: true },
   },
-  { 
-    path: '/login*',
+  {
+    path: '/login/:pathMatch(.*)*',
     name: 'login',
-    component: function () {
-      return import(/* webpackChunkName: "Login" */ '../views/Login.vue')
-    },
-    meta: {
-      requiresAuth: false
-    }
+    component: () => import('../views/Login.vue'),
+    meta: { requiresAuth: false },
   },
   {
     path: '/',
     name: 'root',
-    meta: {
-      requiresAuth: false
-    }
+    component: { render: () => null },
+    meta: { requiresAuth: false },
   },
+]
 
-];
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes,
+})
 
-const router = new VueRouter({
-  mode: 'history',
-  base: process.env.BASE_URL,
-  routes
-});
-
-router.beforeEach((to, from, next) => {
-  console.log("router = ", to.path, from.path);
-  if(to.matched.some(record => record.meta.requiresAuth)) {
-    store.commit("auth/requiresAuth", true)
-    if (store.getters["auth/isAuthenticated"]) {
-      next()
-      return
+router.beforeEach((to) => {
+  const authStore = useAuthStore()
+  console.log('router =', to.path)
+  if (to.matched.some((record) => record.meta.requiresAuth)) {
+    authStore.requiresAuth = true
+    if (!authStore.isAuthenticated) {
+      authStore.intendedRoute = to.fullPath
+      return { path: '/' }
     }
-    //next(window.location.origin)
   } else {
-    store.commit("auth/requiresAuth", false)
-    next()
+    authStore.requiresAuth = false
   }
 })
 

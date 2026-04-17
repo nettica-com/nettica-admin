@@ -1,286 +1,250 @@
 <template>
-  <v-app id="inspire">
-    <v-layout>
-    <Notification v-bind:notification="notification"/>
-      <Header v-show="isAuthenticated" />
-        <v-main style="padding: 0px">
-          <router-view />
-        </v-main>
-
-      <Footer/>
-    </v-layout>
+  <v-app>
+    <Notification :notification="notification" />
+    <Header v-show="authStore.isAuthenticated" />
+    <v-main style="padding: 0px">
+      <router-view />
+    </v-main>
+    <Footer />
   </v-app>
 </template>
 
-<script>
-  import Notification from './components/Notification'
-  import Header from "./components/Header";
-  import MainMenu from "./components/Menu";
-  import Footer from "./components/Footer";
-  import TokenService from "./services/token.service";
-  import ApiService from "./services/api.service";
-  import {mapActions, mapGetters} from "vuex";
+<script setup>
+import { ref, watch, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useTheme } from 'vuetify'
+import { storeToRefs } from 'pinia'
+import Notification from './components/Notification.vue'
+import Header from './components/Header.vue'
+import Footer from './components/Footer.vue'
+import TokenService from './services/token.service'
+import ApiService from './services/api.service'
+import { useAuthStore } from './stores/auth'
+import { useAccountStore } from './stores/account'
+import { useDeviceStore } from './stores/device'
+import { useVpnStore } from './stores/vpn'
+import { useNetStore } from './stores/net'
+import { useServerStore } from './stores/server'
+import { useServiceStore } from './stores/service'
+import { useSubscriptionStore } from './stores/subscription'
 
-  export default {
-    name: 'App',
+const route = useRoute()
+const router = useRouter()
+const theme = useTheme()
 
-    components: {
-      Footer,
-      Header,
-      MainMenu,
-      Notification
-    },
+const authStore = useAuthStore()
+const accountStore = useAccountStore()
+const deviceStore = useDeviceStore()
+const vpnStore = useVpnStore()
+const netStore = useNetStore()
+const serverStore = useServerStore()
+const serviceStore = useServiceStore()
+const subscriptionStore = useSubscriptionStore()
 
-    data: () => ({
-      notification: {
-        show: false,
-        color: '',
-        text: '',
-      },
-    }),
+const { isAuthenticated, authStatus, authRedirectUrl, requiresAuth } = storeToRefs(authStore)
 
-    computed:{
-      ...mapGetters({
-        isAuthenticated: 'auth/isAuthenticated',
-        authStatus: 'auth/authStatus',
-        authRedirectUrl: 'auth/authRedirectUrl',
-        requiresAuth: 'auth/requiresAuth',
-        authError: 'auth/error',
-        vpnError: 'vpn/error',
-        deviceError: 'device/error',
-        netError: 'net/error',
-        accountError: 'account/error',
-        serverError: 'server/error',
-        serviceError: 'service/error',
-        subscriptionError: 'subscription/error',
-      })
-    },
+const notification = ref({ show: false, color: '', text: '', timeout: 10 })
 
-    created () {
-      this.$vuetify.theme.dark = true;
-    },
+function notify(msg) {
+  if (msg == null) return
+  notification.value.show = true
+  notification.value.text = msg
+  notification.value.timeout = 10
+}
 
+theme.change('dark')
 
-
-    mounted() {
-      // Detect Dart user agent and close window if present
-      if (navigator.userAgent && navigator.userAgent.toLowerCase().includes('dart')) {
-        window.close();
-        return;
-      }
-      if (this.$route && this.$route.query && this.$route.query.redirect_uri) {
-        TokenService.saveRedirect(this.$route.query.redirect_uri)
-        TokenService.destroyToken() // force a token exchange
-      }
-      if (this.$route && this.$route.query && this.$route.query.code && this.$route.query.state) {
-        
-        let redirect = TokenService.getRedirect();
-        if (redirect != null && redirect != "") {
-          TokenService.destroyRedirect()
-          var url = redirect + "?code=" + this.$route.query.code + "&state=" + this.$route.query.state + "&client_id=" + TokenService.getClientId();
-            window.location.replace(url);
-            return;
-        }
-      }
-      if (this.$route && this.$route.query && this.$route.query.referer) {
-        let r = TokenService.getReferer()
-        if (r == null) {
-          TokenService.saveReferer(this.$route.query.referer)
-	  console.log("saved referer ", this.$route.query.referer );
-          TokenService.destroyToken() // force a token exchange
-	  this.isAuthenticated = false
-        }
-      } 
-      if (this.$route && this.$route.query && this.$route.query.server &&
-          this.$route.query.code && this.$route.query.state && this.$route.query.client_id) {
-        exchange({
-          code: this.$route.query.code,
-          state: this.$route.query.state,
-          clientId: this.$route.query.client_id,
-          server: this.$route.query.server
-        }).catch(err => {
-          console.log("exchange error", err);
-        });
-
-        return;
-      }
-      if (this.requiresAuth || location.pathname == "/") {
-        if (this.isAuthenticated == false) {
-          if (this.$route.query.code && this.$route.query.state) {
-
-              TokenService.saveCode(this.$route.query.code)
-              TokenService.saveState(this.$route.query.state)
-
-              var referer = TokenService.getReferer()
-              var client_id = TokenService.getClientId()
-              if (referer) {
-                var url = "/consent?referer=" + referer + "&client_id=" + client_id + "&code=" + this.$route.query.code + "&state=" + this.$route.query.state;
-                this.$router.push(url).catch(err => {
-                  if (err.name != "NavigationDuplicated") {
-                    throw err;
-                  }
-                })
-              } else {
-                try {
-                  this.oauth2_exchange({
-                    code: this.$route.query.code,
-                    state: this.$route.query.state
-                })
-                TokenService.destroyReferer();
-                TokenService.destroyCode();
-                TokenService.destroyState();
-                TokenService.destroyClientId();
-              } catch (e) {
-                this.notification = {
-                  show: true,
-                  color: 'error',
-                  text: e.message,
-                }
-              }
-            }
-          } else {
-            console.log("this.$route.path = %s", this.$route.path);
-            if (!location.pathname.startsWith("/join") &&
-                !location.pathname.startsWith("/consent")) {
-              //alert("this.$route.path = " + this.$route.path + "location.pathname=" + location.pathname)
-              this.oauth2_url()
-            }
+onMounted(async () => {
+  if (navigator.userAgent && navigator.userAgent.toLowerCase().includes('dart')) {
+    window.close()
+    return
+  }
+  await router.isReady()
+  if (route.query.redirect_uri) {
+    TokenService.saveRedirect(route.query.redirect_uri)
+    TokenService.destroyToken()
+  }
+  if (route.query.code && route.query.state) {
+    const redirect = TokenService.getRedirect()
+    if (redirect != null && redirect !== '') {
+      TokenService.destroyRedirect()
+      const url =
+        redirect +
+        '?code=' + route.query.code +
+        '&state=' + route.query.state +
+        '&client_id=' + TokenService.getClientId()
+      window.location.replace(url)
+      return
+    }
+  }
+  if (route.query.referer) {
+    const r = TokenService.getReferer()
+    if (r == null) {
+      TokenService.saveReferer(route.query.referer)
+      // console.log('saved referer ', route.query.referer)
+      TokenService.destroyToken()
+    }
+  }
+  if (
+    route.query.server &&
+    route.query.code &&
+    route.query.state &&
+    route.query.client_id
+  ) {
+    exchange({
+      code: route.query.code,
+      state: route.query.state,
+      clientId: route.query.client_id,
+      server: route.query.server,
+    }).catch((err) => {
+      // console.log('exchange error', err)
+    })
+    return
+  }
+  if (authStore.requiresAuth || location.pathname === '/') {
+    if (!authStore.isAuthenticated) {
+      if (route.query.code && route.query.state) {
+        TokenService.saveCode(route.query.code)
+        TokenService.saveState(route.query.state)
+        const referer = TokenService.getReferer()
+        const client_id = TokenService.getClientId()
+        if (referer) {
+          const url =
+            '/consent?referer=' + referer +
+            '&client_id=' + client_id +
+            '&code=' + route.query.code +
+            '&state=' + route.query.state
+          router.push(url)
+        } else {
+          try {
+            authStore.oauth2_exchange({
+              code: route.query.code,
+              state: route.query.state,
+            })
+            TokenService.destroyReferer()
+            TokenService.destroyCode()
+            TokenService.destroyState()
+            TokenService.destroyClientId()
+          } catch (e) {
+            notification.value = { show: true, color: 'error', text: e.message, timeout: 10 }
           }
         }
-      }
-    },
-
-    watch: {
-      authError(newValue, oldValue) {
-        console.log(newValue)
-        this.notify(newValue);
-      },
-
-      netError(newValue, oldValue) {
-        this.notify(newValue);
-        this.errorNet(null)
-      },
-
-      accountError(newValue) {
-        this.notify(newValue);
-        this.errorAccount(null)
-      },
-
-      vpnError(newValue, oldValue) {
-        this.notify(newValue);
-        this.errorVpn(null)
-      },
-
-      deviceError(newValue, oldValue) {
-        this.notify(newValue);
-        this.errorDevice(null)
-      },
-
-      serviceError(newValue, oldValue) {
-        this.notify(newValue);
-        this.errorService(null)
-      },
-
-      subscriptionError(newValue, oldValue) {
-        this.notify(newValue);
-        this.errorSubscription(null)
-      },
-
-      serverError(newValue, oldValue) {
-        this.notify(newValue);
-        this.errorServer(null)
-      },
-      requiresAuth(newValue, oldValue) {
-        console.log(`Updating requiresAuth from ${oldValue} to ${newValue}`);
-      },
-
-      isAuthenticated(newValue, oldValue) {
-        console.log(`Updating isAuthenticated from ${oldValue} to ${newValue}`);
-        if (newValue === true  && this.requiresAuth === true || location.pathname == "/") {
-          //alert("isAuthenticated = " + newValue + " requiresAuth = " + this.requiresAuth)
-           this.$router.push('/').catch(err => {
-            if (err.name != "NavigationDuplicated") {
-              throw err;
-              }
-          })
+      } else {
+        // console.log('route.path = %s', route.path)
+        if (!location.pathname.startsWith('/join') && !location.pathname.startsWith('/consent')) {
+          authStore.oauth2_url()
         }
-      },
-
-      authStatus(newValue, oldValue) {
-        console.log(`Updating authStatus from ${oldValue} to ${newValue}`);
-        if (newValue === 'redirect') {
-	  console.log('redirecting to ', this.authRedirectUrl );
-          window.location.replace(this.authRedirectUrl)
-        }
-      },
-    },
-
-    methods: {
-      ...mapActions('auth', {
-        oauth2_exchange: 'oauth2_exchange',
-        oauth2_url: 'oauth2_url',
-      }),
-      ...mapActions('account', {
-        errorAccount: 'error',
-      }),
-      ...mapActions('device', {
-        errorDevice: 'error',
-      }),
-      ...mapActions('vpn', {
-        errorVpn: 'error',
-      }),
-      ...mapActions('net', {
-        errorNet: 'error',
-      }),
-      ...mapActions('client', {
-        errorClient: 'error',
-      }),
-      ...mapActions('server', {
-        errorServer: 'error',
-      }),
-      ...mapActions('service', {
-        errorService: 'error',
-      }),
-      ...mapActions('subscription', {
-        errorSubscription: 'error',
-      }),
-
-      notify(msg) {
-        if (msg == null) {
-          return;
-        }
-        this.notification.show = true;
-        this.notification.text = msg;
-        this.notification.timeout = 10;
       }
     }
-  };
+  }
+})
 
-  function exchange(x) {
-    return new Promise((resolve, reject) => {
-      // this oauth2_exchange is strictly for the wilderness
-      // this will not screw up the current server's login state
-      
-      TokenService.saveWildServer(x.server)
-      ApiService.setWildServer()
-      var token;
-      ApiService.post("/auth/oauth2_exchange", x)
-      .then(resp => {
-          console.log("wild exchange successful")
-          token = resp
-          TokenService.saveWildToken(token)
-          ApiService.setServer()  // reset to server
-          window.location.replace("/"); // <-- This is messy
+watch(
+  () => authStore.error,
+  (newValue) => {
+    // console.log(newValue)
+    notify(newValue)
+  },
+)
 
+watch(
+  () => netStore.error,
+  (newValue) => {
+    notify(newValue)
+    netStore.error = null
+  },
+)
+
+watch(
+  () => accountStore.error,
+  (newValue) => {
+    notify(newValue)
+    accountStore.error = null
+  },
+)
+
+watch(
+  () => vpnStore.error,
+  (newValue) => {
+    notify(newValue)
+    vpnStore.error = null
+  },
+)
+
+watch(
+  () => deviceStore.error,
+  (newValue) => {
+    notify(newValue)
+    deviceStore.error = null
+  },
+)
+
+watch(
+  () => serviceStore.error,
+  (newValue) => {
+    notify(newValue)
+    serviceStore.error = null
+  },
+)
+
+watch(
+  () => subscriptionStore.error,
+  (newValue) => {
+    notify(newValue)
+    subscriptionStore.error = null
+  },
+)
+
+watch(
+  () => serverStore.error,
+  (newValue) => {
+    notify(newValue)
+    serverStore.error = null
+  },
+)
+
+watch(requiresAuth, (newValue, oldValue) => {
+  // console.log(`Updating requiresAuth from ${oldValue} to ${newValue}`)
+})
+
+watch(isAuthenticated, (newValue, oldValue) => {
+  // console.log(`Updating isAuthenticated from ${oldValue} to ${newValue}`)
+  if (newValue === true) {
+    const dest = authStore.intendedRoute || '/'
+    authStore.intendedRoute = ''
+    router.push(dest)
+  }
+})
+
+watch(authStatus, (newValue, oldValue) => {
+  // console.log(`Updating authStatus from ${oldValue} to ${newValue}`)
+  if (newValue === 'redirect') {
+    // console.log('redirecting to ', authStore.authRedirectUrl)
+    window.location.replace(authStore.authRedirectUrl)
+  }
+})
+
+function exchange(x) {
+  return new Promise((resolve, reject) => {
+    TokenService.saveWildServer(x.server)
+    ApiService.setWildServer()
+    let token
+    ApiService.post('/auth/oauth2_exchange', x)
+      .then((resp) => {
+        // console.log('wild exchange successful')
+        token = resp
+        TokenService.saveWildToken(token)
+        ApiService.setServer()
+        const dest = localStorage.getItem('wilderness_reopen') ? '/services' : '/'
+        window.location.replace(dest)
+        resolve(token)
       })
-      .catch(err => {
-        console.log("wild exchange error", err);
+      .catch((err) => {
+        // console.log('wild exchange error', err)
         TokenService.destroyWildToken()
         TokenService.destroyWildServer()
-        reject(err);
-      });
-
-      resolve(token);
-    });
-  }
+        reject(err)
+      })
+  })
+}
 </script>

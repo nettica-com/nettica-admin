@@ -109,7 +109,7 @@ export const getClientId = () => {
 };
 
 export const saveClientId = token => {
-  console.log("saveClientId = ", token );
+  // console.log("saveClientId = ", token );
   window.localStorage.setItem(CLIENT_ID_KEY, token);
 };
 
@@ -118,7 +118,8 @@ export const destroyClientId = () => {
 };
 
 const AUTHORIZED_REDIRECTS = [
-  'https://my.nettica.com'
+  'https://my.nettica.com',
+  'https://dev.nettica.com',
 ];
 
 export const isValidRedirect = (url) => {

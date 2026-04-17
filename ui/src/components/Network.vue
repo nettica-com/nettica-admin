@@ -2,7 +2,7 @@
     <v-container style="padding-top:0px">
         <div>
             <v-btn class="mb-3 mt-0" @click="Refresh()">
-                <v-icon dark>mdi-refresh</v-icon>
+                <v-icon>mdi-refresh</v-icon>
                 Refresh
             </v-btn>
         </div>
@@ -13,7 +13,7 @@
                         Networks
                     </v-col>
                     <v-col cols="4">
-                        <v-text-field v-model="search" append-icon="mdi-magnify" label="Search" single-line
+                        <v-text-field v-model="search" append-inner-icon="mdi-magnify" label="Search"
                             hide-details></v-text-field>
                     </v-col>
                     <v-col cols="4" class="text-right">
@@ -25,54 +25,53 @@
                 </v-row>
             </v-card-title>
             <div v-if="friendly">
-                <v-alert type="info" color="#336699" dismissible>
+                <v-alert type="info" color="#336699" closable>
                     No networks found. <a style="color:white;" @click="createDefaultNetwork()">Click here to create your first network.</a>
                 </v-alert>
             </div>
-            <d3-network v-if="!friendly" class="network" :net-nodes="nodes" :net-links="links" :options="options" />
+            <D3NetworkGraph v-if="!friendly" class="network" :net-nodes="nodes" :net-links="links" :options="options" />
             <v-divider v-if="!friendly"></v-divider>
             <v-row v-if="!friendly" style="padding-top: 12px;">
                 <v-col cols="6">
-                    <v-treeview v-if="showTree" :items="items" :search="search" :filter="filter" :active.sync="active" :open.sync="open"
-                        activatable hoverable @update:active="loadNetwork">
+                    <VTreeview v-if="showTree" :items="items" :search="search" :filter-fn="filter"
+                        v-model:activated="active" v-model:opened="open"
+                        item-title="name" item-value="id"
+                        activatable hoverable @update:activated="loadNetwork">
                         <template v-slot:prepend="{ item }">
                             <span v-if="item.symbol" class="material-symbols-outlined">{{ item.symbol }}</span>
-                            <v-icon v-else>
-                                {{ item.icon }}
-                            </v-icon>
+                            <v-icon v-else>{{ item.icon }}</v-icon>
                         </template>
-                        <template v-slot:label="{ item }">
-                                    <table>
-                                        <tr><td :style="{ color: item.enabled ? 'white' : 'gray' }">
-                                            {{  item.name  }}
-                                        </td></tr>
-                                        <tr v-if="item.isNet"><td class="gray" style="font-size: small;">
-                                            {{ item.description }}
-                                        </td></tr>
-                                        <tr v-else><td class="gray" style="font-size: small;">
-                                            {{ item.vpn.current.address.join(", ") }}
-                                        </td></tr>
-                                    </table>
+                        <template v-slot:title="{ item }">
+                            <table>
+                                <tbody>
+                                <tr><td :style="{ color: item.enabled ? 'white' : 'gray' }">
+                                    {{ item.name }}
+                                </td></tr>
+                                <tr v-if="item.isNet"><td class="gray" style="font-size: small;">
+                                    {{ item.description }}
+                                </td></tr>
+                                <tr v-else><td class="gray" style="font-size: small;">
+                                    {{ item.vpn.current.address.join(', ') }}
+                                </td></tr>
+                                </tbody>
+                            </table>
                         </template>
                         <template v-slot:append="{ item }">
                             <v-spacer></v-spacer>
                             <v-btn v-if="item.isNet" icon @click="startAddDevice(item.net)">
-                                <v-tooltip bottom>
-                                    <template v-slot:activator="{ on }">
-                                        <v-icon v-on="on" color="#336699">mdi-plus-circle</v-icon>
+                                <v-tooltip text="Add device to this network" location="bottom">
+                                    <template #activator="{ props: tooltipProps }">
+                                        <v-icon v-bind="tooltipProps" color="#336699">mdi-plus-circle</v-icon>
                                     </template>
-                                    <span>Add device to this network</span>
                                 </v-tooltip>
                             </v-btn>
                         </template>
-
-                    </v-treeview>
+                    </VTreeview>
                 </v-col>
                 <v-divider vertical></v-divider>
                 <v-col cols="6" class="text-center">
-                    <div v-if="!selected" class="text-h6 grey--text text--lighten-1 font-weight-light"
+                    <div v-if="!selected" class="text-h6 text-grey-lighten-1 font-weight-light"
                         style="align-self: center;">
-
                     </div>
                     <v-card v-else-if="selected.isNet" :key="selected.id" class="px-3 mx-auto" flat>
                         <v-form autocomplete="off">
@@ -87,59 +86,28 @@
                         <v-row class="px-3" width="600">
                             <v-col flex>
                                 <v-text-field v-model="selected.net.description" label="Description" />
-                                <v-combobox v-model="selected.net.tags" chips hint="Enter a tag, hit tab, hit enter."
-                                    label="Tags" multiple dark>
-                                    <template v-slot:selection="{ attrs, item, select }">
-                                        <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                            @click:close="selected.net.tags.splice(selected.net.tags.indexOf(item), 1)">
-                                            <strong>{{ item }}</strong>&nbsp;
-                                        </v-chip>
-                                    </template>
-                                </v-combobox>
-                                <v-combobox v-model="selected.net.default.address" chips
-                                    hint="Write IPv4 or IPv6 CIDR and hit enter" label="Addresses" multiple dark>
-                                    <template v-slot:selection="{ attrs, item, select }">
-                                        <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                            @click:close="selected.net.default.address.splice(selected.net.default.address.indexOf(item), 1)">
-                                            <strong>{{ item }}</strong>&nbsp;
-                                        </v-chip>
-                                    </template>
-                                </v-combobox>
-                                <v-combobox v-model="selected.net.default.allowedIPs" chips
-                                    hint="Write IPv4 or IPv6 CIDR and hit enter" label="Allowed IPs" multiple dark>
-                                    <template v-slot:selection="{ attrs, item, select }">
-                                        <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                            @click:close="selected.net.default.allowedIPs.splice(selected.net.default.allowedIPs.indexOf(item), 1)">
-                                            <strong>{{ item }}</strong>&nbsp;
-                                        </v-chip>
-                                    </template>
-                                </v-combobox>
-                                <v-combobox v-model="selected.net.default.dns" chips
-                                    hint="Enter IP address(es) and hit enter or leave empty."
-                                    label="DNS servers for this network" multiple dark>
-                                    <template v-slot:selection="{ attrs, item, select }">
-
-                                        <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                            @click:close="selected.net.default.dns.splice(selected.net.default.dns.indexOf(item), 1)">
-                                            <strong>{{ item }}</strong>&nbsp;
-                                        </v-chip>
-                                    </template>
-                                </v-combobox>
+                                <v-combobox v-model="selected.net.tags" chips closable-chips
+                                    hint="Enter a tag, hit tab, hit enter." label="Tags" multiple />
+                                <v-combobox v-model="selected.net.default.address" chips closable-chips
+                                    hint="Write IPv4 or IPv6 CIDR and hit enter" label="Addresses" multiple />
+                                <v-combobox v-model="selected.net.default.allowedIPs" chips closable-chips
+                                    hint="Write IPv4 or IPv6 CIDR and hit enter" label="Allowed IPs" multiple />
+                                <v-combobox v-model="selected.net.default.dns" chips closable-chips
+                                    hint="Enter IP address(es) of the DNS servers.  Do not leave empty."
+                                    label="DNS servers for this network" multiple />
                                 <v-text-field type="number" v-model="selected.net.default.mtu"
                                     label="MTU" hint="Leave at 0 for auto, 1350 for IPv6 or if problems occur" />
                                 <v-text-field v-model="selected.net.accountid" label="Account ID" readonly />
                                 <v-text-field v-model="selected.net.id" label="Network ID" readonly />
                                 <v-text-field label="Preshared Key" readonly>
-                                    <template v-slot:append>
+                                    <template v-slot:append-inner>
                                         <v-icon title="Copy to clipboard" @click="copy(selected.net.default.presharedKey)">mdi-content-copy</v-icon>
                                         <v-icon title="Regenerate preshared key" @click="regenerate(selected.net)">mdi-refresh</v-icon>
                                     </template>
                                 </v-text-field>
-                                <v-text-field type="number" v-model="selected.net.default.persistentKeepalive"
-                                    label="Persistent keepalive"
-                                    hint="To disable, set to 0.  Recommended value 29 (seconds)" />
                                 <span style="font-size: small;">Network Policy</span><v-divider></v-divider>
                                 <table>
+                                    <tbody>
                                     <tr>
                                         <td colspan="2">
                                             <v-switch v-model="selected.net.forceUpdate" color="#004000" inset
@@ -158,9 +126,11 @@
                                                 :label="selected.net.policies.onlyEndpoints ? 'Clients can only see Endpoints' : 'Clients can see all devices'" />
                                         </td>
                                     </tr>
+                                    </tbody>
                                 </table>
                                 <span style="font-size: small;">Client Defaults</span><v-divider></v-divider>
                                 <table width="100%">
+                                    <tbody>
                                     <tr>
                                         <td>
                                             <v-switch v-model="selected.net.default.syncEndpoint" color="#004000" inset
@@ -191,21 +161,23 @@
                                                 label="Enable Nettica DNS" />
                                         </td>
                                     </tr>
+                                    </tbody>
                                 </table>
                                 <v-divider v-if="isOwner"></v-divider>
-                                <table width="100%"  v-if="isOwner">
+                                <table width="100%" v-if="isOwner">
+                                    <tbody>
                                     <tr>
                                         <td colspan="2">
                                             <v-switch v-model="selected.net.critical" color="red" inset
                                                 :label="selected.net.critical ? 'This is a Critical Network' : 'This is a Normal Network'" />
                                         </td>
                                     </tr>
+                                    </tbody>
                                 </table>
                                 <v-divider></v-divider>
                                 <p class="text-caption">Created by {{ selected.net.createdBy }} at {{
-                                    selected.net.created | formatDate }}<br />
-                                    Last update by {{ selected.net.updatedBy }} at {{ selected.net.updated |
-                                        formatDate }}</p>
+                                    formatDate(selected.net.created) }}<br />
+                                    Last update by {{ selected.net.updatedBy }} at {{ formatDate(selected.net.updated) }}</p>
                             </v-col>
                         </v-row>
                         <v-card-actions>
@@ -214,13 +186,13 @@
                                     <v-col>
                                         <v-btn color="#004000" @click="update(selected.net)">
                                             Save
-                                            <v-icon right dark>mdi-check-outline</v-icon>
+                                            <v-icon end>mdi-check-outline</v-icon>
                                         </v-btn>
                                     </v-col>
                                     <v-col>
                                         <v-btn color="#400000" @click="remove(selected.net)">
                                             Delete
-                                            <v-icon right dark>mdi-delete-outline</v-icon>
+                                            <v-icon end>mdi-delete-outline</v-icon>
                                         </v-btn>
                                     </v-col>
                                 </v-row>
@@ -228,8 +200,8 @@
                         </v-card-actions>
                         </v-form>
                     </v-card>
-                    <v-card v-else-if="!selected.isNet">
-                        <v-form autocomplete="off" >
+                    <v-card v-else-if="selected && !selected.isNet">
+                        <v-form autocomplete="off">
                         <v-card-text width="600" class="px-3">
                             <v-icon size="50" class="material-symbols-outlined">network_node</v-icon>
                             <h3 class="text-h5 mb-2">
@@ -241,36 +213,14 @@
                             <v-col flex>
                                 <v-text-field v-model="selected.vpn.name" label="DNS name" :readonly="!inEdit"
                                  :rules="[rules.required, rules.host]" />
-                                <v-combobox :readonly="!inEdit" v-model="selected.vpn.current.address" chips
-                                    hint="Write IPv4 or IPv6 CIDR and hit enter" label="Addresses" multiple dark>
-                                    <template v-slot:selection="{ attrs, item, select }">
-                                        <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                            @click:close="selected.vpn.current.address.splice(selected.vpn.current.address.indexOf(item), 1)">
-                                            <strong>{{ item }}</strong>&nbsp;
-                                        </v-chip>
-                                    </template>
-                                </v-combobox>
-                                <v-combobox :readonly="!inEdit" v-model="selected.vpn.current.dns" chips
+                                <v-combobox :readonly="!inEdit" v-model="selected.vpn.current.address" chips closable-chips
+                                    hint="Write IPv4 or IPv6 CIDR and hit enter" label="Addresses" multiple />
+                                <v-combobox :readonly="!inEdit" v-model="selected.vpn.current.dns" chips closable-chips
                                     hint="Enter IP address(es) and hit enter or leave empty."
-                                    label="DNS servers for this network" multiple dark>
-                                    <template v-slot:selection="{ attrs, item, select }">
-
-                                        <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                            @click:close="selected.vpn.current.dns.splice(selected.vpn.current.dns.indexOf(item), 1)">
-                                            <strong>{{ item }}</strong>&nbsp;
-                                        </v-chip>
-                                    </template>
-                                </v-combobox>
-                                <v-combobox v-if="selected.vpn.type=='Service'" v-model="selected.vpn.current.allowedIPs" chips
-                                                hint="Write IPv4 or IPv6 CIDR and hit enter" label="Allowed IPs" multiple
-                                                dark :readonly="!inEdit" >
-                                    <template v-slot:selection="{ attrs, item, select }">
-                                        <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                            @click:close="selected.vpn.current.allowedIPs.splice(selected.vpn.current.allowedIPs.indexOf(item), 1)">
-                                            <strong>{{ item }}</strong>&nbsp;
-                                        </v-chip>
-                                    </template>
-                                </v-combobox>
+                                    label="DNS servers for this network" multiple />
+                                <v-combobox v-if="selected.vpn.type == 'Service'" v-model="selected.vpn.current.allowedIPs" chips closable-chips
+                                    hint="Write IPv4 or IPv6 CIDR and hit enter" label="Allowed IPs" multiple
+                                    :readonly="!inEdit" />
                                 <v-text-field :readonly="!inEdit" v-model="selected.vpn.current.endpoint"
                                     label="Public endpoint for clients" :rules="[ rules.ipport ]" />
                                 <v-text-field type="number" v-model="selected.vpn.current.mtu"
@@ -279,42 +229,31 @@
                                     label="Persistent keepalive" hint="To disable, set to 0.  Recommended value 23 (seconds)" />
                                 <v-switch v-model="selected.vpn.enable" color="#004000" inset
                                     :label="selected.vpn.enable ? 'Enabled' : 'Disabled'" :readonly="!inEdit" />
-                                <p class="text-caption">Created by {{ selected.vpn.createdBy }} at {{ selected.vpn.created |
-                                    formatDate }}<br />
-                                    Last update by {{ selected.vpn.updatedBy }} at {{ selected.vpn.updated | formatDate }}</p>
-
+                                <p class="text-caption">Created by {{ selected.vpn.createdBy }} at {{ formatDate(selected.vpn.created) }}<br />
+                                    Last update by {{ selected.vpn.updatedBy }} at {{ formatDate(selected.vpn.updated) }}</p>
                             </v-col>
                         </v-row>
                         <v-expansion-panels v-if="inEdit && !(selected.vpn.type == 'Service')">
                             <v-expansion-panel>
-                                <v-expansion-panel-header dark>Advanced Configuration</v-expansion-panel-header>
-                                <v-expansion-panel-content>
+                                <v-expansion-panel-title>Advanced Configuration</v-expansion-panel-title>
+                                <v-expansion-panel-text>
                                     <div class="d-flex flex-no-wrap justify-space-between">
                                         <v-col cols="12">
-                                            <v-combobox v-model="selected.vpn.current.allowedIPs" chips
-                                                hint="Write IPv4 or IPv6 CIDR and hit enter" label="Allowed IPs" multiple
-                                                dark>
-
-                                                <template v-slot:selection="{ attrs, item, select }">
-                                                    <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                                        @click:close="selected.vpn.current.allowedIPs.splice(selected.vpn.current.allowedIPs.indexOf(item), 1)">
-                                                        <strong>{{ item }}</strong>&nbsp;
-                                                    </v-chip>
-                                                </template>
-                                            </v-combobox>
+                                            <v-combobox v-model="selected.vpn.current.allowedIPs" chips closable-chips
+                                                hint="Write IPv4 or IPv6 CIDR and hit enter" label="Allowed IPs" multiple />
                                             <v-text-field v-model="selected.vpn.accountid" label="Account ID" readonly />
                                             <v-text-field v-model="selected.vpn.id" label="VPN ID" readonly />
                                             <v-text-field v-model="selected.vpn.netid" label="Network ID" readonly />
                                             <v-text-field v-model="selected.vpn.deviceid" label="Device ID" readonly />
                                             <v-combobox v-model="selected.vpn.role" :items="['', 'Ingress', 'Egress']"
-                                                label="Role" single dark />
+                                                label="Role" />
                                             <v-text-field v-model="selected.vpn.current.table" label="Table" />
                                             <v-text-field v-model="selected.vpn.current.publicKey" label="Public key" />
-                                            <v-text-field v-if="!editPrivate" label="Private key" readonly append-icon="mdi-square-edit-outline" @click:append="editPrivate = true" />
+                                            <v-text-field v-if="!editPrivate" label="Private key" readonly append-inner-icon="mdi-square-edit-outline" @click:append-inner="editPrivate = true" />
                                             <v-text-field v-if="editPrivate" v-model="selected.vpn.current.privateKey" label="Private key"
                                                 hint="Clear this field to have the client manage its private key" />
-                                            <v-text-field label="Preshared Key" readonly 
-                                                append-icon="mdi-content-copy" @click:append="copy(selected.vpn.current.presharedKey)" />
+                                            <v-text-field label="Preshared Key" readonly
+                                                append-inner-icon="mdi-content-copy" @click:append-inner="copy(selected.vpn.current.presharedKey)" />
                                             <v-textarea v-model="selected.vpn.current.preUp" label="PreUp Script"
                                                 hint="Command to run before starting VPN" />
                                             <v-textarea v-model="selected.vpn.current.postUp" label="PostUp Script"
@@ -327,6 +266,7 @@
                                                 label="Enable subnet routing" />
                                             <v-divider></v-divider>
                                             <table width="100%">
+                                                <tbody>
                                                 <tr>
                                                     <td>
                                                         <v-switch v-model="selected.vpn.current.syncEndpoint" color="#004000" inset
@@ -357,21 +297,22 @@
                                                             label="Nettica DNS" />
                                                     </td>
                                                 </tr>
+                                                </tbody>
                                             </table>
                                         </v-col>
                                     </div>
-                                </v-expansion-panel-content>
+                                </v-expansion-panel-text>
                             </v-expansion-panel>
                         </v-expansion-panels>
                         <v-card>
                             <v-card-actions v-if="inEdit">
                                 <v-btn color="#004000" @click="updateVPN(selected.vpn)">
                                     Submit
-                                    <v-icon right dark>mdi-check-outline</v-icon>
+                                    <v-icon end>mdi-check-outline</v-icon>
                                 </v-btn>
                                 <v-btn color="#000040" @click="inEdit = false">
                                     Cancel
-                                    <v-icon right dark>mdi-close-circle-outline</v-icon>
+                                    <v-icon end>mdi-close-circle-outline</v-icon>
                                 </v-btn>
                             </v-card-actions>
                             <v-card-actions v-else>
@@ -380,19 +321,19 @@
                                         <v-col>
                                             <v-btn color="#004000" @click="forceFileDownload(selected.vpn)">
                                                 Download
-                                                <v-icon right dark>mdi-cloud-download-outline</v-icon>
+                                                <v-icon end>mdi-cloud-download-outline</v-icon>
                                             </v-btn>
                                         </v-col>
                                         <v-col>
                                             <v-btn class="px-3" color="#000040" @click="inEdit = true">
                                                 Edit
-                                                <v-icon right dark>mdi-pencil-outline</v-icon>
+                                                <v-icon end>mdi-pencil-outline</v-icon>
                                             </v-btn>
                                         </v-col>
                                         <v-col>
                                             <v-btn class="px-3" color="#400000" @click="removeVPN(selected.vpn)">
                                                 Delete
-                                                <v-icon right dark>mdi-delete-outline</v-icon>
+                                                <v-icon end>mdi-delete-outline</v-icon>
                                             </v-btn>
                                         </v-col>
                                     </v-row>
@@ -404,7 +345,7 @@
                 </v-col>
             </v-row>
         </v-card>
-        <v-dialog v-if="net" v-model="dialogCreate" max-width="550"  persistent  @keydown.esc="dialogCreate = false" >
+        <v-dialog v-if="net" v-model="dialogCreate" max-width="550" persistent @keydown.esc="dialogCreate = false">
             <v-card>
                 <v-card-title class="headline">Create New Network</v-card-title>
                 <v-card-text>
@@ -414,38 +355,24 @@
                                 <v-text-field v-model="net.netName"
                                     :rules="[ rules.required, rules.host ]" required>
                                     <template #label>
-                                      <span class="red--text"><strong>* </strong></span>Network Name
+                                      <span class="text-red"><strong>* </strong></span>Network Name
                                     </template>
                                 </v-text-field>
                                 <v-combobox v-model="net.default.address" :items="net.default.address"
-                                    :rules="[rules.required, rules.cidr]" multiple chips persistent-hint required >
+                                    :rules="[rules.required, rules.cidr]" multiple chips closable-chips persistent-hint required>
                                     <template #label>
-                                      <span class="red--text"><strong>* </strong></span>IP subnet for this network (ex. 10.10.10.0/24)
+                                      <span class="text-red"><strong>* </strong></span>IP subnet for this network (ex. 10.10.10.0/24)
                                     </template>
                                 </v-combobox>
-                                <v-select return-object v-model="acntList.selected" :items="acntList.items" item-text="text"
+                                <v-select return-object v-model="acntList.selected" :items="acntList.items" item-title="text"
                                     item-value="value" label="For this account"
-                                    :rules="[v => !!v || 'Account is required',]" single persistent-hint />
+                                    :rules="[v => !!v || 'Account is required']" persistent-hint />
                                 <v-text-field v-model="net.description" label="Description" />
-                                <v-combobox v-model="net.tags" chips hint="Enter a tag, hit tab, hit enter." label="Tags"
-                                    multiple dark>
-                                    <template v-slot:selection="{ attrs, item, select, selected }">
-                                        <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                            @click:close="net.tags.splice(net.tags.indexOf(item), 1)">
-                                            <strong>{{ item }}</strong>&nbsp;
-                                        </v-chip>
-                                    </template>
-                                </v-combobox>
-                                <v-combobox v-model="net.default.dns" chips
+                                <v-combobox v-model="net.tags" chips closable-chips
+                                    hint="Enter a tag, hit tab, hit enter." label="Tags" multiple />
+                                <v-combobox v-model="net.default.dns" chips closable-chips
                                     hint="Enter the IP address of a global DNS resolver, hit tab, hit enter."
-                                    label="DNS servers for this network" multiple dark>
-                                    <template v-slot:selection="{ attrs, item, select, selected }">
-                                        <v-chip v-bind="attrs" :input-value="selected" close @click="select"
-                                            @click:close="net.default.dns.splice(net.default.dns.indexOf(item), 1)">
-                                            <strong>{{ item }}</strong>&nbsp;
-                                        </v-chip>
-                                    </template>
-                                </v-combobox>
+                                    label="DNS servers for this network" multiple />
                                 <v-switch v-model="net.policies.userEndpoints" color="#004000" inset
                                     label="Users can create Endpoints" />
                                 <v-switch v-model="net.policies.onlyEndpoints" color="#004000" inset
@@ -464,16 +391,16 @@
                     <v-spacer />
                     <v-btn :disabled="!valid" color="#004000" @click="create(net)">
                         Submit
-                        <v-icon right dark>mdi-check-outline</v-icon>
+                        <v-icon end>mdi-check-outline</v-icon>
                     </v-btn>
                     <v-btn color="#000040" @click="dialogCreate = false">
                         Cancel
-                        <v-icon right dark>mdi-close-circle-outline</v-icon>
+                        <v-icon end>mdi-close-circle-outline</v-icon>
                     </v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
-        <v-dialog v-if="net" v-model="dialogAddDevice" max-width="550"  persistent  @keydown.esc="dialogAddDevice = false" >
+        <v-dialog v-if="net" v-model="dialogAddDevice" max-width="550" persistent @keydown.esc="dialogAddDevice = false">
             <v-card>
                 <v-card-title class="headline">Add Device</v-card-title>
                 <v-card-text>
@@ -481,9 +408,9 @@
                         <v-col cols="12">
                             <v-form ref="form" v-model="valid">
                                 <v-text-field v-model="net.netName" label="To Network" readonly />
-                                <v-select return-object v-model="deviceList.selected" :items="deviceList.items" v-on:change="updateName"
-                                    item-text="text" item-value="value" label="Add this device"
-                                    :rules="[v => !!v || 'Device is required',]" single persistent-hint required />
+                                <v-select return-object v-model="deviceList.selected" :items="deviceList.items" @update:model-value="updateName"
+                                    item-title="text" item-value="value" label="Add this device"
+                                    :rules="[v => !!v || 'Device is required']" persistent-hint required />
                                 <v-text-field v-model="vpn.name" label="DNS name for this device"
                                     :rules="[rules.required, rules.host]" required />
                                 <v-text-field v-model="vpn.current.endpoint" label="Public endpoint for clients"
@@ -499,729 +426,451 @@
                 </v-card-text>
                 <v-card-actions>
                     <v-spacer />
-                    <v-btn :disabled="!valid" color="#004000" @click="addDevice(device)">
+                    <v-btn :disabled="!valid" color="#004000" @click="addDevice()">
                         Submit
-                        <v-icon right dark>mdi-check-outline</v-icon>
+                        <v-icon end>mdi-check-outline</v-icon>
                     </v-btn>
                     <v-btn color="#000040" @click="dialogAddDevice = false">
                         Cancel
-                        <v-icon right dark>mdi-close-circle-outline</v-icon>
+                        <v-icon end>mdi-close-circle-outline</v-icon>
                     </v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
-
     </v-container>
 </template>
 
-<!-- <style src="vue-d3-network/dist/vue-d3-network.css"></style> -->
 <style>
-.v-treeview-node {
-  padding: 10px 0; /* Add padding to the top-level items */
-}
-.v-treeview-node--leaf {
-  padding: 0; /* Add padding to the leaf items */
-}
 .gray {
     color: gray;
 }
-
 text {
     font-size: 12px;
     color: white;
     fill: white;
 }
-
 .node {
     fill: #336699;
     stroke: #5b81a7;
 }
-
 .link {
     color: white;
 }
-
 .net-svg {
     margin: 0 auto;
 }
-
 .network {
     display: flex;
     justify-content: center;
 }
 </style>
-<script>
 
+<script setup>
+import { ref, computed, watch, onMounted } from 'vue'
+import D3NetworkGraph from './D3NetworkGraph.vue'
+import { useVpnStore } from '@/stores/vpn'
+import { useNetStore } from '@/stores/net'
+import { useAccountStore } from '@/stores/account'
+import { useDeviceStore } from '@/stores/device'
+import { useAuthStore } from '@/stores/auth'
+import ApiService from '@/services/api.service'
+import { formatDate } from '@/utils/formatDate'
 
-var D3Network = window['vue-d3-network']
+const vpnStore = useVpnStore()
+const netStore = useNetStore()
+const accountStore = useAccountStore()
+const deviceStore = useDeviceStore()
+const authStore = useAuthStore()
 
+const acntList = ref({})
+const showTree = ref(false)
+const friendly = ref(false)
+const items = ref([])
+const active = ref([])
+const open = ref([])
+const deviceList = ref({})
+const isOwner = ref(false)
+const inEdit = ref(false)
+const editPrivate = ref(false)
+const dialogCreate = ref(false)
+const dialogAddDevice = ref(false)
+const publicSubnets = ref(false)
+const noEdit = ref(false)
+const net = ref(null)
+const vpn = ref({
+    name: '',
+    current: { endpoint: '' }
+})
+const device = ref(null)
+const valid = ref(false)
+const refreshing = ref(false)
+const search = ref('')
+const nodes = ref([])
+const links = ref([])
+const nodeSize = ref(50)
 
-import { mapActions, mapGetters } from 'vuex';
-import ApiService from '../services/api.service';
+const rules = {
+    cidr: v => /((\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\b[0-9]{1,2}\b)|(\b(?:[A-Fa-f0-9]{1,4}:){7}[A-Fa-f0-9]{1,4}\b\/\b[0-9]{1,3}\b))(?: ((\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\b[0-9]{1,2}\b)|(\b(?:[A-Fa-f0-9]{1,4}:){7}[A-Fa-f0-9]{1,4}\b\/\b[0-9]{1,3}\b)))*/.test(v) || 'Enter a valid subnet',
+    required: value => !!value || 'Required.',
+    email: v => /.+@.+\..+/.test(v) || 'E-mail must be valid',
+    host: v => /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/.test(v) || 'Only letters, numbers, dots and hyphens are allowed. Must start and end with a letter or number.',
+    ipport: v => (!v || v && v.length == 0 || /^(((\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}\b)|(\[([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\]:[0-9]{1,5})|^$)(,\s+((\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}\b)|(\[([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\]:[0-9]{1,5})|^$))*)$/.test(v)) || 'If present, must be valid IPv4 or IPv6 address and port',
+}
 
-export default {
-    name: 'Networks',
+const options = computed(() => ({
+    force: 4000,
+    size: { w: Math.min(window.innerWidth, 1000), h: 300 },
+    nodeSize: nodeSize.value,
+    nodeLabels: true,
+    linkLabels: true,
+    canvas: false,
+}))
 
-    data: () => ({
-        acntList: {},
-        showTree: false,
-        showPrivate: false,
-        showPreshared: false,
-        friendly: false,
-        items: [],
-        active: [],
-        open: [],
-        deviceList: {},
-        isOwner: false,
-        inEdit: false,
-        editPrivate: false,
-        dialogCreate: false,
-        dialogAddDevice: false,
-        publicSubnets: false,
-        noEdit: false,
-        net: null,
-        vpn: {
-            name: "",
-            current: {
-                endpoint: "",
-            }
-        },
-        device: null,
-        panel: 1,
-        valid: false,
-        rules: {
-            cidr: v =>  /((\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\b[0-9]{1,2}\b)|(\b(?:[A-Fa-f0-9]{1,4}:){7}[A-Fa-f0-9]{1,4}\b\/\b[0-9]{1,3}\b))(?: ((\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\b[0-9]{1,2}\b)|(\b(?:[A-Fa-f0-9]{1,4}:){7}[A-Fa-f0-9]{1,4}\b\/\b[0-9]{1,3}\b)))*/.test(v) || 'Enter a valid subnet',
-            required: value => !!value || 'Required.',
-            email: v => /.+@.+\..+/.test(v) || 'E-mail must be valid',
-            host: v => /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/.test(v) || 'Only letters, numbers, dots and hyphens are allowed. Must start and end with a letter or number.',
-            ipport: v => (!v || v && v.length == 0 || /^(((\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}\b)|(\[([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\]:[0-9]{1,5})|^$)(,\s+((\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{1,5}\b)|(\[([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\]:[0-9]{1,5})|^$))*)$/.test(v)) || 'If present, must be valid IPv4 or IPv6 address and port',
-        },
-        search: '',
-        nodes: [
-        ],
-        links: [
-        ],
-        nodeSize: 50,
-        canvas: false,
-
-
-    }),
-
-    computed: {
-        selected() {
-            if (!this.active.length) return undefined
-
-            const id = this.active[0]
-            console.log("selected id = ", id)
-
-            // find the item in the tree
-            for (let i = 0; i < this.items.length; i++) {
-                if (this.items[i].id == id) {
-                    return this.items[i]
-                }
-                for (let j = 0; j < this.items[i].children.length; j++) {
-                    if (this.items[i].children[j].id == id) {
-                        return this.items[i].children[j]
-                    }
-                }
-            }
-
-            var vpn = this.vpns.find(vpn => vpn.id === id)
-            if (vpn) {
-                return vpn
-            }
-
-
-            return this.items.find(item => item.id === id)
-        },
-
-        ...mapGetters({
-            user: 'auth/user',
-            server: 'server/server',
-            nets: 'net/nets',
-            vpns: 'vpn/vpns',
-            hosts: 'host/hosts',
-            devices: 'device/devices',
-            accounts: 'account/accounts',
-            getvpnconfig: "vpn/getVPNConfig",
-
-        }),
-        options() {
-            return {
-                force: 4000,
-                size: { w: Math.min(window.innerWidth, 1000), h: 300 },
-                nodeSize: this.nodeSize,
-                nodeLabels: true,
-                linkLabels: true,
-                canvas: this.canvas
-            }
+const selected = computed(() => {
+    if (!active.value.length) return undefined
+    const id = active.value[0]
+    for (let i = 0; i < items.value.length; i++) {
+        if (items.value[i].id === id) return items.value[i]
+        for (let j = 0; j < items.value[i].children.length; j++) {
+            if (items.value[i].children[j].id === id) return items.value[i].children[j]
         }
-
-    },
-
-    mounted() {
-        this.readAllAccounts(this.user.email)
-        this.readAllNetworks()
-        this.readAllVPNs()
-        this.readAllDevices()
-
-    },
-
-    watch: {
-        nets: function (val) {
-            console.log("buildTree = ", this.buildTree())
-            this.showTree = true
-            if (this.nets.length == 0) {
-                this.friendly = true
-            } else {
-                this.friendly = false
-            }
-        },
-
-        vpns: function (val) {
-            console.log("buildTree = ", this.buildTree())
-            this.showTree = true
-        },
-        accounts: function(val) {
-            this.acntList = {
-                selected: { "text": "", "value": "" },
-                items: []
-            }
-            for (let i = 0; i < this.accounts.length; i++) {
-                if (this.accounts[i].parent == this.accounts[i].id) {
-                    this.isOwner = true
-                }
-                this.acntList.items[i] = { "text": this.accounts[i].accountName + " - " + this.accounts[i].parent, "value": this.accounts[i].parent }
-            }
-        }
-    },
-
-
-    methods: {
-        ...mapActions('vpn', {
-            readAllVPNs: 'readAll',
-            createvpn: "create",
-            updatevpn: "update",
-            deletevpn: "delete",
-            readvpnconfig: "readConfig",
-
-        }),
-        ...mapActions('net', {
-            errorNet: 'error',
-            readAllNetworks: 'readAll',
-            createNet: 'create',
-            updateNet: 'update',
-            update_net: 'update_net',
-            deleteNet: 'delete',
-        }),
-        ...mapActions('account', {
-            readAllAccounts: 'readAll',
-        }),
-        ...mapActions('device', {
-            readAllDevices: 'readAll',
-            createdevice: 'create',
-            updatedevice: 'update',
-            deletedevice: 'delete',
-        }),
-
-
-        Refresh() {
-            this.readAllAccounts(this.user.email)
-            this.readAllVPNs()
-            this.readAllNetworks()
-        },
-        Refreshing() {
-            this.refreshing = true
-            this.Refresh()
-
-            for (let i = 0; i < 5; i++) {
-                if (this.refreshing) {
-                    setTimeout(() => {
-                        console.log("Refreshing", i)
-                        this.Refresh()
-                    }, (i+1) * 2000)
-                if (i == 4) {
-                    this.refreshing = false
-                }   
-                } else {
-                    break
-                }
-            }
-        },
-        filter(item) {
-
-            if (this.search == "") {
-                return true
-            }
-
-            if (item.name.toLowerCase().includes(this.search.toLowerCase())) {
-                return true
-            }
-            if (item.isNet && item.net.tags != null) {
-                for (let i = 0; i < item.net.tags.length; i++) {
-                    if (item.net.tags[i].toLowerCase().includes(this.search.toLowerCase())) {
-                        return true
-                    }
-                }
-            }
-            if (!item.isNet && item.vpn.name.toLowerCase().includes(this.search.toLowerCase())) {
-                return true
-            }
-            if (!item.isNet && item.vpn.current.address.length > 0) {
-                for (let i = 0; i < item.vpn.current.address.length; i++) {
-                    if (item.vpn.current.address[i].toLowerCase().includes(this.search.toLowerCase())) {
-                        return true
-                    }
-                }
-            }
-
-            return false;
-        },
-        buildTree() {
-            // build the treeview using the networks
-            this.items = []
-            var k = 0
-            for (let i = 0; i < this.nets.length; i++) {
-                this.items[i] = {
-                    id: this.nets[i].id,
-                    name: this.nets[i].netName,
-                    description: this.nets[i].description,
-                    net: this.nets[i],
-                    icon: "mdi-network-outline",
-                    symbol: "hub",
-                    isNet: true,
-                    enabled: true,
-                    children: []
-                }
-            }
-
-            this.items.sort((a, b) => {
-                const nameA = a.name.toUpperCase(); // ignore upper and lowercase
-                const nameB = b.name.toUpperCase(); // ignore upper and lowercase
-                if (nameA < nameB) {
-                    return -1;
-                }
-                if (nameA > nameB) {
-                    return 1;
-                }
-
-                // names must be equal
-                return 0;
-            });
-
-            k = 0
-            console.log("this.items = ", this.items)
-            console.log("this.vpns = ", this.vpns)
-            for (let i = 0; i < this.items.length; i++) {
-                for (let j = 0; j < this.vpns.length; j++) {
-                    if (this.vpns[j].netName == this.items[i].name) {
-                        this.items[i].children[k] = {
-                            id: this.vpns[j].id,
-                            name: this.vpns[j].name,
-                            address: this.vpns[j].current.address[0],
-                            net: this.items[i].net,
-                            vpn: this.vpns[j],
-                            icon: "mdi-network-outline",
-                            symbol: "network_node",
-                            isNet: false,
-                            isNode: true,
-                            enabled: this.vpns[j].enable,
-                            children: []
-                        }
-                        k++
-                    }
-                }
-                k = 0
-            }
-
-            return this.items
-
-        },
-
-
-        loadNetwork(id) {
-            let item = this.selected
-            if (!item) return
-            let net = item.net
-            console.log("net = ", net)
-            let name = net.netName
-            let x = 0
-            let l = 0
-            this.links = []
-            this.nodes = []
-            let net_hosts = []
-            console.log("this.vpns = ", this.vpns)
-            for (let i = 0; i < this.vpns.length; i++) {
-                if (this.vpns[i].netName == name) {
-                    net_hosts[x] = this.vpns[i]
-                        this.nodes[x] = { id: x, name: this.vpns[i].name, /* _color:'gray'*/ }
-                    if (this.vpns[i].current.endpoint == "") {
-                        this.nodes[x]._color = "#34adcd"
-                    } else {
-                        this.nodes[x]._color = "#83c44d"
-                    }
-                    if (this.vpns[i].role == "Egress") {
-                        this.nodes[x]._color = "#50C878"
-                    }
-                    if (this.vpns[i].id == id) {
-                        this.nodes[x]._color = "#FF8C00"
-                    }                    
-                    x++
-                }
-            }
-            for (let i = 0; i < net_hosts.length; i++) {
-                for (let j = 0; j < net_hosts.length; j++) {
-                    if (i != j && net_hosts[j].current.endpoint != "" && net_hosts[j].role != "Egress") {
-                        this.links[l] = { sid: i, tid: j, _color: "white" }
-                        l++
-                    }
-                }
-            }
-        },
-
-        doCopy() {
-            this.$copyText(this.net.default.presharedKey).then(function (e) {
-                alert('Copied')
-                console.log(e)
-            }, function (e) {
-                alert('Can not copy')
-                console.log(e)
-            })
-        },
-
-        startCreate() {
-            this.net = {
-                name: "",
-                email: this.user.email,
-                enable: true,
-                netName: "",
-                id: "",
-                tags: [],
-                accountid: ""
-            }
-            this.net.default = {
-                allowedIPs: [],
-                address: [],
-                enableDns: false,
-                upnp: false,
-                failsafe: false,
-            }
-            this.net.policies = {
-                userEndpoints: false,
-                onlyEndpoints: false,
-            }
-            this.acntList = {
-                selected: { "text": "", "value": "" },
-                items: []
-            }
-
-            var selected = 0;
-            for (let i = 0; i < this.accounts.length; i++) {
-                this.acntList.items[i] = { "text": this.accounts[i].accountName + " - " + this.accounts[i].parent, "value": this.accounts[i].parent }
-                if (this.acntList.items[i].value == this.net.accountid) {
-                    selected = i
-                }
-            }
-
-            this.acntList.selected = this.acntList.items[selected];
-
-            this.dialogCreate = true;
-        },
-
-        create(net) {
-            this.net = net
-            if (net.default.allowedIPs.length < 0) {
-                this.errorNet('Please provide at least one valid CIDR address for net allowed IPs')
-                return;
-            }
-            //for (let i = 0; i < net.default.allowedIPs.length; i++) {
-            //    if (this.$isCidr(net.default.allowedIPs[i]) === 0) {
-            //        this.errorNet('Invalid CIDR detected, please correct before submitting')
-            //        return
-            //    }
-            //}
-            this.net.accountid = this.acntList.selected.value
-            this.dialogCreate = false;
-            this.createNet(net)
-        },
-
-        createDefaultNetwork() {
-            this.net = {
-                name: "Nettica",
-                description: this.user.email + "'s first network",
-                email: this.user.email,
-                enable: true,
-                netName: "Nettica",
-                id: "",
-                tags: [],
-                accountid: ""
-
-            }
-            this.net.default = {
-                allowedIPs: ["10.10.10.0/24"],
-                address: ["10.10.10.0/24"],
-                dns: ["8.8.8.8"],
-                enableDns: false,
-                upnp: true,
-                failsafe: true,
-            }
-            this.net.policies = {
-                userEndpoints: true,
-                onlyEndpoints: false,
-            }
-
-            for (let i = 0; i < this.accounts.length; i++) {
-                if (this.accounts[i].id == this.accounts[i].parent) {
-                    this.net.accountid = this.accounts[i].parent
-                    break
-                }
-            }
-            
-            if (this.net.accountid == "") {
-                this.errorNet('Cannot create a network for this account')
-                return
-            }
-
-            this.createNet(this.net)
-        },
-
-        remove(net) {
-            this.noEdit = true
-            if (confirm(`Do you really want to delete ${net.netName}?`)) {
-                this.deleteNet(net)
-            }
-        },
-
-        startAddDevice(net) {
-            this.net = net
-            this.vpn = {
-                name: "",
-                netid: this.net.id,
-                accountid: this.net.accountid,
-                email: this.user.email,
-                enable: true,
-                tags: [],
-                current: {
-                    syncEndpoint: false,                    
-                },
-            }
-
-            this.deviceList = {
-                selected: { "text": "", "value": "" },
-                items: []
-            }
-
-            // get all the devices, but only add the ones 
-            // that are not already in the network
-            for (let i = 0; i < this.devices.length; i++) {
-                let found = false
-                let v = this.devices[i].vpns
-                if (v == null) {
-                    this.deviceList.items.push({ "text": this.devices[i].name, "value": this.devices[i].id })
-                    continue
-                }
-                for (let j = 0; j < this.devices[i].vpns.length; j++) {
-                    if (this.devices[i].vpns[j].netid == this.net.id) {
-                        found = true
-                        break
-                    }
-                }
-                if (!found) {
-                    this.deviceList.items.push({ "text": this.devices[i].name, "value": this.devices[i].id })
-                }
-            }
-
-            // alphabetize the list
-            this.deviceList.items.sort((a, b) => {
-                const nameA = a.text.toUpperCase(); // ignore upper and lowercase
-                const nameB = b.text.toUpperCase(); // ignore upper and lowercase
-                if (nameA < nameB) {
-                    return -1;
-                }
-                if (nameA > nameB) {
-                    return 1;
-                }
-
-                // names must be equal
-                return 0;
-            });
-
-            this.dialogAddDevice = true;
-        },
-
-        updateName(item) {
-            console.log("updateName", item)
-            let device = this.devices.find(device => device.id === item.value)
-            this.device = device
-
-            // Change the host name to be the device name + the network name
-            this.vpn.name = this.device.name + "." + this.net.netName
-        },
-
-        async addDevice() {
-            this.vpn
-            this.vpn.current.listenPort = 0;
-
-            // get the listen port from the endpoint field if it is there
-            if (this.vpn.current.endpoint != null && this.vpn.current.endpoint != "" && this.vpn.current.endpoint.indexOf(":") != -1) {
-                let parts = this.vpn.current.endpoint.split(":")
-                this.vpn.current.listenPort = parseInt(parts[parts.length-1], 10)
-            }
-
-            this.vpn.netName = this.net.netName
-            this.vpn.netid = this.net.id
-            this.vpn.accountid = this.net.accountid
-            this.vpn.deviceid = this.device.id
-            
-            this.dialogAddDevice = false;
-
-            console.log("this.vpn = ", this.vpn)
-            this.createvpn(this.vpn)
-            // wait a second
-            // await new Promise(r => setTimeout(r, 2000));
-            // await this.asyncRefresh()
-
-        },
-
-
-        email(net) {
-            if (!net.email) {
-                this.errorNet('Net email is not defined')
-                return
-            }
-
-            if (confirm(`Do you really want to send email to ${net.email} with all configurations ?`)) {
-                this.emailNet(net)
-            }
-        },
-
-        startUpdate(net) {
-            if (this.noEdit == true) {
-                this.noEdit = false;
-                return
-            }
-
-            this.net = net;
-            this.dialogUpdate = true;
-        },
-
-        update(net) {
-            this.net = net
-
-            this.net.default.listenPort = 0;
-            this.net.default.persistentKeepalive = parseInt(this.net.default.persistentKeepalive, 10);
-            this.net.default.mtu = parseInt(this.net.default.mtu, 10);
-            this.net.id = net.id
-            this.net.netName = net.netName
-
-            for (let i = 0; i < net.default.address.length; i++) {
-                if (this.$isCidr(net.default.address[i]) === 0) {
-                    this.errorNet('Invalid CIDR detected, please correct before submitting');
-                    return
-                }
-            }
-
-            // check allowed IPs
-            if (net.default.allowedIPs.length < 1) {
-                this.net.default.allowedIPs = this.net.default.address;
-            }
-            // all good, submit
-            this.dialogUpdate = false;
-            this.updateNet(net)
-            this.update_net(net)
-
-        },
-        updateVPN(vpn) {
-            this.vpn = vpn
-            this.vpn.current.listenPort = 0;
-            // get the listen port from the endpoint field if it is there
-            if (this.vpn.current.endpoint != null && this.vpn.current.endpoint != "" && this.vpn.current.endpoint.indexOf(":") != -1) {
-                let parts = this.vpn.current.endpoint.split(":")
-                this.vpn.current.listenPort = parseInt(parts[parts.length-1], 10)
-            }
-
-            this.vpn.current.persistentKeepalive = parseInt(this.vpn.current.persistentKeepalive, 10);
-            this.vpn.current.mtu = parseInt(this.vpn.current.mtu, 10);
-
-            if (this.publicSubnets) {
-                this.vpn.current.allowedIPs.push("0.0.0.0/5", "8.0.0.0/7", "11.0.0.0/8", "12.0.0.0/6", "16.0.0.0/4", "32.0.0.0/3", "64.0.0.0/3",
-				"96.0.0.0/4", "112.0.0.0/5", "120.0.0.0/6", "124.0.0.0/7", "126.0.0.0/8", "128.0.0.0/3", "160.0.0.0/5", "168.0.0.0/6",
-				"172.0.0.0/12", "172.32.0.0/11", "172.64.0.0/10", "172.128.0.0/9", "173.0.0.0/8", "174.0.0.0/7", "176.0.0.0/4", "192.0.0.0/9", "192.128.0.0/11",
-				"192.160.0.0/13", "192.169.0.0/16", "192.170.0.0/15", "192.172.0.0/14", "192.176.0.0/12", "192.192.0.0/10", "193.0.0.0/8", "194.0.0.0/7",
-				"196.0.0.0/6", "200.0.0.0/5", "208.0.0.0/4", "::/1", "8000::/2", "c000::/3", "e000::/4", "f000::/5", "f800::/6", "fe00::/9", "fe80::/10", "ff00::/8")
-            }
-
-
-            this.inEdit = false;
-            this.editPrivate = false;
-            this.updatevpn(this.vpn)
-        },
-
-        async removeVPN(vpn) {
-            if (confirm(`Do you really want to delete ${vpn.name} from ${vpn.netName}?`)) {
-                await this.deletevpn(vpn)
-                // refresh the page
-                this.Refreshing()
-            }
-        },
-
-        copy(text) {
-            navigator.clipboard
-                .writeText(text)
-                .then(() => {
-                    this.errorNet("Copied to clipboard")
-                })
-        },
-
-        regenerate(net) {
-            if (confirm(`Do you really want to regenerate the preshared key for ${net.netName}? This will take effect immediately.`)) {
-
-                const characters = 'ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
-                const charactersLength = characters.length;
-                let counter = 0;
-                let length = 32;
-                let key = "";
-                while (counter < length) {
-                    key += characters.charAt(Math.floor(Math.random() * charactersLength));
-                    counter += 1;
-                }
-
-                key = btoa(key)
-                net.default.presharedKey = key
-                net.forceUpdate = true
-
-                ApiService.patch(`/net/${net.id}`, net)
-                    .then((n) => {
-                        this.update_net(n)
-                        this.errorNet("Preshared key has been regenerated and distributed.  Clients may need to reconnect.")
-                        this.Refresh()
-                    })
-                    .catch(() => {
-                        this.errorNet('Failed to regenerate preshared key');
-                    })
-            }
-        },
-
-
-        async forceFileDownload(vpn) {
-            console.log("vpn = ", vpn)
-
-            ApiService.getWithConfig(`/vpn/${vpn.id}/config?qrcode=false`, { responseType: 'arraybuffer' })
-                .then( config => {
-                    const url = window.URL.createObjectURL(new Blob([config]))
-                    const link = document.createElement('a')
-                    link.href = url
-                    link.setAttribute('download', vpn.name.split(' ').join('-') + '-' + vpn.netName.split(' ').join('-') + '.zip') //or any other extension
-                    document.body.appendChild(link)
-                    link.click()
-                })
-                .catch( error => {
-                    console.log("error = ", error)
-                    this.errorNet('Failed to download device config');
-                })
-
-        },
-
     }
-};
+    const foundVpn = vpnStore.vpns.find(v => v.id === id)
+    if (foundVpn) return foundVpn
+    return items.value.find(item => item.id === id)
+})
+
+watch(() => netStore.nets, () => {
+    buildTree()
+    showTree.value = true
+    friendly.value = netStore.nets.length === 0
+})
+
+watch(() => vpnStore.vpns, () => {
+    buildTree()
+    showTree.value = true
+})
+
+watch(() => accountStore.accounts, (val) => {
+    acntList.value = { selected: { text: '', value: '' }, items: [] }
+    for (let i = 0; i < val.length; i++) {
+        if (val[i].parent === val[i].id) isOwner.value = true
+        acntList.value.items[i] = { text: val[i].accountName + ' - ' + val[i].parent, value: val[i].parent }
+    }
+})
+
+onMounted(() => {
+    accountStore.readAll(authStore.user.email)
+    netStore.readAll()
+    vpnStore.readAll()
+    deviceStore.readAll()
+})
+
+function Refresh() {
+    accountStore.readAll(authStore.user.email)
+    vpnStore.readAll()
+    netStore.readAll()
+}
+
+function Refreshing() {
+    refreshing.value = true
+    Refresh()
+    for (let i = 0; i < 5; i++) {
+        if (refreshing.value) {
+            setTimeout(() => { Refresh() }, (i + 1) * 2000)
+            if (i === 4) refreshing.value = false
+        } else {
+            break
+        }
+    }
+}
+
+function filter(value, query, item) {
+    const raw = item?.raw ?? item
+    if (!query) return true
+    if (raw.name && raw.name.toLowerCase().includes(query.toLowerCase())) return true
+    if (raw.isNet && raw.net.tags != null) {
+        for (const tag of raw.net.tags) {
+            if (tag.toLowerCase().includes(query.toLowerCase())) return true
+        }
+    }
+    if (!raw.isNet && raw.vpn?.name?.toLowerCase().includes(query.toLowerCase())) return true
+    if (!raw.isNet && raw.vpn?.current?.address?.length > 0) {
+        for (const addr of raw.vpn.current.address) {
+            if (addr.toLowerCase().includes(query.toLowerCase())) return true
+        }
+    }
+    return false
+}
+
+function buildTree() {
+    items.value = []
+    for (let i = 0; i < netStore.nets.length; i++) {
+        items.value[i] = {
+            id: netStore.nets[i].id,
+            name: netStore.nets[i].netName,
+            description: netStore.nets[i].description,
+            net: netStore.nets[i],
+            icon: 'mdi-network-outline',
+            symbol: 'hub',
+            isNet: true,
+            enabled: true,
+            children: []
+        }
+    }
+
+    items.value.sort((a, b) => a.name.toUpperCase() < b.name.toUpperCase() ? -1 : a.name.toUpperCase() > b.name.toUpperCase() ? 1 : 0)
+
+    for (let i = 0; i < items.value.length; i++) {
+        let k = 0
+        for (let j = 0; j < vpnStore.vpns.length; j++) {
+            if (vpnStore.vpns[j].netid === items.value[i].net.id) {
+                items.value[i].children[k] = {
+                    id: vpnStore.vpns[j].id,
+                    name: vpnStore.vpns[j].name,
+                    address: vpnStore.vpns[j].current.address[0],
+                    net: items.value[i].net,
+                    vpn: vpnStore.vpns[j],
+                    icon: 'mdi-network-outline',
+                    symbol: 'network_node',
+                    isNet: false,
+                    isNode: true,
+                    enabled: vpnStore.vpns[j].enable,
+                }
+                k++
+            }
+        }
+    }
+}
+
+function loadNetwork() {
+    const item = selected.value
+    if (!item) return
+    const n = item.net
+    if (!n) return
+    const netid = n.id
+    let x = 0
+    let l = 0
+    links.value = []
+    nodes.value = []
+    const net_hosts = []
+    for (let i = 0; i < vpnStore.vpns.length; i++) {
+        if (vpnStore.vpns[i].netid === netid) {
+            net_hosts[x] = vpnStore.vpns[i]
+            nodes.value[x] = { id: x, name: vpnStore.vpns[i].name }
+            if (!vpnStore.vpns[i].current.endpoint) {
+                nodes.value[x]._color = '#34adcd'
+            } else {
+                nodes.value[x]._color = '#83c44d'
+            }
+            if (vpnStore.vpns[i].role === 'Egress') nodes.value[x]._color = '#50C878'
+            if (vpnStore.vpns[i].id === active.value[0]) nodes.value[x]._color = '#FF8C00'
+            x++
+        }
+    }
+    for (let i = 0; i < net_hosts.length; i++) {
+        for (let j = 0; j < net_hosts.length; j++) {
+            if (i !== j && net_hosts[j].current.endpoint !== '' && net_hosts[j].role !== 'Egress') {
+                links.value[l] = { sid: i, tid: j, _color: 'white' }
+                l++
+            }
+        }
+    }
+}
+
+function startCreate() {
+    net.value = {
+        name: '',
+        email: authStore.user.email,
+        enable: true,
+        netName: '',
+        id: '',
+        tags: [],
+        accountid: '',
+        default: { allowedIPs: [], address: [], enableDns: false, upnp: false, failsafe: false },
+        policies: { userEndpoints: false, onlyEndpoints: false },
+    }
+
+    acntList.value = { selected: { text: '', value: '' }, items: [] }
+    let sel = 0
+    for (let i = 0; i < accountStore.accounts.length; i++) {
+        acntList.value.items[i] = { text: accountStore.accounts[i].accountName + ' - ' + accountStore.accounts[i].parent, value: accountStore.accounts[i].parent }
+        if (acntList.value.items[i].value === net.value.accountid) sel = i
+    }
+    acntList.value.selected = acntList.value.items[sel]
+    dialogCreate.value = true
+}
+
+function create(n) {
+    net.value = n
+    net.value.accountid = acntList.value.selected.value
+    dialogCreate.value = false
+    netStore.create(n)
+}
+
+function createDefaultNetwork() {
+    net.value = {
+        name: 'Nettica',
+        description: authStore.user.email + "'s first network",
+        email: authStore.user.email,
+        enable: true,
+        netName: 'Nettica',
+        id: '',
+        tags: [],
+        accountid: '',
+        default: {
+            allowedIPs: ['10.10.10.0/24'],
+            address: ['10.10.10.0/24'],
+            dns: ['8.8.8.8'],
+            enableDns: false,
+            upnp: true,
+            failsafe: true,
+        },
+        policies: { userEndpoints: true, onlyEndpoints: false },
+    }
+
+    for (const acct of accountStore.accounts) {
+        if (acct.id === acct.parent) {
+            net.value.accountid = acct.parent
+            break
+        }
+    }
+
+    if (!net.value.accountid) {
+        netStore.error = 'Cannot create a network for this account'
+        return
+    }
+
+    netStore.create(net.value)
+}
+
+function remove(n) {
+    noEdit.value = true
+    if (confirm(`Do you really want to delete ${n.netName}?`)) {
+        netStore.delete(n)
+    }
+}
+
+function startAddDevice(n) {
+    net.value = n
+    vpn.value = {
+        name: '',
+        netid: n.id,
+        accountid: n.accountid,
+        email: authStore.user.email,
+        enable: true,
+        tags: [],
+        current: { syncEndpoint: false },
+    }
+
+    deviceList.value = { selected: { text: '', value: '' }, items: [] }
+    for (const d of deviceStore.devices) {
+        let found = false
+        if (d.vpns) {
+            for (const v of d.vpns) {
+                if (v.netid === n.id) { found = true; break }
+            }
+        }
+        if (!found) deviceList.value.items.push({ text: d.name, value: d.id })
+    }
+    deviceList.value.items.sort((a, b) => a.text.toUpperCase() < b.text.toUpperCase() ? -1 : a.text.toUpperCase() > b.text.toUpperCase() ? 1 : 0)
+    dialogAddDevice.value = true
+}
+
+function updateName(item) {
+    device.value = deviceStore.devices.find(d => d.id === item.value)
+    vpn.value.name = device.value.name + '.' + net.value.netName
+}
+
+async function addDevice() {
+    vpn.value.current.listenPort = 0
+    if (vpn.value.current.endpoint && vpn.value.current.endpoint.includes(':')) {
+        const parts = vpn.value.current.endpoint.split(':')
+        vpn.value.current.listenPort = parseInt(parts[parts.length - 1], 10)
+    }
+    vpn.value.netName = net.value.netName
+    vpn.value.netid = net.value.id
+    vpn.value.accountid = net.value.accountid
+    vpn.value.deviceid = device.value.id
+    dialogAddDevice.value = false
+    vpnStore.create(vpn.value)
+}
+
+function update(n) {
+    net.value = n
+    net.value.default.listenPort = 0
+    net.value.default.persistentKeepalive = parseInt(net.value.default.persistentKeepalive, 10)
+    net.value.default.mtu = parseInt(net.value.default.mtu, 10)
+
+    for (const addr of n.default.address) {
+        if (typeof addr === 'string' && !addr.includes('/')) {
+            netStore.error = 'Invalid CIDR detected, please correct before submitting'
+            return
+        }
+    }
+
+    if (n.default.allowedIPs.length < 1) {
+        net.value.default.allowedIPs = net.value.default.address
+    }
+
+    netStore.update(n)
+    netStore.update_net(n)
+}
+
+function updateVPN(v) {
+    vpn.value = v
+    vpn.value.current.listenPort = 0
+    if (vpn.value.current.endpoint && vpn.value.current.endpoint.includes(':')) {
+        const parts = vpn.value.current.endpoint.split(':')
+        vpn.value.current.listenPort = parseInt(parts[parts.length - 1], 10)
+    }
+    vpn.value.current.persistentKeepalive = parseInt(vpn.value.current.persistentKeepalive, 10)
+    vpn.value.current.mtu = parseInt(vpn.value.current.mtu, 10)
+    inEdit.value = false
+    editPrivate.value = false
+    vpnStore.update(vpn.value)
+}
+
+async function removeVPN(v) {
+    if (confirm(`Do you really want to delete ${v.name} from ${v.netName}?`)) {
+        await vpnStore.delete(v)
+        Refreshing()
+    }
+}
+
+function copy(text) {
+    navigator.clipboard.writeText(text).then(() => netStore.error = 'Copied to clipboard')
+}
+
+function regenerate(n) {
+    if (confirm(`Do you really want to regenerate the preshared key for ${n.netName}? This will take effect immediately.`)) {
+        const chars = 'ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789'
+        let key = ''
+        for (let i = 0; i < 32; i++) key += chars.charAt(Math.floor(Math.random() * chars.length))
+        key = btoa(key)
+        n.default.presharedKey = key
+        n.forceUpdate = true
+
+        ApiService.patch(`/net/${n.id}`, n)
+            .then(updated => {
+                netStore.update_net(updated)
+                netStore.error = 'Preshared key has been regenerated and distributed.  Clients may need to reconnect.'
+                Refresh()
+            })
+            .catch(() => netStore.error = 'Failed to regenerate preshared key')
+    }
+}
+
+async function forceFileDownload(v) {
+    ApiService.getWithConfig(`/vpn/${v.id}/config?qrcode=false`, { responseType: 'arraybuffer' })
+        .then(config => {
+            const url = window.URL.createObjectURL(new Blob([config]))
+            const link = document.createElement('a')
+            link.href = url
+            link.setAttribute('download', v.name.split(' ').join('-') + '-' + v.netName.split(' ').join('-') + '.zip')
+            document.body.appendChild(link)
+            link.click()
+        })
+        .catch(() => netStore.error = 'Failed to download device config')
+}
 </script>

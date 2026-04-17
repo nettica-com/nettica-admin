@@ -11,7 +11,7 @@ A control plane for [WireGuard](https://wireguard.com).
 * Mail Server credentials for sending outgoing email
 * golang
 * nginx
-* NodeJS / Vue 2
+* NodeJS / Vue 3
 
 ![Screenshot](https://nettica.com/wp-content/uploads/2025/01/nettica-architecture.webp)
 

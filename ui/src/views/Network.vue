@@ -1,16 +1,9 @@
 <template>
   <v-main style="padding-top:74px;">
-    <Net/>
+    <Net />
   </v-main>
 </template>
 
-<script>
-  import Net from '../components/Network'
-
-  export default {
-    name: 'net',
-    components: {
-      Net
-    }
-  }
+<script setup>
+import Net from '../components/Network.vue'
 </script>
