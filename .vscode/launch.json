@@ -32,6 +32,24 @@
             ],
             "runtimeExecutable": "npm",
             "type": "pwa-node"
+        },
+        {
+            "name": "Launch via NPM 25",
+            "request": "launch",
+            "cwd":"${env:HOME}/go/src/nettica-admin/ui",
+            "env" : { "VUE_APP_API_BASE_URL" : "https://dev.nettica.com/api/v1.0/"},
+            "runtimeArgs": [
+                "run",
+                "serve"
+            ],
+            "runtimeExecutable": "npm",
+            "runtimeVersion": "25",
+            "type": "pwa-node",
+            "sourceMapPathOverrides": {
+                "/src/*": "${workspaceFolder}/ui/src/*"
+              }
         }
+
+
     ]
 }

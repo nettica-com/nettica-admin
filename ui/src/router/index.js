@@ -53,6 +53,7 @@ const routes = [
   {
     path: '/',
     name: 'root',
+    component: { render: () => null },
     meta: { requiresAuth: false },
   },
 ]

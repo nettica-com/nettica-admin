@@ -25,36 +25,49 @@
                     </v-card-title>
                     <div v-if="friendly">
                         <v-alert type="info" color="#336699" closable>
-                            No devices found. <a style="color:white;" @click="startCreate">Click here to add your first device.</a>
+                            No devices found. <a style="color:white;" @click="startCreate">Click here to add your first
+                                device.</a>
                         </v-alert>
                     </div>
 
                     <v-row v-if="!friendly">
                         <v-col cols="6">
                             <VTreeview v-if="showTree" :items="items" :search="search" :filter-fn="filter"
-                                v-model:activated="active" v-model:opened="open"
-                                item-title="name" item-value="id"
+                                v-model:activated="active" v-model:opened="open" item-title="name" item-value="id"
                                 activatable hoverable>
                                 <template v-slot:prepend="{ item }">
-                                    <span v-if="item.symbol && item.status == 'Online'" class="material-symbols-outlined" style="color:green;">{{ item.symbol }}</span>
-                                    <span v-else-if="item.symbol && item.status == 'Offline'" class="material-symbols-outlined" style="color:red;">{{ item.symbol }}</span>
-                                    <span v-else-if="item.symbol && item.status && item.status != 'Online' && item.status != 'Offline'" class="material-symbols-outlined" style="color:blue;">{{ item.symbol }}</span>
-                                    <span v-else-if="item.symbol" class="material-symbols-outlined">{{ item.symbol }}</span>
+                                    <span v-if="item.symbol && item.status == 'Online'"
+                                        class="material-symbols-outlined" style="color:green;">{{ item.symbol }}</span>
+                                    <span v-else-if="item.symbol && item.status == 'Offline'"
+                                        class="material-symbols-outlined" style="color:red;">{{ item.symbol }}</span>
+                                    <span
+                                        v-else-if="item.symbol && item.status && item.status != 'Online' && item.status != 'Offline'"
+                                        class="material-symbols-outlined" style="color:blue;">{{ item.symbol }}</span>
+                                    <span v-else-if="item.symbol" class="material-symbols-outlined">{{ item.symbol
+                                    }}</span>
                                     <v-icon v-else style="color:white;">
                                         {{ item.icon }}
                                     </v-icon>
                                 </template>
                                 <template v-slot:title="{ item }">
                                     <table>
-                                        <tr><td :style="{ color: item.enabled ? 'white' : 'gray' }">
-                                            {{ item.name }}
-                                        </td></tr>
-                                        <tr v-if="item.isDevice"><td class="gray" style="font-size: small;">
-                                            {{ item.description }}
-                                        </td></tr>
-                                        <tr v-else><td class="gray" style="font-size: small;">
-                                            {{ item.vpn.current.address.join(', ') }}
-                                        </td></tr>
+                                        <tbody>
+                                            <tr>
+                                                <td :style="{ color: item.enabled ? 'white' : 'gray' }">
+                                                    {{ item.name }}
+                                                </td>
+                                            </tr>
+                                            <tr v-if="item.isDevice">
+                                                <td class="gray" style="font-size: small;">
+                                                    {{ item.description }}
+                                                </td>
+                                            </tr>
+                                            <tr v-else>
+                                                <td class="gray" style="font-size: small;">
+                                                    {{ item.vpn.current.address.join(', ') }}
+                                                </td>
+                                            </tr>
+                                        </tbody>
                                     </table>
                                 </template>
                                 <template v-slot:append="{ item }">
@@ -75,197 +88,78 @@
                             </div>
                             <v-card v-else-if="selected.isDevice" :key="selected.id" class="px-3 mx-auto" flat>
                                 <v-form autocomplete="off">
-                                <v-card-text width="600">
-                                    <span class="material-symbols-outlined" style="font-size:50px;">{{ selected.symbol }}</span>
-                                    <h3 class="text-h5 mb-2">
-                                        {{ selected.name }}
-                                    </h3>
-                                    <div class="mb-2">
-                                        <v-icon v-if="selected.device.status == 'Online'" color="green">mdi-check-circle</v-icon>
-                                        <v-icon v-else-if="selected.device.status == 'Offline'" color="red">mdi-close-circle</v-icon>
-                                        <v-icon v-else color="blue">mdi-minus-circle</v-icon>
-                                        {{ selected.device.status }}
-                                    </div>
-                                </v-card-text>
-                                <v-divider></v-divider>
-
-                                <v-row class="px-3" width="600">
-                                    <v-col flex>
-                                        <div :hidden="selected.device.registered">
-                                            <v-text-field v-model="selected.device.ezcode" label="EZ-Code" :readonly="true" />
+                                    <v-card-text width="600">
+                                        <span class="material-symbols-outlined" style="font-size:50px;">{{
+                                            selected.symbol }}</span>
+                                        <h3 class="text-h5 mb-2">
+                                            {{ selected.name }}
+                                        </h3>
+                                        <div class="mb-2">
+                                            <v-icon v-if="selected.device.status == 'Online'"
+                                                color="green">mdi-check-circle</v-icon>
+                                            <v-icon v-else-if="selected.device.status == 'Offline'"
+                                                color="red">mdi-close-circle</v-icon>
+                                            <v-icon v-else color="blue">mdi-minus-circle</v-icon>
+                                            {{ selected.device.status }}
                                         </div>
-                                        <v-text-field v-model="selected.device.description" label="Description" :readonly="!inEdit" />
-                                        <v-combobox v-model="selected.device.tags" chips closable-chips
-                                            hint="Enter a tag, hit tab, hit enter." label="Tags" multiple
-                                            :readonly="!inEdit" />
-                                        <v-select return-object v-model="selected.platform" :items="platforms.items"
-                                            item-title="text" item-value="value" label="Platform of this device"
-                                            persistent-hint :readonly="!inEdit" />
-                                        <v-text-field v-model="selected.device.version" label="Version" readonly />
-                                        <v-switch v-model="selected.device.enable" color="#004000" inset
-                                            :label="selected.device.enable ? 'Enabled' : 'Disabled'" :readonly="!inEdit" />
-                                        <v-text-field v-model="selected.device.checkInterval" type="number"
-                                            label="Check interval" hint="In seconds" :readonly="!inEdit" />
-                                        <v-select return-object v-model="selected.accountid" :items="acntList.items"
-                                            item-title="text" item-value="value" label="Account ID"
-                                            persistent-hint :readonly="!inEdit" />
-                                        <v-text-field v-model="selected.device.id" label="Device ID" readonly />
-                                        <v-text-field v-model="selected.device.server" label="Server" :readonly="!inEdit" />
-                                        <v-text-field v-if="!inEdit" label="API Key" readonly
-                                            append-inner-icon="mdi-content-copy" @click:append-inner="copy(selected.device.apiKey)">* * * *</v-text-field>
-                                        <v-text-field v-if="inEdit" v-model="selected.device.apiKey" label="API Key" />
-                                        <v-text-field v-model="selected.device.instanceid" label="AWS or Azure Instance ID" :readonly="!inEdit" />
-                                        <div :hidden="!inEdit">
-                                            <v-text-field v-model="selected.device.name" label="Device friendly name"
-                                                :rules="[v => !!v || 'device name is required']" required />
-                                        </div>
-                                        <v-select return-object v-model="selected.logging" :items="logging.items"
-                                            item-title="text" item-value="value" label="Logging" persistent-hint :readonly="!inEdit" />
-                                        <p class="text-caption">Created by {{ selected.device.createdBy }} at {{ formatDate(selected.device.created) }}<br/>
-                                                            Last update by {{ selected.device.updatedBy }} at {{ formatDate(selected.device.updated) }}<br/>
-                                                            <span v-if="selected.device.lastSeen">Last Seen on {{ formatDate(selected.device.lastSeen) }}</span></p>
-                                    </v-col>
-                                </v-row>
-                                <v-card-actions v-if="inEdit">
-                                    <v-btn color="#004000" @click="updateDevice(selected)">
-                                        Submit
-                                        <v-icon end>mdi-check-outline</v-icon>
-                                    </v-btn>
-                                    <v-btn color="#000040" @click="inEdit = false">
-                                        Cancel
-                                        <v-icon end>mdi-close-circle-outline</v-icon>
-                                    </v-btn>
-                                </v-card-actions>
-                                <v-card-actions v-else>
-                                    <v-container>
-                                        <v-row>
-                                            <v-col>
-                                                <v-btn color="#004000" @click="copyDeviceConfig(selected.device)">
-                                                    Copy
-                                                    <v-icon end>mdi-cloud-download-outline</v-icon>
-                                                </v-btn>
-                                            </v-col>
-                                            <v-col>
-                                                <v-btn class="px-3" color="#000040" @click="inEdit = true">
-                                                    Edit
-                                                    <v-icon end>mdi-pencil-outline</v-icon>
-                                                </v-btn>
-                                            </v-col>
-                                            <v-col>
-                                                <v-btn class="px-3" color="#400000" @click="removeDevice(selected.device)">
-                                                    Delete
-                                                    <v-icon end>mdi-delete-outline</v-icon>
-                                                </v-btn>
-                                            </v-col>
-                                        </v-row>
-                                    </v-container>
-                                </v-card-actions>
-                                </v-form>
-                            </v-card>
-                            <v-card v-else-if="selected && !selected.isDevice">
-                                <v-form autocomplete="off">
-                                <v-card-text width="600" class="px-3">
-                                    <v-icon class="material-symbols-outlined" size="50">hub</v-icon>
-                                    <h3 class="text-h5 mb-2">
-                                        {{ selected.vpn.netName }}
-                                    </h3>
-                                </v-card-text>
-                                <v-divider></v-divider>
-                                <v-row class="px-3" width="600">
-                                    <v-col flex>
-                                        <v-text-field v-model="selected.vpn.name" label="DNS name" :readonly="!inEdit"
-                                          :rules="[ rules.required, rules.host ]" />
-                                        <v-combobox :readonly="!inEdit" v-model="selected.vpn.current.address" chips closable-chips
-                                            hint="Write IPv4 or IPv6 CIDR and hit enter" label="Addresses" multiple />
-                                        <v-combobox :readonly="!inEdit" v-model="selected.vpn.current.dns" chips closable-chips
-                                            hint="Enter IP address(es) and hit enter or leave empty."
-                                            label="DNS servers for this device" multiple />
-                                        <v-combobox v-if="selected.vpn.type=='Service'" v-model="selected.vpn.current.allowedIPs" chips closable-chips
-                                                hint="Write IPv4 or IPv6 CIDR and hit enter" label="Allowed IPs" multiple
-                                                :readonly="!inEdit" />
-                                        <v-text-field :readonly="!inEdit" v-model="selected.vpn.current.endpoint"
-                                            label="Public endpoint for clients" :rules="[ rules.ipport ]" />
-                                        <v-text-field type="number" v-model="selected.vpn.current.mtu"
-                                            label="MTU" hint="Leave at 0 for auto, 1350 for IPv6 or if problems occur" />
-                                        <v-text-field type="number"
-                                            v-model="selected.vpn.current.persistentKeepalive" label="Persistent keepalive"
-                                            hint="To disable, set to 0.  Recommended value 23 (seconds)" />
-                                        <v-switch v-model="selected.vpn.enable" color="#004000" inset
-                                        :label="selected.vpn.enable ? 'Enabled' : 'Disabled'" :readonly="!inEdit" />
-                                        <p class="text-caption">Created by {{ selected.vpn.createdBy }} at {{ formatDate(selected.vpn.created) }}<br/>
-                                                            Last update by {{ selected.vpn.updatedBy }} at {{ formatDate(selected.vpn.updated) }}</p>
+                                    </v-card-text>
+                                    <v-divider></v-divider>
 
-                                    </v-col>
-                                </v-row>
-                                <v-expansion-panels v-if="inEdit && !(selected.vpn.type=='Service')">
-                                    <v-expansion-panel>
-                                        <v-expansion-panel-title>Advanced Configuration</v-expansion-panel-title>
-                                        <v-expansion-panel-text>
-                                            <div class="d-flex flex-no-wrap justify-space-between">
-                                                <v-col cols="12">
-                                                    <v-combobox v-model="selected.vpn.current.allowedIPs" chips closable-chips
-                                                        hint="Write IPv4 or IPv6 CIDR and hit enter" label="Allowed IPs"
-                                                        multiple />
-                                                    <v-text-field v-model="selected.vpn.id" label="VPN ID" readonly />
-                                                    <v-text-field v-model="selected.vpn.netid" label="Network ID" readonly />
-                                                    <v-text-field v-model="selected.vpn.deviceid" label="Device ID" disabled />
-                                                    <v-combobox v-model="selected.vpn.role" :items="['', 'Ingress', 'Egress']"
-                                                        label="Role" />
-                                                    <v-text-field v-model="selected.vpn.current.table" label="Table" />
-                                                    <v-text-field v-model="selected.vpn.current.publicKey" label="Public key" />
-                                                    <v-text-field v-if="!editPrivate" label="Private key" readonly append-inner-icon="mdi-square-edit-outline" @click:append-inner="editPrivate = true" />
-                                                    <v-text-field v-if="editPrivate" v-model="selected.vpn.current.privateKey" label="Private key"
-                                                        hint="Clear this field to have the client manage its private key" />
-                                                    <v-text-field label="Preshared Key" readonly
-                                                        append-inner-icon="mdi-content-copy" @click:append-inner="copy(selected.vpn.current.presharedKey)" />
-                                                    <v-textarea v-model="selected.vpn.current.postUp" label="PostUp Script"
-                                                        hint="Only applies to linux servers" />
-                                                    <v-textarea v-model="selected.vpn.current.postDown" label="PostDown Script"
-                                                        hint="Only applies to linux servers" />
-                                                    <v-switch v-model="selected.vpn.current.subnetRouting" color="#004000" inset
-                                                        label="Enable subnet routing" />
-                                                    <v-divider></v-divider>
-                                                    <table width="100%">
-                                                        <tr>
-                                                            <td>
-                                                                <v-switch v-model="selected.vpn.current.syncEndpoint" color="#004000" inset
-                                                                    label="Sync Endpoint" />
-                                                            </td>
-                                                            <td>
-                                                                <v-switch v-model="selected.vpn.current.hasSSH" color="#004000" inset
-                                                                    label="SSH" />
-                                                            </td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td>
-                                                                <v-switch v-model="selected.vpn.current.upnp" color="#004000" inset
-                                                                    label="UPnP" />
-                                                            </td>
-                                                            <td>
-                                                                <v-switch v-model="selected.vpn.current.hasRDP" color="#004000" inset
-                                                                    label="Remote Desktop" />
-                                                            </td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td>
-                                                                <v-switch v-model="selected.vpn.current.failsafe" color="#004000" inset
-                                                                    label="FailSafe" />
-                                                            </td>
-                                                            <td>
-                                                                <v-switch v-model="selected.vpn.current.enableDns" color="#004000" inset
-                                                                    label="Nettica DNS" />
-                                                            </td>
-                                                        </tr>
-                                                    </table>
-                                                </v-col>
+                                    <v-row class="px-3" width="600">
+                                        <v-col flex>
+                                            <div :hidden="selected.device.registered">
+                                                <v-text-field v-model="selected.device.ezcode" label="EZ-Code"
+                                                    :readonly="true" />
                                             </div>
-                                        </v-expansion-panel-text>
-                                    </v-expansion-panel>
-                                </v-expansion-panels>
-
-                                <v-card>
+                                            <v-text-field v-model="selected.device.description" label="Description"
+                                                :readonly="!inEdit" />
+                                            <v-combobox v-model="selected.device.tags" chips closable-chips
+                                                hint="Enter a tag, hit tab, hit enter." label="Tags" multiple
+                                                :readonly="!inEdit" />
+                                            <v-select return-object v-model="selected.platform" :items="platforms.items"
+                                                item-title="text" item-value="value" label="Platform of this device"
+                                                persistent-hint :readonly="!inEdit" />
+                                            <v-text-field v-model="selected.device.version" label="Version" readonly />
+                                            <v-switch v-model="selected.device.enable" color="#004000" inset
+                                                :label="selected.device.enable ? 'Enabled' : 'Disabled'"
+                                                :readonly="!inEdit" />
+                                            <v-text-field v-model="selected.device.checkInterval" type="number"
+                                                label="Check interval" hint="In seconds" :readonly="!inEdit" />
+                                            <v-select return-object v-model="selected.accountid" :items="acntList.items"
+                                                item-title="text" item-value="value" label="Account ID" persistent-hint
+                                                :readonly="!inEdit" />
+                                            <v-text-field v-model="selected.device.id" label="Device ID" readonly />
+                                            <v-text-field v-model="selected.device.server" label="Server"
+                                                :readonly="!inEdit" />
+                                            <v-text-field v-if="!inEdit" label="API Key" readonly
+                                                append-inner-icon="mdi-content-copy"
+                                                @click:append-inner="copy(selected.device.apiKey)">* * *
+                                                *</v-text-field>
+                                            <v-text-field v-if="inEdit" v-model="selected.device.apiKey"
+                                                label="API Key" />
+                                            <v-text-field v-model="selected.device.instanceid"
+                                                label="Instance ID (AWS | Oracle | GCP | Azure)" hint="Give your device superpowers. Enter the instance ID from your cloud provider" :readonly="!inEdit" />
+                                            <div :hidden="!inEdit">
+                                                <v-text-field v-model="selected.device.name"
+                                                    label="Device friendly name"
+                                                    :rules="[v => !!v || 'device name is required']" required />
+                                            </div>
+                                            <v-select return-object v-model="selected.logging" :items="logging.items"
+                                                item-title="text" item-value="value" label="Logging" persistent-hint
+                                                :readonly="!inEdit" />
+                                            <p class="text-caption">Created by {{ selected.device.createdBy }} at {{
+                                                formatDate(selected.device.created) }}<br />
+                                                Last update by {{ selected.device.updatedBy }} at {{
+                                                    formatDate(selected.device.updated)
+                                                }}<br />
+                                                <span v-if="selected.device.lastSeen">Last Seen on {{
+                                                    formatDate(selected.device.lastSeen)
+                                                }}</span>
+                                            </p>
+                                        </v-col>
+                                    </v-row>
                                     <v-card-actions v-if="inEdit">
-                                        <v-btn color="#004000" @click="updateVPN(selected.vpn)">
+                                        <v-btn color="#004000" @click="updateDevice(selected)">
                                             Submit
                                             <v-icon end>mdi-check-outline</v-icon>
                                         </v-btn>
@@ -278,8 +172,8 @@
                                         <v-container>
                                             <v-row>
                                                 <v-col>
-                                                    <v-btn color="#004000" @click="forceFileDownload(selected.vpn)">
-                                                        Download
+                                                    <v-btn color="#004000" @click="copyDeviceConfig(selected.device)">
+                                                        Copy
                                                         <v-icon end>mdi-cloud-download-outline</v-icon>
                                                     </v-btn>
                                                 </v-col>
@@ -290,7 +184,8 @@
                                                     </v-btn>
                                                 </v-col>
                                                 <v-col>
-                                                    <v-btn class="px-3" color="#400000" @click="removeVPN(selected.vpn)">
+                                                    <v-btn class="px-3" color="#400000"
+                                                        @click="removeDevice(selected.device)">
                                                         Delete
                                                         <v-icon end>mdi-delete-outline</v-icon>
                                                     </v-btn>
@@ -298,31 +193,197 @@
                                             </v-row>
                                         </v-container>
                                     </v-card-actions>
-                                </v-card>
+                                </v-form>
+                            </v-card>
+                            <v-card v-else-if="selected && !selected.isDevice">
+                                <v-form autocomplete="off">
+                                    <v-card-text width="600" class="px-3">
+                                        <v-icon class="material-symbols-outlined" size="50">hub</v-icon>
+                                        <h3 class="text-h5 mb-2">
+                                            {{ selected.vpn.netName }}
+                                        </h3>
+                                    </v-card-text>
+                                    <v-divider></v-divider>
+                                    <v-row class="px-3" width="600">
+                                        <v-col flex>
+                                            <v-text-field v-model="selected.vpn.name" label="DNS name"
+                                                :readonly="!inEdit" :rules="[rules.required, rules.host]" />
+                                            <v-combobox :readonly="!inEdit" v-model="selected.vpn.current.address" chips
+                                                closable-chips hint="Write IPv4 or IPv6 CIDR and hit enter"
+                                                label="Addresses" multiple />
+                                            <v-combobox :readonly="!inEdit" v-model="selected.vpn.current.dns" chips
+                                                closable-chips
+                                                hint="Enter IP address(es) of the DNS servers and hit enter.  Do not leave empty."
+                                                label="DNS servers for this device" multiple />
+                                            <v-combobox v-if="selected.vpn.type == 'Service'"
+                                                v-model="selected.vpn.current.allowedIPs" chips closable-chips
+                                                hint="Write IPv4 or IPv6 CIDR and hit enter" label="Allowed IPs"
+                                                multiple :readonly="!inEdit" />
+                                            <v-text-field :readonly="!inEdit" v-model="selected.vpn.current.endpoint"
+                                                label="Public endpoint for clients" :rules="[rules.ipport]" />
+                                            <v-text-field type="number" v-model="selected.vpn.current.mtu" label="MTU"
+                                                hint="Leave at 0 for auto, 1350 for IPv6 or if problems occur" />
+                                            <v-text-field type="number"
+                                                v-model="selected.vpn.current.persistentKeepalive"
+                                                label="Persistent keepalive"
+                                                hint="To disable, set to 0.  Recommended value 23 (seconds)" />
+                                            <v-switch v-model="selected.vpn.enable" color="#004000" inset
+                                                :label="selected.vpn.enable ? 'Enabled' : 'Disabled'"
+                                                :readonly="!inEdit" />
+                                            <p class="text-caption">Created by {{ selected.vpn.createdBy }} at {{
+                                                formatDate(selected.vpn.created) }}<br />
+                                                Last update by {{ selected.vpn.updatedBy }} at {{
+                                                    formatDate(selected.vpn.updated) }}</p>
+
+                                        </v-col>
+                                    </v-row>
+                                    <v-expansion-panels v-if="inEdit && !(selected.vpn.type == 'Service')">
+                                        <v-expansion-panel>
+                                            <v-expansion-panel-title>Advanced Configuration</v-expansion-panel-title>
+                                            <v-expansion-panel-text>
+                                                <div class="d-flex flex-no-wrap justify-space-between">
+                                                    <v-col cols="12">
+                                                        <v-combobox v-model="selected.vpn.current.allowedIPs" chips
+                                                            closable-chips hint="Write IPv4 or IPv6 CIDR and hit enter"
+                                                            label="Allowed IPs" multiple />
+                                                        <v-text-field v-model="selected.vpn.id" label="VPN ID"
+                                                            readonly />
+                                                        <v-text-field v-model="selected.vpn.netid" label="Network ID"
+                                                            readonly />
+                                                        <v-text-field v-model="selected.vpn.deviceid" label="Device ID"
+                                                            disabled />
+                                                        <v-combobox v-model="selected.vpn.role"
+                                                            :items="['', 'Ingress', 'Egress']" label="Role" />
+                                                        <v-text-field v-model="selected.vpn.current.table"
+                                                            label="Table" />
+                                                        <v-text-field v-model="selected.vpn.current.publicKey"
+                                                            label="Public key" />
+                                                        <v-text-field v-if="!editPrivate" label="Private key" readonly
+                                                            append-inner-icon="mdi-square-edit-outline"
+                                                            @click:append-inner="editPrivate = true" />
+                                                        <v-text-field v-if="editPrivate"
+                                                            v-model="selected.vpn.current.privateKey"
+                                                            label="Private key"
+                                                            hint="Clear this field to have the client manage its private key" />
+                                                        <v-text-field label="Preshared Key" readonly
+                                                            append-inner-icon="mdi-content-copy"
+                                                            @click:append-inner="copy(selected.vpn.current.presharedKey)" />
+                                                        <v-textarea v-model="selected.vpn.current.postUp"
+                                                            label="PostUp Script"
+                                                            hint="Only applies to linux servers" />
+                                                        <v-textarea v-model="selected.vpn.current.postDown"
+                                                            label="PostDown Script"
+                                                            hint="Only applies to linux servers" />
+                                                        <v-switch v-model="selected.vpn.current.subnetRouting"
+                                                            color="#004000" inset label="Enable subnet routing" />
+                                                        <v-divider></v-divider>
+                                                        <table width="100%">
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td>
+                                                                        <v-switch
+                                                                            v-model="selected.vpn.current.syncEndpoint"
+                                                                            color="#004000" inset
+                                                                            label="Sync Endpoint" />
+                                                                    </td>
+                                                                    <td>
+                                                                        <v-switch v-model="selected.vpn.current.hasSSH"
+                                                                            color="#004000" inset label="SSH" />
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td>
+                                                                        <v-switch v-model="selected.vpn.current.upnp"
+                                                                            color="#004000" inset label="UPnP" />
+                                                                    </td>
+                                                                    <td>
+                                                                        <v-switch v-model="selected.vpn.current.hasRDP"
+                                                                            color="#004000" inset
+                                                                            label="Remote Desktop" />
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td>
+                                                                        <v-switch
+                                                                            v-model="selected.vpn.current.failsafe"
+                                                                            color="#004000" inset label="FailSafe" />
+                                                                    </td>
+                                                                    <td>
+                                                                        <v-switch
+                                                                            v-model="selected.vpn.current.enableDns"
+                                                                            color="#004000" inset label="Nettica DNS" />
+                                                                    </td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </v-col>
+                                                </div>
+                                            </v-expansion-panel-text>
+                                        </v-expansion-panel>
+                                    </v-expansion-panels>
+
+                                    <v-card>
+                                        <v-card-actions v-if="inEdit">
+                                            <v-btn color="#004000" @click="updateVPN(selected.vpn)">
+                                                Submit
+                                                <v-icon end>mdi-check-outline</v-icon>
+                                            </v-btn>
+                                            <v-btn color="#000040" @click="inEdit = false">
+                                                Cancel
+                                                <v-icon end>mdi-close-circle-outline</v-icon>
+                                            </v-btn>
+                                        </v-card-actions>
+                                        <v-card-actions v-else>
+                                            <v-container>
+                                                <v-row>
+                                                    <v-col>
+                                                        <v-btn color="#004000" @click="forceFileDownload(selected.vpn)">
+                                                            Download
+                                                            <v-icon end>mdi-cloud-download-outline</v-icon>
+                                                        </v-btn>
+                                                    </v-col>
+                                                    <v-col>
+                                                        <v-btn class="px-3" color="#000040" @click="inEdit = true">
+                                                            Edit
+                                                            <v-icon end>mdi-pencil-outline</v-icon>
+                                                        </v-btn>
+                                                    </v-col>
+                                                    <v-col>
+                                                        <v-btn class="px-3" color="#400000"
+                                                            @click="removeVPN(selected.vpn)">
+                                                            Delete
+                                                            <v-icon end>mdi-delete-outline</v-icon>
+                                                        </v-btn>
+                                                    </v-col>
+                                                </v-row>
+                                            </v-container>
+                                        </v-card-actions>
+                                    </v-card>
                                 </v-form>
                             </v-card>
                         </v-col>
                     </v-row>
 
                 </v-card>
-                <v-dialog v-if="device" v-model="dialogCreate" max-width="550" persistent @keydown.esc="dialogCreate = false">
+                <v-dialog v-if="device" v-model="dialogCreate" max-width="550" persistent
+                    @keydown.esc="dialogCreate = false">
                     <v-card>
                         <v-card-title class="headline">Add New Device</v-card-title>
                         <v-card-text>
                             <v-row>
                                 <v-col cols="12">
                                     <v-form ref="form" v-model="valid">
-                                        <v-text-field v-model="device.name"
-                                            :rules="[rules.required, rules.host]" required>
+                                        <v-text-field v-model="device.name" :rules="[rules.required, rules.host]"
+                                            required>
                                             <template #label>
                                                 <span class="text-red"><strong>* </strong></span>Host friendly name
                                             </template>
                                         </v-text-field>
-                                        <v-select return-object v-model="addNet.selected" :items="addNet.items" @update:model-value="onNetChange"
-                                            item-title="text" item-value="value" label="Join this network (optional)"
-                                            persistent-hint />
-                                        <v-select return-object v-model="acntList.selected" :items="acntList.items" item-title="text"
-                                            item-value="value" label="For this account"
+                                        <v-select return-object v-model="addNet.selected" :items="addNet.items"
+                                            @update:model-value="onNetChange" item-title="text" item-value="value"
+                                            label="Join this network (optional)" persistent-hint />
+                                        <v-select return-object v-model="acntList.selected" :items="acntList.items"
+                                            item-title="text" item-value="value" label="For this account"
                                             :rules="[v => !!v || 'Account is required']" persistent-hint />
                                         <v-select return-object v-model="platforms.selected" :items="platforms.items"
                                             item-title="text" item-value="value" label="Platform of this device"
@@ -349,14 +410,16 @@
                         </v-card-actions>
                     </v-card>
                 </v-dialog>
-                <v-dialog v-if="device && device.ezcode" v-model="dialogEZCode" max-width="550" persistent @keydown.esc="dialogEZCode = false">
+                <v-dialog v-if="device && device.ezcode" v-model="dialogEZCode" max-width="550" persistent
+                    @keydown.esc="dialogEZCode = false">
                     <v-card>
                         <v-card-title class="headline">EZ-Code</v-card-title>
                         <v-card-text>
                             <v-row>
                                 <v-col cols="12">
                                     <v-form ref="form" v-model="valid">
-                                        <v-text-field v-model="device.name" label="Host friendly name" :readonly="true" />
+                                        <v-text-field v-model="device.name" label="Host friendly name"
+                                            :readonly="true" />
                                         <v-text-field v-model="device.ezcode" label="EZ-Code" :readonly="true" />
                                     </v-form>
                                 </v-col>
@@ -371,20 +434,22 @@
                         </v-card-actions>
                     </v-card>
                 </v-dialog>
-                <v-dialog v-if="vpn" v-model="dialogAddVPN" max-width="550" persistent @keydown.esc="dialogAddVPN = false">
+                <v-dialog v-if="vpn" v-model="dialogAddVPN" max-width="550" persistent
+                    @keydown.esc="dialogAddVPN = false">
                     <v-card>
                         <v-card-title class="headline">Add VPN</v-card-title>
                         <v-card-text>
                             <v-row>
                                 <v-col cols="12">
                                     <v-form ref="form" v-model="valid">
-                                        <v-select return-object v-model="netList.selected" :items="netList.items" @update:model-value="updateDefaults"
-                                            item-title="text" item-value="value" label="Join this network"
-                                            :rules="[v => !!v || 'Network is required']" persistent-hint required />
+                                        <v-select return-object v-model="netList.selected" :items="netList.items"
+                                            @update:model-value="updateDefaults" item-title="text" item-value="value"
+                                            label="Join this network" :rules="[v => !!v || 'Network is required']"
+                                            persistent-hint required />
                                         <v-text-field v-model="vpn.name" label="DNS name for this device"
                                             :rules="[rules.required, rules.host]" required />
                                         <v-text-field v-model="vpn.current.endpoint" label="Public endpoint for clients"
-                                            :rules="[ rules.ipport ]" />
+                                            :rules="[rules.ipport]" />
                                         <v-switch v-model="vpn.enable" color="#004000" inset
                                             :label="vpn.enable ? 'Enable VPN after creation' : 'Disable VPN after creation'" />
                                         <v-switch v-model="vpn.current.syncEndpoint" color="#004000" inset
@@ -440,11 +505,13 @@
 
 <style>
 .v-treeview-node {
-  padding: 10px 0;
+    padding: 10px 0;
 }
+
 .v-treeview-node--leaf {
-  padding: 0;
+    padding: 0;
 }
+
 .gray {
     color: gray;
 }
@@ -551,22 +618,10 @@ watch(() => accountStore.accounts, (val) => {
 })
 
 watch(() => netStore.nets, (val) => {
-    netList.value = {
-        selected: { text: '', value: '' },
-        items: []
-    }
-    for (let i = 0; i < val.length; i++) {
-        if (device.value != null && device.value.vpns != null) {
-            let found = false
-            for (let j = 0; j < device.value.vpns.length; j++) {
-                if (device.value.vpns[j].netid === val[i].id) {
-                    found = true
-                    break
-                }
-            }
-            if (found) continue
-        }
-        netList.value.items[i] = { text: val[i].netName, value: val[i].id }
+    netList.value = { selected: { text: '', value: '' }, items: [] }
+    for (const net of val) {
+        if (device.value?.vpns?.some(v => v.netid === net.id)) continue
+        netList.value.items.push({ text: net.netName, value: net.id })
     }
 })
 
@@ -756,12 +811,10 @@ function startAddVPN(dev) {
     }
 
     netList.value = { selected: { text: '', value: '' }, items: [] }
-    let sel = 0
-    for (let i = 0; i < netStore.nets.length; i++) {
-        netList.value.items[i] = { text: netStore.nets[i].netName, value: netStore.nets[i].id }
-        if (netList.value.items[i].text === dev.netName) { sel = i; break }
+    for (const net of netStore.nets) {
+        if (dev.vpns?.some(v => v.netid === net.id)) continue
+        netList.value.items.push({ text: net.netName, value: net.id })
     }
-    netList.value.selected = netList.value.items[sel]
     dialogAddVPN.value = true
 }
 

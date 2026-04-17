@@ -52,7 +52,7 @@ function notify(msg) {
   notification.value.timeout = 10
 }
 
-theme.global.name.value = 'dark'
+theme.change('dark')
 
 onMounted(async () => {
   if (navigator.userAgent && navigator.userAgent.toLowerCase().includes('dart')) {

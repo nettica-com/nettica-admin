@@ -1,13 +1,15 @@
 <template>
   <div>
-    <v-app-bar app class="hidden-xs-only">
+    <v-app-bar app>
       <a href="https://nettica.com">
         <img class="mr-3" src="/nettica-3d-256.png" height="50" width="50" alt="nettica" />
       </a>
       <v-toolbar-title>{{ title }}</v-toolbar-title>
 
       <v-spacer />
-      <v-toolbar-items>
+
+      <!-- Desktop nav -->
+      <v-toolbar-items class="d-none d-sm-flex">
         <v-btn :to="'/services'" v-show="showServices" title="services">
           Services
           <v-icon end>mdi-weather-cloudy</v-icon>
@@ -26,7 +28,7 @@
         </v-btn>
       </v-toolbar-items>
 
-      <v-menu location="bottom left">
+      <v-menu location="bottom left" class="d-none d-sm-flex">
         <template #activator="{ props: menuProps }">
           <v-btn icon v-bind="menuProps">
             <v-avatar size="36">
@@ -55,15 +57,9 @@
           </v-card-actions>
         </v-card>
       </v-menu>
-    </v-app-bar>
 
-    <v-app-bar app class="hidden-sm-and-up">
-      <a href="https://nettica.com">
-        <img class="mr-3" src="/logo.png" height="50" width="50" alt="nettica" />
-      </a>
-      <v-toolbar-title>{{ title }}</v-toolbar-title>
-      <v-spacer />
-      <v-btn icon @click="myShowMenu">
+      <!-- Mobile hamburger -->
+      <v-btn icon class="d-flex d-sm-none" @click="myShowMenu">
         <v-icon>mdi-menu</v-icon>
       </v-btn>
     </v-app-bar>
@@ -75,7 +71,7 @@
       </v-alert>
     </div>
 
-    <v-navigation-drawer v-model="showMenu" app location="right" class="hidden-sm-and-up">
+    <v-navigation-drawer v-model="showMenu" app location="right" temporary>
       <v-list nav density="compact">
         <v-list-item
           v-show="showServices"
@@ -86,18 +82,34 @@
         />
         <v-list-item title="Networks" value="networks" to="/networks">
           <template #prepend>
-            <span class="material-symbols-outlined" style="margin-right:8px">hub</span>
+            <span class="material-symbols-outlined" style="display:inline-block; font-size:24px; width:24px; height:24px; line-height:24px; margin-right:32px; opacity:0.87">hub</span>
           </template>
         </v-list-item>
         <v-list-item prepend-icon="mdi-devices" title="Devices" value="devices" to="/devices" />
         <v-list-item prepend-icon="mdi-account-group" title="Accounts" value="accounts" to="/accounts" />
       </v-list>
+      <template #append>
+        <v-divider />
+        <v-list nav density="compact">
+          <v-list-item>
+            <template #prepend>
+              <v-avatar size="36" class="mr-2">
+                <img :src="picture" height="36" width="36" :alt="name" />
+              </v-avatar>
+            </template>
+            <v-list-item-title>{{ name }}</v-list-item-title>
+            <v-list-item-subtitle>{{ email }}</v-list-item-subtitle>
+          </v-list-item>
+          <v-list-item prepend-icon="mdi-logout" title="Logout" @click="mylogout" />
+        </v-list>
+      </template>
     </v-navigation-drawer>
   </div>
 </template>
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
+import { useDisplay } from 'vuetify'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
@@ -107,6 +119,7 @@ import env from '../../env.json'
 const route = useRoute()
 const authStore = useAuthStore()
 const { user } = storeToRefs(authStore)
+const { smAndUp } = useDisplay()
 
 const title = ref(document.location.host)
 const showMenu = ref(false)
@@ -131,10 +144,15 @@ watch(user, (val) => {
   issuedAt.value = val.issuedAt
 })
 
+watch(smAndUp, (val) => {
+  if (val) showMenu.value = false
+})
+
 watch(
   () => route.path,
   (path) => {
     friendly.value = path === '/'
+    showMenu.value = false
   },
 )
 

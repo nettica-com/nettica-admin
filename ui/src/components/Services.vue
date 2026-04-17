@@ -8,23 +8,29 @@
         </div>
         <v-card>
             <v-card-title>
-                Services
-                <v-spacer></v-spacer>
-                <v-text-field v-if="listView" v-model="search" append-inner-icon="mdi-magnify" label="Search"
-                    hide-details></v-text-field>
-                <v-spacer></v-spacer>
-                <v-btn color="#004000" @click="startCreateService">
-                    Add Service
-                    <v-icon end>mdi-weather-cloudy</v-icon>
-                </v-btn>&nbsp;
-                <v-btn color="#004000" @click="startCreateMultihop">
-                    Add Multihop
-                    <v-icon end>mdi-weather-cloudy</v-icon>
-                </v-btn>&nbsp;
-                <v-btn color="#400000" @click="startCreateWilderness">
-                    In the Wild
-                    <v-icon end>mdi-weather-cloudy</v-icon>
-                </v-btn>
+                <v-row>
+                    <v-col cols="2">
+                        Services
+                    </v-col>
+                    <v-col cols="4">
+                        <v-text-field v-if="listView" v-model="search" append-inner-icon="mdi-magnify" label="Search"
+                            hide-details></v-text-field>
+                    </v-col>
+                    <v-col cols="6" class="text-right">
+                        <v-btn color="#004000" @click="startCreateService">
+                            Add Service
+                            <v-icon end>mdi-weather-cloudy</v-icon>
+                        </v-btn>&nbsp;
+                        <v-btn color="#004000" @click="startCreateMultihop">
+                            Add Multihop
+                            <v-icon end>mdi-weather-cloudy</v-icon>
+                        </v-btn>&nbsp;
+                        <v-btn color="#400000" @click="startCreateWilderness">
+                            In the Wild
+                            <v-icon end>mdi-weather-cloudy</v-icon>
+                        </v-btn>
+                    </v-col>
+                </v-row>
             </v-card-title>
         </v-card>
         <v-card>

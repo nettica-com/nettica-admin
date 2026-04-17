@@ -15,7 +15,7 @@ export default defineConfig({
   },
   server: {
     port: 8081,
-    allowedHosts: 'all',
+    allowedHosts: true,
   },
   build: {
     sourcemap: true,

@@ -45,16 +45,20 @@
                 hoverable
               >
                 <template #prepend="{ item }">
+                  <template v-if="item">
                   <span v-if="item.symbol" class="material-symbols-outlined">{{ item.symbol }}</span>
                   <v-avatar v-else-if="item.member?.userPicture || item.member?.picture" size="32">
                     <img :src="memberImageSrc(item.member)" width="32" height="32" />
                   </v-avatar>
                   <v-icon v-else>{{ item.icon }}</v-icon>
+                  </template>
                 </template>
                 <template #title="{ item }">
                   <table>
-                    <tr><td>{{ item.name }}</td></tr>
-                    <tr v-if="item.isMember"><td class="gray" style="font-size: small;">{{ item.email }}</td></tr>
+                    <tbody>
+                    <tr><td>{{ item?.name }}</td></tr>
+                    <tr v-if="item?.isMember"><td class="gray" style="font-size: small;">{{ item?.email }}</td></tr>
+                    </tbody>
                   </table>
                 </template>
               </v-treeview>
@@ -352,14 +356,13 @@ function buildTree() {
     }
   }
 
-  let child = 0
   for (const acnt of accounts.value) {
     for (const it of newItems) {
       if (acnt.parent === it.idx) {
         let name = acnt.name
         if (acnt.netName) name += ' (' + acnt.netName + ')'
         const netName = acnt.netName || 'All Networks'
-        it.children[child++] = {
+        it.children.push({
           id: 'c-' + acnt.id,
           idx: acnt.id,
           name,
@@ -372,7 +375,7 @@ function buildTree() {
           icon: 'mdi-account',
           isAccount: false,
           isMember: true,
-        }
+        })
       }
     }
   }
@@ -381,14 +384,13 @@ function buildTree() {
     if (!accounts.value[i]) continue
     const mems = accountStore.getMembers(accounts.value[i].parent)
     if (!mems) continue
-    child = newItems[i].children.length
     for (const m of mems) {
       if (m.parent !== newItems[i].idx) continue
       if (newItems[i].children.some((c) => c.idx === m.id)) continue
       let name = m.name
       if (m.netName) name += ' (' + m.netName + ')'
       const netName = m.netName || 'All Networks'
-      newItems[i].children[child++] = {
+      newItems[i].children.push({
         id: 'm-' + m.id + '-' + m.netName,
         idx: m.id,
         name,
@@ -401,7 +403,7 @@ function buildTree() {
         icon: 'mdi-account',
         isAccount: false,
         isMember: true,
-      }
+      })
     }
   }
 

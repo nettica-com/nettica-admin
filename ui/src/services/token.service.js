@@ -118,7 +118,8 @@ export const destroyClientId = () => {
 };
 
 const AUTHORIZED_REDIRECTS = [
-  'https://my.nettica.com'
+  'https://my.nettica.com',
+  'https://dev.nettica.com',
 ];
 
 export const isValidRedirect = (url) => {

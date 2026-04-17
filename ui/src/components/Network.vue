@@ -43,6 +43,7 @@
                         </template>
                         <template v-slot:title="{ item }">
                             <table>
+                                <tbody>
                                 <tr><td :style="{ color: item.enabled ? 'white' : 'gray' }">
                                     {{ item.name }}
                                 </td></tr>
@@ -52,6 +53,7 @@
                                 <tr v-else><td class="gray" style="font-size: small;">
                                     {{ item.vpn.current.address.join(', ') }}
                                 </td></tr>
+                                </tbody>
                             </table>
                         </template>
                         <template v-slot:append="{ item }">
@@ -91,7 +93,7 @@
                                 <v-combobox v-model="selected.net.default.allowedIPs" chips closable-chips
                                     hint="Write IPv4 or IPv6 CIDR and hit enter" label="Allowed IPs" multiple />
                                 <v-combobox v-model="selected.net.default.dns" chips closable-chips
-                                    hint="Enter IP address(es) and hit enter or leave empty."
+                                    hint="Enter IP address(es) of the DNS servers.  Do not leave empty."
                                     label="DNS servers for this network" multiple />
                                 <v-text-field type="number" v-model="selected.net.default.mtu"
                                     label="MTU" hint="Leave at 0 for auto, 1350 for IPv6 or if problems occur" />
@@ -103,11 +105,9 @@
                                         <v-icon title="Regenerate preshared key" @click="regenerate(selected.net)">mdi-refresh</v-icon>
                                     </template>
                                 </v-text-field>
-                                <v-text-field type="number" v-model="selected.net.default.persistentKeepalive"
-                                    label="Persistent keepalive"
-                                    hint="To disable, set to 0.  Recommended value 29 (seconds)" />
                                 <span style="font-size: small;">Network Policy</span><v-divider></v-divider>
                                 <table>
+                                    <tbody>
                                     <tr>
                                         <td colspan="2">
                                             <v-switch v-model="selected.net.forceUpdate" color="#004000" inset
@@ -126,9 +126,11 @@
                                                 :label="selected.net.policies.onlyEndpoints ? 'Clients can only see Endpoints' : 'Clients can see all devices'" />
                                         </td>
                                     </tr>
+                                    </tbody>
                                 </table>
                                 <span style="font-size: small;">Client Defaults</span><v-divider></v-divider>
                                 <table width="100%">
+                                    <tbody>
                                     <tr>
                                         <td>
                                             <v-switch v-model="selected.net.default.syncEndpoint" color="#004000" inset
@@ -159,15 +161,18 @@
                                                 label="Enable Nettica DNS" />
                                         </td>
                                     </tr>
+                                    </tbody>
                                 </table>
                                 <v-divider v-if="isOwner"></v-divider>
                                 <table width="100%" v-if="isOwner">
+                                    <tbody>
                                     <tr>
                                         <td colspan="2">
                                             <v-switch v-model="selected.net.critical" color="red" inset
                                                 :label="selected.net.critical ? 'This is a Critical Network' : 'This is a Normal Network'" />
                                         </td>
                                     </tr>
+                                    </tbody>
                                 </table>
                                 <v-divider></v-divider>
                                 <p class="text-caption">Created by {{ selected.net.createdBy }} at {{
@@ -261,6 +266,7 @@
                                                 label="Enable subnet routing" />
                                             <v-divider></v-divider>
                                             <table width="100%">
+                                                <tbody>
                                                 <tr>
                                                     <td>
                                                         <v-switch v-model="selected.vpn.current.syncEndpoint" color="#004000" inset
@@ -291,6 +297,7 @@
                                                             label="Nettica DNS" />
                                                     </td>
                                                 </tr>
+                                                </tbody>
                                             </table>
                                         </v-col>
                                     </div>
@@ -617,7 +624,7 @@ function buildTree() {
     for (let i = 0; i < items.value.length; i++) {
         let k = 0
         for (let j = 0; j < vpnStore.vpns.length; j++) {
-            if (vpnStore.vpns[j].netName === items.value[i].name) {
+            if (vpnStore.vpns[j].netid === items.value[i].net.id) {
                 items.value[i].children[k] = {
                     id: vpnStore.vpns[j].id,
                     name: vpnStore.vpns[j].name,
@@ -641,14 +648,14 @@ function loadNetwork() {
     if (!item) return
     const n = item.net
     if (!n) return
-    const name = n.netName
+    const netid = n.id
     let x = 0
     let l = 0
     links.value = []
     nodes.value = []
     const net_hosts = []
     for (let i = 0; i < vpnStore.vpns.length; i++) {
-        if (vpnStore.vpns[i].netName === name) {
+        if (vpnStore.vpns[i].netid === netid) {
             net_hosts[x] = vpnStore.vpns[i]
             nodes.value[x] = { id: x, name: vpnStore.vpns[i].name }
             if (!vpnStore.vpns[i].current.endpoint) {
