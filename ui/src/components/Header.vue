@@ -163,6 +163,5 @@ function mylogout() {
 
 function myShowMenu() {
   showMenu.value = !showMenu.value
-  console.log('showMenu = ' + showMenu.value)
 }
 </script>
