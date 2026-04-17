@@ -326,6 +326,10 @@ onMounted(() => {
         wildServer.value = TokenService.getWildServer()
         wild.value = true
         wildnetStore.readAll()
+        if (localStorage.getItem('wilderness_reopen')) {
+            localStorage.removeItem('wilderness_reopen')
+            dialogWilderness.value = true
+        }
     } else {
         wild.value = false
     }
@@ -566,6 +570,7 @@ function loginWild() {
         wildServer.value = wildServer.value.slice(0, -1)
     }
     dialogWilderness.value = false
+    localStorage.setItem('wilderness_reopen', 'true')
     window.location.replace(window.location.origin + '/api/v1.0/auth/redirect?url=' + wildServer.value)
 }
 

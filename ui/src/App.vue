@@ -235,7 +235,8 @@ function exchange(x) {
         token = resp
         TokenService.saveWildToken(token)
         ApiService.setServer()
-        window.location.replace('/')
+        const dest = localStorage.getItem('wilderness_reopen') ? '/services' : '/'
+        window.location.replace(dest)
         resolve(token)
       })
       .catch((err) => {
