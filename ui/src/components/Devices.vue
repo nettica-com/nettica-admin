@@ -277,45 +277,18 @@
                                                         <v-switch v-model="selected.vpn.current.subnetRouting"
                                                             color="#004000" inset label="Enable subnet routing" />
                                                         <v-divider></v-divider>
-                                                        <table width="100%">
-                                                            <tbody>
-                                                                <tr>
-                                                                    <td>
-                                                                        <v-switch
-                                                                            v-model="selected.vpn.current.syncEndpoint"
-                                                                            color="#004000" inset
-                                                                            label="Sync Endpoint" />
-                                                                    </td>
-                                                                    <td>
-                                                                        <v-switch v-model="selected.vpn.current.hasSSH"
-                                                                            color="#004000" inset label="SSH" />
-                                                                    </td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td>
-                                                                        <v-switch v-model="selected.vpn.current.upnp"
-                                                                            color="#004000" inset label="UPnP" />
-                                                                    </td>
-                                                                    <td>
-                                                                        <v-switch v-model="selected.vpn.current.hasRDP"
-                                                                            color="#004000" inset
-                                                                            label="Remote Desktop" />
-                                                                    </td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td>
-                                                                        <v-switch
-                                                                            v-model="selected.vpn.current.failsafe"
-                                                                            color="#004000" inset label="FailSafe" />
-                                                                    </td>
-                                                                    <td>
-                                                                        <v-switch
-                                                                            v-model="selected.vpn.current.enableDns"
-                                                                            color="#004000" inset label="Nettica DNS" />
-                                                                    </td>
-                                                                </tr>
-                                                            </tbody>
-                                                        </table>
+                                                        <div style="display:flex; flex-wrap:wrap; gap:0 16px;">
+                                                            <div style="display:flex; flex-direction:column; flex:1 1 180px; min-width:0;">
+                                                                <v-switch v-model="selected.vpn.current.syncEndpoint" color="#004000" inset label="Sync Endpoint" />
+                                                                <v-switch v-model="selected.vpn.current.upnp" color="#004000" inset label="UPnP" />
+                                                                <v-switch v-model="selected.vpn.current.failsafe" color="#004000" inset label="FailSafe" />
+                                                            </div>
+                                                            <div style="display:flex; flex-direction:column; flex:1 1 180px; min-width:0;">
+                                                                <v-switch v-model="selected.vpn.current.hasSSH" color="#004000" inset label="SSH" />
+                                                                <v-switch v-model="selected.vpn.current.hasRDP" color="#004000" inset label="Remote Desktop" />
+                                                                <v-switch v-model="selected.vpn.current.enableDns" color="#004000" inset label="Nettica DNS" />
+                                                            </div>
+                                                        </div>
                                                     </v-col>
                                                 </div>
                                             </v-expansion-panel-text>

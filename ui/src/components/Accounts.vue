@@ -47,6 +47,9 @@
                 <template #prepend="{ item }">
                   <template v-if="item">
                   <span v-if="item.symbol" class="material-symbols-outlined">{{ item.symbol }}</span>
+                  <v-avatar v-else-if="item.isAccount && (item.account?.accountPicture || item.account?.accountPict)" size="32">
+                    <img :src="accountImageSrc(item.account)" width="32" height="32" />
+                  </v-avatar>
                   <v-avatar v-else-if="item.member?.userPicture || item.member?.picture" size="32">
                     <img :src="memberImageSrc(item.member)" width="32" height="32" />
                   </v-avatar>
@@ -68,7 +71,10 @@
               <div v-if="!selected" class="text-h6 font-weight-light" style="align-self: center;"></div>
               <v-card v-else-if="selected.hasLimits" :key="selected.pid" class="px-3 mx-auto" flat>
                 <v-card-text>
-                  <v-icon size="50">mdi-account-group</v-icon>
+                  <v-avatar v-if="selected.account?.accountPicture || selected.account?.accountPict" size="50">
+                    <img :src="accountImageSrc(selected.account)" width="50" height="50" />
+                  </v-avatar>
+                  <v-icon v-else size="50">mdi-account-group</v-icon>
                   <h3 class="text-h5 mb-2">{{ selected.account.accountName }}</h3>
                   <h5 class="text-h6 mb-2">{{ selected.account.parent }}</h5>
                 </v-card-text>
@@ -312,6 +318,11 @@ function memberImageSrc(member) {
   return member?.picture || ''
 }
 
+function accountImageSrc(account) {
+  if (account?.accountPict) return `data:image/png;base64,${account.accountPict}`
+  return account?.accountPicture || ''
+}
+
 function Refresh() {
   if (authuser.value) accountStore.readAll(authuser.value.email)
   netStore.readAll()
@@ -339,12 +350,14 @@ function buildTree() {
     const found = newItems.some((it) => it.idx === acnt.parent)
     if (!found) {
       const lims = accountStore.getLimits(acnt.parent)
+      const mems = accountStore.getMembers(acnt.parent)
+      const ownerRecord = mems?.find(m => m.id === m.parent) || acnt
       newItems[x++] = {
         id: 'p-' + acnt.parent,
         pid: 'p-' + acnt.parent,
         idx: acnt.parent,
         name: acnt.accountName,
-        account: acnt,
+        account: ownerRecord,
         status: acnt.status,
         icon: 'mdi-account-group',
         isAccount: true,
