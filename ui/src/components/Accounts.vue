@@ -15,14 +15,15 @@
               <v-col cols="4">
                 <v-text-field v-model="search" append-inner-icon="mdi-magnify" label="Search" hide-details></v-text-field>
               </v-col>
-              <v-col cols="5" class="text-right">
-                <v-btn color="#004000" @click="startInvite">
-                  Invite <v-icon end>mdi-account-group</v-icon>
-                </v-btn>
-                &nbsp;
-                <v-btn color="#000040" @click="dialogAPI = true">
-                  API <v-icon end>mdi-key</v-icon>
-                </v-btn>
+              <v-col cols="5">
+                <div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end;">
+                  <v-btn color="#004000" @click="startInvite">
+                    Invite <v-icon end>mdi-account-group</v-icon>
+                  </v-btn>
+                  <v-btn color="#000040" @click="dialogAPI = true">
+                    API <v-icon end>mdi-key</v-icon>
+                  </v-btn>
+                </div>
               </v-col>
             </v-row>
           </v-card-title>
