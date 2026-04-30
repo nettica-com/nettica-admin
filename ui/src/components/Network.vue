@@ -422,7 +422,7 @@ text {
 </style>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import D3NetworkGraph from './D3NetworkGraph.vue'
 import { useVpnStore } from '@/stores/vpn'
 import { useNetStore } from '@/stores/net'
@@ -515,11 +515,20 @@ watch(() => accountStore.accounts, (val) => {
     }
 })
 
+function onVisibilityChange() {
+    if (document.visibilityState === 'visible') Refresh()
+}
+
 onMounted(() => {
+    document.addEventListener('visibilitychange', onVisibilityChange)
     accountStore.readAll(authStore.user.email)
     netStore.readAll()
     vpnStore.readAll()
     deviceStore.readAll()
+})
+
+onUnmounted(() => {
+    document.removeEventListener('visibilitychange', onVisibilityChange)
 })
 
 function Refresh() {

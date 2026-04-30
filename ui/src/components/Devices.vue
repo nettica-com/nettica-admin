@@ -491,7 +491,7 @@
 </style>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useDeviceStore } from '@/stores/device'
 import { useNetStore } from '@/stores/net'
 import { useAccountStore } from '@/stores/account'
@@ -598,10 +598,19 @@ watch(() => netStore.nets, (val) => {
     }
 })
 
+function onVisibilityChange() {
+    if (document.visibilityState === 'visible') Refresh()
+}
+
 onMounted(() => {
+    document.addEventListener('visibilitychange', onVisibilityChange)
     accountStore.readAll(authStore.user.email)
     deviceStore.readAll()
     netStore.readAll()
+})
+
+onUnmounted(() => {
+    document.removeEventListener('visibilitychange', onVisibilityChange)
 })
 
 function Refresh() {

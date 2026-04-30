@@ -210,7 +210,7 @@
 </style>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAccountStore } from '@/stores/account'
 import { useNetStore } from '@/stores/net'
@@ -264,9 +264,18 @@ const selected = computed(() => {
   return findValue(items.value, id)
 })
 
+function onVisibilityChange() {
+  if (document.visibilityState === 'visible') Refresh()
+}
+
 onMounted(() => {
+  document.addEventListener('visibilitychange', onVisibilityChange)
   netStore.readAll()
   if (authuser.value) accountStore.readAll(authuser.value.email)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('visibilitychange', onVisibilityChange)
 })
 
 watch(accounts, async (newAccounts) => {
