@@ -149,7 +149,7 @@ func readPush(c *gin.Context) {
 	}
 
 	if pp.ApiKey != apiKey {
-		log.Errorf("push: read: api key mismatch %s != %s", pp.ApiKey, apiKey)
+		log.Errorf("push: read: api key mismatch")
 		c.JSON(http.StatusForbidden, gin.H{"error": "api key mismatch"})
 		return
 	}
@@ -221,7 +221,7 @@ func sendPush(c *gin.Context) {
 	}
 
 	if pp.ApiKey != push.ApiKey {
-		log.Errorf("push: send: api key mismatch %s != %s", pp.ApiKey, push.ApiKey)
+		log.Errorf("push: send: api key mismatch")
 		c.JSON(http.StatusForbidden, gin.H{"error": "api key mismatch"})
 		return
 	}
@@ -270,7 +270,7 @@ func unregisterPush(c *gin.Context) {
 	}
 
 	if pp.ApiKey != apiKey {
-		log.Errorf("push: unregister: api key mismatch %s != %s", pp.ApiKey, apiKey)
+		log.Errorf("push: unregister: api key mismatch")
 		c.JSON(http.StatusForbidden, gin.H{"error": "api key mismatch"})
 		return
 	}

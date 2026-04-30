@@ -199,7 +199,8 @@ func (pm *PushManager) Send(msg *model.Push) error {
 func (pm *PushManager) Add(pusher *model.Pusher) error {
 
 	if pusher.Id == "" {
-		log.Errorf("pusher id is empty %v", pusher)
+		//log.Errorf("pusher id is empty %v", pusher)
+		log.Errorf("pusher id is empty")
 		return fmt.Errorf("pusher id is empty")
 	}
 
