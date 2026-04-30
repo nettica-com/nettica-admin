@@ -1,6 +1,6 @@
 # Nettica Admin
 
-<h1><img src="./ui/src/assets/nettica.png" alt="A WireGuard control plane"></h1>
+<h1><img src="./ui/public/nettica-3d-512.png" alt="A WireGuard control plane"></h1>
 
 A control plane for [WireGuard](https://wireguard.com).
 
