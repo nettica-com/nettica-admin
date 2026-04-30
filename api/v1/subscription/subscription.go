@@ -717,6 +717,8 @@ func handleAndroidWebhook(c *gin.Context) {
 				last := time.Now().UTC()
 				subscription.LastUpdated = &last
 				subscription.UpdatedBy = "google"
+				f := false
+				subscription.IsDeleted = &f
 				core.RenewSubscription(subscription.Id)
 				log.Infof("subscription renewed: %s", subscription.Id)
 				subscription, err = core.GetSubscriptionByReceipt(purchaseToken)
@@ -987,11 +989,15 @@ func handleAppleWebhook(c *gin.Context) {
 			}
 			log.Infof("subscription sku apple: %s", subscription.Sku)
 			log.Infof("apple subscription: %v", subscription)
+			f := false
+			subscription.IsDeleted = &f
 			core.UpdateSubscription(subscription.Id, subscription)
 			log.Infof("apple: subscription PURCHASE updated: %s until %s", subscription.Id, expires)
 
 		case "RENEWAL":
 			subscription.Expires = &expires
+			f := false
+			subscription.IsDeleted = &f
 			if subscription.Status == "cancelled" || subscription.Status == "expired" {
 				subscription.Status = "active"
 				core.UpdateSubscription(subscription.Id, subscription)
@@ -1010,6 +1016,7 @@ func handleAppleWebhook(c *gin.Context) {
 			log.Infof("apple: subscription CANCEL: %s", subscription.Id)
 
 		case "DID_NOT_RENEW":
+			subscription.Status = "expired"
 			core.ExpireSubscription(subscription.Id)
 			log.Infof("apple: subscription DID_NOT_RENEW: %s at %s", subscription.Id, expires)
 		}
