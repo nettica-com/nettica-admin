@@ -2,7 +2,7 @@
   <div>
     <v-app-bar app>
       <a href="https://nettica.com">
-        <img class="mr-3" src="/nettica-3d-50.png" height="50" width="50" alt="nettica" />
+        <img class="ml-4 mt-2" src="/nettica-3d-50.png" height="50" width="50" alt="nettica" />
       </a>
       <v-toolbar-title>{{ title }}</v-toolbar-title>
 
