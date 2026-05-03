@@ -6,6 +6,10 @@ import vuetify from './plugins/vuetify'
 import axios from './plugins/axios'
 import { isCidr } from './plugins/cidr'
 
+window.addEventListener('vite:preloadError', () => {
+  window.location.reload()
+})
+
 const app = createApp(App)
 const pinia = createPinia()
 
