@@ -19,5 +19,17 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('vuetify')) return 'vuetify-vendor'
+            if (id.includes('/d3') || id.includes('d3-')) return 'd3-vendor'
+            if (id.includes('vue') || id.includes('pinia')) return 'vue-vendor'
+            return 'vendor'
+          }
+        },
+      },
+    },
   },
 })
