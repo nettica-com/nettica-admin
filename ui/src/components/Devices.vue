@@ -353,7 +353,7 @@
                                             </template>
                                         </v-text-field>
                                         <v-select return-object v-model="addNet.selected" :items="addNet.items"
-                                            @update:model-value="onNetChange" item-title="text" item-value="value"
+                                            item-title="text" item-value="value"
                                             label="Join this network (optional)" persistent-hint />
                                         <v-select return-object v-model="acntList.selected" :items="acntList.items"
                                             item-title="text" item-value="value" label="For this account"
@@ -604,6 +604,10 @@ function onVisibilityChange() {
 
 onMounted(() => {
     document.addEventListener('visibilitychange', onVisibilityChange)
+    if (deviceStore.devices.length > 0) {
+        buildTree()
+        showTree.value = true
+    }
     accountStore.readAll(authStore.user.email)
     deviceStore.readAll()
     netStore.readAll()
@@ -860,15 +864,6 @@ function updateEnable(dev) {
     deviceStore.update(dev)
 }
 
-function onNetChange(n) {
-    addNet.value = {
-        selected: { text: n.text, value: n.value },
-        items: [{ text: n.text, value: n.value }]
-    }
-    for (let i = 0; i < netStore.nets.length; i++) {
-        addNet.value.items[i + 1] = { text: netStore.nets[i].netName, value: netStore.nets[i] }
-    }
-}
 
 function copyDeviceConfig(dev) {
     const url = `curl "http://localhost:53280/config/?id=${dev.id}&apiKey=${dev.apiKey}&server=${dev.server}"`

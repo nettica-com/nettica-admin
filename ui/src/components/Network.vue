@@ -521,6 +521,10 @@ function onVisibilityChange() {
 
 onMounted(() => {
     document.addEventListener('visibilitychange', onVisibilityChange)
+    if (netStore.nets.length > 0) {
+        buildTree()
+        showTree.value = true
+    }
     accountStore.readAll(authStore.user.email)
     netStore.readAll()
     vpnStore.readAll()

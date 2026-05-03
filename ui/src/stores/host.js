@@ -41,7 +41,18 @@ export const useHostStore = defineStore('host', {
             host.status = 'Online'
           }
         }
-        this.hosts = resp
+        const incoming = new Map(resp.map(h => [h.id, h]))
+        for (let i = this.hosts.length - 1; i >= 0; i--) {
+          const id = this.hosts[i].id
+          if (incoming.has(id)) {
+            this.hosts[i] = incoming.get(id)
+            incoming.delete(id)
+          } else {
+            this.hosts.splice(i, 1)
+          }
+        }
+        for (const h of incoming.values()) this.hosts.push(h)
+        this.hosts = [...this.hosts]
       } catch (err) {
         this.error = err
       }
@@ -52,6 +63,7 @@ export const useHostStore = defineStore('host', {
         const resp = await ApiService.post('/host', host)
         await this.readConfig(resp)
         this.hosts.push(resp)
+        this.hosts = [...this.hosts]
       } catch (err) {
         this.error = err
       }
@@ -67,6 +79,7 @@ export const useHostStore = defineStore('host', {
         } else {
           this.error = 'update host failed, not in list'
         }
+        this.hosts = [...this.hosts]
       } catch (err) {
         this.error = err
       }
@@ -77,6 +90,7 @@ export const useHostStore = defineStore('host', {
         await ApiService.delete(`/host/${host.id}`)
         const index = this.hosts.findIndex((x) => x.id === host.id)
         if (index !== -1) this.hosts.splice(index, 1)
+        this.hosts = [...this.hosts]
       } catch (err) {
         this.error = err
       }

@@ -17,7 +17,19 @@ export const useNetStore = defineStore('net', {
   actions: {
     async readAll() {
       try {
-        this.nets = await ApiService.get('/net')
+        const resp = await ApiService.get('/net')
+        const incoming = new Map(resp.map(n => [n.id, n]))
+        for (let i = this.nets.length - 1; i >= 0; i--) {
+          const id = this.nets[i].id
+          if (incoming.has(id)) {
+            this.nets[i] = incoming.get(id)
+            incoming.delete(id)
+          } else {
+            this.nets.splice(i, 1)
+          }
+        }
+        for (const n of incoming.values()) this.nets.push(n)
+        this.nets = [...this.nets]
       } catch (error) {
         if (error.response) this.error = error.response.data.error
       }
@@ -27,6 +39,7 @@ export const useNetStore = defineStore('net', {
       try {
         const resp = await ApiService.post('/net', net)
         this.nets.push(resp)
+        this.nets = [...this.nets]
         this.error = `Network ${net.netName} created`
       } catch (error) {
         if (error.response) this.error = error.response.data.error
@@ -43,6 +56,7 @@ export const useNetStore = defineStore('net', {
         } else {
           this.error = 'update net failed, not in list'
         }
+        this.nets = [...this.nets]
         this.error = `Network ${net.netName} updated`
       } catch (error) {
         if (error.response) this.error = error.response.data.error
@@ -54,6 +68,7 @@ export const useNetStore = defineStore('net', {
       if (index !== -1) {
         this.nets.splice(index, 1)
         this.nets.push(net)
+        this.nets = [...this.nets]
       }
     },
 
@@ -62,6 +77,7 @@ export const useNetStore = defineStore('net', {
         await ApiService.delete(`/net/${net.id}`)
         const index = this.nets.findIndex((x) => x.id === net.id)
         if (index !== -1) this.nets.splice(index, 1)
+        this.nets = [...this.nets]
         this.error = `Network ${net.netName} deleted`
       } catch (error) {
         if (error.response) this.error = error.response.data.error

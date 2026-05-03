@@ -25,7 +25,19 @@ export const useAccountStore = defineStore('account', {
   actions: {
     async readAll(id) {
       try {
-        this.accounts = await ApiService.get(`/accounts/${id}`)
+        const resp = await ApiService.get(`/accounts/${id}`)
+        const incoming = new Map(resp.map(a => [a.id, a]))
+        for (let i = this.accounts.length - 1; i >= 0; i--) {
+          const id = this.accounts[i].id
+          if (incoming.has(id)) {
+            this.accounts[i] = incoming.get(id)
+            incoming.delete(id)
+          } else {
+            this.accounts.splice(i, 1)
+          }
+        }
+        for (const a of incoming.values()) this.accounts.push(a)
+        this.accounts = [...this.accounts]
       } catch (error) {
         if (error.response) this.error = error.response.data.error
       }
@@ -93,6 +105,7 @@ export const useAccountStore = defineStore('account', {
             this.accounts.push(resp)
           }
         }
+        this.accounts = [...this.accounts]
         this.error = `${account.email} updated`
       } catch (error) {
         if (error.response) this.error = error.response.data.error
@@ -104,6 +117,7 @@ export const useAccountStore = defineStore('account', {
         await ApiService.delete(`/accounts/${account.id}`)
         const index = this.accounts.findIndex((x) => x.id === account.id)
         if (index !== -1) this.accounts.splice(index, 1)
+        this.accounts = [...this.accounts]
         this.error = `${account.email} deleted`
       } catch (error) {
         if (error.response) this.error = error.response.data.error

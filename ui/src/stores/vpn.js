@@ -27,7 +27,19 @@ export const useVpnStore = defineStore('vpn', {
   actions: {
     async readAll() {
       try {
-        this.vpns = await ApiService.get('/vpn')
+        const resp = await ApiService.get('/vpn')
+        const incoming = new Map(resp.map(v => [v.id, v]))
+        for (let i = this.vpns.length - 1; i >= 0; i--) {
+          const id = this.vpns[i].id
+          if (incoming.has(id)) {
+            this.vpns[i] = incoming.get(id)
+            incoming.delete(id)
+          } else {
+            this.vpns.splice(i, 1)
+          }
+        }
+        for (const v of incoming.values()) this.vpns.push(v)
+        this.vpns = [...this.vpns]
       } catch (error) {
         if (error.response) this.error = error.response.data.error
       }
@@ -37,6 +49,7 @@ export const useVpnStore = defineStore('vpn', {
       try {
         const resp = await ApiService.post('/vpn', vpn)
         this.vpns.push(resp)
+        this.vpns = [...this.vpns]
         this.error = `${vpn.name} created`
       } catch (error) {
         if (error.response) this.error = error.response.data.error
@@ -53,6 +66,7 @@ export const useVpnStore = defineStore('vpn', {
         } else {
           this.error = 'update vpn failed, not in list'
         }
+        this.vpns = [...this.vpns]
         useDeviceStore().update_vpn(resp)
         this.error = `${vpn.name} updated`
       } catch (error) {
@@ -66,6 +80,7 @@ export const useVpnStore = defineStore('vpn', {
         await ApiService.delete(`/vpn/${vpn.id}`)
         const index = this.vpns.findIndex((x) => x.id === vpn.id)
         if (index !== -1) this.vpns.splice(index, 1)
+        this.vpns = [...this.vpns]
         this.error = `${vpn.name} deleted`
       } catch (error) {
         if (error.response) this.error = error.response.data.error

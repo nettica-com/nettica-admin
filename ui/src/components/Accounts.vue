@@ -270,6 +270,9 @@ function onVisibilityChange() {
 
 onMounted(() => {
   document.addEventListener('visibilitychange', onVisibilityChange)
+  if (accountStore.accounts.length > 0) {
+    buildTree()
+  }
   netStore.readAll()
   if (authuser.value) accountStore.readAll(authuser.value.email)
 })

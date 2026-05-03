@@ -10,7 +10,19 @@ export const useServiceStore = defineStore('service', {
   actions: {
     async read() {
       try {
-        this.services = await ApiService.get('/service')
+        const resp = await ApiService.get('/service')
+        const incoming = new Map(resp.map(s => [s.id, s]))
+        for (let i = this.services.length - 1; i >= 0; i--) {
+          const id = this.services[i].id
+          if (incoming.has(id)) {
+            this.services[i] = incoming.get(id)
+            incoming.delete(id)
+          } else {
+            this.services.splice(i, 1)
+          }
+        }
+        for (const s of incoming.values()) this.services.push(s)
+        this.services = [...this.services]
       } catch (err) {
         this.error = err
       }
@@ -20,6 +32,7 @@ export const useServiceStore = defineStore('service', {
       try {
         const resp = await ApiService.post('/service', service)
         this.services.push(resp)
+        this.services = [...this.services]
       } catch (err) {
         this.error = err
       }
@@ -35,6 +48,7 @@ export const useServiceStore = defineStore('service', {
         } else {
           this.error = 'update service failed, not in list'
         }
+        this.services = [...this.services]
       } catch (err) {
         this.error = err
       }
@@ -45,6 +59,7 @@ export const useServiceStore = defineStore('service', {
         await ApiService.delete(`/service/${service.id}`)
         const index = this.services.findIndex((x) => x.id === service.id)
         if (index !== -1) this.services.splice(index, 1)
+        this.services = [...this.services]
       } catch (err) {
         this.error = err
       }

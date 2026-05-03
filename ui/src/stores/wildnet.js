@@ -32,7 +32,19 @@ export const useWildnetStore = defineStore('wildnet', {
       ApiService.setWildServer()
       ApiService.setWildHeader()
       try {
-        this.nets = await ApiService.get('/net')
+        const resp = await ApiService.get('/net')
+        const incoming = new Map(resp.map(n => [n.id, n]))
+        for (let i = this.nets.length - 1; i >= 0; i--) {
+          const id = this.nets[i].id
+          if (incoming.has(id)) {
+            this.nets[i] = incoming.get(id)
+            incoming.delete(id)
+          } else {
+            this.nets.splice(i, 1)
+          }
+        }
+        for (const n of incoming.values()) this.nets.push(n)
+        this.nets = [...this.nets]
       } catch (error) {
         TokenService.destroyWildToken()
         TokenService.destroyWildServer()
@@ -46,6 +58,7 @@ export const useWildnetStore = defineStore('wildnet', {
       try {
         const resp = await ApiService.post('/net', net)
         this.nets.push(resp)
+        this.nets = [...this.nets]
         this.error = `Network ${net.netName} created`
       } catch (error) {
         if (error.response) this.error = error.response.data.error
@@ -62,6 +75,7 @@ export const useWildnetStore = defineStore('wildnet', {
         } else {
           this.error = 'update net failed, not in list'
         }
+        this.nets = [...this.nets]
         this.error = `Network ${net.netName} updated`
       } catch (error) {
         if (error.response) this.error = error.response.data.error
@@ -73,6 +87,7 @@ export const useWildnetStore = defineStore('wildnet', {
         await ApiService.delete(`/net/${net.id}`)
         const index = this.nets.findIndex((x) => x.id === net.id)
         if (index !== -1) this.nets.splice(index, 1)
+        this.nets = [...this.nets]
         this.error = `Network ${net.netName} deleted`
       } catch (error) {
         if (error.response) this.error = error.response.data.error

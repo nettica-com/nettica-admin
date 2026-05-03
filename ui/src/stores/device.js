@@ -43,7 +43,18 @@ export const useDeviceStore = defineStore('device', {
             device.status = 'Online'
           }
         }
-        this.devices = resp
+        const incoming = new Map(resp.map(d => [d.id, d]))
+        for (let i = this.devices.length - 1; i >= 0; i--) {
+          const id = this.devices[i].id
+          if (incoming.has(id)) {
+            this.devices[i] = incoming.get(id)
+            incoming.delete(id)
+          } else {
+            this.devices.splice(i, 1)
+          }
+        }
+        for (const d of incoming.values()) this.devices.push(d)
+        this.devices = [...this.devices]
       } catch (error) {
         if (error.response) this.error = error.response.data.error
       }
@@ -71,6 +82,7 @@ export const useDeviceStore = defineStore('device', {
           this.error = 'update device failed, not in list'
         }
         this.error = `Device ${device.name} updated`
+        this.devices = [...this.devices]
       } catch (error) {
         if (error.response) this.error = error.response.data.error
       }
@@ -93,6 +105,7 @@ export const useDeviceStore = defineStore('device', {
           this.devices.splice(index, 1)
           this.devices.push(device)
         }
+        this.devices = [...this.devices]
       } else {
         this.error = 'update vpn failed, not in list'
       }
@@ -104,6 +117,7 @@ export const useDeviceStore = defineStore('device', {
         const index = this.devices.findIndex((x) => x.id === device.id)
         if (index !== -1) this.devices.splice(index, 1)
         this.error = `Device ${device.name} deleted`
+        this.devices = [...this.devices]
       } catch (error) {
         if (error.response) this.error = error.response.data.error
       }
