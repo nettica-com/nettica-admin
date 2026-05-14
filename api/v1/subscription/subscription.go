@@ -233,8 +233,17 @@ func createSubscriptionAndroid(c *gin.Context) {
 	// Check if the subscription already exists
 	s, err := core.GetSubscriptionByReceipt(receipt.Receipt)
 	if err == nil {
-		c.JSON(http.StatusOK, s)
-		return
+		// if it does, update it
+		log.Infof("subscription already exists, updating: %s", s.Id)
+	}
+
+	if s != nil && s.Email == "" {
+		// if the subscription exists but doesn't have an email, update it with the email from the receipt
+		now := time.Now().UTC()
+		s.Email = receipt.Email
+		s.AccountID = receipt.AccountID
+		s.UpdatedBy = "android/" + receipt.Email
+		s.LastUpdated = &now
 	}
 
 	// Validate the receipt with Google
@@ -705,9 +714,31 @@ func handleAndroidWebhook(c *gin.Context) {
 		if err != nil {
 			// create the subscription
 
-			log.Errorf("error getting subscription: %v", err)
-			c.JSON(http.StatusNotFound, gin.H{"error": "Subscription not found"})
-			return
+			log.Errorf("error getting subscription: %v, creating one", err)
+
+			// Create a subscription based on the transaction info
+
+			now := time.Now().UTC()
+			// generate a random subscription id
+			id, err := util.RandomString(8)
+			if err != nil {
+				log.Error(err)
+			}
+			id = "android-" + id
+
+			subscription = &model.Subscription{
+				Id:          id,
+				AccountID:   "", // we don't have the account id, so we'll leave it blank for now
+				Email:       "", // we don't have the email, so we'll leave it blank for now
+				Name:        "", // we don't have the name, so we'll leave it blank for now
+				Description: "",
+				Issued:      &now,
+				CreatedBy:   "android",
+				Receipt:     purchaseToken,
+			}
+			log.Infof("created subscription: %v", subscription)
+			mongo.Serialize(subscription.Id, "id", "subscriptions", subscription)
+
 		}
 
 		if sub["subscriptionState"] != nil && sub["subscriptionState"].(string) == "SUBSCRIPTION_STATE_ACTIVE" {
@@ -871,12 +902,12 @@ func handleAppleWebhook(c *gin.Context) {
 	}
 
 	// Decode the parts
-	headerBytes, err := base64.RawURLEncoding.DecodeString(parts[0])
-	if err != nil {
-		log.Error(err)
-	}
-	header := string(headerBytes)
-	log.Infof("header: %s", header)
+	// headerBytes, err := base64.RawURLEncoding.DecodeString(parts[0])
+	// if err != nil {
+	//	log.Error(err)
+	// a}
+	// header := string(headerBytes)
+	// log.Infof("header: %s", header)
 
 	payloadBytes, err := base64.RawURLEncoding.DecodeString(parts[1])
 	if err != nil {
@@ -889,12 +920,12 @@ func handleAppleWebhook(c *gin.Context) {
 	}
 	log.Infof("payload: %v", payload)
 
-	signatureBytes, err := base64.RawURLEncoding.DecodeString(parts[2])
-	if err != nil {
-		log.Error(err)
-	}
-	signature := string(signatureBytes)
-	log.Infof("signature: %s", signature)
+	// signatureBytes, err := base64.RawURLEncoding.DecodeString(parts[2])
+	// if err != nil {
+	//	log.Error(err)
+	// }
+	// signature := string(signatureBytes)
+	// log.Infof("signature: %s", signature)
 
 	// Validate the signature - ignore errors for now
 	valid, err := validateAppleSignature(parts[0], parts[1], parts[2])
@@ -912,6 +943,13 @@ func handleAppleWebhook(c *gin.Context) {
 
 	notificationType := payload["notificationType"].(string)
 	log.Infof("notificationType: %s", notificationType)
+
+	AutoRenew := true
+	if payload["subtype"] != nil && payload["subtype"].(string) == "AUTO_RENEW_DISABLED" {
+		AutoRenew = false
+	}
+
+	log.Infof("AutoRenew: %v", AutoRenew)
 
 	data := payload["data"].(map[string]interface{})
 	signedTransactionInfo := data["signedTransactionInfo"].(string)
@@ -948,9 +986,26 @@ func handleAppleWebhook(c *gin.Context) {
 		subscription, err := core.GetSubscriptionByReceipt(originalTransactionId)
 		if err != nil {
 			log.Error(err)
-			c.JSON(http.StatusNotFound, gin.H{"error": "Subscription not found"})
-			return
+			// Create a subscription based on the transaction info
+			log.Infof("subscription not found for originalTransactionId %s, creating new subscription", originalTransactionId)
+			now := time.Now().UTC()
+			subscription = &model.Subscription{
+				Id:          "apple-" + originalTransactionId,
+				AccountID:   "", // we don't have the account id, so we'll leave it blank for now
+				Email:       "", // we don't have the email, so we'll leave it blank for now
+				Name:        "", // we don't have the name, so we'll leave it blank for now
+				Description: "",
+				AutoRenew:   AutoRenew,
+				Issued:      &now,
+				CreatedBy:   "apple",
+				UpdatedBy:   "apple/" + originalTransactionId,
+				Receipt:     originalTransactionId,
+			}
+			log.Infof("created subscription: %v", subscription)
+			mongo.Serialize(subscription.Id, "id", "subscriptions", subscription)
+
 		}
+		AutoRenew = subscription.AutoRenew
 		last := time.Now().UTC()
 		subscription.LastUpdated = &last
 		subscription.UpdatedBy = "apple"
