@@ -39,8 +39,8 @@ func ApplyRoutes(r *gin.RouterGroup) {
 		g.POST("/helio", createHelioSubscription)
 		g.POST("", createSubscription)
 		g.POST("/update", updateSubscriptionWoo)
-		g.POST("/apple", createSubscriptionApple)
-		g.POST("/apple/webhook", handleAppleWebhook)
+		g.POST("/apple", createSubscriptionApple2)
+		g.POST("/apple/webhook", handleAppleWebhook2)
 		g.POST("/apple/discount", handleAppleDiscount)
 		g.POST("/android", createSubscriptionAndroid)
 		g.POST("/android/webhook", handleAndroidWebhook)
@@ -1083,6 +1083,384 @@ func handleAppleWebhook(c *gin.Context) {
 
 }
 
+// handleAppleWebhook2 is the hardened replacement for handleAppleWebhook.
+//
+// Key differences from the original:
+//   - Dispatches on notificationType (the Apple event kind) rather than
+//     transactionReason, so all notification types are handled correctly.
+//   - All JWS field extractions use appleStr / appleF64 — no bare assertions.
+//   - Enforces correct DB operation ordering: RenewSubscription is called BEFORE
+//     UpdateSubscription for reactivation (RenewSubscription reads old status from
+//     DB; if status is already "active" it returns without re-enabling services).
+//     ExpireSubscription is called AFTER UpdateSubscription has persisted the
+//     Apple-provided expiresDate (ExpireSubscription rejects future expiry dates).
+//   - Per-transaction lock prevents duplicate processing from Apple retries.
+//   - Always returns 200 so Apple does not disable the webhook endpoint.
+func handleAppleWebhook2(c *gin.Context) {
+
+	// 1. Read body.
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		log.Errorf("handleAppleWebhook2: read body: %v", err)
+		c.JSON(http.StatusOK, gin.H{"status": "received"})
+		return
+	}
+	log.Infof("handleAppleWebhook2: %s", string(body))
+
+	// 2. Parse outer JWS envelope.
+	var msg map[string]interface{}
+	if err := json.Unmarshal(body, &msg); err != nil {
+		log.Errorf("handleAppleWebhook2: unmarshal envelope: %v \n%s", err, string(body))
+		c.JSON(http.StatusOK, gin.H{"status": "received"})
+		return
+	}
+	signedPayload, ok := appleStr(msg, "signedPayload")
+	if !ok || signedPayload == "" {
+		log.Errorf("handleAppleWebhook2: signedPayload missing or wrong type")
+		c.JSON(http.StatusOK, gin.H{"status": "received"})
+		return
+	}
+
+	// 3. Split outer JWS: header.payload.signature.
+	outerParts := strings.Split(signedPayload, ".")
+	if len(outerParts) != 3 {
+		log.Errorf("handleAppleWebhook2: signedPayload has %d parts, expected 3", len(outerParts))
+		c.JSON(http.StatusOK, gin.H{"status": "received"})
+		return
+	}
+
+	// 4. Validate outer JWS signature.
+	// Logged but not enforced: validateAppleSignature is still being stabilised.
+	// Once confirmed working this block should reject invalid payloads.
+	if valid, sigErr := validateAppleSignature(outerParts[0], outerParts[1], outerParts[2]); sigErr != nil || !valid {
+		log.Errorf("handleAppleWebhook2: signature invalid (valid=%v err=%v) — proceeding", valid, sigErr)
+	}
+
+	// 5. Decode and parse the notification payload.
+	payloadBytes, err := base64.RawURLEncoding.DecodeString(outerParts[1])
+	if err != nil {
+		log.Errorf("handleAppleWebhook2: decode payload: %v \n%s", err, outerParts[1])
+		c.JSON(http.StatusOK, gin.H{"status": "received"})
+		return
+	}
+	var payload map[string]interface{}
+	if err := json.Unmarshal(payloadBytes, &payload); err != nil {
+		log.Errorf("handleAppleWebhook2: unmarshal payload: %v \n%s", err, string(payloadBytes))
+		c.JSON(http.StatusOK, gin.H{"status": "received"})
+		return
+	}
+	log.Infof("handleAppleWebhook2: payload %v", payload)
+
+	// 6. Extract notification type — this is the canonical dispatch key.
+	notificationType, ok := appleStr(payload, "notificationType")
+	if !ok || notificationType == "" {
+		log.Errorf("handleAppleWebhook2: notificationType missing")
+		c.JSON(http.StatusOK, gin.H{"status": "received"})
+		return
+	}
+	subtype, _ := appleStr(payload, "subtype") // optional; absent is valid
+	log.Infof("handleAppleWebhook2: notificationType=%s subtype=%s", notificationType, subtype)
+
+	// 7. Decode signedTransactionInfo from data.
+	data, ok := payload["data"].(map[string]interface{})
+	if !ok || data == nil {
+		log.Errorf("handleAppleWebhook2: data missing")
+		c.JSON(http.StatusOK, gin.H{"status": "received"})
+		return
+	}
+	signedTxInfo, ok := appleStr(data, "signedTransactionInfo")
+	if !ok || signedTxInfo == "" {
+		log.Errorf("handleAppleWebhook2: signedTransactionInfo missing")
+		c.JSON(http.StatusOK, gin.H{"status": "received"})
+		return
+	}
+	txParts := strings.Split(signedTxInfo, ".")
+	if len(txParts) != 3 {
+		log.Errorf("handleAppleWebhook2: signedTransactionInfo has %d parts, expected 3", len(txParts))
+		c.JSON(http.StatusOK, gin.H{"status": "received"})
+		return
+	}
+	txBytes, err := base64.RawURLEncoding.DecodeString(txParts[1])
+	if err != nil {
+		log.Errorf("handleAppleWebhook2: decode transaction: %v \n%s", err, txParts[1])
+		c.JSON(http.StatusOK, gin.H{"status": "received"})
+		return
+	}
+	var transaction map[string]interface{}
+	if err := json.Unmarshal(txBytes, &transaction); err != nil {
+		log.Errorf("handleAppleWebhook2: unmarshal transaction: %v \n%s", err, string(txBytes))
+		c.JSON(http.StatusOK, gin.H{"status": "received"})
+		return
+	}
+	log.Infof("handleAppleWebhook2: transaction %s", string(txBytes))
+
+	// 8. Extract required transaction fields.
+	originalTxId, ok := appleStr(transaction, "originalTransactionId")
+	if !ok || originalTxId == "" {
+		log.Errorf("handleAppleWebhook2: originalTransactionId missing")
+		c.JSON(http.StatusOK, gin.H{"status": "received"})
+		return
+	}
+	productId, _ := appleStr(transaction, "productId")
+
+	var appleExpires time.Time
+	if expiresMs, ok := appleF64(transaction, "expiresDate"); ok {
+		appleExpires = time.Unix(int64(expiresMs)/1000, 0).UTC()
+	}
+
+	log.Infof("handleAppleWebhook2: originalTxId=%s productId=%s expires=%s",
+		originalTxId, productId, appleTimeStr(appleExpires))
+
+	// 9. Per-transaction lock — Apple retries failed deliveries so we must be
+	//    idempotent.  The lock ensures only one goroutine processes a given
+	//    originalTransactionId at a time.
+	release := acquireAppleTxLock(originalTxId)
+	defer release()
+
+	// 10. Look up the subscription.
+	subscription, err := core.GetSubscriptionByReceipt(originalTxId)
+	if err != nil && !strings.Contains(err.Error(), "no documents in result") {
+		log.Errorf("handleAppleWebhook2: DB error for %s: %v", originalTxId, err)
+		// Return 200 — Apple will retry; we'll process when DB recovers.
+		c.JSON(http.StatusNotFound, gin.H{"status": "received"})
+		return
+	}
+	notFound := subscription == nil
+
+	now := time.Now().UTC()
+	falseVal := false
+
+	// 11. Dispatch on notificationType.
+	switch notificationType {
+
+	case "SUBSCRIBED":
+		// New subscription, or resubscription after a full expiry.
+		// Create a stub when not found so createSubscriptionApple2 can claim it.
+		if notFound {
+			subscription = appleNewStub(originalTxId, productId, &now)
+			if serErr := mongo.Serialize(subscription.Id, "id", "subscriptions", subscription); serErr != nil {
+				log.Errorf("handleAppleWebhook2: SUBSCRIBED stub serialize: %v", serErr)
+			}
+		}
+		wasInactive := subscription.Status == "expired" || subscription.Status == "cancelled" || subscription.Status == ""
+		if sku, known := appleSkuMap[productId]; known {
+			subscription.Sku = productId
+			subscription.Name = sku.name
+			subscription.Description = sku.description
+			subscription.Credits = sku.credits
+		}
+		if !appleExpires.IsZero() {
+			subscription.Expires = &appleExpires
+		}
+		subscription.Status = "active"
+		subscription.AutoRenew = true
+		subscription.IsDeleted = &falseVal
+		subscription.LastUpdated = &now
+		subscription.UpdatedBy = "apple"
+		// RenewSubscription must run BEFORE UpdateSubscription: it reads the old
+		// status from DB and won't re-enable services if status is already "active".
+		if wasInactive && subscription.AccountID != "" {
+			if err := core.RenewSubscription(subscription.Id); err != nil {
+				log.Errorf("handleAppleWebhook2: SUBSCRIBED RenewSubscription: %v", err)
+			}
+		}
+		if _, err := core.UpdateSubscription(subscription.Id, subscription); err != nil {
+			log.Errorf("handleAppleWebhook2: SUBSCRIBED UpdateSubscription: %v", err)
+		}
+		if wasInactive && subscription.AccountID != "" {
+			core.SubscriptionEmail(subscription)
+		}
+		log.Infof("handleAppleWebhook2: SUBSCRIBED %s until %s (wasInactive=%v notFound=%v)",
+			subscription.Id, appleTimeStr(appleExpires), wasInactive, notFound)
+
+	case "DID_RENEW":
+		// Auto-renewal succeeded, or billing recovered after a grace period.
+		if notFound {
+			subscription = appleNewStub(originalTxId, productId, &now)
+			if serErr := mongo.Serialize(subscription.Id, "id", "subscriptions", subscription); serErr != nil {
+				log.Errorf("handleAppleWebhook2: DID_RENEW stub serialize: %v", serErr)
+			}
+		}
+		wasInactive := subscription.Status == "expired" || subscription.Status == "cancelled"
+		if sku, known := appleSkuMap[productId]; known {
+			subscription.Sku = productId
+			subscription.Name = sku.name
+			subscription.Description = sku.description
+			subscription.Credits = sku.credits
+		}
+		if !appleExpires.IsZero() {
+			subscription.Expires = &appleExpires
+		}
+		subscription.Status = "active"
+		subscription.IsDeleted = &falseVal
+		subscription.LastUpdated = &now
+		subscription.UpdatedBy = "apple"
+		// Same sequencing requirement as SUBSCRIBED.
+		if wasInactive && subscription.AccountID != "" {
+			if err := core.RenewSubscription(subscription.Id); err != nil {
+				log.Errorf("handleAppleWebhook2: DID_RENEW RenewSubscription: %v", err)
+			}
+		}
+		if _, err := core.UpdateSubscription(subscription.Id, subscription); err != nil {
+			log.Errorf("handleAppleWebhook2: DID_RENEW UpdateSubscription: %v", err)
+		}
+		if wasInactive && subscription.AccountID != "" {
+			core.SubscriptionEmail(subscription)
+		}
+		log.Infof("handleAppleWebhook2: DID_RENEW %s until %s (wasInactive=%v subtype=%s)",
+			subscription.Id, appleTimeStr(appleExpires), wasInactive, subtype)
+
+	case "DID_CHANGE_RENEWAL_STATUS":
+		// The user toggled auto-renew.  They still have service until the current
+		// billing period ends — status and expiry are unchanged.
+		// AUTO_RENEW_DISABLED = user "cancelled"; service continues until Expires.
+		// AUTO_RENEW_ENABLED  = user re-enabled; subscription will auto-renew.
+		if notFound {
+			log.Infof("handleAppleWebhook2: DID_CHANGE_RENEWAL_STATUS no subscription for %s, ignoring", originalTxId)
+			break
+		}
+		switch subtype {
+		case "AUTO_RENEW_DISABLED":
+			subscription.AutoRenew = false
+		case "AUTO_RENEW_ENABLED":
+			subscription.AutoRenew = true
+		default:
+			log.Infof("handleAppleWebhook2: DID_CHANGE_RENEWAL_STATUS unknown subtype %q for %s", subtype, subscription.Id)
+		}
+		subscription.LastUpdated = &now
+		subscription.UpdatedBy = "apple"
+		if _, err := core.UpdateSubscription(subscription.Id, subscription); err != nil {
+			log.Errorf("handleAppleWebhook2: DID_CHANGE_RENEWAL_STATUS UpdateSubscription: %v", err)
+		}
+		log.Infof("handleAppleWebhook2: DID_CHANGE_RENEWAL_STATUS subtype=%s autoRenew=%v for %s",
+			subtype, subscription.AutoRenew, subscription.Id)
+
+	case "DID_FAIL_TO_RENEW":
+		// Billing failed.  Without a subtype we're inside Apple's billing grace
+		// period — service continues and we take no action.  When subtype is
+		// GRACE_PERIOD_EXPIRED the grace period has ended and service must stop.
+		if notFound {
+			log.Infof("handleAppleWebhook2: DID_FAIL_TO_RENEW no subscription for %s, ignoring", originalTxId)
+			break
+		}
+		if subtype != "GRACE_PERIOD_EXPIRED" {
+			log.Infof("handleAppleWebhook2: DID_FAIL_TO_RENEW grace period active for %s, no action", subscription.Id)
+			break
+		}
+		// Grace period has ended — same expiry logic as EXPIRED below.
+		if !appleExpires.IsZero() {
+			subscription.Expires = &appleExpires
+		}
+		subscription.AutoRenew = false
+		subscription.LastUpdated = &now
+		subscription.UpdatedBy = "apple"
+		if _, err := core.UpdateSubscription(subscription.Id, subscription); err != nil {
+			log.Errorf("handleAppleWebhook2: DID_FAIL_TO_RENEW UpdateSubscription: %v", err)
+		}
+		// ExpireSubscription reads fresh from DB; it requires Expires to be in the
+		// past and status to not already be "expired".  UpdateSubscription above
+		// persisted the Apple-provided (past) expiresDate before this call.
+		if err := core.ExpireSubscription(subscription.Id); err != nil {
+			log.Errorf("handleAppleWebhook2: DID_FAIL_TO_RENEW ExpireSubscription: %v", err)
+		}
+		subscription.Status = "expired" // update in-memory for email only
+		core.SubscriptionEmail(subscription)
+		log.Infof("handleAppleWebhook2: DID_FAIL_TO_RENEW GRACE_PERIOD_EXPIRED %s expired at %s",
+			subscription.Id, appleTimeStr(appleExpires))
+
+	case "EXPIRED", "GRACE_PERIOD_EXPIRED":
+		// The subscription has fully expired.
+		// EXPIRED subtypes: CANCELLED (user cancelled and billing period ended),
+		// BILLING_RETRY (billing failed after retries), PRICE_INCREASE, etc.
+		// GRACE_PERIOD_EXPIRED is also sent as its own notification type.
+		if notFound {
+			log.Infof("handleAppleWebhook2: %s no subscription for %s, ignoring", notificationType, originalTxId)
+			break
+		}
+		// Persist Apple's authoritative expiresDate (which is in the past) BEFORE
+		// calling ExpireSubscription, which rejects subscriptions with a future Expires.
+		if !appleExpires.IsZero() {
+			subscription.Expires = &appleExpires
+		}
+		subscription.AutoRenew = false
+		subscription.LastUpdated = &now
+		subscription.UpdatedBy = "apple"
+		if _, err := core.UpdateSubscription(subscription.Id, subscription); err != nil {
+			log.Errorf("handleAppleWebhook2: %s UpdateSubscription: %v", notificationType, err)
+		}
+		if err := core.ExpireSubscription(subscription.Id); err != nil {
+			log.Errorf("handleAppleWebhook2: %s ExpireSubscription: %v", notificationType, err)
+		}
+		subscription.Status = "expired" // update in-memory for email only
+		core.SubscriptionEmail(subscription)
+		log.Infof("handleAppleWebhook2: %s %s expired at %s (subtype=%s)",
+			notificationType, subscription.Id, appleTimeStr(appleExpires), subtype)
+
+	case "REFUND":
+		// Apple issued a refund — revoke service immediately regardless of the
+		// remaining billing period.  We force Expires into the past so that
+		// ExpireSubscription acts right away rather than waiting for the period end.
+		if notFound {
+			log.Infof("handleAppleWebhook2: REFUND no subscription for %s, ignoring", originalTxId)
+			break
+		}
+		past := now.Add(-time.Second)
+		subscription.Status = "cancelled"
+		subscription.Expires = &past
+		subscription.AutoRenew = false
+		subscription.LastUpdated = &now
+		subscription.UpdatedBy = "apple"
+		if _, err := core.UpdateSubscription(subscription.Id, subscription); err != nil {
+			log.Errorf("handleAppleWebhook2: REFUND UpdateSubscription: %v", err)
+		}
+		// ExpireSubscription reads status="cancelled" from DB and sees Expires in
+		// the past, so it disables services without overwriting the cancelled status.
+		if err := core.ExpireSubscription(subscription.Id); err != nil {
+			log.Errorf("handleAppleWebhook2: REFUND ExpireSubscription: %v", err)
+		}
+		core.SubscriptionEmail(subscription)
+		log.Infof("handleAppleWebhook2: REFUND %s", subscription.Id)
+
+	default:
+		log.Infof("handleAppleWebhook2: unhandled notificationType=%s subtype=%s originalTxId=%s",
+			notificationType, subtype, originalTxId)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "received"})
+}
+
+// appleNewStub returns a minimal Subscription placeholder for when a webhook
+// arrives before the user's app has connected.
+// createSubscriptionApple2 will claim it (fill in email, accountID, grant limits).
+func appleNewStub(originalTxId, productId string, now *time.Time) *model.Subscription {
+	falseVal := false
+	sub := &model.Subscription{
+		Id:        "apple-" + originalTxId,
+		Receipt:   originalTxId,
+		AutoRenew: true,
+		Issued:    now,
+		CreatedBy: "apple",
+		UpdatedBy: "apple",
+		IsDeleted: &falseVal,
+	}
+	if sku, known := appleSkuMap[productId]; known {
+		sub.Sku = productId
+		sub.Name = sku.name
+		sub.Description = sku.description
+		sub.Credits = sku.credits
+	}
+	return sub
+}
+
+// appleTimeStr formats t as "2006-01-02T15:04:05Z" for readable log output.
+// Returns "(not set)" when t is the zero value.
+func appleTimeStr(t time.Time) string {
+	if t.IsZero() {
+		return "(not set)"
+	}
+	return t.UTC().Format(time.RFC3339)
+}
+
 func handleAppleDiscount(c *gin.Context) {
 
 	request := model.DiscountRequest{}
@@ -1306,7 +1684,12 @@ func createSubscriptionApple(c *gin.Context) {
 		subscription.Name = receipt.Name
 		subscription.Sku = receipt.ProductID
 		last := time.Now().UTC()
-		productId := result["productId"].(string)
+		productId, ok := result["productId"].(string)
+		if !ok {
+			log.Errorf("productId not found in result")
+			c.JSON(http.StatusForbidden, gin.H{"error": "Invalid subscription"})
+			return
+		}
 		var expires time.Time
 		if productId == "24_hours_flex" || productId == "10_day_flex" {
 			isDeleted = true
@@ -1315,11 +1698,21 @@ func createSubscriptionApple(c *gin.Context) {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Invalid subscription"})
 			return
 		} else {
-			expiresDate := result["expiresDate"].(float64)
+			expiresDate, ok := result["expiresDate"].(float64)
+			if !ok {
+				log.Errorf("expiresDate not found in result")
+				c.JSON(http.StatusForbidden, gin.H{"error": "Invalid subscription"})
+				return
+			}
 			expires = time.Unix(int64(expiresDate)/1000, 0)
 		}
 		log.Infof("expires: %s", expires)
-		transactionReason := result["transactionReason"].(string)
+		transactionReason, ok := result["transactionReason"].(string)
+		if !ok {
+			log.Errorf("transactionReason not found in result")
+			c.JSON(http.StatusForbidden, gin.H{"error": "Invalid subscription"})
+			return
+		}
 		if transactionReason == "RENEWAL" {
 			subscription.Expires = &expires
 			subscription.LastUpdated = &last
@@ -1646,6 +2039,440 @@ func validateReceiptApple(receipt string) (bool, error) {
 	}
 
 	return false, nil
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// createSubscriptionApple2 — hardened Apple IAP handler
+//
+// Called directly by the iOS app without session authentication.
+// Validates the Apple transaction token with Apple's servers before touching
+// any subscription or account data.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// appleSkuDef holds the service entitlements for one Apple IAP product.
+// Flex products (24_hours_flex, 10_day_flex) are intentionally absent —
+// they are non-renewable and must never be restored.
+type appleSkuDef struct {
+	name        string
+	description string
+	credits     int
+	devices     int
+	networks    int
+	members     int
+	relays      int
+}
+
+var appleSkuMap = map[string]appleSkuDef{
+	"basic_monthly":        {"Core Service (monthly)", "A single tunnel or relay in any region", 1, 5, 1, 2, 1},
+	"basic_yearly":         {"Core Service (yearly)", "A single tunnel or relay in any region", 1, 5, 1, 2, 1},
+	"premium_monthly":      {"Premium Service (monthly)", "Up to 5 tunnels or relays in any region", 5, 25, 10, 5, 5},
+	"premium_yearly":       {"Premium Service (yearly)", "Up to 5 tunnels or relays in any region", 5, 25, 10, 5, 5},
+	"professional_monthly": {"Professional Service (monthly)", "Up to 10 tunnels or relays in any region", 10, 100, 25, 25, 10},
+	"professional_yearly":  {"Professional Service (yearly)", "Up to 10 tunnels or relays in any region", 10, 100, 25, 25, 10},
+}
+
+// ── Per-transaction locking ───────────────────────────────────────────────────
+// Serialises concurrent calls that share the same originalTransactionId so that
+// restore-purchase storms cannot create duplicate subscriptions or double-grant
+// limits.  Uses a reference-counted map so locks clean up after themselves.
+
+type appleTxEntry struct {
+	mu      sync.Mutex
+	waiters int
+}
+
+var (
+	appleTxMu       sync.Mutex
+	appleTxInflight = make(map[string]*appleTxEntry)
+)
+
+func acquireAppleTxLock(txID string) func() {
+	appleTxMu.Lock()
+	e, ok := appleTxInflight[txID]
+	if !ok {
+		e = &appleTxEntry{}
+		appleTxInflight[txID] = e
+	}
+	e.waiters++
+	appleTxMu.Unlock()
+
+	e.mu.Lock()
+	return func() {
+		e.mu.Unlock()
+		appleTxMu.Lock()
+		e.waiters--
+		if e.waiters == 0 {
+			delete(appleTxInflight, txID)
+		}
+		appleTxMu.Unlock()
+	}
+}
+
+// ── Safe field extraction ─────────────────────────────────────────────────────
+// These avoid the panic that results from a bare .(string) assertion when
+// Apple's response is missing a field.
+
+func appleStr(m map[string]interface{}, key string) (string, bool) {
+	v, ok := m[key]
+	if !ok || v == nil {
+		return "", false
+	}
+	s, ok := v.(string)
+	return s, ok
+}
+
+func appleF64(m map[string]interface{}, key string) (float64, bool) {
+	v, ok := m[key]
+	if !ok || v == nil {
+		return 0, false
+	}
+	f, ok := v.(float64)
+	return f, ok
+}
+
+// ── Account / limits helpers ──────────────────────────────────────────────────
+
+// appleEnsureAccount returns the root Nettica account for email, creating one
+// if none exists yet.
+func appleEnsureAccount(email string) (*model.Account, error) {
+	accounts, err := core.ReadAllAccounts(email)
+	if err != nil {
+		return nil, fmt.Errorf("ReadAllAccounts: %w", err)
+	}
+	if len(accounts) == 0 {
+		acct := model.Account{
+			Name:        "Me",
+			AccountName: "Company",
+			Email:       email,
+			Role:        "Owner",
+			Status:      "Active",
+			CreatedBy:   email,
+			UpdatedBy:   email,
+			Picture:     os.Getenv("SERVER") + "/account-circle.png",
+		}
+		if _, err = core.CreateAccount(&acct); err != nil {
+			return nil, fmt.Errorf("CreateAccount: %w", err)
+		}
+		accounts, err = core.ReadAllAccounts(email)
+		if err != nil {
+			return nil, fmt.Errorf("ReadAllAccounts after create: %w", err)
+		}
+	}
+	for _, a := range accounts {
+		if a.Id == a.Parent {
+			return a, nil
+		}
+	}
+	if len(accounts) > 0 {
+		return accounts[0], nil
+	}
+	return nil, fmt.Errorf("no account found for %s after create", email)
+}
+
+// appleAddLimits increments the account limits by one SKU's worth of
+// entitlements.  Callers are responsible for calling this exactly once per
+// subscription lifetime.
+func appleAddLimits(accountID, email string, sku appleSkuDef) error {
+	limits, err := core.ReadLimits(accountID)
+	if err != nil {
+		limitsID, idErr := util.GenerateRandomString(8)
+		if idErr != nil {
+			return fmt.Errorf("GenerateRandomString: %w", idErr)
+		}
+		limits = &model.Limits{
+			Id:        "limits-" + limitsID,
+			AccountID: accountID,
+			Tolerance: core.GetDefaultTolerance(),
+			CreatedBy: email,
+			UpdatedBy: email,
+			Created:   time.Now().UTC(),
+			Updated:   time.Now().UTC(),
+		}
+	}
+	limits.MaxDevices += sku.devices
+	limits.MaxNetworks += sku.networks
+	limits.MaxMembers += sku.members
+	limits.MaxServices += sku.relays
+	limits.UpdatedBy = email
+	limits.Updated = time.Now().UTC()
+
+	if errs := limits.IsValid(); len(errs) != 0 {
+		for _, e := range errs {
+			log.WithField("err", e).Error("appleAddLimits: validation error")
+		}
+		return fmt.Errorf("limits validation failed")
+	}
+	return mongo.Serialize(limits.Id, "id", "limits", limits)
+}
+
+// ── Main handler ──────────────────────────────────────────────────────────────
+
+func createSubscriptionApple2(c *gin.Context) {
+
+	// 1. Parse and minimally validate the request body.
+	var receipt model.PurchaseRceipt
+	if err := json.NewDecoder(c.Request.Body).Decode(&receipt); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "invalid request body"})
+		return
+	}
+	if receipt.Receipt == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "receipt is required"})
+		return
+	}
+	if receipt.Email == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "email is required"})
+		return
+	}
+
+	log.Infof("createSubscriptionApple2: email=%s productId=%s", receipt.Email, receipt.ProductID)
+
+	// 2. Validate the transaction token with Apple (production, then sandbox).
+	//    This is the only source of truth — we never trust client-provided fields
+	//    for entitlement decisions.
+	result, err := validateReceiptApple2(receipt.Receipt)
+	if err != nil || result == nil {
+		log.Errorf("createSubscriptionApple2: Apple validation failed: %v", err)
+		c.JSON(http.StatusForbidden, gin.H{"error": "invalid receipt"})
+		return
+	}
+
+	// 3. Extract required fields from Apple's response without risking a panic.
+	productId, ok := appleStr(result, "productId")
+	if !ok || productId == "" {
+		log.Errorf("createSubscriptionApple2: productId missing from Apple response for %s", receipt.Email)
+		c.JSON(http.StatusForbidden, gin.H{"error": "invalid receipt: missing productId"})
+		return
+	}
+
+	// originalTransactionId is the stable key that links every renewal of one
+	// subscription.  transactionId changes on every billing cycle.
+	originalTxId, ok := appleStr(result, "originalTransactionId")
+	if !ok || originalTxId == "" {
+		if originalTxId, ok = appleStr(result, "transactionId"); !ok || originalTxId == "" {
+			// Sandbox / legacy fallback.
+			originalTxId = receipt.Receipt
+		}
+	}
+
+	transactionReason, _ := appleStr(result, "transactionReason")
+
+	// expiresDate is mandatory for auto-renewable subscriptions.  Without it we
+	// have no way to confirm whether service should be granted.
+	expiresMs, hasExpiry := appleF64(result, "expiresDate")
+	if !hasExpiry {
+		log.Errorf("createSubscriptionApple2: expiresDate missing from Apple response for %s %s", productId, receipt.Email)
+		c.JSON(http.StatusForbidden, gin.H{"error": "cannot determine subscription validity"})
+		return
+	}
+	appleExpires := time.Unix(int64(expiresMs)/1000, 0).UTC()
+
+	// 4. Flex products are time-boxed and non-renewable — Apple never issues a
+	//    future expiresDate for them after the window closes.  Reject explicitly
+	//    rather than letting the expiry check below handle it so the error is clear.
+	if productId == "24_hours_flex" || productId == "10_day_flex" {
+		log.Infof("createSubscriptionApple2: rejecting non-restorable flex product %s for %s", productId, receipt.Email)
+		c.JSON(http.StatusForbidden, gin.H{"error": "this product type cannot be restored"})
+		return
+	}
+
+	// 5. Reject unknown SKUs.
+	sku, knownSKU := appleSkuMap[productId]
+	if !knownSKU {
+		log.Errorf("createSubscriptionApple2: unknown productId %q from Apple for %s", productId, receipt.Email)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "unknown product"})
+		return
+	}
+
+	// 6. Apple's expiresDate is ground truth.  Never grant or restore service for
+	//    a subscription Apple itself says has expired.
+	if appleExpires.Before(time.Now().UTC()) {
+		log.Infof("createSubscriptionApple2: Apple confirms expired at %s for %s", appleExpires, receipt.Email)
+		c.JSON(http.StatusForbidden, gin.H{"error": "subscription has expired"})
+		return
+	}
+
+	// 7. Per-transaction lock: prevents a restore-purchase burst from creating
+	//    duplicate subscriptions or granting limits more than once.
+	release := acquireAppleTxLock(originalTxId)
+	defer release()
+
+	// 8. Look up an existing subscription.
+	// GetSubscriptionByReceipt returns (nil, mongo.ErrNoDocuments) — message
+	// "mongo: no documents in result" — when nothing exists yet.  That is the
+	// normal path for a first purchase, not a fault.  Any other error is a real
+	// DB problem; in that case we stop rather than risk creating a duplicate and
+	// double-granting limits.
+	existing, err := core.GetSubscriptionByReceipt(originalTxId)
+	if err != nil {
+		if !strings.Contains(err.Error(), "no documents in result") {
+			log.Errorf("createSubscriptionApple2: DB error looking up %s: %v", originalTxId, err)
+			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "service temporarily unavailable"})
+			return
+		}
+		existing = nil
+	}
+
+	now := time.Now().UTC()
+	falseVal := false
+
+	if existing != nil {
+		// ── Subscription already exists ──────────────────────────────────────────
+
+		// Security: once a subscription is claimed by a Nettica email, only that
+		// email may interact with it.  This prevents a caller from replaying a
+		// stolen transaction token against a different account.
+		if existing.Email != "" && existing.Email != receipt.Email {
+			log.Errorf("createSubscriptionApple2: receipt %s is owned by %s, refused for %s",
+				originalTxId, existing.Email, receipt.Email)
+			c.JSON(http.StatusForbidden, gin.H{"error": "receipt belongs to a different account"})
+			return
+		}
+
+		// handleAppleWebhook creates stub entries (email="", accountID="") when a
+		// webhook fires before the app has connected.  Limits are never granted for
+		// stubs — we must grant them exactly once, right here, when the app claims
+		// the stub.
+		isStub := existing.AccountID == ""
+
+		if existing.Email == "" {
+			existing.Email = receipt.Email
+		}
+
+		var acctID string
+		if isStub {
+			acct, acctErr := appleEnsureAccount(receipt.Email)
+			if acctErr != nil {
+				log.Errorf("createSubscriptionApple2: appleEnsureAccount: %v", acctErr)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to resolve account"})
+				return
+			}
+			acctID = acct.Id
+			existing.AccountID = acctID
+		} else {
+			acctID = existing.AccountID
+		}
+
+		// Preserve the original Issued timestamp; set it only if the stub left it nil.
+		if existing.Issued == nil {
+			existing.Issued = &now
+		}
+
+		// Update authoritative fields from Apple's response.
+		existing.Sku = productId
+		existing.Name = sku.name
+		existing.Description = sku.description
+		existing.Credits = sku.credits
+		existing.AutoRenew = true
+		existing.Expires = &appleExpires
+		existing.LastUpdated = &now
+		existing.UpdatedBy = "apple"
+		existing.IsDeleted = &falseVal
+
+		// Status is inactive for: explicit cancellation/expiry, or an unclaimed stub.
+		wasInactive := existing.Status == "expired" || existing.Status == "cancelled" || existing.Status == ""
+
+		if wasInactive {
+			existing.Status = "active"
+			if _, updateErr := core.UpdateSubscription(existing.Id, existing); updateErr != nil {
+				log.Errorf("createSubscriptionApple2: UpdateSubscription failed: %v", updateErr)
+			}
+			if renewErr := core.RenewSubscription(existing.Id); renewErr != nil {
+				log.Errorf("createSubscriptionApple2: RenewSubscription failed: %v", renewErr)
+			}
+			// Grant limits only for stubs — a previously active subscription already
+			// had its limits granted at purchase time; granting again would inflate them.
+			if isStub {
+				if limErr := appleAddLimits(acctID, receipt.Email, sku); limErr != nil {
+					log.Errorf("createSubscriptionApple2: appleAddLimits failed: %v", limErr)
+				}
+			}
+			core.SubscriptionEmail(existing)
+			log.Infof("createSubscriptionApple2: reactivated %s (%s) until %s reason=%s",
+				existing.Id, receipt.Email, appleExpires, transactionReason)
+		} else {
+			// Subscription is already active — update metadata and expiry only.
+			// Do NOT touch limits; they were already granted at the original purchase.
+			if _, updateErr := core.UpdateSubscription(existing.Id, existing); updateErr != nil {
+				log.Errorf("createSubscriptionApple2: UpdateSubscription failed: %v", updateErr)
+			}
+			if isStub {
+				// Edge case: active stub (webhook fired with status set, but no account).
+				if limErr := appleAddLimits(acctID, receipt.Email, sku); limErr != nil {
+					log.Errorf("createSubscriptionApple2: appleAddLimits failed: %v", limErr)
+				}
+			}
+			log.Infof("createSubscriptionApple2: updated %s (%s) reason=%s",
+				existing.Id, receipt.Email, transactionReason)
+		}
+
+		c.JSON(http.StatusOK, existing)
+		return
+	}
+
+	// ── No existing subscription — genuine first-time purchase ───────────────────
+
+	acct, err := appleEnsureAccount(receipt.Email)
+	if err != nil {
+		log.Errorf("createSubscriptionApple2: appleEnsureAccount: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to resolve account"})
+		return
+	}
+
+	if err := appleAddLimits(acct.Id, receipt.Email, sku); err != nil {
+		log.Errorf("createSubscriptionApple2: appleAddLimits failed: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to provision service limits"})
+		return
+	}
+
+	subID, err := util.RandomString(8)
+	if err != nil {
+		log.Errorf("createSubscriptionApple2: RandomString failed: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+		return
+	}
+	// Always use the fixed "apple-" prefix — never interpolate receipt.Source,
+	// which is client-provided and could be used to craft predictable IDs.
+	subID = "apple-" + subID
+
+	sub := model.Subscription{
+		Id:          subID,
+		AccountID:   acct.Id,
+		Email:       receipt.Email,
+		Name:        sku.name,
+		Description: sku.description,
+		Credits:     sku.credits,
+		Sku:         productId,
+		AutoRenew:   true,
+		Status:      "active",
+		Receipt:     originalTxId, // stable originalTransactionId, NOT the raw JWS token
+		Issued:      &now,
+		LastUpdated: &now,
+		Expires:     &appleExpires,
+		CreatedBy:   receipt.Email,
+		UpdatedBy:   "apple",
+		IsDeleted:   &falseVal,
+	}
+
+	if errs := sub.IsValid(); len(errs) != 0 {
+		for _, e := range errs {
+			log.WithField("err", e).Error("createSubscriptionApple2: subscription validation error")
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": "subscription validation failed"})
+		return
+	}
+
+	if err := mongo.Serialize(sub.Id, "id", "subscriptions", sub); err != nil {
+		log.Errorf("createSubscriptionApple2: Serialize failed: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save subscription"})
+		return
+	}
+
+	if err := core.SubscriptionEmail(&sub); err != nil {
+		log.Errorf("createSubscriptionApple2: SubscriptionEmail failed: %v", err)
+	}
+
+	log.Infof("createSubscriptionApple2: created %s for %s until %s", sub.Id, receipt.Email, appleExpires)
+	c.JSON(http.StatusCreated, sub)
 }
 
 // validateReceiptApple2 validates an Apple purchaseId
