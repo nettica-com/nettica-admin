@@ -1105,7 +1105,7 @@ func handleAppleWebhook2(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "received"})
 		return
 	}
-	log.Infof("handleAppleWebhook2: %s", string(body))
+	//log.Infof("handleAppleWebhook2: %s", string(body))
 
 	// 2. Parse outer JWS envelope.
 	var msg map[string]interface{}
@@ -1149,7 +1149,7 @@ func handleAppleWebhook2(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "received"})
 		return
 	}
-	log.Infof("handleAppleWebhook2: payload %v", payload)
+	//log.Infof("handleAppleWebhook2: payload %v", payload)
 
 	// 6. Extract notification type — this is the canonical dispatch key.
 	notificationType, ok := appleStr(payload, "notificationType")
@@ -1226,6 +1226,12 @@ func handleAppleWebhook2(c *gin.Context) {
 		return
 	}
 	notFound := subscription == nil
+
+	if notFound {
+		log.Infof("handleAppleWebhook2: no subscription found for originalTxId %s", originalTxId)
+	} else {
+		log.Infof("handleAppleWebhook2: found subscription %s by %s for originalTxId %s", subscription.Id, subscription.Email, originalTxId)
+	}
 
 	now := time.Now().UTC()
 	falseVal := false
@@ -1421,6 +1427,46 @@ func handleAppleWebhook2(c *gin.Context) {
 		core.SubscriptionEmail(subscription)
 		log.Infof("handleAppleWebhook2: REFUND %s", subscription.Id)
 
+	case "DID_CHANGE_RENEWAL_PREF":
+		// The user changed their subscription tier.
+		//
+		// UPGRADE: takes effect immediately.  The transaction in this notification
+		//   already carries the new (higher) productId, new expiry, and prorated
+		//   billing — update the subscription right now.
+		//
+		// DOWNGRADE: deferred.  The current tier continues until the billing period
+		//   ends; the lower tier starts at the next renewal.  A subsequent DID_RENEW
+		//   with the new productId will handle the actual switch then.
+		if notFound {
+			log.Infof("handleAppleWebhook2: DID_CHANGE_RENEWAL_PREF no subscription for %s, ignoring", originalTxId)
+			break
+		}
+		if subtype == "UPGRADE" {
+			prevSku := subscription.Sku
+			if sku, known := appleSkuMap[productId]; known {
+				subscription.Sku = productId
+				subscription.Name = sku.name
+				subscription.Description = sku.description
+				subscription.Credits = sku.credits
+			}
+			if !appleExpires.IsZero() {
+				subscription.Expires = &appleExpires
+			}
+			subscription.AutoRenew = true
+			subscription.IsDeleted = &falseVal
+			subscription.LastUpdated = &now
+			subscription.UpdatedBy = "apple"
+			if _, err := core.UpdateSubscription(subscription.Id, subscription); err != nil {
+				log.Errorf("handleAppleWebhook2: DID_CHANGE_RENEWAL_PREF UPGRADE UpdateSubscription: %v", err)
+			}
+			log.Infof("handleAppleWebhook2: DID_CHANGE_RENEWAL_PREF UPGRADE %s sku %s→%s until %s",
+				subscription.Id, prevSku, productId, appleTimeStr(appleExpires))
+		} else {
+			// DOWNGRADE — no immediate action; log for traceability.
+			log.Infof("handleAppleWebhook2: DID_CHANGE_RENEWAL_PREF DOWNGRADE %s currentSku=%s newSku=%s effective at %s",
+				subscription.Id, subscription.Sku, productId, appleTimeStr(appleExpires))
+		}
+
 	default:
 		log.Infof("handleAppleWebhook2: unhandled notificationType=%s subtype=%s originalTxId=%s",
 			notificationType, subtype, originalTxId)
@@ -1599,7 +1645,7 @@ func validateAppleSignature(header, payload, signature string) (bool, error) {
 		return false, err
 	}
 
-	log.Infof("header: %v", headerMap)
+	// log.Infof("header: %v", headerMap)
 
 	if headerMap["x5c"] == nil {
 		return false, fmt.Errorf("x5c not found")
@@ -1681,7 +1727,7 @@ func createSubscriptionApple(c *gin.Context) {
 			subscription.Email = receipt.Email
 			subscription.AccountID = receipt.AccountID
 		}
-		subscription.Name = receipt.Name
+		// subscription.Name = receipt.Name
 		subscription.Sku = receipt.ProductID
 		last := time.Now().UTC()
 		productId, ok := result["productId"].(string)
