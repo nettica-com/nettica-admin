@@ -81,12 +81,12 @@
                 </v-card-text>
                 <v-divider></v-divider>
                 <table width="100%" style="text-align: left;">
-                  <thead><tr><th>Limit</th><th>Current</th><th>Max</th></tr></thead>
+                  <thead><tr><th>Account</th><th>Count</th></tr></thead>
                   <tbody>
-                    <tr><td>Members</td><td>{{ selected.limits.members }}</td><td>{{ selected.limits.maxmembers }}</td></tr>
-                    <tr><td>Devices</td><td>{{ selected.limits.devices }}</td><td>{{ selected.limits.maxdevices }}</td></tr>
-                    <tr><td>Networks</td><td>{{ selected.limits.networks }}</td><td>{{ selected.limits.maxnetworks }}</td></tr>
-                    <tr><td>Services</td><td>{{ selected.limits.services }}</td><td>{{ selected.limits.maxservices }}</td></tr>
+                    <tr><td>Members</td><td>{{ selected.limits.members }}</td></tr>
+                    <tr><td>Devices</td><td>{{ selected.limits.devices }}</td></tr>
+                    <tr><td>Networks</td><td>{{ selected.limits.networks }}</td></tr>
+                    <tr><td>Services</td><td>{{ selected.limits.services }}</td></tr>
                   </tbody>
                 </table>
               </v-card>

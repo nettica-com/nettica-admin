@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	model "github.com/nettica-com/nettica-admin/model"
@@ -39,6 +40,7 @@ var (
 		PushTokens:  make(map[string]string),
 		VoipDevices: make(map[string]string),
 		VoipTokens:  make(map[string]string),
+		recentSends: make(map[string]time.Time),
 		Enabled:     false,
 	}
 )
@@ -265,13 +267,16 @@ func (pm *PushManager) Load() error {
 }
 
 type PushCore struct {
-	app         *firebase.App
-	client      *messaging.Client
-	PushDevices map[string]string
-	PushTokens  map[string]string
-	VoipDevices map[string]string
-	VoipTokens  map[string]string
-	Enabled     bool
+	app          *firebase.App
+	client       *messaging.Client
+	PushDevices  map[string]string
+	PushTokens   map[string]string
+	VoipDevices  map[string]string
+	VoipTokens   map[string]string
+	recentMu     sync.Mutex
+	recentSends  map[string]time.Time
+	recentSweep  int
+	Enabled      bool
 }
 
 // Initialize initializes the push notification service
@@ -391,6 +396,25 @@ func (p *PushCore) SendPushNotification(pushToken, title, body string, isVoIP ..
 		voip = isVoIP[0]
 	}
 
+	pushKey := pushToken + "\x00" + title + "\x00" + body
+	p.recentMu.Lock()
+	if last, ok := p.recentSends[pushKey]; ok && time.Since(last) < time.Second {
+		p.recentMu.Unlock()
+		log.Infof("Push: dropped duplicate for token %s (last sent %s ago)", pushToken, time.Since(last).Round(time.Millisecond))
+		return nil
+	}
+	p.recentSends[pushKey] = time.Now()
+	p.recentSweep++
+	if p.recentSweep%100 == 0 {
+		now := time.Now()
+		for k, t := range p.recentSends {
+			if now.Sub(t) >= time.Second {
+				delete(p.recentSends, k)
+			}
+		}
+	}
+	p.recentMu.Unlock()
+
 	log.Infof("Push: %s - %s (%s)", title, body, pushToken)
 
 	if PM.Enabled != nil && *PM.Enabled {
@@ -470,6 +494,25 @@ func (p *PushCore) RemovePushTokenFromDevice(pushToken string) {
 
 // SendPushNotification sends a push notification to a device
 func (p *PushCore) SendVoipNotification(pushToken, title, body string) error {
+
+	voipKey := pushToken + "\x00" + title + "\x00" + body
+	p.recentMu.Lock()
+	if last, ok := p.recentSends[voipKey]; ok && time.Since(last) < time.Second {
+		p.recentMu.Unlock()
+		log.Infof("VoIP: dropped duplicate for token %s (last sent %s ago)", pushToken, time.Since(last).Round(time.Millisecond))
+		return nil
+	}
+	p.recentSends[voipKey] = time.Now()
+	p.recentSweep++
+	if p.recentSweep%100 == 0 {
+		now := time.Now()
+		for k, t := range p.recentSends {
+			if now.Sub(t) >= time.Second {
+				delete(p.recentSends, k)
+			}
+		}
+	}
+	p.recentMu.Unlock()
 
 	log.Infof("VoIP : %s - %s", title, body)
 
