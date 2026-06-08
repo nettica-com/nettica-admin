@@ -43,7 +43,7 @@ func ApplyRoutes(r *gin.RouterGroup) {
 		g.POST("/apple/webhook", handleAppleWebhook2)
 		g.POST("/apple/discount", handleAppleDiscount)
 		g.POST("/android", createSubscriptionAndroid)
-		g.POST("/android/webhook", handleAndroidWebhook)
+		g.POST("/android/webhook", handleAndroidWebhook2)
 		g.GET("/offers/:id", getOffers)
 		g.POST("/trial/:id", createTrial)
 		g.GET("/:id", readSubscription)
@@ -833,6 +833,242 @@ func handleAndroidWebhook(c *gin.Context) {
 		voidedPurchaseNotification := msg["voidedPurchaseNotification"].(map[string]interface{})
 		log.Infof("voidedPurchaseNotification: %v", voidedPurchaseNotification)
 
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "received"})
+}
+
+func handleAndroidWebhook2(c *gin.Context) {
+
+	bytes, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		log.WithFields(log.Fields{"err": err}).Error("failed to read request body")
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+
+	log.Info(string(bytes))
+
+	var message map[string]interface{}
+	if err = json.Unmarshal(bytes, &message); err != nil {
+		log.WithFields(log.Fields{"err": err}).Error("failed to unmarshal request body")
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+
+	mess, ok := message["message"].(map[string]interface{})
+	if !ok {
+		log.Error("android webhook: message field missing or wrong type")
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "invalid message format"})
+		return
+	}
+
+	data64, ok := mess["data"].(string)
+	if !ok {
+		log.Error("android webhook: message.data missing or wrong type")
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "invalid message format"})
+		return
+	}
+
+	data, err := base64.StdEncoding.DecodeString(data64)
+	if err != nil {
+		log.WithFields(log.Fields{"err": err}).Error("failed to decode data")
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+	log.Infof("android webhook data: %s", data)
+
+	var msg map[string]interface{}
+	if err = json.Unmarshal(data, &msg); err != nil {
+		log.WithFields(log.Fields{"err": err}).Error("failed to unmarshal data")
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+
+	log.Infof("android webhook msg: %v", msg)
+
+	packageName, ok := msg["packageName"].(string)
+	if !ok || packageName == "" {
+		log.Error("android webhook: packageName missing")
+		c.JSON(http.StatusOK, gin.H{"status": "received"})
+		return
+	}
+	log.Infof("android webhook packageName: %s", packageName)
+
+	if subscriptionNotification, ok := msg["subscriptionNotification"].(map[string]interface{}); ok {
+		log.Infof("subscriptionNotification: %v", subscriptionNotification)
+
+		purchaseToken, ok := subscriptionNotification["purchaseToken"].(string)
+		if !ok || purchaseToken == "" {
+			log.Error("purchaseToken not found -- assuming test")
+			c.JSON(http.StatusOK, gin.H{"status": "received"})
+			return
+		}
+		log.Infof("purchaseToken: %s", purchaseToken)
+
+		// Get Google Play access token
+		payload := "grant_type=refresh_token" +
+			"&client_id=" + os.Getenv("GOOGLE_PLAY_CLIENT_ID") +
+			"&client_secret=" + os.Getenv("GOOGLE_PLAY_CLIENT_SECRET") +
+			"&refresh_token=" + os.Getenv("GOOGLE_PLAY_REFRESH_TOKEN")
+
+		rsp, err := http.Post(os.Getenv("GOOGLE_PLAY_ACCESS_URL"), "application/x-www-form-urlencoded", strings.NewReader(payload))
+		if err != nil {
+			log.Error(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+			return
+		}
+		defer rsp.Body.Close()
+
+		if rsp.StatusCode != http.StatusOK {
+			log.Errorf("invalid response from Google: %s", rsp.Status)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+			return
+		}
+
+		var tokenResult map[string]interface{}
+		if err = json.NewDecoder(rsp.Body).Decode(&tokenResult); err != nil {
+			log.Errorf("error decoding access token response: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error getting access token"})
+			return
+		}
+
+		access_token, ok := tokenResult["access_token"].(string)
+		if !ok || access_token == "" {
+			log.Error("android webhook: access_token missing from response")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error getting access token"})
+			return
+		}
+
+		// Fetch subscription from Google Play API
+		gpURL := "https://www.googleapis.com/androidpublisher/v3/applications/" + packageName +
+			"/purchases/subscriptionsv2/tokens/" + purchaseToken + "?access_token=" + access_token
+		log.Infof("google play url: %s", gpURL)
+
+		resp, err := http.Get(gpURL)
+		if err != nil {
+			log.Errorf("error getting subscription from google: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "error getting subscription from google"})
+			return
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			log.Errorf("invalid subscription response from Google: %s", resp.Status)
+			c.JSON(http.StatusOK, gin.H{"status": "received"})
+			return
+		}
+
+		var sub map[string]interface{}
+		if err = json.NewDecoder(resp.Body).Decode(&sub); err != nil {
+			log.Errorf("error decoding google subscription response: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+			return
+		}
+		log.Infof("google subscription: %v", sub)
+
+		// Get or create local subscription record
+		subscription, err := core.GetSubscriptionByReceipt(purchaseToken)
+		if err != nil {
+			log.Errorf("subscription not found for purchaseToken, creating stub: %v", err)
+
+			now := time.Now().UTC()
+			id, idErr := util.RandomString(8)
+			if idErr != nil {
+				log.Error(idErr)
+				id = "unknown"
+			}
+			id = "android-" + id
+
+			subscription = &model.Subscription{
+				Id:          id,
+				AccountID:   "",
+				Email:       "",
+				Name:        "",
+				Description: "",
+				Issued:      &now,
+				CreatedBy:   "android",
+				Receipt:     purchaseToken,
+			}
+			log.Infof("created subscription stub: %v", subscription)
+			mongo.Serialize(subscription.Id, "id", "subscriptions", subscription)
+		}
+
+		subscriptionState, _ := sub["subscriptionState"].(string)
+
+		if subscriptionState == "SUBSCRIPTION_STATE_ACTIVE" {
+			if subscription.Status == "expired" || subscription.Status == "cancelled" || subscription.Status == "grace" {
+				last := time.Now().UTC()
+				subscription.Status = "active"
+				subscription.LastUpdated = &last
+				subscription.UpdatedBy = "google"
+				f := false
+				subscription.IsDeleted = &f
+				core.RenewSubscription(subscription.Id)
+				log.Infof("subscription renewed: %s", subscription.Id)
+				subscription, err = core.GetSubscriptionByReceipt(purchaseToken)
+				if err != nil {
+					log.Errorf("error getting subscription after renew: %v", err)
+					c.JSON(http.StatusNotFound, gin.H{"error": "Subscription not found"})
+					return
+				}
+			}
+		}
+
+		// Update expiry from lineItems[0].expiryTime
+		lineItems, ok := sub["lineItems"].([]interface{})
+		if !ok || len(lineItems) == 0 {
+			log.Errorf("lineItems not found in google response")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+			return
+		}
+
+		zero, ok := lineItems[0].(map[string]interface{})
+		if ok {
+			if expiryStr, ok := zero["expiryTime"].(string); ok {
+				t, parseErr := time.Parse(time.RFC3339, expiryStr)
+				if parseErr != nil {
+					log.Errorf("error parsing expiryTime %q: %v", expiryStr, parseErr)
+				} else {
+					subscription.Expires = &t
+					last := time.Now().UTC()
+					subscription.LastUpdated = &last
+					log.Infof("subscription %s expires %s", subscription.Id, t.Format(time.RFC3339))
+				}
+			}
+			subscription.UpdatedBy = "google"
+			core.UpdateSubscription(subscription.Id, subscription)
+		}
+
+		switch subscriptionState {
+		case "SUBSCRIPTION_STATE_EXPIRED":
+			core.ExpireSubscription(subscription.Id)
+			log.Infof("subscription expired: %s", subscription.Id)
+			core.SubscriptionEmail(subscription)
+			c.JSON(http.StatusOK, gin.H{"status": "expired"})
+			return
+
+		case "SUBSCRIPTION_STATE_CANCELED":
+			subscription.Status = "cancelled"
+			core.UpdateSubscription(subscription.Id, subscription)
+			core.ExpireSubscription(subscription.Id)
+			core.SubscriptionEmail(subscription)
+			log.Infof("subscription cancelled: %s", subscription.Id)
+			c.JSON(http.StatusOK, gin.H{"status": "cancelled"})
+			return
+
+		case "SUBSCRIPTION_STATE_IN_GRACE_PERIOD":
+			subscription.Status = "grace"
+			core.UpdateSubscription(subscription.Id, subscription)
+			core.SubscriptionEmail(subscription)
+			log.Infof("subscription grace: %s", subscription.Id)
+			c.JSON(http.StatusOK, gin.H{"status": "grace"})
+			return
+		}
+	}
+
+	if voidedNotification, ok := msg["voidedPurchaseNotification"].(map[string]interface{}); ok {
+		log.Infof("voidedPurchaseNotification: %v", voidedNotification)
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "received"})
