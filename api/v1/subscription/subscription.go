@@ -1010,6 +1010,8 @@ func handleAndroidWebhook2(c *gin.Context) {
 			}
 		}
 
+		log.Infof("subscription %s account: %s owner: %s", subscription.Id, subscription.AccountID, subscription.Email)
+
 		subscriptionState, _ := sub["subscriptionState"].(string)
 
 		if subscriptionState == "SUBSCRIPTION_STATE_ACTIVE" {
