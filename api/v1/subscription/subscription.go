@@ -970,28 +970,44 @@ func handleAndroidWebhook2(c *gin.Context) {
 		// Get or create local subscription record
 		subscription, err := core.GetSubscriptionByReceipt(purchaseToken)
 		if err != nil {
-			log.Errorf("subscription not found for purchaseToken, creating stub: %v", err)
-
-			now := time.Now().UTC()
-			id, idErr := util.RandomString(8)
-			if idErr != nil {
-				log.Error(idErr)
-				id = "unknown"
+			// On renewal of expired subscriptions, Google mints a new purchaseToken and links back to the
+			// prior one via linkedPurchaseToken -- look up the existing subscription
+			// by that instead of creating a duplicate.
+			if linkedToken, ok := sub["linkedPurchaseToken"].(string); ok && linkedToken != "" {
+				subscription, err = core.GetSubscriptionByReceipt(linkedToken)
 			}
-			id = "android-" + id
 
-			subscription = &model.Subscription{
-				Id:          id,
-				AccountID:   "",
-				Email:       "",
-				Name:        "",
-				Description: "",
-				Issued:      &now,
-				CreatedBy:   "android",
-				Receipt:     purchaseToken,
+			if err != nil {
+				log.Errorf("subscription not found for purchaseToken, creating stub: %v", err)
+
+				now := time.Now().UTC()
+				id, idErr := util.RandomString(8)
+				if idErr != nil {
+					log.Error(idErr)
+					id = "unknown"
+				}
+				id = "android-" + id
+
+				subscription = &model.Subscription{
+					Id:          id,
+					AccountID:   "",
+					Email:       "",
+					Name:        "",
+					Description: "",
+					Issued:      &now,
+					CreatedBy:   "android",
+					Receipt:     purchaseToken,
+				}
+				log.Infof("created subscription stub: %v", subscription)
+				mongo.Serialize(subscription.Id, "id", "subscriptions", subscription)
+			} else {
+				log.Infof("subscription %s found via linkedPurchaseToken, updating receipt to new purchaseToken", subscription.Id)
+				subscription.Receipt = purchaseToken
+				subscription.UpdatedBy = "google"
+				last := time.Now().UTC()
+				subscription.LastUpdated = &last
+				core.UpdateSubscription(subscription.Id, subscription)
 			}
-			log.Infof("created subscription stub: %v", subscription)
-			mongo.Serialize(subscription.Id, "id", "subscriptions", subscription)
 		}
 
 		subscriptionState, _ := sub["subscriptionState"].(string)
