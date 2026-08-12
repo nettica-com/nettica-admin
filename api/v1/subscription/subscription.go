@@ -230,20 +230,15 @@ func createSubscriptionAndroid(c *gin.Context) {
 	}
 	log.Infof("android: %s", receipt)
 
-	// Check if the subscription already exists
-	s, err := core.GetSubscriptionByReceipt(receipt.Receipt)
-	if err == nil {
-		// if it does, update it
-		log.Infof("subscription already exists, updating: %s", s.Id)
+	// Check if the subscription already exists for this receipt.  Both the app and
+	// the Google webhook can drive this path for the same purchase, so when we
+	// already have one we update it in place instead of creating a second.
+	existing, err := core.GetSubscriptionByReceipt(receipt.Receipt)
+	if err != nil {
+		existing = nil
 	}
-
-	if s != nil && s.Email == "" {
-		// if the subscription exists but doesn't have an email, update it with the email from the receipt
-		now := time.Now().UTC()
-		s.Email = receipt.Email
-		s.AccountID = receipt.AccountID
-		s.UpdatedBy = "android/" + receipt.Email
-		s.LastUpdated = &now
+	if existing != nil {
+		log.Infof("subscription already exists for receipt, updating in place: %s", existing.Id)
 	}
 
 	// Validate the receipt with Google
@@ -297,6 +292,10 @@ func createSubscriptionAndroid(c *gin.Context) {
 	relays := 0
 	autoRenew := false
 	issued := time.Now()
+	if existing != nil && existing.Issued != nil {
+		// keep the original issue date when updating an existing subscription
+		issued = *existing.Issued
+	}
 
 	switch receipt.ProductID {
 	case "basic_monthly":
@@ -436,35 +435,49 @@ func createSubscriptionAndroid(c *gin.Context) {
 		}
 	}
 
-	limits.MaxDevices += devices
-	limits.MaxNetworks += networks
-	limits.MaxMembers += members
-	limits.MaxServices += relays
+	// only grant the limits once -- a repeat call for the same receipt has
+	// already had them applied
+	if existing == nil {
+		limits.MaxDevices += devices
+		limits.MaxNetworks += networks
+		limits.MaxMembers += members
+		limits.MaxServices += relays
 
-	errs := limits.IsValid()
-	if len(errs) != 0 {
-		for _, err := range errs {
-			log.WithFields(log.Fields{
-				"err": err,
-			}).Error("limits validation error")
+		errs := limits.IsValid()
+		if len(errs) != 0 {
+			for _, err := range errs {
+				log.WithFields(log.Fields{
+					"err": err,
+				}).Error("limits validation error")
+			}
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Limits validation error"})
+			return
 		}
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Limits validation error"})
-		return
+
+		// save limits to mongodb
+		mongo.Serialize(limits.Id, "id", "limits", limits)
 	}
 
-	// save limits to mongodb
-	mongo.Serialize(limits.Id, "id", "limits", limits)
-
-	// generate a random subscription id
-	id, err := util.RandomString(8)
-	if err != nil {
-		log.Error(err)
+	// reuse the existing subscription id for this receipt, otherwise generate one
+	id := ""
+	if existing != nil {
+		id = existing.Id
+	} else {
+		id, err = util.RandomString(8)
+		if err != nil {
+			log.Error(err)
+		}
+		id = receipt.Source + "-" + id
 	}
-	id = receipt.Source + "-" + id
 
 	// construct a subscription object
 	lu := time.Now()
 	isDeleted := false
+
+	createdBy := receipt.Email
+	if existing != nil && existing.CreatedBy != "" {
+		createdBy = existing.CreatedBy
+	}
 
 	subscription := model.Subscription{
 		Id:          id,
@@ -482,10 +495,10 @@ func createSubscriptionAndroid(c *gin.Context) {
 		AutoRenew:   autoRenew,
 		Receipt:     receipt.Receipt,
 		IsDeleted:   &isDeleted,
-		CreatedBy:   receipt.Email,
+		CreatedBy:   createdBy,
 	}
 
-	errs = subscription.IsValid()
+	errs := subscription.IsValid()
 	if len(errs) != 0 {
 		for _, err := range errs {
 			log.WithFields(log.Fields{
