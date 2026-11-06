@@ -370,9 +370,6 @@ func updateAccount(c *gin.Context) {
 	// check if the account is authorized to update this account
 
 	if account.Role == "Admin" || account.Role == "Owner" {
-		if data.ApiKey == "" {
-			data.ApiKey = update.ApiKey
-		}
 		update = &data
 	} else if account.Id == id {
 		if update.NetName != data.NetName {
